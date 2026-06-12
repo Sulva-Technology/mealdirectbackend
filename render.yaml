@@ -1,0 +1,95 @@
+services:
+  - type: web
+    name: meal-direct-api
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /v1/health/ready
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      - key: HOST
+        value: 0.0.0.0
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_SSL
+        value: true
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_JWT_ISSUER
+        sync: false
+      - key: SUPABASE_JWT_AUDIENCE
+        value: authenticated
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+      - key: INTERNAL_OPERATIONS_TOKEN
+        sync: false
+      - key: RELEASE_VERSION
+        sync: false
+      - key: COMMIT_SHA
+        sync: false
+  - type: worker
+    name: meal-direct-worker
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    dockerCommand: node dist/worker.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_SSL
+        value: true
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_JWT_ISSUER
+        sync: false
+      - key: INTERNAL_OPERATIONS_TOKEN
+        sync: false
+      - key: RELEASE_VERSION
+        sync: false
+      - key: COMMIT_SHA
+        sync: false
+  - type: cron
+    name: meal-direct-release-expired-reservations
+    runtime: docker
+    schedule: '*/5 * * * *'
+    dockerfilePath: ./Dockerfile
+    dockerCommand: node dist/cron.js release-expired-reservations
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_SSL
+        value: true
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_JWT_ISSUER
+        sync: false
+      - key: INTERNAL_OPERATIONS_TOKEN
+        sync: false
+  - type: cron
+    name: meal-direct-close-batches
+    runtime: docker
+    schedule: '*/10 * * * *'
+    dockerfilePath: ./Dockerfile
+    dockerCommand: node dist/cron.js close-batches-at-cutoff
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_SSL
+        value: true
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_JWT_ISSUER
+        sync: false
+      - key: INTERNAL_OPERATIONS_TOKEN
+        sync: false

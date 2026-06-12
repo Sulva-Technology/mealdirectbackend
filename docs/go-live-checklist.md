@@ -1,0 +1,30 @@
+# Go-Live Checklist
+
+- Paystack live keys stored in production secret management.
+- Paystack webhook URL configured to production API.
+- Paystack webhook signature test passed.
+- Google OAuth production redirects configured.
+- User frontend domain configured.
+- Vendor frontend domain configured.
+- Rider frontend domain configured.
+- Admin frontend domain configured.
+- API domain `api.mealdirect.com` configured.
+- TLS active for all public domains.
+- Exact CORS origins configured.
+- Vendor records loaded and verified.
+- Rider records loaded and verified.
+- Campus locations loaded and verified.
+- Delivery slots loaded and verified.
+- Launch inventory loaded and verified.
+- Support roster assigned.
+- Escalation owner assigned.
+- Settlement bank process approved.
+- Privacy policy published.
+- Terms published.
+- Vendor agreement approved.
+- Rider agreement approved.
+- Monitoring dashboards active.
+- Alerts routed to on-call owner.
+- Backups configured.
+- Restore drill completed.
+- Launch-day smoke test completed for customer, vendor, rider, and admin flows.

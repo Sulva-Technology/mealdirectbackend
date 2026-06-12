@@ -1,0 +1,5 @@
+dist
+node_modules
+coverage
+supabase/types
+pnpm-lock.yaml

@@ -1,0 +1,95 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/v1/health/live": {
+      "get": {
+        "operationId": "HealthController_live",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The API process is running."
+          }
+        },
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/v1/health/ready": {
+      "get": {
+        "operationId": "HealthController_ready",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The API is ready to serve traffic."
+          },
+          "503": {
+            "description": "A required dependency is unavailable."
+          }
+        },
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/v1/operations/status": {
+      "get": {
+        "operationId": "OperationsController_status",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Internal operational status for authorized administrators."
+          },
+          "401": {
+            "description": "Operations token missing or invalid."
+          }
+        },
+        "security": [
+          {
+            "operationsToken": []
+          }
+        ],
+        "tags": [
+          "operations"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Meal Direct API",
+    "description": "Stable REST API for Meal Direct web and future mobile clients.",
+    "version": "1.0.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "supabaseAuth": {
+        "scheme": "bearer",
+        "bearerFormat": "Supabase JWT",
+        "type": "http",
+        "description": "Supabase Auth access token."
+      },
+      "idempotencyKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Idempotency-Key",
+        "description": "Required for important mutations such as order creation and payments."
+      },
+      "requestId": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-request-id",
+        "description": "Optional caller-provided request ID. The API echoes or generates one."
+      },
+      "operationsToken": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http",
+        "description": "Internal operations token. Temporary until Super Admin JWT/RBAC is implemented."
+      }
+    },
+    "schemas": {}
+  }
+}

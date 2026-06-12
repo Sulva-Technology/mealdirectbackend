@@ -1,0 +1,25 @@
+import 'reflect-metadata';
+
+process.env.NODE_ENV = 'test';
+process.env.APP_NAME = 'Meal Direct API Test';
+process.env.HOST = '127.0.0.1';
+process.env.PORT = '0';
+process.env.API_PREFIX = 'v1';
+process.env.DATABASE_URL = 'postgresql://postgres:postgres@127.0.0.1:1/postgres';
+process.env.DATABASE_SSL = 'false';
+process.env.DATABASE_POOL_MAX = '1';
+process.env.SUPABASE_URL = 'http://127.0.0.1:54321';
+process.env.SUPABASE_JWT_ISSUER = 'http://127.0.0.1:54321/auth/v1';
+process.env.SUPABASE_JWT_AUDIENCE = 'authenticated';
+process.env.CORS_ALLOWED_ORIGINS =
+  'https://user.mealdirect.com,https://vendor.mealdirect.com,https://rider.mealdirect.com,https://admin.mealdirect.com,http://localhost:3000';
+process.env.LOG_LEVEL = 'silent';
+process.env.BODY_LIMIT_BYTES = '1048576';
+process.env.RATE_LIMIT_MAX = '120';
+process.env.RATE_LIMIT_WINDOW_MS = '60000';
+process.env.REQUEST_ID_HEADER = 'x-request-id';
+process.env.TRACE_ID_HEADER = 'x-trace-id';
+process.env.RELEASE_VERSION = 'test';
+process.env.COMMIT_SHA = 'test-commit';
+process.env.RESERVATION_TTL_SECONDS = '900';
+process.env.INTERNAL_OPERATIONS_TOKEN = 'test-operations-token';

@@ -1,0 +1,48 @@
+name: database
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  supabase:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile=false
+
+      - name: Start Supabase
+        run: pnpm supabase:start
+
+      - name: Reset database
+        run: pnpm db:reset
+
+      - name: Run database tests
+        run: pnpm db:test
+
+      - name: Lint migrations
+        run: pnpm db:lint
+
+      - name: Generate TypeScript types
+        run: pnpm db:types
+
+      - name: Check schema diff
+        run: pnpm db:diff:check
