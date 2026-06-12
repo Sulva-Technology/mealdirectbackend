@@ -16,15 +16,15 @@ export class PaystackWebhookController {
   @HttpCode(202)
   @ApiAcceptedResponse({ description: 'Paystack webhook was verified and accepted idempotently.' })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid Paystack signature.' })
-  handlePaystackWebhook(
+  async handlePaystackWebhook(
     @Req() request: FastifyRequest,
     @Res({ passthrough: true }) reply: FastifyReply,
     @Body() payload: PaystackWebhookEvent
-  ): Record<string, unknown> {
+  ): Promise<Record<string, unknown>> {
     const signatureHeader = request.headers['x-paystack-signature'];
     const signature = Array.isArray(signatureHeader) ? signatureHeader[0] : signatureHeader;
     const rawBody = request.rawBody ?? JSON.stringify(payload);
-    const result = this.webhookService.process(rawBody, signature, payload);
+    const result = await this.webhookService.process(rawBody, signature, payload);
 
     if (result.status === 'duplicate') {
       reply.status(200);

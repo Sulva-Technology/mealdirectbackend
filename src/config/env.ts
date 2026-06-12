@@ -67,6 +67,7 @@ const envSchema = z
     COMMIT_SHA: z.string().min(1).default('unknown'),
     RESERVATION_TTL_SECONDS: z.coerce.number().int().positive().default(900),
     PAYSTACK_SECRET_KEY: optionalSecret,
+    PAYSTACK_WEBHOOK_INBOX_MODE: z.enum(['database', 'memory']).default('database'),
     INTERNAL_OPERATIONS_TOKEN: optionalSecret
   })
   .superRefine((env, context) => {
@@ -92,6 +93,16 @@ const envSchema = z
         code: 'custom',
         path: ['SUPABASE_JWT_SECRET'],
         message: 'SUPABASE_JWT_SECRET must be configured until JWKS verification is introduced'
+      });
+    }
+    if (
+      (env.NODE_ENV === 'production' || env.NODE_ENV === 'staging') &&
+      env.PAYSTACK_WEBHOOK_INBOX_MODE !== 'database'
+    ) {
+      context.addIssue({
+        code: 'custom',
+        path: ['PAYSTACK_WEBHOOK_INBOX_MODE'],
+        message: 'PAYSTACK_WEBHOOK_INBOX_MODE must be database outside development and test'
       });
     }
   });

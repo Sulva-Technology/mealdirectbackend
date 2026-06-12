@@ -1,6 +1,7 @@
 export type PaystackWebhookEvent = {
   event: string;
   data?: {
+    id?: string | number;
     reference?: string;
     amount?: number;
     status?: string;

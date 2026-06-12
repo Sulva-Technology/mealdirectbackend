@@ -24,4 +24,5 @@ process.env.RELEASE_VERSION = 'test';
 process.env.COMMIT_SHA = 'test-commit';
 process.env.RESERVATION_TTL_SECONDS = '900';
 process.env.PAYSTACK_SECRET_KEY = 'test-paystack-secret';
+process.env.PAYSTACK_WEBHOOK_INBOX_MODE = 'memory';
 process.env.INTERNAL_OPERATIONS_TOKEN = 'test-operations-token';

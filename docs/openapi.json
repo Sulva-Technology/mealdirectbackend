@@ -76,6 +76,25 @@
         ]
       }
     },
+    "/v1/orders": {
+      "post": {
+        "operationId": "OrdersController_createOrder",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Order was created idempotently and inventory was reserved."
+          }
+        },
+        "security": [
+          {
+            "supabaseAuth": []
+          }
+        ],
+        "tags": [
+          "orders"
+        ]
+      }
+    },
     "/v1/payments/webhooks/paystack": {
       "post": {
         "operationId": "PaystackWebhookController_handlePaystackWebhook",
@@ -90,6 +109,44 @@
         },
         "tags": [
           "payments"
+        ]
+      }
+    },
+    "/v1/settlements/vendors/{vendorId}/daily": {
+      "post": {
+        "operationId": "SettlementsController_generateVendorDailySettlement",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Vendor daily settlement was generated idempotently."
+          }
+        },
+        "security": [
+          {
+            "supabaseAuth": []
+          }
+        ],
+        "tags": [
+          "settlements"
+        ]
+      }
+    },
+    "/v1/settlements/riders/{riderId}/daily": {
+      "post": {
+        "operationId": "SettlementsController_generateRiderDailySettlement",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Rider daily settlement was generated idempotently."
+          }
+        },
+        "security": [
+          {
+            "supabaseAuth": []
+          }
+        ],
+        "tags": [
+          "settlements"
         ]
       }
     }
