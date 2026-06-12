@@ -33,39 +33,39 @@ Status: draft, repository-grounded. This model uses the current backend and data
 
 ## Trust Boundaries
 
-| Boundary                     | Current Evidence                       | Required Control                                                       |
-| ---------------------------- | -------------------------------------- | ---------------------------------------------------------------------- |
-| Browser frontends to API     | CORS allowlist in env and Fastify CORS | exact origins, JWT validation, rate limits, payload limits             |
-| API to Supabase/PostgreSQL   | Kysely pool and migrations             | least-privilege DB role, RLS, transactional mutations                  |
-| API to Paystack              | Paystack secret env placeholder        | HMAC/signature validation, idempotency, replay window                  |
-| Paystack to webhook endpoint | endpoint not implemented               | signature validation before parsing side effects                       |
-| API to logs/metrics          | structured logger and redaction        | no secrets/PII beyond lawful operational IDs                           |
-| Admin operations endpoint    | bearer operations token guard          | replace with Super Admin JWT/RBAC before launch                        |
-| CI/CD to staging/production  | GitHub workflows and Render blueprint  | separate secrets, manual production approval, single migration process |
+| Boundary                     | Current Evidence                                                                                                          | Required Control                                                             |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Browser frontends to API     | CORS allowlist, Fastify CORS, Supabase JWT verifier, actor context, RBAC guard                                            | exact origins, route-level JWT/RBAC application, rate limits, payload limits |
+| API to Supabase/PostgreSQL   | Kysely pool and migrations                                                                                                | least-privilege DB role, RLS, transactional mutations                        |
+| API to Paystack              | Paystack secret env placeholder                                                                                           | HMAC/signature validation, idempotency, replay window                        |
+| Paystack to webhook endpoint | `/v1/payments/webhooks/paystack` verifies `x-paystack-signature` and handles duplicate deliveries idempotently in-process | database-backed idempotency before payment side effects                      |
+| API to logs/metrics          | structured logger and redaction                                                                                           | no secrets/PII beyond lawful operational IDs                                 |
+| Admin operations endpoint    | bearer operations token guard                                                                                             | replace with Super Admin JWT/RBAC before launch                              |
+| CI/CD to staging/production  | GitHub workflows and Render blueprint                                                                                     | separate secrets, manual production approval, single migration process       |
 
 ## Abuse Cases
 
-| Abuse Case                           | Impact                            | Existing Control                                  | Gap                                                                              |
-| ------------------------------------ | --------------------------------- | ------------------------------------------------- | -------------------------------------------------------------------------------- |
-| Customer reads another user's order  | PII and order exposure            | DB `can_read_order` and RLS functions exist       | API object authorization not implemented                                         |
-| Vendor reads another vendor's orders | cross-vendor leakage              | vendor access functions and RLS exist             | API handlers not implemented                                                     |
-| Campus Admin accesses another campus | cross-campus data leak            | campus admin DB functions exist                   | API RBAC not implemented                                                         |
-| Payment amount manipulation          | underpayment or free orders       | DB amount columns and payment functions exist     | API payment initialization not implemented                                       |
-| Duplicate payment webhook            | duplicate paid effects            | `payment_events` and idempotency schema exist     | webhook endpoint/signature/replay not implemented                                |
-| Inventory oversell                   | customer harm and vendor disputes | reservation function exists                       | API order reservation not implemented                                            |
-| Fake delivery confirmation           | fraudulent completion             | delivery confirmation table exists                | API rider/customer confirmation not implemented                                  |
-| Duplicate refund                     | financial loss                    | refund schema exists                              | refund workflow not implemented                                                  |
-| Stolen token                         | account takeover                  | CORS/rate limits exist                            | JWT verification and session revocation checks missing                           |
-| Secret leakage                       | infrastructure compromise         | env examples omit values and log redaction exists | dependency/code/container scanning must run in CI                                |
-| DoS                                  | API unavailable                   | Fastify rate limit, payload limit, health checks  | per-user/per-route limits and alerting not complete                              |
-| Malicious future file upload         | malware or data leak              | no upload surface today                           | storage scanning and content-type validation required before image upload launch |
+| Abuse Case                           | Impact                            | Existing Control                                                                                            | Gap                                                                              |
+| ------------------------------------ | --------------------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Customer reads another user's order  | PII and order exposure            | DB `can_read_order` and RLS functions exist                                                                 | API object authorization not implemented                                         |
+| Vendor reads another vendor's orders | cross-vendor leakage              | vendor access functions and RLS exist                                                                       | API handlers not implemented                                                     |
+| Campus Admin accesses another campus | cross-campus data leak            | campus admin DB functions exist                                                                             | API RBAC not implemented                                                         |
+| Payment amount manipulation          | underpayment or free orders       | DB amount columns and payment functions exist                                                               | API payment initialization not implemented                                       |
+| Duplicate payment webhook            | duplicate paid effects            | Webhook signature verification and duplicate detection exist; `payment_events` and idempotency schema exist | webhook side effects are not persisted through a database transaction yet        |
+| Inventory oversell                   | customer harm and vendor disputes | reservation function exists                                                                                 | API order reservation not implemented                                            |
+| Fake delivery confirmation           | fraudulent completion             | delivery confirmation table exists                                                                          | API rider/customer confirmation not implemented                                  |
+| Duplicate refund                     | financial loss                    | refund schema exists                                                                                        | refund workflow not implemented                                                  |
+| Stolen token                         | account takeover                  | CORS/rate limits exist                                                                                      | JWT verification and session revocation checks missing                           |
+| Secret leakage                       | infrastructure compromise         | env examples omit values and log redaction exists                                                           | dependency/code/container scanning must run in CI                                |
+| DoS                                  | API unavailable                   | Fastify rate limit, payload limit, health checks                                                            | per-user/per-route limits and alerting not complete                              |
+| Malicious future file upload         | malware or data leak              | no upload surface today                                                                                     | storage scanning and content-type validation required before image upload launch |
 
 ## Required Mitigations
 
-- Implement Supabase JWT verification middleware and derive actor context from verified claims.
+- Apply the Supabase JWT verification guard to every non-public business handler.
 - Enforce RBAC and object-level authorization in every business handler.
 - Keep high-value mutations inside database transactions or SQL functions.
-- Validate Paystack webhooks with the provider signature before reading side-effect fields.
+- Persist Paystack webhook idempotency and side effects in the database after signature verification.
 - Store processed webhook event IDs and idempotency keys with unique constraints.
 - Filter API responses by role and avoid exposing payout account details except masked snapshots.
 - Add audit log writes for admin actions, payment effects, settlement approvals, refunds, and escalations.

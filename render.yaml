@@ -22,6 +22,8 @@ services:
         sync: false
       - key: SUPABASE_JWT_AUDIENCE
         value: authenticated
+      - key: SUPABASE_JWT_SECRET
+        sync: false
       - key: CORS_ALLOWED_ORIGINS
         sync: false
       - key: PAYSTACK_SECRET_KEY
@@ -49,6 +51,8 @@ services:
         sync: false
       - key: SUPABASE_JWT_ISSUER
         sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
       - key: INTERNAL_OPERATIONS_TOKEN
         sync: false
       - key: RELEASE_VERSION
@@ -72,6 +76,8 @@ services:
         sync: false
       - key: SUPABASE_JWT_ISSUER
         sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
       - key: INTERNAL_OPERATIONS_TOKEN
         sync: false
   - type: cron
@@ -90,6 +96,8 @@ services:
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_JWT_ISSUER
+        sync: false
+      - key: SUPABASE_JWT_SECRET
         sync: false
       - key: INTERNAL_OPERATIONS_TOKEN
         sync: false

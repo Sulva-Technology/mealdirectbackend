@@ -11,6 +11,7 @@ process.env.DATABASE_POOL_MAX = '1';
 process.env.SUPABASE_URL = 'http://127.0.0.1:54321';
 process.env.SUPABASE_JWT_ISSUER = 'http://127.0.0.1:54321/auth/v1';
 process.env.SUPABASE_JWT_AUDIENCE = 'authenticated';
+process.env.SUPABASE_JWT_SECRET = 'test-jwt-secret-at-least-32-characters-long';
 process.env.CORS_ALLOWED_ORIGINS =
   'https://user.mealdirect.com,https://vendor.mealdirect.com,https://rider.mealdirect.com,https://admin.mealdirect.com,http://localhost:3000';
 process.env.LOG_LEVEL = 'silent';
@@ -22,4 +23,5 @@ process.env.TRACE_ID_HEADER = 'x-trace-id';
 process.env.RELEASE_VERSION = 'test';
 process.env.COMMIT_SHA = 'test-commit';
 process.env.RESERVATION_TTL_SECONDS = '900';
+process.env.PAYSTACK_SECRET_KEY = 'test-paystack-secret';
 process.env.INTERNAL_OPERATIONS_TOKEN = 'test-operations-token';

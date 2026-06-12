@@ -32,6 +32,30 @@ paths:
         - operationsToken: []
       tags:
         - operations
+  /v1/auth/me:
+    get:
+      operationId: AuthController_me
+      parameters: []
+      responses:
+        "200":
+          description: The authenticated Meal Direct actor context.
+        "401":
+          description: Missing, invalid, or expired Supabase JWT.
+      security:
+        - supabaseAuth: []
+      tags:
+        - auth
+  /v1/payments/webhooks/paystack:
+    post:
+      operationId: PaystackWebhookController_handlePaystackWebhook
+      parameters: []
+      responses:
+        "202":
+          description: Paystack webhook was verified and accepted idempotently.
+        "401":
+          description: Missing or invalid Paystack signature.
+      tags:
+        - payments
 info:
   title: Meal Direct API
   description: Stable REST API for Meal Direct web and future mobile clients.

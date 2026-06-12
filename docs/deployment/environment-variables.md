@@ -15,6 +15,7 @@ Do not commit real values. Store staging and production values only in platform 
 | `SUPABASE_URL`              | all                 | no     | Supabase project URL                              |
 | `SUPABASE_JWT_ISSUER`       | all                 | no     | Supabase JWT issuer                               |
 | `SUPABASE_JWT_AUDIENCE`     | all                 | no     | Expected JWT audience                             |
+| `SUPABASE_JWT_SECRET`       | all                 | yes    | Supabase HS256 JWT signing secret                 |
 | `CORS_ALLOWED_ORIGINS`      | all                 | no     | Exact comma-separated frontend origins            |
 | `LOG_LEVEL`                 | all                 | no     | `silent`, `debug`, `info`, `warn`, or `error`     |
 | `BODY_LIMIT_BYTES`          | all                 | no     | Fastify payload limit                             |

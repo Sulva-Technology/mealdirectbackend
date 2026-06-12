@@ -5,6 +5,7 @@ import { ClassSerializerInterceptor, type INestApplication } from '@nestjs/commo
 import { Reflector } from '@nestjs/core';
 import { FastifyAdapter, type NestFastifyApplication } from '@nestjs/platform-fastify';
 import { NestFactory } from '@nestjs/core';
+import type { FastifyInstance } from 'fastify';
 
 import { AppModule } from './app.module.js';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter.js';
@@ -30,6 +31,28 @@ function configureGlobals(app: INestApplication): void {
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 }
 
+function configureRawJsonParser(fastify: FastifyInstance): void {
+  if (fastify.hasContentTypeParser('application/json')) {
+    fastify.removeContentTypeParser('application/json');
+  }
+
+  fastify.addContentTypeParser('application/json', { parseAs: 'string' }, (request, body, done) => {
+    const rawBody = typeof body === 'string' ? body : body.toString('utf8');
+    request.rawBody = rawBody;
+
+    if (rawBody.trim().length === 0) {
+      done(null, {});
+      return;
+    }
+
+    try {
+      done(null, JSON.parse(rawBody) as unknown);
+    } catch (error) {
+      done(error instanceof Error ? error : new Error('Invalid JSON body'), undefined);
+    }
+  });
+}
+
 export async function createApp(options: CreateAppOptions = {}): Promise<NestFastifyApplication> {
   const env = options.env;
   const adapter = new FastifyAdapter({
@@ -40,6 +63,7 @@ export async function createApp(options: CreateAppOptions = {}): Promise<NestFas
 
   const app = await NestFactory.create<NestFastifyApplication>(AppModule, adapter, {
     abortOnError: false,
+    bodyParser: false,
     bufferLogs: true,
     logger: false
   });
@@ -68,6 +92,8 @@ export async function createApp(options: CreateAppOptions = {}): Promise<NestFas
   });
 
   const fastify = app.getHttpAdapter().getInstance();
+  configureRawJsonParser(fastify);
+
   fastify.addHook('onRequest', (request, reply, done) => {
     attachRequestId(request, reply, config.REQUEST_ID_HEADER);
     request.traceId = extractTraceId(request, config.TRACE_ID_HEADER);
