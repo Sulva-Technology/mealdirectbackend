@@ -5,14 +5,8 @@
       "get": {
         "operationId": "HealthController_live",
         "parameters": [],
-        "responses": {
-          "200": {
-            "description": "The API process is running."
-          }
-        },
-        "tags": [
-          "health"
-        ]
+        "responses": { "200": { "description": "The API process is running." } },
+        "tags": ["health"]
       }
     },
     "/v1/health/ready": {
@@ -20,16 +14,10 @@
         "operationId": "HealthController_ready",
         "parameters": [],
         "responses": {
-          "200": {
-            "description": "The API is ready to serve traffic."
-          },
-          "503": {
-            "description": "A required dependency is unavailable."
-          }
+          "200": { "description": "The API is ready to serve traffic." },
+          "503": { "description": "A required dependency is unavailable." }
         },
-        "tags": [
-          "health"
-        ]
+        "tags": ["health"]
       }
     },
     "/v1/operations/status": {
@@ -37,21 +25,11 @@
         "operationId": "OperationsController_status",
         "parameters": [],
         "responses": {
-          "200": {
-            "description": "Internal operational status for authorized administrators."
-          },
-          "401": {
-            "description": "Operations token missing or invalid."
-          }
+          "200": { "description": "Internal operational status for authorized administrators." },
+          "401": { "description": "Operations token missing or invalid." }
         },
-        "security": [
-          {
-            "operationsToken": []
-          }
-        ],
-        "tags": [
-          "operations"
-        ]
+        "security": [{ "operationsToken": [] }],
+        "tags": ["operations"]
       }
     },
     "/v1/auth/me": {
@@ -59,21 +37,11 @@
         "operationId": "AuthController_me",
         "parameters": [],
         "responses": {
-          "200": {
-            "description": "The authenticated Meal Direct actor context."
-          },
-          "401": {
-            "description": "Missing, invalid, or expired Supabase JWT."
-          }
+          "200": { "description": "The authenticated Meal Direct actor context." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
         },
-        "security": [
-          {
-            "supabaseAuth": []
-          }
-        ],
-        "tags": [
-          "auth"
-        ]
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["auth"]
       }
     },
     "/v1/orders": {
@@ -81,18 +49,10 @@
         "operationId": "OrdersController_createOrder",
         "parameters": [],
         "responses": {
-          "201": {
-            "description": "Order was created idempotently and inventory was reserved."
-          }
+          "201": { "description": "Order was created idempotently and inventory was reserved." }
         },
-        "security": [
-          {
-            "supabaseAuth": []
-          }
-        ],
-        "tags": [
-          "orders"
-        ]
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["orders"]
       }
     },
     "/v1/payments/webhooks/paystack": {
@@ -100,16 +60,10 @@
         "operationId": "PaystackWebhookController_handlePaystackWebhook",
         "parameters": [],
         "responses": {
-          "202": {
-            "description": "Paystack webhook was verified and accepted idempotently."
-          },
-          "401": {
-            "description": "Missing or invalid Paystack signature."
-          }
+          "202": { "description": "Paystack webhook was verified and accepted idempotently." },
+          "401": { "description": "Missing or invalid Paystack signature." }
         },
-        "tags": [
-          "payments"
-        ]
+        "tags": ["payments"]
       }
     },
     "/v1/settlements/vendors/{vendorId}/daily": {
@@ -117,18 +71,10 @@
         "operationId": "SettlementsController_generateVendorDailySettlement",
         "parameters": [],
         "responses": {
-          "201": {
-            "description": "Vendor daily settlement was generated idempotently."
-          }
+          "201": { "description": "Vendor daily settlement was generated idempotently." }
         },
-        "security": [
-          {
-            "supabaseAuth": []
-          }
-        ],
-        "tags": [
-          "settlements"
-        ]
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["settlements"]
       }
     },
     "/v1/settlements/riders/{riderId}/daily": {
@@ -136,18 +82,10 @@
         "operationId": "SettlementsController_generateRiderDailySettlement",
         "parameters": [],
         "responses": {
-          "201": {
-            "description": "Rider daily settlement was generated idempotently."
-          }
+          "201": { "description": "Rider daily settlement was generated idempotently." }
         },
-        "security": [
-          {
-            "supabaseAuth": []
-          }
-        ],
-        "tags": [
-          "settlements"
-        ]
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["settlements"]
       }
     }
   },

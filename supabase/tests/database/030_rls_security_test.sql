@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(14);
+select plan(15);
 
 select ok(
   (
@@ -18,6 +18,7 @@ set local role anon;
 select throws_ok(
   $$ select count(*) from public.profiles $$,
   '42501',
+  null::text,
   'anonymous users cannot read profiles'
 );
 reset role;
@@ -50,12 +51,14 @@ select throws_ok(
   $$ insert into public.admin_memberships (user_id, role)
      values (auth.uid(), 'super_admin') $$,
   '42501',
+  null::text,
   'customer cannot grant themselves an admin role'
 );
 
 select throws_ok(
   $$ select count(*) from public.vendor_payout_accounts $$,
   '42501',
+  null::text,
   'authenticated users cannot directly read vendor payout accounts'
 );
 reset role;
@@ -141,6 +144,7 @@ select throws_ok(
      set metadata = '{"changed":true}'::jsonb
      where id = 'f1111111-1111-1111-1111-111111111111' $$,
   '23000',
+  null::text,
   'audit logs cannot be mutated even by ordinary SQL updates'
 );
 
@@ -149,6 +153,7 @@ select throws_ok(
      set amount_kobo = amount_kobo + 1
      where settlement_id = 'e1111111-1111-1111-1111-111111111111' $$,
   '23000',
+  null::text,
   'settlement lines are append-only financial history'
 );
 

@@ -23,6 +23,7 @@ select throws_ok(
   $$ insert into public.campus_locations (campus_id, zone_id, name, slug, type)
      values ('11111111-1111-1111-1111-111111111111', '21111111-1111-1111-1111-111111111111', 'Invalid Park', 'invalid-park', 'park'::public.location_type) $$,
   '22P02',
+  null::text,
   'invalid location types are rejected'
 );
 
@@ -30,6 +31,7 @@ select throws_ok(
   $$ insert into public.campus_zones (campus_id, name, code)
      values ('11111111-1111-1111-1111-111111111111', 'Duplicate Zone A', 'ZONE_A') $$,
   '23505',
+  null::text,
   'duplicate zone codes are rejected per campus'
 );
 
@@ -37,6 +39,7 @@ select throws_ok(
   $$ insert into public.admin_memberships (user_id, role)
      values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa4', 'campus_admin') $$,
   '23514',
+  null::text,
   'campus admin requires a campus'
 );
 

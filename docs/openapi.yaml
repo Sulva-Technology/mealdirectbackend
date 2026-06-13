@@ -5,7 +5,7 @@ paths:
       operationId: HealthController_live
       parameters: []
       responses:
-        "200":
+        '200':
           description: The API process is running.
       tags: &a1
         - health
@@ -14,9 +14,9 @@ paths:
       operationId: HealthController_ready
       parameters: []
       responses:
-        "200":
+        '200':
           description: The API is ready to serve traffic.
-        "503":
+        '503':
           description: A required dependency is unavailable.
       tags: *a1
   /v1/operations/status:
@@ -24,9 +24,9 @@ paths:
       operationId: OperationsController_status
       parameters: []
       responses:
-        "200":
+        '200':
           description: Internal operational status for authorized administrators.
-        "401":
+        '401':
           description: Operations token missing or invalid.
       security:
         - operationsToken: []
@@ -37,9 +37,9 @@ paths:
       operationId: AuthController_me
       parameters: []
       responses:
-        "200":
+        '200':
           description: The authenticated Meal Direct actor context.
-        "401":
+        '401':
           description: Missing, invalid, or expired Supabase JWT.
       security:
         - supabaseAuth: []
@@ -50,7 +50,7 @@ paths:
       operationId: OrdersController_createOrder
       parameters: []
       responses:
-        "201":
+        '201':
           description: Order was created idempotently and inventory was reserved.
       security:
         - supabaseAuth: []
@@ -61,9 +61,9 @@ paths:
       operationId: PaystackWebhookController_handlePaystackWebhook
       parameters: []
       responses:
-        "202":
+        '202':
           description: Paystack webhook was verified and accepted idempotently.
-        "401":
+        '401':
           description: Missing or invalid Paystack signature.
       tags:
         - payments
@@ -72,7 +72,7 @@ paths:
       operationId: SettlementsController_generateVendorDailySettlement
       parameters: []
       responses:
-        "201":
+        '201':
           description: Vendor daily settlement was generated idempotently.
       security: &a2
         - supabaseAuth: []
@@ -83,7 +83,7 @@ paths:
       operationId: SettlementsController_generateRiderDailySettlement
       parameters: []
       responses:
-        "201":
+        '201':
           description: Rider daily settlement was generated idempotently.
       security: *a2
       tags: *a3

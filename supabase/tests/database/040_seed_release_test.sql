@@ -92,6 +92,7 @@ select throws_ok(
        5
      ) $$,
   '23514',
+  null::text,
   'unconfirmed orders cannot be reviewed'
 );
 

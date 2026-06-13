@@ -23,6 +23,7 @@ select throws_ok(
        0
      ) $$,
   '23505',
+  null::text,
   'duplicate inventory per item/date/slot is rejected'
 );
 
@@ -40,6 +41,7 @@ select throws_ok(
        -1
      ) $$,
   '23514',
+  null::text,
   'negative inventory is rejected'
 );
 
@@ -61,6 +63,7 @@ select throws_ok(
        1
      ) $$,
   '23514',
+  null::text,
   'reserved plus sold cannot exceed effective quantity'
 );
 
@@ -123,6 +126,7 @@ select throws_ok(
      set reason = 'edited'
      where inventory_id = '71111111-1111-1111-1111-111111111111' $$,
   '23000',
+  null::text,
   'inventory adjustment history is append-only'
 );
 

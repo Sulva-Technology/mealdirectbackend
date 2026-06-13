@@ -5,6 +5,23 @@ import { Pool } from 'pg';
 import { EnvService } from '../config/env.service.js';
 import type { DatabaseSchema } from './database.types.js';
 
+type DatabaseSslConfigInput = {
+  DATABASE_SSL: boolean;
+  DATABASE_SSL_REJECT_UNAUTHORIZED: boolean;
+};
+
+export function createPostgresSslConfig(
+  config: DatabaseSslConfigInput
+): false | { rejectUnauthorized: boolean } {
+  if (!config.DATABASE_SSL) {
+    return false;
+  }
+
+  return {
+    rejectUnauthorized: config.DATABASE_SSL_REJECT_UNAUTHORIZED
+  };
+}
+
 @Injectable()
 export class DatabaseService implements OnModuleDestroy {
   private readonly pool: Pool;
@@ -15,7 +32,7 @@ export class DatabaseService implements OnModuleDestroy {
     this.pool = new Pool({
       connectionString: config.DATABASE_URL,
       max: config.DATABASE_POOL_MAX,
-      ssl: config.DATABASE_SSL ? { rejectUnauthorized: true } : false
+      ssl: createPostgresSslConfig(config)
     });
 
     this.db = new Kysely<DatabaseSchema>({

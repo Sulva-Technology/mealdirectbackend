@@ -54,6 +54,7 @@ select throws_ok(
      set quantity = quantity + 1
      where order_id = '81111111-1111-1111-1111-111111111112' $$,
   '23000',
+  null::text,
   'paid order items cannot be changed directly'
 );
 
@@ -62,6 +63,7 @@ select throws_ok(
      set total_kobo = total_kobo + 100
      where id = '81111111-1111-1111-1111-111111111112' $$,
   '23000',
+  null::text,
   'paid order financial snapshots cannot change'
 );
 
@@ -79,6 +81,7 @@ select throws_ok(
        45000
      ) $$,
   '23505',
+  null::text,
   'duplicate payment references are rejected'
 );
 
@@ -115,6 +118,7 @@ select throws_ok(
        'invalid regression'
      ) $$,
   '23514',
+  null::text,
   'invalid order status transitions are rejected'
 );
 

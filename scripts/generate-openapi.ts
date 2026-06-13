@@ -4,6 +4,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import { stringify } from 'yaml';
+import { format, resolveConfig } from 'prettier';
 
 import { createApp } from '../src/app.factory.js';
 import { createOpenApiDocument } from '../src/openapi.js';
@@ -26,10 +27,18 @@ async function generateOpenApi(): Promise<void> {
 
   const jsonPath = join(process.cwd(), 'docs', 'openapi.json');
   const yamlPath = join(process.cwd(), 'docs', 'openapi.yaml');
+  const jsonPrettierOptions = (await resolveConfig(jsonPath)) ?? {};
+  const yamlPrettierOptions = (await resolveConfig(yamlPath)) ?? {};
 
   await mkdir(dirname(jsonPath), { recursive: true });
-  await writeFile(jsonPath, `${JSON.stringify(document, null, 2)}\n`);
-  await writeFile(yamlPath, stringify(document));
+  await writeFile(
+    jsonPath,
+    await format(JSON.stringify(document), { ...jsonPrettierOptions, parser: 'json' })
+  );
+  await writeFile(
+    yamlPath,
+    await format(stringify(document), { ...yamlPrettierOptions, parser: 'yaml' })
+  );
   await app.close();
 }
 

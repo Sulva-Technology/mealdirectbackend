@@ -35,6 +35,7 @@ select throws_ok(
        'hash-four-spoon'
      ) $$,
   '23514',
+  null::text,
   'four spoon units are rejected'
 );
 

@@ -81,7 +81,7 @@ export async function createApp(options: CreateAppOptions = {}): Promise<NestFas
         callback(null, true);
         return;
       }
-      callback(new Error('Origin is not allowed by CORS'), false);
+      callback(null, false);
     },
     credentials: true
   });

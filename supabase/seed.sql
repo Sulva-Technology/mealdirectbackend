@@ -246,14 +246,15 @@ set quantity_total = excluded.quantity_total,
     active = excluded.active;
 
 insert into public.menu_item_inventory (menu_item_id, service_date, delivery_slot_id, quantity_total, active)
-select mi.id, d.service_date, misa.delivery_slot_id, 25, true
+select distinct mi.id, d.service_date, misa.delivery_slot_id, 25, true
 from public.menu_items mi
 join public.menu_item_slot_availability misa on misa.menu_item_id = mi.id
 cross join lateral (
   select current_date + n as service_date
   from generate_series(1, 7) as n
 ) d
-where not (
+where misa.day_of_week = extract(dow from d.service_date)::integer
+  and not (
   mi.id = '61111111-1111-1111-1111-111111111111'
   and d.service_date = current_date + 1
   and misa.delivery_slot_id = '51111111-1111-1111-1111-111111111113'

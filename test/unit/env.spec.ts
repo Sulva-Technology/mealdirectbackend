@@ -17,7 +17,19 @@ describe('environment validation', () => {
 
     expect(env.NODE_ENV).toBe('test');
     expect(env.DATABASE_SSL).toBe(false);
+    expect(env.DATABASE_SSL_REJECT_UNAUTHORIZED).toBe(true);
     expect(env.CORS_ALLOWED_ORIGINS).toContain('https://user.mealdirect.com');
+  });
+
+  it('allows managed database poolers to opt out of SSL certificate verification', () => {
+    const env = parseEnvironment({
+      ...validEnv,
+      DATABASE_SSL: 'true',
+      DATABASE_SSL_REJECT_UNAUTHORIZED: 'false'
+    });
+
+    expect(env.DATABASE_SSL).toBe(true);
+    expect(env.DATABASE_SSL_REJECT_UNAUTHORIZED).toBe(false);
   });
 
   it('fails clearly when required database configuration is missing', () => {

@@ -73,4 +73,19 @@ describe('health endpoints', () => {
       requestId: 'test-missing-request'
     });
   });
+
+  it('does not treat disallowed CORS preflight as an internal server error', async () => {
+    const response = await app.inject({
+      method: 'OPTIONS',
+      url: '/v1/auth/me',
+      headers: {
+        origin: 'https://evil.example',
+        'access-control-request-method': 'GET',
+        'access-control-request-headers': 'authorization'
+      }
+    });
+
+    expect(response.statusCode).toBe(404);
+    expect(response.headers['access-control-allow-origin']).toBeUndefined();
+  });
 });

@@ -7,6 +7,7 @@ process.env.PORT = '0';
 process.env.API_PREFIX = 'v1';
 process.env.DATABASE_URL = 'postgresql://postgres:postgres@127.0.0.1:1/postgres';
 process.env.DATABASE_SSL = 'false';
+process.env.DATABASE_SSL_REJECT_UNAUTHORIZED = 'true';
 process.env.DATABASE_POOL_MAX = '1';
 process.env.SUPABASE_URL = 'http://127.0.0.1:54321';
 process.env.SUPABASE_JWT_ISSUER = 'http://127.0.0.1:54321/auth/v1';

@@ -51,6 +51,7 @@ const envSchema = z
       .default('v1'),
     DATABASE_URL: z.url(),
     DATABASE_SSL: booleanFromString.default(false),
+    DATABASE_SSL_REJECT_UNAUTHORIZED: booleanFromString.default(true),
     DATABASE_POOL_MAX: z.coerce.number().int().positive().default(10),
     SUPABASE_URL: z.url(),
     SUPABASE_JWT_ISSUER: z.url(),

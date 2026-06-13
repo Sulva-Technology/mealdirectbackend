@@ -16,6 +16,8 @@ services:
         sync: false
       - key: DATABASE_SSL
         value: true
+      - key: DATABASE_SSL_REJECT_UNAUTHORIZED
+        value: false
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_JWT_ISSUER
@@ -47,6 +49,8 @@ services:
         sync: false
       - key: DATABASE_SSL
         value: true
+      - key: DATABASE_SSL_REJECT_UNAUTHORIZED
+        value: false
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_JWT_ISSUER
@@ -72,6 +76,8 @@ services:
         sync: false
       - key: DATABASE_SSL
         value: true
+      - key: DATABASE_SSL_REJECT_UNAUTHORIZED
+        value: false
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_JWT_ISSUER
@@ -93,6 +99,8 @@ services:
         sync: false
       - key: DATABASE_SSL
         value: true
+      - key: DATABASE_SSL_REJECT_UNAUTHORIZED
+        value: false
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_JWT_ISSUER

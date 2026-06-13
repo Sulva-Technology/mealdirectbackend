@@ -1,10 +1,10 @@
 begin;
 
-create unique index vendor_slot_availability_unique_effective
+create unique index if not exists vendor_slot_availability_unique_effective
 on public.vendor_slot_availability (vendor_id, delivery_slot_id, day_of_week, valid_from, valid_until)
 nulls not distinct;
 
-create unique index menu_item_slot_availability_unique_effective
+create unique index if not exists menu_item_slot_availability_unique_effective
 on public.menu_item_slot_availability (menu_item_id, delivery_slot_id, day_of_week, valid_from, valid_until)
 nulls not distinct;
 
