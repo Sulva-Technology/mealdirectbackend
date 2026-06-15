@@ -352,6 +352,51 @@ paths:
         '403': *a7
       security: *a8
       tags: *a9
+  /v1/catalog/vendors:
+    get:
+      operationId: CatalogController_listVendors
+      parameters: []
+      responses:
+        '200':
+          description: Approved active vendors available for the selected campus/date/slot.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogVendorListEnvelopeDto'
+        '400':
+          description: Invalid catalog filters.
+      tags: &a10
+        - catalog
+  /v1/catalog/vendors/{vendorId}:
+    get:
+      operationId: CatalogController_getVendor
+      parameters: []
+      responses:
+        '200':
+          description: Approved active vendor detail.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogVendorEnvelopeDto'
+        '400':
+          description: Invalid vendor ID.
+        '404':
+          description: Vendor not found or unavailable.
+      tags: *a10
+  /v1/catalog/vendors/{vendorId}/menu:
+    get:
+      operationId: CatalogController_listVendorMenu
+      parameters: []
+      responses:
+        '200':
+          description: Approved active menu items for the vendor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MenuItemListEnvelopeDto'
+        '400':
+          description: Invalid vendor ID or menu filters.
+      tags: *a10
   /v1/orders:
     post:
       operationId: OrdersController_createOrder
@@ -381,9 +426,9 @@ paths:
       responses:
         '201':
           description: Vendor daily settlement was generated idempotently.
-      security: &a10
+      security: &a11
         - supabaseAuth: []
-      tags: &a11
+      tags: &a12
         - settlements
   /v1/settlements/riders/{riderId}/daily:
     post:
@@ -392,8 +437,8 @@ paths:
       responses:
         '201':
           description: Rider daily settlement was generated idempotently.
-      security: *a10
-      tags: *a11
+      security: *a11
+      tags: *a12
 info:
   title: Meal Direct API
   description: Stable REST API for Meal Direct web and future mobile clients.
@@ -433,7 +478,7 @@ components:
           format: uuid
         role:
           type: string
-          enum: &a12
+          enum: &a13
             - customer
             - vendor
             - rider
@@ -634,7 +679,7 @@ components:
           type: array
           items:
             type: string
-            enum: *a12
+            enum: *a13
         campuses:
           type: array
           items:
@@ -894,6 +939,105 @@ components:
       properties:
         data:
           $ref: '#/components/schemas/DeliverySlotRecordDto'
+      required:
+        - data
+    CatalogVendorDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        campusId:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+          nullable: true
+        logoUrl:
+          type: string
+          nullable: true
+        kitchenLocation:
+          type: string
+          nullable: true
+        defaultDeliveryMode:
+          type: string
+          enum:
+            - meal_direct_rider
+            - vendor_delivery
+      required:
+        - id
+        - campusId
+        - displayName
+        - slug
+        - defaultDeliveryMode
+    CatalogVendorListEnvelopeDto:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/CatalogVendorDto'
+      required:
+        - data
+    CatalogVendorEnvelopeDto:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/CatalogVendorDto'
+      required:
+        - data
+    MenuItemDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        vendorId:
+          type: string
+          format: uuid
+        categoryId:
+          type: string
+          format: uuid
+          nullable: true
+        categoryName:
+          type: string
+          nullable: true
+        unitTypeId:
+          type: string
+          format: uuid
+        unitCode:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        imageUrl:
+          type: string
+          nullable: true
+        priceKobo:
+          type: number
+        remainingQuantity:
+          type: number
+          nullable: true
+      required:
+        - id
+        - vendorId
+        - unitTypeId
+        - unitCode
+        - name
+        - priceKobo
+    MenuItemListEnvelopeDto:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/MenuItemDto'
       required:
         - data
     CursorPaginationMetaDto:
