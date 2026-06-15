@@ -11,8 +11,6 @@ import type {
   PaystackVerifyResult
 } from './payments.types.js';
 
-const paystackBaseUrl = 'https://api.paystack.co';
-
 type PaystackEnvelope = {
   status?: boolean;
   message?: string;
@@ -158,7 +156,7 @@ export class PaystackClient implements PaystackClientContract {
       });
     }
 
-    const response = await fetch(`${paystackBaseUrl}${path}`, {
+    const response = await fetch(`${this.env.get('PAYSTACK_BASE_URL')}${path}`, {
       ...init,
       headers: {
         authorization: `Bearer ${secret}`,

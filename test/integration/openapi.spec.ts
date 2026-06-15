@@ -162,4 +162,22 @@ describe('OpenAPI contract foundation', () => {
     expect(document.paths['/v1/vendor/settlements/{id}']?.get).toBeDefined();
     expect(document.paths['/v1/vendor/reviews']?.get).toBeDefined();
   });
+
+  it('documents rider profile, assignment, delivery, earnings, and settlement endpoints', () => {
+    const document = createOpenApiDocument(app);
+
+    expect(document.paths['/v1/rider/profile']?.get).toBeDefined();
+    expect(document.paths['/v1/rider/profile']?.patch).toBeDefined();
+    expect(document.paths['/v1/rider/assignments']?.get).toBeDefined();
+    expect(document.paths['/v1/rider/assignments/{assignmentId}']?.get).toBeDefined();
+    expect(document.paths['/v1/rider/assignments/{assignmentId}/accept']?.post).toBeDefined();
+    expect(document.paths['/v1/rider/assignments/{assignmentId}/picked-up']?.post).toBeDefined();
+    expect(document.paths['/v1/rider/orders/{orderId}']?.get).toBeDefined();
+    expect(document.paths['/v1/rider/orders/{orderId}/out-for-delivery']?.post).toBeDefined();
+    expect(document.paths['/v1/rider/orders/{orderId}/delivered']?.post).toBeDefined();
+    expect(document.paths['/v1/rider/orders/{orderId}/issues']?.post).toBeDefined();
+    expect(document.paths['/v1/rider/earnings']?.get).toBeDefined();
+    expect(document.paths['/v1/rider/settlements']?.get).toBeDefined();
+    expect(document.paths['/v1/rider/settlements/{id}']?.get).toBeDefined();
+  });
 });

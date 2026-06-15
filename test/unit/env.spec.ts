@@ -19,6 +19,7 @@ describe('environment validation', () => {
     expect(env.DATABASE_SSL).toBe(false);
     expect(env.DATABASE_SSL_REJECT_UNAUTHORIZED).toBe(true);
     expect(env.CORS_ALLOWED_ORIGINS).toContain('https://user.mealdirect.com');
+    expect(env.PAYSTACK_BASE_URL).toBe('https://api.paystack.co');
   });
 
   it('allows managed database poolers to opt out of SSL certificate verification', () => {
@@ -47,5 +48,28 @@ describe('environment validation', () => {
     };
 
     expect(() => parseEnvironment(invalidEnv)).toThrow(/DATABASE_SSL must be true/);
+  });
+
+  it('allows Paystack base URL override outside production for fake provider tests', () => {
+    const env = parseEnvironment({
+      ...validEnv,
+      PAYSTACK_BASE_URL: 'http://127.0.0.1:59999'
+    });
+
+    expect(env.PAYSTACK_BASE_URL).toBe('http://127.0.0.1:59999');
+  });
+
+  it('requires the official Paystack base URL in production', () => {
+    const invalidEnv = {
+      ...validEnv,
+      NODE_ENV: 'production',
+      DATABASE_SSL: 'true',
+      INTERNAL_OPERATIONS_TOKEN: 'prod-operations-token',
+      PAYSTACK_BASE_URL: 'http://127.0.0.1:59999',
+      PAYSTACK_SECRET_KEY: 'prod-paystack-secret',
+      SUPABASE_JWT_SECRET: 'prod-jwt-secret'
+    };
+
+    expect(() => parseEnvironment(invalidEnv)).toThrow(/PAYSTACK_BASE_URL/);
   });
 });

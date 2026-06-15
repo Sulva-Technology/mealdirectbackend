@@ -1459,6 +1459,329 @@
         "tags": ["vendor-batches"]
       }
     },
+    "/v1/rider/profile": {
+      "get": {
+        "operationId": "RidersController_getProfile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Authenticated rider profile.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RiderProfileEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Verified active rider access is required." },
+          "404": { "description": "Rider profile not found." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["rider"]
+      },
+      "patch": {
+        "operationId": "RidersController_updateProfile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Updated rider profile.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RiderProfileEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid profile input." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Verified active rider access is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["rider"]
+      }
+    },
+    "/v1/rider/assignments": {
+      "get": {
+        "operationId": "RidersController_listAssignments",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Cursor-paginated assignments for the authenticated rider.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RiderAssignmentListEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid filters or cursor." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Verified active rider access is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["rider"]
+      }
+    },
+    "/v1/rider/assignments/{assignmentId}": {
+      "get": {
+        "operationId": "RidersController_getAssignment",
+        "parameters": [
+          {
+            "name": "assignmentId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Assignment detail with order manifest.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RiderAssignmentDetailEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Verified active rider access is required." },
+          "404": { "description": "Assignment not found for this rider." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["rider"]
+      }
+    },
+    "/v1/rider/assignments/{assignmentId}/accept": {
+      "post": {
+        "operationId": "RidersController_acceptAssignment",
+        "parameters": [
+          {
+            "name": "assignmentId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Assignment accepted.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RiderAssignmentDetailEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Verified active rider access is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["rider"]
+      }
+    },
+    "/v1/rider/assignments/{assignmentId}/picked-up": {
+      "post": {
+        "operationId": "RidersController_markAssignmentPickedUp",
+        "parameters": [
+          {
+            "name": "assignmentId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Assignment marked picked up.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RiderAssignmentDetailEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Verified active rider access is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["rider"]
+      }
+    },
+    "/v1/rider/orders/{orderId}": {
+      "get": {
+        "operationId": "RidersController_getOrder",
+        "parameters": [
+          {
+            "name": "orderId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Delivery order detail for an assigned rider.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RiderOrderDetailEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Verified active rider access is required." },
+          "404": { "description": "Order not found for this rider." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["rider"]
+      }
+    },
+    "/v1/rider/orders/{orderId}/out-for-delivery": {
+      "post": {
+        "operationId": "RidersController_markOrderOutForDelivery",
+        "parameters": [
+          {
+            "name": "orderId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order marked out for delivery.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RiderOrderDetailEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Verified active rider access is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["rider"]
+      }
+    },
+    "/v1/rider/orders/{orderId}/delivered": {
+      "post": {
+        "operationId": "RidersController_markOrderDelivered",
+        "parameters": [
+          {
+            "name": "orderId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order marked delivered.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RiderOrderDetailEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Verified active rider access is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["rider"]
+      }
+    },
+    "/v1/rider/orders/{orderId}/issues": {
+      "post": {
+        "operationId": "RidersController_createIssue",
+        "parameters": [
+          {
+            "name": "orderId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Delivery issue recorded.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RiderIssueEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid issue payload." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Verified active rider access is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["rider"]
+      }
+    },
+    "/v1/rider/earnings": {
+      "get": {
+        "operationId": "RidersController_getEarnings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Rider earnings grouped by assignment batch.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RiderEarningsEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid earnings date range." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Verified active rider access is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["rider"]
+      }
+    },
+    "/v1/rider/settlements": {
+      "get": {
+        "operationId": "RidersController_listSettlements",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Cursor-paginated rider settlement list.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RiderSettlementListEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid settlement filters or cursor." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Verified active rider access is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["rider"]
+      }
+    },
+    "/v1/rider/settlements/{id}": {
+      "get": {
+        "operationId": "RidersController_getSettlement",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rider settlement detail with settlement lines.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RiderSettlementDetailEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Verified active rider access is required." },
+          "404": { "description": "Settlement not found for this rider." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["rider"]
+      }
+    },
     "/v1/settlements/vendors/{vendorId}/daily": {
       "post": {
         "operationId": "SettlementsController_generateVendorDailySettlement",
@@ -1626,6 +1949,735 @@
         "tags": ["escalations"]
       }
     },
+    "/v1/admin/session": {
+      "get": {
+        "operationId": "AdminController_getSession",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Authenticated admin session and scope." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/dashboard": {
+      "get": {
+        "operationId": "AdminController_getDashboard",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Admin operational dashboard for a service date." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/orders": {
+      "get": {
+        "operationId": "AdminController_listOrders",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/orders/{orderId}": {
+      "get": {
+        "operationId": "AdminController_getOrder",
+        "parameters": [
+          {
+            "name": "orderId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/orders/{orderId}/cancel": {
+      "post": {
+        "operationId": "AdminController_cancelOrder",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/orders/{orderId}/status-transition": {
+      "post": {
+        "operationId": "AdminController_transitionOrder",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/batches": {
+      "get": {
+        "operationId": "AdminController_listBatches",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/batches/{batchId}": {
+      "get": {
+        "operationId": "AdminController_getBatch",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/batches/{batchId}/close": {
+      "post": {
+        "operationId": "AdminController_closeBatch",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/batches/{batchId}/assign-rider": {
+      "post": {
+        "operationId": "AdminController_assignRider",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/batches/{batchId}/assign-vendor-delivery": {
+      "post": {
+        "operationId": "AdminController_assignVendorDelivery",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/batches/{batchId}/reassign-rider": {
+      "post": {
+        "operationId": "AdminController_reassignRider",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/batches/{batchId}/cancel-assignment": {
+      "post": {
+        "operationId": "AdminController_cancelAssignment",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/vendors": {
+      "get": {
+        "operationId": "AdminController_listVendors",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      },
+      "post": {
+        "operationId": "AdminController_createVendor",
+        "parameters": [],
+        "responses": {
+          "201": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/vendors/{vendorId}": {
+      "get": {
+        "operationId": "AdminController_getVendor",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      },
+      "patch": {
+        "operationId": "AdminController_updateVendor",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/vendors/{vendorId}/approve": {
+      "post": {
+        "operationId": "AdminController_approveVendor",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/vendors/{vendorId}/suspend": {
+      "post": {
+        "operationId": "AdminController_suspendVendor",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/vendors/{vendorId}/activate": {
+      "post": {
+        "operationId": "AdminController_activateVendor",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/vendors/{vendorId}/users": {
+      "post": {
+        "operationId": "AdminController_addVendorUser",
+        "parameters": [],
+        "responses": {
+          "201": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/vendors/{vendorId}/performance": {
+      "get": {
+        "operationId": "AdminController_getVendorPerformance",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/riders": {
+      "get": {
+        "operationId": "AdminController_listRiders",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/riders/{riderId}": {
+      "get": {
+        "operationId": "AdminController_getRider",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/riders/{riderId}/assignments": {
+      "get": {
+        "operationId": "AdminController_getRiderAssignments",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/riders/{riderId}/settlements": {
+      "get": {
+        "operationId": "AdminController_getRiderSettlements",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/riders/{riderId}/verify": {
+      "post": {
+        "operationId": "AdminController_verifyRider",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/riders/{riderId}/suspend": {
+      "post": {
+        "operationId": "AdminController_suspendRider",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/riders/{riderId}/activate": {
+      "post": {
+        "operationId": "AdminController_activateRider",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/inventory": {
+      "get": {
+        "operationId": "AdminController_listInventory",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/inventory/{inventoryId}/adjustments": {
+      "post": {
+        "operationId": "AdminController_adjustInventory",
+        "parameters": [],
+        "responses": {
+          "201": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/escalations": {
+      "get": {
+        "operationId": "AdminController_listEscalations",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/escalations/{id}": {
+      "get": {
+        "operationId": "AdminController_getEscalation",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/escalations/{id}/assign": {
+      "post": {
+        "operationId": "AdminController_assignEscalation",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/escalations/{id}/request-evidence": {
+      "post": {
+        "operationId": "AdminController_requestEvidence",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/escalations/{id}/resolve": {
+      "post": {
+        "operationId": "AdminController_resolveEscalation",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/escalations/{id}/refunds": {
+      "post": {
+        "operationId": "AdminController_refundEscalation",
+        "parameters": [],
+        "responses": {
+          "201": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/settlements": {
+      "get": {
+        "operationId": "AdminController_listSettlements",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/settlements/preview": {
+      "post": {
+        "operationId": "AdminController_previewSettlement",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/settlements/generate": {
+      "post": {
+        "operationId": "AdminController_generateSettlement",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/settlements/{id}": {
+      "get": {
+        "operationId": "AdminController_getSettlement",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/settlements/{id}/approve": {
+      "post": {
+        "operationId": "AdminController_approveSettlement",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/settlements/{id}/mark-paid": {
+      "post": {
+        "operationId": "AdminController_markSettlementPaid",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/settlements/{id}/adjustments": {
+      "post": {
+        "operationId": "AdminController_adjustSettlement",
+        "parameters": [],
+        "responses": {
+          "201": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/reviews": {
+      "get": {
+        "operationId": "AdminController_listReviews",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/reviews/{reviewId}/moderate": {
+      "post": {
+        "operationId": "AdminController_moderateReview",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/users": {
+      "get": {
+        "operationId": "AdminController_listUsers",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/users/{userId}": {
+      "get": {
+        "operationId": "AdminController_getUser",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/users/{userId}/suspend": {
+      "post": {
+        "operationId": "AdminController_suspendUser",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/users/{userId}/activate": {
+      "post": {
+        "operationId": "AdminController_activateUser",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/admin-memberships": {
+      "get": {
+        "operationId": "AdminController_listAdminMemberships",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      },
+      "post": {
+        "operationId": "AdminController_createAdminMembership",
+        "parameters": [],
+        "responses": {
+          "201": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/admin-memberships/{id}/revoke": {
+      "post": {
+        "operationId": "AdminController_revokeAdminMembership",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/admin-memberships/{id}/activate": {
+      "post": {
+        "operationId": "AdminController_activateAdminMembership",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/analytics": {
+      "get": {
+        "operationId": "AdminController_getAnalytics",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/audit-logs": {
+      "get": {
+        "operationId": "AdminController_listAuditLogs",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
     "/v1/notifications": {
       "get": {
         "operationId": "NotificationsController_listNotifications",
@@ -1724,6 +2776,45 @@
         },
         "security": [{ "supabaseAuth": [] }],
         "tags": ["notifications"]
+      }
+    },
+    "/v1/admin/system": {
+      "get": {
+        "operationId": "JobsController_getSystemSummary",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Worker and outbox operational summary." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-jobs"]
+      }
+    },
+    "/v1/admin/jobs/outbox": {
+      "get": {
+        "operationId": "JobsController_listOutboxEvents",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Outbox event list for admin operations." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-jobs"]
+      }
+    },
+    "/v1/admin/jobs/outbox/process": {
+      "post": {
+        "operationId": "JobsController_processOutboxEvents",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Claims currently available outbox events for a worker." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-jobs"]
       }
     }
   },
@@ -3020,6 +4111,393 @@
       "BatchDetailEnvelopeDto": {
         "type": "object",
         "properties": { "data": { "$ref": "#/components/schemas/BatchDetailDto" } },
+        "required": ["data"]
+      },
+      "RiderProfileEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/RiderProfileDto" } },
+        "required": ["data"]
+      },
+      "RiderAssignmentSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "batchId": { "type": "string", "format": "uuid" },
+          "riderId": { "type": "string", "format": "uuid" },
+          "vendorId": { "type": "string", "format": "uuid" },
+          "vendorDisplayName": { "type": "string" },
+          "vendorPhone": { "type": "string", "nullable": true },
+          "serviceDate": { "type": "string" },
+          "deliverySlotId": { "type": "string", "format": "uuid" },
+          "deliverySlotName": { "type": "string" },
+          "deliveryTime": { "type": "string" },
+          "zoneId": { "type": "string", "format": "uuid" },
+          "zoneName": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["accepted", "assigned", "cancelled", "completed", "picked_up"]
+          },
+          "batchStatus": { "type": "string" },
+          "orderCount": { "type": "number" },
+          "deliveryEarningsKobo": { "type": "number" },
+          "assignedAt": { "type": "string" },
+          "acceptedAt": { "type": "string", "nullable": true },
+          "pickedUpAt": { "type": "string", "nullable": true },
+          "completedAt": { "type": "string", "nullable": true }
+        },
+        "required": [
+          "id",
+          "batchId",
+          "riderId",
+          "vendorId",
+          "vendorDisplayName",
+          "serviceDate",
+          "deliverySlotId",
+          "deliverySlotName",
+          "deliveryTime",
+          "zoneId",
+          "zoneName",
+          "status",
+          "batchStatus",
+          "orderCount",
+          "deliveryEarningsKobo",
+          "assignedAt"
+        ]
+      },
+      "RiderAssignmentListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/RiderAssignmentSummaryDto" }
+          }
+        },
+        "required": ["data"]
+      },
+      "RiderAssignmentDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "batchId": { "type": "string", "format": "uuid" },
+          "riderId": { "type": "string", "format": "uuid" },
+          "vendorId": { "type": "string", "format": "uuid" },
+          "vendorDisplayName": { "type": "string" },
+          "vendorPhone": { "type": "string", "nullable": true },
+          "serviceDate": { "type": "string" },
+          "deliverySlotId": { "type": "string", "format": "uuid" },
+          "deliverySlotName": { "type": "string" },
+          "deliveryTime": { "type": "string" },
+          "zoneId": { "type": "string", "format": "uuid" },
+          "zoneName": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["accepted", "assigned", "cancelled", "completed", "picked_up"]
+          },
+          "batchStatus": { "type": "string" },
+          "orderCount": { "type": "number" },
+          "deliveryEarningsKobo": { "type": "number" },
+          "assignedAt": { "type": "string" },
+          "acceptedAt": { "type": "string", "nullable": true },
+          "pickedUpAt": { "type": "string", "nullable": true },
+          "completedAt": { "type": "string", "nullable": true },
+          "orders": { "type": "array", "items": { "$ref": "#/components/schemas/OrderDetailDto" } }
+        },
+        "required": [
+          "id",
+          "batchId",
+          "riderId",
+          "vendorId",
+          "vendorDisplayName",
+          "serviceDate",
+          "deliverySlotId",
+          "deliverySlotName",
+          "deliveryTime",
+          "zoneId",
+          "zoneName",
+          "status",
+          "batchStatus",
+          "orderCount",
+          "deliveryEarningsKobo",
+          "assignedAt",
+          "orders"
+        ]
+      },
+      "RiderAssignmentDetailEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/RiderAssignmentDetailDto" } },
+        "required": ["data"]
+      },
+      "RiderOrderDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "orderNumber": { "type": "string" },
+          "customerId": { "type": "string", "format": "uuid" },
+          "campusId": { "type": "string", "format": "uuid" },
+          "vendorId": { "type": "string", "format": "uuid" },
+          "vendorDisplayName": { "type": "string" },
+          "serviceDate": { "type": "string" },
+          "deliverySlotId": { "type": "string", "format": "uuid" },
+          "deliverySlotName": { "type": "string" },
+          "locationId": { "type": "string", "format": "uuid" },
+          "locationName": { "type": "string" },
+          "orderStatus": {
+            "type": "string",
+            "enum": [
+              "accepted",
+              "administratively_completed",
+              "cancelled",
+              "confirmed",
+              "delivered",
+              "expired",
+              "out_for_delivery",
+              "paid",
+              "pending_payment",
+              "preparing",
+              "ready",
+              "refunded"
+            ]
+          },
+          "deliveryMode": { "type": "string" },
+          "foodSubtotalKobo": { "type": "number" },
+          "deliveryFeeKobo": { "type": "number" },
+          "discountKobo": { "type": "number" },
+          "totalKobo": { "type": "number" },
+          "currency": { "type": "string" },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" },
+          "paidAt": { "type": "string", "nullable": true },
+          "deliveredAt": { "type": "string", "nullable": true },
+          "confirmedAt": { "type": "string", "nullable": true },
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/OrderItemDto" } },
+          "latestPayment": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [{ "$ref": "#/components/schemas/PaymentSnapshotDto" }]
+          },
+          "assignmentId": { "type": "string", "format": "uuid" },
+          "batchId": { "type": "string", "format": "uuid" },
+          "assignmentStatus": {
+            "type": "string",
+            "enum": ["accepted", "assigned", "cancelled", "completed", "picked_up"]
+          },
+          "customerDisplayName": { "type": "string", "nullable": true },
+          "customerPhone": { "type": "string", "nullable": true },
+          "deliveryInstructions": { "type": "string", "nullable": true },
+          "zoneName": { "type": "string" }
+        },
+        "required": [
+          "id",
+          "orderNumber",
+          "customerId",
+          "campusId",
+          "vendorId",
+          "vendorDisplayName",
+          "serviceDate",
+          "deliverySlotId",
+          "deliverySlotName",
+          "locationId",
+          "locationName",
+          "orderStatus",
+          "deliveryMode",
+          "foodSubtotalKobo",
+          "deliveryFeeKobo",
+          "discountKobo",
+          "totalKobo",
+          "currency",
+          "createdAt",
+          "updatedAt",
+          "items",
+          "assignmentId",
+          "batchId",
+          "assignmentStatus",
+          "zoneName"
+        ]
+      },
+      "RiderOrderDetailEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/RiderOrderDetailDto" } },
+        "required": ["data"]
+      },
+      "RiderIssueDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "orderId": { "type": "string", "format": "uuid" },
+          "category": { "type": "string" },
+          "description": { "type": "string" },
+          "status": { "type": "string" },
+          "openedAt": { "type": "string" }
+        },
+        "required": ["id", "orderId", "category", "description", "status", "openedAt"]
+      },
+      "RiderIssueEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/RiderIssueDto" } },
+        "required": ["data"]
+      },
+      "RiderEarningsBatchDto": {
+        "type": "object",
+        "properties": {
+          "assignmentId": { "type": "string", "format": "uuid" },
+          "batchId": { "type": "string", "format": "uuid" },
+          "serviceDate": { "type": "string" },
+          "vendorId": { "type": "string", "format": "uuid" },
+          "vendorDisplayName": { "type": "string" },
+          "deliveredOrderCount": { "type": "number" },
+          "confirmedOrderCount": { "type": "number" },
+          "pendingAmountKobo": { "type": "number" },
+          "settledAmountKobo": { "type": "number" },
+          "totalAmountKobo": { "type": "number" },
+          "settlementId": { "type": "string", "nullable": true },
+          "settlementStatus": {
+            "type": "string",
+            "enum": ["approved", "cancelled", "draft", "paid"],
+            "nullable": true
+          }
+        },
+        "required": [
+          "assignmentId",
+          "batchId",
+          "serviceDate",
+          "vendorId",
+          "vendorDisplayName",
+          "deliveredOrderCount",
+          "confirmedOrderCount",
+          "pendingAmountKobo",
+          "settledAmountKobo",
+          "totalAmountKobo"
+        ]
+      },
+      "RiderEarningsSummaryDto": {
+        "type": "object",
+        "properties": {
+          "riderId": { "type": "string", "format": "uuid" },
+          "dateFrom": { "type": "string", "nullable": true },
+          "dateTo": { "type": "string", "nullable": true },
+          "deliveredOrderCount": { "type": "number" },
+          "confirmedOrderCount": { "type": "number" },
+          "pendingAmountKobo": { "type": "number" },
+          "settledAmountKobo": { "type": "number" },
+          "totalAmountKobo": { "type": "number" },
+          "currency": { "type": "string" },
+          "ratePerOrderKobo": { "type": "number" },
+          "batches": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/RiderEarningsBatchDto" }
+          }
+        },
+        "required": [
+          "riderId",
+          "deliveredOrderCount",
+          "confirmedOrderCount",
+          "pendingAmountKobo",
+          "settledAmountKobo",
+          "totalAmountKobo",
+          "currency",
+          "ratePerOrderKobo",
+          "batches"
+        ]
+      },
+      "RiderEarningsEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/RiderEarningsSummaryDto" } },
+        "required": ["data"]
+      },
+      "RiderSettlementSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "campusId": { "type": "string", "format": "uuid" },
+          "riderId": { "type": "string", "format": "uuid" },
+          "settlementDate": { "type": "string" },
+          "status": { "type": "string", "enum": ["approved", "cancelled", "draft", "paid"] },
+          "deliveryEarningsKobo": { "type": "number" },
+          "adjustmentsKobo": { "type": "number" },
+          "payableKobo": { "type": "number" },
+          "paidAt": { "type": "string", "nullable": true },
+          "externalReference": { "type": "string", "nullable": true },
+          "lineCount": { "type": "number" },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" }
+        },
+        "required": [
+          "id",
+          "campusId",
+          "riderId",
+          "settlementDate",
+          "status",
+          "deliveryEarningsKobo",
+          "adjustmentsKobo",
+          "payableKobo",
+          "lineCount",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "RiderSettlementListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/RiderSettlementSummaryDto" }
+          }
+        },
+        "required": ["data"]
+      },
+      "RiderSettlementLineDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "settlementId": { "type": "string", "format": "uuid" },
+          "orderId": { "type": "string", "format": "uuid", "nullable": true },
+          "orderNumber": { "type": "string", "nullable": true },
+          "lineType": { "type": "string" },
+          "amountKobo": { "type": "number" },
+          "description": { "type": "string" },
+          "createdAt": { "type": "string" }
+        },
+        "required": ["id", "settlementId", "lineType", "amountKobo", "description", "createdAt"]
+      },
+      "RiderSettlementDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "campusId": { "type": "string", "format": "uuid" },
+          "riderId": { "type": "string", "format": "uuid" },
+          "settlementDate": { "type": "string" },
+          "status": { "type": "string", "enum": ["approved", "cancelled", "draft", "paid"] },
+          "deliveryEarningsKobo": { "type": "number" },
+          "adjustmentsKobo": { "type": "number" },
+          "payableKobo": { "type": "number" },
+          "paidAt": { "type": "string", "nullable": true },
+          "externalReference": { "type": "string", "nullable": true },
+          "lineCount": { "type": "number" },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" },
+          "lines": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/RiderSettlementLineDto" }
+          }
+        },
+        "required": [
+          "id",
+          "campusId",
+          "riderId",
+          "settlementDate",
+          "status",
+          "deliveryEarningsKobo",
+          "adjustmentsKobo",
+          "payableKobo",
+          "lineCount",
+          "createdAt",
+          "updatedAt",
+          "lines"
+        ]
+      },
+      "RiderSettlementDetailEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/RiderSettlementDetailDto" } },
         "required": ["data"]
       },
       "SettlementSummaryDto": {
