@@ -37,7 +37,9 @@ export function createPostgresPoolConfig(config: DatabasePoolConfigInput): PoolC
     max: config.DATABASE_POOL_MAX
   };
 
-  if (!connectionStringHasSslMode(config.DATABASE_URL)) {
+  if (config.DATABASE_SSL && !config.DATABASE_SSL_REJECT_UNAUTHORIZED) {
+    poolConfig.ssl = createPostgresSslConfig(config);
+  } else if (!connectionStringHasSslMode(config.DATABASE_URL)) {
     poolConfig.ssl = createPostgresSslConfig(config);
   }
 

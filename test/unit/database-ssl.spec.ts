@@ -33,7 +33,7 @@ describe('database SSL configuration', () => {
     ).toEqual({ rejectUnauthorized: false });
   });
 
-  it('lets node-postgres honor sslmode from the connection string', () => {
+  it('relaxes certificate-chain validation when configured even if the URL has sslmode', () => {
     expect(
       createPostgresPoolConfig({
         DATABASE_URL:
@@ -45,6 +45,25 @@ describe('database SSL configuration', () => {
     ).toEqual({
       connectionString:
         'postgresql://postgres:postgres@example.supabase.com:5432/postgres?sslmode=require',
+      max: 10,
+      ssl: {
+        rejectUnauthorized: false
+      }
+    });
+  });
+
+  it('lets node-postgres honor sslmode when strict certificate validation is enabled', () => {
+    expect(
+      createPostgresPoolConfig({
+        DATABASE_URL:
+          'postgresql://postgres:postgres@example.supabase.com:5432/postgres?sslmode=verify-full',
+        DATABASE_POOL_MAX: 10,
+        DATABASE_SSL: true,
+        DATABASE_SSL_REJECT_UNAUTHORIZED: true
+      })
+    ).toEqual({
+      connectionString:
+        'postgresql://postgres:postgres@example.supabase.com:5432/postgres?sslmode=verify-full',
       max: 10
     });
   });
