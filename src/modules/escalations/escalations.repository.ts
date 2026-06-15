@@ -148,5 +148,4 @@ export class EscalationsRepository implements EscalationsRepositoryContract {
 
     return result.rows[0];
   }
-
 }

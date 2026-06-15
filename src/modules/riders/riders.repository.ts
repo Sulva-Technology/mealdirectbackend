@@ -2,7 +2,12 @@ import { Inject, Injectable } from '@nestjs/common';
 import { sql } from 'kysely';
 
 import { DatabaseService } from '../../database/database.service.js';
-import type { OrderDetail, OrderItem, OrderStatus, PaymentSnapshot } from '../orders/orders.types.js';
+import type {
+  OrderDetail,
+  OrderItem,
+  OrderStatus,
+  PaymentSnapshot
+} from '../orders/orders.types.js';
 import type {
   RiderAssignmentListFilters,
   RiderAssignmentSummary,
@@ -530,7 +535,9 @@ export class RidersRepository implements RidersRepositoryContract {
     `.execute(this.database.db);
   }
 
-  private async listBatchOrderSummaries(batchId: string): Promise<Omit<OrderDetail, 'items' | 'latestPayment'>[]> {
+  private async listBatchOrderSummaries(
+    batchId: string
+  ): Promise<Omit<OrderDetail, 'items' | 'latestPayment'>[]> {
     const result = await sql<Omit<OrderDetail, 'items' | 'latestPayment'>>`
       select
         o.id::text as "id",

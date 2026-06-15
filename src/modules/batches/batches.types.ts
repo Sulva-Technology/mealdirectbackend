@@ -1,6 +1,12 @@
 import type { OrderSummary } from '../orders/orders.types.js';
 
-export type BatchStatus = 'open' | 'closed' | 'assigned' | 'in_progress' | 'completed' | 'cancelled';
+export type BatchStatus =
+  | 'open'
+  | 'closed'
+  | 'assigned'
+  | 'in_progress'
+  | 'completed'
+  | 'cancelled';
 
 export type BatchSummary = {
   id: string;

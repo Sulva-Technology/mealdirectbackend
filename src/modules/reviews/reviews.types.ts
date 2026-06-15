@@ -57,10 +57,7 @@ export type VendorReviewListFilters = {
 
 export type ReviewsRepositoryContract = {
   assertVendorAccess: (vendorId: string, userId: string) => Promise<boolean>;
-  findCustomerReview: (
-    customerId: string,
-    orderId: string
-  ) => Promise<ReviewRecord | undefined>;
+  findCustomerReview: (customerId: string, orderId: string) => Promise<ReviewRecord | undefined>;
   findCustomerReviewEligibility: (
     customerId: string,
     orderId: string

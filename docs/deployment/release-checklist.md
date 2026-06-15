@@ -12,10 +12,12 @@
 - `pnpm db:reset`
 - `pnpm db:test`
 - `pnpm test:production`
+- `pnpm test:e2e:hosted`
 - `pnpm db:lint`
 - `pnpm db:types`
 - `pnpm db:diff:check`
 - `pnpm audit --audit-level high`
+- `pnpm smoke:production`
 - `docker build -t meal-direct-api:<commit> .`
 
 ## Staging
@@ -28,7 +30,8 @@
    - rider frontend;
    - admin frontend.
 4. Verify `/v1/health/live`, `/v1/health/ready`, `/docs/openapi.json`, and `/v1/operations/status`.
-5. Confirm release version and commit SHA in health metadata.
+5. Run `pnpm test:e2e:hosted` against the dedicated hosted E2E/staging Supabase project.
+6. Confirm release version and commit SHA in health metadata.
 
 ## Production
 
@@ -38,7 +41,15 @@
 4. Deploy API and worker after migration success.
 5. Confirm cron jobs are enabled only after the API is healthy.
 6. Run post-deployment smoke tests.
-7. Monitor logs, readiness, Paystack webhooks, database pool, and error rates.
+7. Run `pnpm smoke:production`; do not run hosted E2E against production.
+8. Monitor logs, readiness, Paystack webhooks, database pool, outbox backlog, settlement jobs, and error rates.
+
+## Production Supabase Safety
+
+- Production and hosted E2E must use separate Supabase projects.
+- Production migrations run once from a controlled release process.
+- Hosted E2E may seed and clean test data; production smoke must remain read-only.
+- Cron and worker-dependent operations are enabled only after readiness and production smoke pass.
 
 ## Migration Safety
 

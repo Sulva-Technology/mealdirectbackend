@@ -231,7 +231,10 @@ describe('RidersService', () => {
       status: 'picked_up'
     });
 
-    vi.mocked(repository.acceptAssignment).mockResolvedValueOnce({ ...assignment, status: 'cancelled' });
+    vi.mocked(repository.acceptAssignment).mockResolvedValueOnce({
+      ...assignment,
+      status: 'cancelled'
+    });
     await expect(service.acceptAssignment(actor, assignmentId)).rejects.toBeInstanceOf(
       BadRequestException
     );

@@ -45,10 +45,7 @@ export class EscalationsService {
     private readonly repository: EscalationsRepositoryContract
   ) {}
 
-  async listEscalations(
-    actor: AuthenticatedActor,
-    orderId: string
-  ): Promise<EscalationRecord[]> {
+  async listEscalations(actor: AuthenticatedActor, orderId: string): Promise<EscalationRecord[]> {
     this.assertCustomer(actor);
     const eligibility = await this.repository.findCustomerEscalationEligibility(
       actor.userId,

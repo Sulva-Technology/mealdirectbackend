@@ -63,7 +63,10 @@ describe('vendor batches API', () => {
     const endpoints = [
       { method: 'GET' as const, url: '/v1/vendor/batches' },
       { method: 'GET' as const, url: '/v1/vendor/batches/44444444-4444-4444-8444-444444444444' },
-      { method: 'POST' as const, url: '/v1/vendor/batches/44444444-4444-4444-8444-444444444444/pickup' }
+      {
+        method: 'POST' as const,
+        url: '/v1/vendor/batches/44444444-4444-4444-8444-444444444444/pickup'
+      }
     ];
 
     for (const endpoint of endpoints) {

@@ -314,9 +314,7 @@ describe('rider API', () => {
       headers: { authorization: `Bearer ${token}` }
     });
     expect(earningsResponse.statusCode).toBe(200);
-    expect(earningsResponse.json<{ data: RiderEarningsSummary }>().data.totalAmountKobo).toBe(
-      7500
-    );
+    expect(earningsResponse.json<{ data: RiderEarningsSummary }>().data.totalAmountKobo).toBe(7500);
 
     const settlementResponse = await app.inject({
       method: 'GET',

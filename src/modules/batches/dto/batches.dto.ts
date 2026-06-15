@@ -4,7 +4,14 @@ import { IsIn, IsInt, IsOptional, IsUUID, Matches, Max, Min } from 'class-valida
 
 import { OrderSummaryDto } from '../../orders/dto/order-api.dto.js';
 
-const batchStatuses = ['open', 'closed', 'assigned', 'in_progress', 'completed', 'cancelled'] as const;
+const batchStatuses = [
+  'open',
+  'closed',
+  'assigned',
+  'in_progress',
+  'completed',
+  'cancelled'
+] as const;
 
 export class BatchIdParamDto {
   @ApiProperty({ format: 'uuid', type: String })

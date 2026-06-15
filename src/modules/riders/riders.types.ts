@@ -153,10 +153,7 @@ export type RiderSettlementListFilters = {
 };
 
 export type RidersRepositoryContract = {
-  findRiderProfileForActor: (
-    userId: string,
-    riderId?: string
-  ) => Promise<RiderProfile | undefined>;
+  findRiderProfileForActor: (userId: string, riderId?: string) => Promise<RiderProfile | undefined>;
   updateRiderProfile: (
     riderId: string,
     userId: string,

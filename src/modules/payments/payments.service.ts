@@ -98,10 +98,7 @@ export class PaymentsService {
     return this.repository.listAdminPayments(this.adminCampusScope(actor));
   }
 
-  async getAdminPayment(
-    actor: AuthenticatedActor,
-    paymentId: string
-  ): Promise<PaymentRecord> {
+  async getAdminPayment(actor: AuthenticatedActor, paymentId: string): Promise<PaymentRecord> {
     const payment = await this.repository.findAdminPaymentById(
       paymentId,
       this.adminCampusScope(actor)

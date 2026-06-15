@@ -27,10 +27,7 @@ export class ReviewsRepository implements ReviewsRepositoryContract {
     return result.rows[0]?.hasAccess ?? false;
   }
 
-  async findCustomerReview(
-    customerId: string,
-    orderId: string
-  ): Promise<ReviewRecord | undefined> {
+  async findCustomerReview(customerId: string, orderId: string): Promise<ReviewRecord | undefined> {
     const result = await sql<ReviewRecord>`
       select
         id::text as "id",

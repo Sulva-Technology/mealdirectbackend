@@ -28,7 +28,14 @@ const orderStatuses = [
   'ready',
   'refunded'
 ] as const;
-const batchStatuses = ['open', 'closed', 'assigned', 'in_progress', 'completed', 'cancelled'] as const;
+const batchStatuses = [
+  'open',
+  'closed',
+  'assigned',
+  'in_progress',
+  'completed',
+  'cancelled'
+] as const;
 const vendorStatuses = ['approved', 'deactivated', 'pending', 'suspended'] as const;
 const riderStatuses = ['deactivated', 'pending', 'suspended', 'verified'] as const;
 const settlementStatuses = ['approved', 'cancelled', 'draft', 'paid'] as const;

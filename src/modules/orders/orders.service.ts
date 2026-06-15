@@ -85,10 +85,7 @@ export class OrdersService {
     return order;
   }
 
-  async getPaymentStatus(
-    actor: AuthenticatedActor,
-    orderId: string
-  ): Promise<OrderPaymentStatus> {
+  async getPaymentStatus(actor: AuthenticatedActor, orderId: string): Promise<OrderPaymentStatus> {
     customerOnly(actor);
     const status = await this.repository.findPaymentStatus(actor.userId, orderId);
     if (status === undefined) {
@@ -105,7 +102,10 @@ export class OrdersService {
     return this.repository.confirmDelivery(actor.userId, orderId);
   }
 
-  private assertAllItemsQuoted(input: CreateOrderDto, quotedItems: readonly OrderQuoteItem[]): void {
+  private assertAllItemsQuoted(
+    input: CreateOrderDto,
+    quotedItems: readonly OrderQuoteItem[]
+  ): void {
     const quotedByMenuItemId = new Map(quotedItems.map((item) => [item.menuItemId, item]));
     const unavailableItem = input.items.find((item) => {
       const quoted = quotedByMenuItemId.get(item.menuItemId);

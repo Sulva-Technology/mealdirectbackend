@@ -129,3 +129,78 @@ jobs:
         env:
           SMOKE_BASE_URL: ${{ secrets.STAGING_API_BASE_URL }}
           SMOKE_FRONTEND_ORIGINS: ${{ secrets.STAGING_FRONTEND_ORIGINS }}
+
+  hosted-e2e:
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    needs:
+      - api
+      - database
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Hosted E2E tests
+        run: pnpm test:e2e:hosted
+        env:
+          NODE_ENV: test
+          HOST: 127.0.0.1
+          PORT: 0
+          API_PREFIX: v1
+          DATABASE_URL: ${{ secrets.E2E_DATABASE_URL }}
+          E2E_DATABASE_URL: ${{ secrets.E2E_DATABASE_URL }}
+          DATABASE_SSL: 'true'
+          DATABASE_SSL_REJECT_UNAUTHORIZED: 'false'
+          SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
+          SUPABASE_JWT_ISSUER: ${{ secrets.E2E_SUPABASE_URL }}/auth/v1
+          SUPABASE_JWT_AUDIENCE: authenticated
+          SUPABASE_JWT_SECRET: ${{ secrets.E2E_SUPABASE_JWT_SECRET }}
+          PAYSTACK_BASE_URL: http://127.0.0.1:59999
+          PAYSTACK_SECRET_KEY: e2e-paystack-secret
+          PAYSTACK_WEBHOOK_INBOX_MODE: database
+          INTERNAL_OPERATIONS_TOKEN: ${{ secrets.E2E_INTERNAL_OPERATIONS_TOKEN }}
+          E2E_TEST_NAMESPACE: e2e_meal_direct_${{ github.run_id }}
+
+  production-smoke:
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    needs:
+      - api
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Production smoke tests
+        run: pnpm smoke:production
+        env:
+          NODE_ENV: production
+          SMOKE_BASE_URL: ${{ secrets.PRODUCTION_API_BASE_URL }}
+          SMOKE_FRONTEND_ORIGINS: ${{ secrets.PRODUCTION_FRONTEND_ORIGINS }}
+          INTERNAL_OPERATIONS_TOKEN: ${{ secrets.PRODUCTION_INTERNAL_OPERATIONS_TOKEN }}

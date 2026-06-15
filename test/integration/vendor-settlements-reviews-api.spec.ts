@@ -187,8 +187,9 @@ describe('vendor settlements and reviews API', () => {
       headers: { authorization: `Bearer ${token}` }
     });
     expect(listReviews.statusCode).toBe(200);
-    const reviewsJson =
-      listReviews.json<{ data: (VendorReviewRecord & { reviewerId?: string })[] }>();
+    const reviewsJson = listReviews.json<{
+      data: (VendorReviewRecord & { reviewerId?: string })[];
+    }>();
     const firstReview = reviewsJson.data[0];
     expect(firstReview).toBeDefined();
     expect(firstReview).toMatchObject({ id: review.id });

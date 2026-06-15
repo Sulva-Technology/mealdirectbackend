@@ -85,7 +85,10 @@ export class AdminService {
     actor: AuthenticatedActor,
     query: AdminDirectoryQueryDto & { date?: string }
   ): Promise<AdminDashboard> {
-    return this.repository.getDashboard(this.campusScope(actor, query.campusId), query.date ?? today());
+    return this.repository.getDashboard(
+      this.campusScope(actor, query.campusId),
+      query.date ?? today()
+    );
   }
 
   listOrders(actor: AuthenticatedActor, query: AdminOrderListQueryDto): Promise<AdminListResult> {
@@ -119,12 +122,7 @@ export class AdminService {
     await this.getOrder(actor, orderId);
     try {
       return this.requireRecord(
-        await this.repository.transitionOrder(
-          orderId,
-          input.status,
-          actor.userId,
-          input.reason
-        ),
+        await this.repository.transitionOrder(orderId, input.status, actor.userId, input.reason),
         'Order was not found.'
       );
     } catch (error) {
@@ -236,18 +234,12 @@ export class AdminService {
     );
   }
 
-  async listRiderAssignments(
-    actor: AuthenticatedActor,
-    riderId: string
-  ): Promise<AdminRecord[]> {
+  async listRiderAssignments(actor: AuthenticatedActor, riderId: string): Promise<AdminRecord[]> {
     await this.getRider(actor, riderId);
     return this.repository.listRiderAssignments(riderId, this.campusScope(actor));
   }
 
-  async listRiderSettlements(
-    actor: AuthenticatedActor,
-    riderId: string
-  ): Promise<AdminRecord[]> {
+  async listRiderSettlements(actor: AuthenticatedActor, riderId: string): Promise<AdminRecord[]> {
     await this.getRider(actor, riderId);
     return this.repository.listRiderSettlements(riderId, this.campusScope(actor));
   }

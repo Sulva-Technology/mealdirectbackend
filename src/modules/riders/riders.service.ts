@@ -188,10 +188,7 @@ export class RidersService {
     return this.transitionOrder(actor, orderId, 'out_for_delivery');
   }
 
-  async markOrderDelivered(
-    actor: AuthenticatedActor,
-    orderId: string
-  ): Promise<RiderOrderDetail> {
+  async markOrderDelivered(actor: AuthenticatedActor, orderId: string): Promise<RiderOrderDetail> {
     return this.transitionOrder(actor, orderId, 'delivered');
   }
 
@@ -270,8 +267,7 @@ export class RidersService {
         actor.userId
       );
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Order status transition failed.';
+      const message = error instanceof Error ? error.message : 'Order status transition failed.';
       throw badRequest(message);
     }
 
@@ -295,10 +291,7 @@ export class RidersService {
       throw notFound('Rider profile was not found.');
     }
 
-    if (
-      options.requireActiveVerified &&
-      (!profile.active || profile.status !== 'verified')
-    ) {
+    if (options.requireActiveVerified && (!profile.active || profile.status !== 'verified')) {
       throw forbidden('Verified active rider access is required.');
     }
 

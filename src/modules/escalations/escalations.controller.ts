@@ -32,9 +32,7 @@ import type { EscalationRecord } from './escalations.types.js';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @RequireRoles('customer')
 export class CustomerEscalationsController {
-  constructor(
-    @Inject(EscalationsService) private readonly escalations: EscalationsService
-  ) {}
+  constructor(@Inject(EscalationsService) private readonly escalations: EscalationsService) {}
 
   @Get(':orderId/escalations')
   @ApiParam({ format: 'uuid', name: 'orderId', type: String })
@@ -62,6 +60,8 @@ export class CustomerEscalationsController {
     @Param() params: OrderIdParamDto,
     @Body() input: CreateEscalationDto
   ): Promise<SuccessEnvelope<EscalationRecord>> {
-    return createSuccessEnvelope(await this.escalations.openEscalation(actor, params.orderId, input));
+    return createSuccessEnvelope(
+      await this.escalations.openEscalation(actor, params.orderId, input)
+    );
   }
 }

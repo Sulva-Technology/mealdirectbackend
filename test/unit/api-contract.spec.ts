@@ -34,10 +34,8 @@ describe('API contract foundation', () => {
   });
 
   it('creates cursor pages from limit-plus-one query results', () => {
-    const page = createCursorPage(
-      [{ id: 'a' }, { id: 'b' }, { id: 'c' }],
-      2,
-      (item) => encodeCursor({ id: item.id })
+    const page = createCursorPage([{ id: 'a' }, { id: 'b' }, { id: 'c' }], 2, (item) =>
+      encodeCursor({ id: item.id })
     );
 
     expect(page).toEqual({
@@ -51,10 +49,12 @@ describe('API contract foundation', () => {
   });
 
   it('parses explicit sort rules against an allowlist', () => {
-    expect(parseSort('createdAt:desc', ['createdAt', 'name'], { field: 'name', direction: 'asc' }))
-      .toEqual({ field: 'createdAt', direction: 'desc' });
-    expect(parseSort('-name', ['createdAt', 'name'], { field: 'createdAt', direction: 'desc' }))
-      .toEqual({ field: 'name', direction: 'desc' });
+    expect(
+      parseSort('createdAt:desc', ['createdAt', 'name'], { field: 'name', direction: 'asc' })
+    ).toEqual({ field: 'createdAt', direction: 'desc' });
+    expect(
+      parseSort('-name', ['createdAt', 'name'], { field: 'createdAt', direction: 'desc' })
+    ).toEqual({ field: 'name', direction: 'desc' });
     expect(() =>
       parseSort('email:asc', ['createdAt', 'name'], { field: 'createdAt', direction: 'desc' })
     ).toThrow('Unsupported sort field.');

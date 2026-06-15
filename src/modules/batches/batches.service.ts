@@ -24,10 +24,7 @@ function notFound(message: string): NotFoundException {
 export class BatchesService {
   constructor(@Inject(BatchesRepository) private readonly repository: BatchesRepository) {}
 
-  async listBatches(
-    actor: AuthenticatedActor,
-    query: BatchListQueryDto
-  ): Promise<BatchSummary[]> {
+  async listBatches(actor: AuthenticatedActor, query: BatchListQueryDto): Promise<BatchSummary[]> {
     const vendorId = this.assertAndGetVendorId(actor);
     await this.assertVendorAccess(vendorId, actor.userId);
 
@@ -66,7 +63,8 @@ export class BatchesService {
     try {
       await this.repository.pickupBatch(batchId, actor.userId);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Ready-for-pickup transition failed.';
+      const message =
+        error instanceof Error ? error.message : 'Ready-for-pickup transition failed.';
       throw new ForbiddenException({
         code: ErrorCodes.FORBIDDEN,
         message

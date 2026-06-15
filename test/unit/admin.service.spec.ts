@@ -39,10 +39,7 @@ describe('AdminService', () => {
   it('pins campus admins to their own campus scope', async () => {
     await service.listOrders(campusAdmin, { campusId, limit: 20 });
 
-    expect(listOrdersMock).toHaveBeenCalledWith(
-      expect.objectContaining({ campusId }),
-      campusId
-    );
+    expect(listOrdersMock).toHaveBeenCalledWith(expect.objectContaining({ campusId }), campusId);
   });
 
   it('rejects cross-campus queries from campus admins', () => {

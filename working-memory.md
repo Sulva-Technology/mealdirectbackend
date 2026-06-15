@@ -147,11 +147,17 @@ Meal Direct backend is being built from API foundation into production-hardened 
 
 ## Remaining Launch Blockers
 
-- Applying Supabase JWT/RBAC guards to all business routes.
-- Object-level authorization in business routes.
-- Paystack initialization and refund workflow.
-- Live database verification for order reservation, payment webhook side effects, and settlement generation.
-- Remaining customer endpoint flows and broader database-backed E2E tests.
+- Hosted Supabase E2E execution with `.env.e2e`/CI E2E secrets using a separate mutable E2E or staging project.
+- Production smoke execution with `.env.production`/production smoke secrets after deploy; this must remain read-only.
 - External observability/alerting provider configuration.
 - Full `pnpm db:ci` verification with Supabase CLI and Docker.
 - After the next Render deploy, check `/v1/health/ready`; if it still fails, inspect Render logs for the sanitized `HealthController` database error code/message.
+
+## Production Readiness Harness Added
+
+- `pnpm test:e2e:hosted` runs the hosted Supabase E2E Vitest config in `vitest.e2e.config.ts`.
+- `pnpm smoke:production` runs read-only production checks from `scripts/smoke-production.ts`.
+- `pnpm readiness:launch` chains format, lint, typecheck, unit/integration tests, critical-test check, OpenAPI check, build, hosted E2E, and production smoke.
+- `.env.e2e.example` documents isolated hosted E2E variables and refuses production/unsafe namespaces through `test/e2e/setup-e2e.ts`.
+- `.env.production.example`, deployment docs, CI jobs, observability docs, and runbooks now include E2E/staging/production readiness gates.
+- Paystack is now testable through `PAYSTACK_BASE_URL`; production requires `https://api.paystack.co`.

@@ -72,9 +72,18 @@ describe('vendor orders API', () => {
     const endpoints = [
       { method: 'GET' as const, url: '/v1/vendor/orders' },
       { method: 'GET' as const, url: '/v1/vendor/orders/44444444-4444-4444-8444-444444444444' },
-      { method: 'POST' as const, url: '/v1/vendor/orders/44444444-4444-4444-8444-444444444444/accept' },
-      { method: 'POST' as const, url: '/v1/vendor/orders/44444444-4444-4444-8444-444444444444/prepare' },
-      { method: 'POST' as const, url: '/v1/vendor/orders/44444444-4444-4444-8444-444444444444/ready' }
+      {
+        method: 'POST' as const,
+        url: '/v1/vendor/orders/44444444-4444-4444-8444-444444444444/accept'
+      },
+      {
+        method: 'POST' as const,
+        url: '/v1/vendor/orders/44444444-4444-4444-8444-444444444444/prepare'
+      },
+      {
+        method: 'POST' as const,
+        url: '/v1/vendor/orders/44444444-4444-4444-8444-444444444444/ready'
+      }
     ];
 
     for (const endpoint of endpoints) {
@@ -98,7 +107,7 @@ describe('vendor orders API', () => {
 
   it('validates list queries before invoking service', async () => {
     const token = await signToken('vendor');
-    
+
     // Bad status
     const badStatusResponse = await app.inject({
       method: 'GET',

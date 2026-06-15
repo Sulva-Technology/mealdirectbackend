@@ -40,9 +40,7 @@ function badGateway(message: string): BadGatewayException {
 export class PaystackClient implements PaystackClientContract {
   constructor(@Inject(EnvService) private readonly env: EnvService) {}
 
-  async initializeTransaction(
-    input: PaystackInitializeInput
-  ): Promise<PaystackInitializeResult> {
+  async initializeTransaction(input: PaystackInitializeInput): Promise<PaystackInitializeResult> {
     const envelope = await this.request('/transaction/initialize', {
       method: 'POST',
       body: JSON.stringify({
@@ -61,11 +59,7 @@ export class PaystackClient implements PaystackClientContract {
     const authorizationUrl = stringFrom(envelope.data.authorization_url);
     const accessCode = stringFrom(envelope.data.access_code);
     const reference = stringFrom(envelope.data.reference);
-    if (
-      authorizationUrl === undefined ||
-      accessCode === undefined ||
-      reference === undefined
-    ) {
+    if (authorizationUrl === undefined || accessCode === undefined || reference === undefined) {
       throw badGateway('Paystack initialization response was missing checkout details.');
     }
 
@@ -90,8 +84,7 @@ export class PaystackClient implements PaystackClientContract {
     const verifiedReference = stringFrom(envelope.data.reference);
     const amountKobo = numberFrom(envelope.data.amount);
     const currency = stringFrom(envelope.data.currency);
-    const transactionId =
-      stringFrom(envelope.data.id) ?? numberFrom(envelope.data.id)?.toString();
+    const transactionId = stringFrom(envelope.data.id) ?? numberFrom(envelope.data.id)?.toString();
 
     if (
       status === undefined ||
@@ -171,9 +164,7 @@ export class PaystackClient implements PaystackClientContract {
 
     const envelope = payload as PaystackEnvelope;
     if (!response.ok || envelope.status !== true) {
-      throw badGateway(
-        stringFrom(envelope.message) ?? 'Paystack rejected the payment request.'
-      );
+      throw badGateway(stringFrom(envelope.message) ?? 'Paystack rejected the payment request.');
     }
 
     return envelope;

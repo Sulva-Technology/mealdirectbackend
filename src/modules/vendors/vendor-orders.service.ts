@@ -22,7 +22,9 @@ function notFound(message: string): NotFoundException {
 
 @Injectable()
 export class VendorOrdersService {
-  constructor(@Inject(VendorOrdersRepository) private readonly repository: VendorOrdersRepository) {}
+  constructor(
+    @Inject(VendorOrdersRepository) private readonly repository: VendorOrdersRepository
+  ) {}
 
   async listOrders(
     actor: AuthenticatedActor,
@@ -35,11 +37,10 @@ export class VendorOrdersService {
     if (query.status !== undefined) filters.status = query.status;
     if (query.date !== undefined) filters.date = query.date;
 
-    return this.repository.listVendorOrders(
-      vendorId,
-      filters,
-      { page: query.page ?? 1, limit: query.limit ?? 20 }
-    );
+    return this.repository.listVendorOrders(vendorId, filters, {
+      page: query.page ?? 1,
+      limit: query.limit ?? 20
+    });
   }
 
   async getOrder(actor: AuthenticatedActor, orderId: string): Promise<OrderDetail> {

@@ -15,4 +15,3 @@ import { VendorOrdersRepository } from './vendor-orders.repository.js';
   exports: [VendorsService, VendorOrdersService]
 })
 export class VendorsModule {}
-

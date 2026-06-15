@@ -1,4 +1,15 @@
-import { Body, Controller, Get, HttpCode, Inject, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Inject,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards
+} from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -148,14 +159,15 @@ export class RidersController {
   @Post('orders/:orderId/out-for-delivery')
   @HttpCode(200)
   @ApiParam({ format: 'uuid', name: 'orderId', type: String })
-  @ApiOkResponse({ description: 'Order marked out for delivery.', type: RiderOrderDetailEnvelopeDto })
+  @ApiOkResponse({
+    description: 'Order marked out for delivery.',
+    type: RiderOrderDetailEnvelopeDto
+  })
   async markOrderOutForDelivery(
     @CurrentActor() actor: AuthenticatedActor,
     @Param() params: RiderOrderIdParamDto
   ): Promise<SuccessEnvelope<RiderOrderDetail>> {
-    return createSuccessEnvelope(
-      await this.riders.markOrderOutForDelivery(actor, params.orderId)
-    );
+    return createSuccessEnvelope(await this.riders.markOrderOutForDelivery(actor, params.orderId));
   }
 
   @Post('orders/:orderId/delivered')

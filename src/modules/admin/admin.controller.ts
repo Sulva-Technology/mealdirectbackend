@@ -66,7 +66,11 @@ import {
   UuidIdParamDto
 } from './dto/admin.dto.js';
 
-function listEnvelope(result: { items: AdminRecord[]; hasMore: boolean; limit: number }): ListEnvelope<AdminRecord> {
+function listEnvelope(result: {
+  items: AdminRecord[];
+  hasMore: boolean;
+  limit: number;
+}): ListEnvelope<AdminRecord> {
   return createListEnvelope(result.items, {
     hasMore: result.hasMore,
     limit: result.limit
@@ -244,7 +248,9 @@ export class AdminController {
     @CurrentActor() actor: AuthenticatedActor,
     @Param() params: AdminVendorIdParamDto
   ): Promise<SuccessEnvelope<AdminRecord>> {
-    return createSuccessEnvelope(await this.admin.setVendorStatus(actor, params.vendorId, 'approved'));
+    return createSuccessEnvelope(
+      await this.admin.setVendorStatus(actor, params.vendorId, 'approved')
+    );
   }
 
   @Post('vendors/:vendorId/suspend')
@@ -253,7 +259,9 @@ export class AdminController {
     @CurrentActor() actor: AuthenticatedActor,
     @Param() params: AdminVendorIdParamDto
   ): Promise<SuccessEnvelope<AdminRecord>> {
-    return createSuccessEnvelope(await this.admin.setVendorStatus(actor, params.vendorId, 'suspended'));
+    return createSuccessEnvelope(
+      await this.admin.setVendorStatus(actor, params.vendorId, 'suspended')
+    );
   }
 
   @Post('vendors/:vendorId/activate')
@@ -262,7 +270,9 @@ export class AdminController {
     @CurrentActor() actor: AuthenticatedActor,
     @Param() params: AdminVendorIdParamDto
   ): Promise<SuccessEnvelope<AdminRecord>> {
-    return createSuccessEnvelope(await this.admin.setVendorStatus(actor, params.vendorId, 'approved'));
+    return createSuccessEnvelope(
+      await this.admin.setVendorStatus(actor, params.vendorId, 'approved')
+    );
   }
 
   @Post('vendors/:vendorId/users')
@@ -322,7 +332,9 @@ export class AdminController {
     @CurrentActor() actor: AuthenticatedActor,
     @Param() params: AdminRiderIdParamDto
   ): Promise<SuccessEnvelope<AdminRecord>> {
-    return createSuccessEnvelope(await this.admin.setRiderStatus(actor, params.riderId, 'verified'));
+    return createSuccessEnvelope(
+      await this.admin.setRiderStatus(actor, params.riderId, 'verified')
+    );
   }
 
   @Post('riders/:riderId/suspend')
@@ -331,7 +343,9 @@ export class AdminController {
     @CurrentActor() actor: AuthenticatedActor,
     @Param() params: AdminRiderIdParamDto
   ): Promise<SuccessEnvelope<AdminRecord>> {
-    return createSuccessEnvelope(await this.admin.setRiderStatus(actor, params.riderId, 'suspended'));
+    return createSuccessEnvelope(
+      await this.admin.setRiderStatus(actor, params.riderId, 'suspended')
+    );
   }
 
   @Post('riders/:riderId/activate')
@@ -340,7 +354,9 @@ export class AdminController {
     @CurrentActor() actor: AuthenticatedActor,
     @Param() params: AdminRiderIdParamDto
   ): Promise<SuccessEnvelope<AdminRecord>> {
-    return createSuccessEnvelope(await this.admin.setRiderStatus(actor, params.riderId, 'verified'));
+    return createSuccessEnvelope(
+      await this.admin.setRiderStatus(actor, params.riderId, 'verified')
+    );
   }
 
   @Get('inventory')
@@ -358,7 +374,9 @@ export class AdminController {
     @Param() params: AdminInventoryIdParamDto,
     @Body() input: AdminInventoryAdjustmentDto
   ): Promise<SuccessEnvelope<AdminRecord | undefined>> {
-    return createSuccessEnvelope(await this.admin.adjustInventory(actor, params.inventoryId, input));
+    return createSuccessEnvelope(
+      await this.admin.adjustInventory(actor, params.inventoryId, input)
+    );
   }
 
   @Get('escalations')
@@ -550,7 +568,9 @@ export class AdminController {
     @CurrentActor() actor: AuthenticatedActor,
     @Param() params: UuidIdParamDto
   ): Promise<SuccessEnvelope<AdminRecord | undefined>> {
-    return createSuccessEnvelope(await this.admin.setAdminMembershipActive(actor, params.id, false));
+    return createSuccessEnvelope(
+      await this.admin.setAdminMembershipActive(actor, params.id, false)
+    );
   }
 
   @Post('admin-memberships/:id/activate')

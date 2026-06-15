@@ -68,7 +68,9 @@ const orderDetail: OrderDetail = {
 
 function createRepository(): OrdersRepositoryContract {
   return {
-    confirmDelivery: vi.fn().mockResolvedValue({ confirmationId: '99999999-9999-4999-8999-999999999999' }),
+    confirmDelivery: vi
+      .fn()
+      .mockResolvedValue({ confirmationId: '99999999-9999-4999-8999-999999999999' }),
     createOrder: vi.fn().mockResolvedValue({ orderId: orderDetail.id }),
     findCustomerOrderById: vi.fn().mockResolvedValue(orderDetail),
     findPaymentStatus: vi.fn().mockResolvedValue({

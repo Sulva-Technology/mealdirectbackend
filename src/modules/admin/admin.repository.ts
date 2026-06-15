@@ -83,7 +83,12 @@ export class AdminRepository {
     return result.rows[0];
   }
 
-  async transitionOrder(orderId: string, status: OrderStatus, actorUserId: string, reason?: string): Promise<AdminRecord | undefined> {
+  async transitionOrder(
+    orderId: string,
+    status: OrderStatus,
+    actorUserId: string,
+    reason?: string
+  ): Promise<AdminRecord | undefined> {
     await sql`
       select public.transition_order_status(
         ${orderId}::uuid,
@@ -165,7 +170,11 @@ export class AdminRepository {
     return this.getBatch(batchId);
   }
 
-  async assignBatch(batchId: string, actorUserId: string, input: { riderId?: string; vendorId?: string }): Promise<AdminRecord | undefined> {
+  async assignBatch(
+    batchId: string,
+    actorUserId: string,
+    input: { riderId?: string; vendorId?: string }
+  ): Promise<AdminRecord | undefined> {
     await sql`
       insert into public.delivery_assignments (batch_id, rider_id, vendor_id, assigned_by)
       values (${batchId}::uuid, ${input.riderId ?? null}::uuid, ${input.vendorId ?? null}::uuid, ${actorUserId}::uuid)
@@ -179,7 +188,9 @@ export class AdminRepository {
         picked_up_at = null,
         completed_at = null
     `.execute(this.database.db);
-    await sql`update public.delivery_batches set status = 'assigned', updated_at = now() where id = ${batchId}::uuid`.execute(this.database.db);
+    await sql`update public.delivery_batches set status = 'assigned', updated_at = now() where id = ${batchId}::uuid`.execute(
+      this.database.db
+    );
     return this.getBatch(batchId);
   }
 
@@ -208,7 +219,12 @@ export class AdminRepository {
     return this.toList(result.rows, limit);
   }
 
-  async createVendor(input: { campusId: string; legalName: string; displayName: string; slug: string }): Promise<AdminRecord | undefined> {
+  async createVendor(input: {
+    campusId: string;
+    legalName: string;
+    displayName: string;
+    slug: string;
+  }): Promise<AdminRecord | undefined> {
     const result = await sql<AdminRecord>`
       insert into public.vendors (campus_id, legal_name, display_name, slug)
       values (${input.campusId}::uuid, ${input.legalName}, ${input.displayName}, ${input.slug})
@@ -231,7 +247,10 @@ export class AdminRepository {
     return result.rows[0];
   }
 
-  async updateVendor(vendorId: string, input: { displayName?: string; description?: string; phone?: string; active?: boolean }): Promise<AdminRecord | undefined> {
+  async updateVendor(
+    vendorId: string,
+    input: { displayName?: string; description?: string; phone?: string; active?: boolean }
+  ): Promise<AdminRecord | undefined> {
     await sql`
       update public.vendors
       set display_name = case when ${Object.hasOwn(input, 'displayName')} then ${input.displayName ?? null} else display_name end,
@@ -244,7 +263,11 @@ export class AdminRepository {
     return this.getVendor(vendorId);
   }
 
-  async setVendorStatus(vendorId: string, status: 'approved' | 'pending' | 'suspended', actorUserId: string): Promise<AdminRecord | undefined> {
+  async setVendorStatus(
+    vendorId: string,
+    status: 'approved' | 'pending' | 'suspended',
+    actorUserId: string
+  ): Promise<AdminRecord | undefined> {
     await sql`
       update public.vendors
       set status = ${status}::public.vendor_status,
@@ -257,7 +280,11 @@ export class AdminRepository {
     return this.getVendor(vendorId);
   }
 
-  async addVendorUser(vendorId: string, userId: string, role: string): Promise<AdminRecord | undefined> {
+  async addVendorUser(
+    vendorId: string,
+    userId: string,
+    role: string
+  ): Promise<AdminRecord | undefined> {
     const result = await sql<AdminRecord>`
       insert into public.vendor_users (vendor_id, user_id, role)
       values (${vendorId}::uuid, ${userId}::uuid, ${role}::public.vendor_user_role)
@@ -363,7 +390,11 @@ export class AdminRepository {
     return result.rows;
   }
 
-  async setRiderStatus(riderId: string, status: 'suspended' | 'verified', actorUserId: string): Promise<AdminRecord | undefined> {
+  async setRiderStatus(
+    riderId: string,
+    status: 'suspended' | 'verified',
+    actorUserId: string
+  ): Promise<AdminRecord | undefined> {
     await sql`
       update public.riders
       set status = ${status}::public.rider_status,
@@ -402,7 +433,12 @@ export class AdminRepository {
     return result.rows;
   }
 
-  async adjustInventory(inventoryId: string, delta: number, reason: string, actorUserId: string): Promise<AdminRecord | undefined> {
+  async adjustInventory(
+    inventoryId: string,
+    delta: number,
+    reason: string,
+    actorUserId: string
+  ): Promise<AdminRecord | undefined> {
     const result = await sql<AdminRecord>`
       select public.record_inventory_adjustment(
         ${inventoryId}::uuid,
@@ -415,7 +451,10 @@ export class AdminRepository {
     return result.rows[0];
   }
 
-  async listEscalations(query: AdminEscalationQueryDto, campusId?: string): Promise<AdminListResult> {
+  async listEscalations(
+    query: AdminEscalationQueryDto,
+    campusId?: string
+  ): Promise<AdminListResult> {
     const limit = query.limit ?? 20;
     const result = await sql<AdminRecord>`
       select e.id::text as "id", e.order_id::text as "orderId", o.campus_id::text as "campusId",
@@ -447,7 +486,10 @@ export class AdminRepository {
     return result.rows[0];
   }
 
-  async updateEscalation(id: string, input: { assignedAdminId?: string; status?: string; resolution?: string; refundId?: string }): Promise<AdminRecord | undefined> {
+  async updateEscalation(
+    id: string,
+    input: { assignedAdminId?: string; status?: string; resolution?: string; refundId?: string }
+  ): Promise<AdminRecord | undefined> {
     await sql`
       update public.escalations
       set assigned_admin_id = case when ${Object.hasOwn(input, 'assignedAdminId')} then ${input.assignedAdminId ?? null}::uuid else assigned_admin_id end,
@@ -461,7 +503,10 @@ export class AdminRepository {
     return this.getEscalation(id);
   }
 
-  async listSettlements(query: AdminSettlementQueryDto, campusId?: string): Promise<AdminListResult> {
+  async listSettlements(
+    query: AdminSettlementQueryDto,
+    campusId?: string
+  ): Promise<AdminListResult> {
     const limit = query.limit ?? 20;
     const result = await sql<AdminRecord>`
       select s.id::text as "id", s.campus_id::text as "campusId", s.vendor_id::text as "vendorId",
@@ -495,14 +540,28 @@ export class AdminRepository {
     return result.rows[0];
   }
 
-  async generateSettlement(type: 'rider' | 'vendor', id: string, date: string, actorUserId: string): Promise<AdminRecord | undefined> {
-    const result = type === 'vendor'
-      ? await sql<AdminRecord>`select public.produce_vendor_daily_settlement(${id}::uuid, ${date}::date, ${actorUserId}::uuid)::text as "settlementId"`.execute(this.database.db)
-      : await sql<AdminRecord>`select public.produce_rider_daily_settlement(${id}::uuid, ${date}::date, ${actorUserId}::uuid)::text as "settlementId"`.execute(this.database.db);
+  async generateSettlement(
+    type: 'rider' | 'vendor',
+    id: string,
+    date: string,
+    actorUserId: string
+  ): Promise<AdminRecord | undefined> {
+    const result =
+      type === 'vendor'
+        ? await sql<AdminRecord>`select public.produce_vendor_daily_settlement(${id}::uuid, ${date}::date, ${actorUserId}::uuid)::text as "settlementId"`.execute(
+            this.database.db
+          )
+        : await sql<AdminRecord>`select public.produce_rider_daily_settlement(${id}::uuid, ${date}::date, ${actorUserId}::uuid)::text as "settlementId"`.execute(
+            this.database.db
+          );
     return result.rows[0];
   }
 
-  async previewSettlement(type: 'rider' | 'vendor', id: string, date: string): Promise<AdminRecord> {
+  async previewSettlement(
+    type: 'rider' | 'vendor',
+    id: string,
+    date: string
+  ): Promise<AdminRecord> {
     if (type === 'vendor') {
       const result = await sql<AdminRecord>`
         select
@@ -545,7 +604,12 @@ export class AdminRepository {
     return result.rows[0] ?? {};
   }
 
-  async setSettlementStatus(id: string, status: 'approved' | 'paid', actorUserId: string, externalReference?: string): Promise<AdminRecord | undefined> {
+  async setSettlementStatus(
+    id: string,
+    status: 'approved' | 'paid',
+    actorUserId: string,
+    externalReference?: string
+  ): Promise<AdminRecord | undefined> {
     await sql`
       update public.settlements
       set status = ${status}::public.settlement_status,
@@ -558,7 +622,11 @@ export class AdminRepository {
     return this.getSettlement(id);
   }
 
-  async adjustSettlement(id: string, amountKobo: number, description: string): Promise<AdminRecord | undefined> {
+  async adjustSettlement(
+    id: string,
+    amountKobo: number,
+    description: string
+  ): Promise<AdminRecord | undefined> {
     await this.database.db.transaction().execute(async (trx) => {
       await sql`
         update public.settlements
@@ -635,7 +703,9 @@ export class AdminRepository {
   }
 
   async setUserStatus(userId: string, status: string): Promise<AdminRecord | undefined> {
-    await sql`update public.profiles set account_status = ${status}::public.account_status, updated_at = now() where id = ${userId}::uuid`.execute(this.database.db);
+    await sql`update public.profiles set account_status = ${status}::public.account_status, updated_at = now() where id = ${userId}::uuid`.execute(
+      this.database.db
+    );
     return this.getUser(userId);
   }
 
@@ -649,7 +719,10 @@ export class AdminRepository {
     return result.rows;
   }
 
-  async createAdminMembership(input: { userId: string; role: string; campusId?: string }, actorUserId: string): Promise<AdminRecord | undefined> {
+  async createAdminMembership(
+    input: { userId: string; role: string; campusId?: string },
+    actorUserId: string
+  ): Promise<AdminRecord | undefined> {
     const result = await sql<AdminRecord>`
       insert into public.admin_memberships (user_id, campus_id, role, granted_by)
       values (${input.userId}::uuid, ${input.campusId ?? null}::uuid, ${input.role}::public.admin_role, ${actorUserId}::uuid)
@@ -671,11 +744,21 @@ export class AdminRepository {
 
   async getDashboard(campusId: string | undefined, date: string): Promise<AdminDashboard> {
     const [orders, batches, payments, escalations, settlements] = await Promise.all([
-      sql<AdminRecord>`select count(*)::integer as "total", count(*) filter (where order_status = 'paid')::integer as "paid" from public.orders where (${campusId ?? null}::uuid is null or campus_id = ${campusId ?? null}::uuid) and service_date = ${date}::date`.execute(this.database.db),
-      sql<AdminRecord>`select count(*)::integer as "total", count(*) filter (where status = 'open')::integer as "open" from public.delivery_batches where (${campusId ?? null}::uuid is null or campus_id = ${campusId ?? null}::uuid) and service_date = ${date}::date`.execute(this.database.db),
-      sql<AdminRecord>`select count(*)::integer as "total", count(*) filter (where p.status = 'failed')::integer as "failed" from public.payments p join public.orders o on o.id = p.order_id where (${campusId ?? null}::uuid is null or o.campus_id = ${campusId ?? null}::uuid)`.execute(this.database.db),
-      sql<AdminRecord>`select count(*)::integer as "open" from public.escalations e join public.orders o on o.id = e.order_id where (${campusId ?? null}::uuid is null or o.campus_id = ${campusId ?? null}::uuid) and e.status = 'open'`.execute(this.database.db),
-      sql<AdminRecord>`select coalesce(sum(payable_kobo), 0)::integer as "payableKobo" from public.settlements where (${campusId ?? null}::uuid is null or campus_id = ${campusId ?? null}::uuid) and status in ('draft', 'approved')`.execute(this.database.db)
+      sql<AdminRecord>`select count(*)::integer as "total", count(*) filter (where order_status = 'paid')::integer as "paid" from public.orders where (${campusId ?? null}::uuid is null or campus_id = ${campusId ?? null}::uuid) and service_date = ${date}::date`.execute(
+        this.database.db
+      ),
+      sql<AdminRecord>`select count(*)::integer as "total", count(*) filter (where status = 'open')::integer as "open" from public.delivery_batches where (${campusId ?? null}::uuid is null or campus_id = ${campusId ?? null}::uuid) and service_date = ${date}::date`.execute(
+        this.database.db
+      ),
+      sql<AdminRecord>`select count(*)::integer as "total", count(*) filter (where p.status = 'failed')::integer as "failed" from public.payments p join public.orders o on o.id = p.order_id where (${campusId ?? null}::uuid is null or o.campus_id = ${campusId ?? null}::uuid)`.execute(
+        this.database.db
+      ),
+      sql<AdminRecord>`select count(*)::integer as "open" from public.escalations e join public.orders o on o.id = e.order_id where (${campusId ?? null}::uuid is null or o.campus_id = ${campusId ?? null}::uuid) and e.status = 'open'`.execute(
+        this.database.db
+      ),
+      sql<AdminRecord>`select coalesce(sum(payable_kobo), 0)::integer as "payableKobo" from public.settlements where (${campusId ?? null}::uuid is null or campus_id = ${campusId ?? null}::uuid) and status in ('draft', 'approved')`.execute(
+        this.database.db
+      )
     ]);
     return {
       alerts: [],

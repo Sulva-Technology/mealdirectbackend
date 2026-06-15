@@ -2,7 +2,13 @@ import { Inject, Injectable } from '@nestjs/common';
 import { sql } from 'kysely';
 
 import { DatabaseService } from '../../database/database.service.js';
-import type { OrderDetail, OrderItem, OrderStatus, OrderSummary, PaymentSnapshot } from '../orders/orders.types.js';
+import type {
+  OrderDetail,
+  OrderItem,
+  OrderStatus,
+  OrderSummary,
+  PaymentSnapshot
+} from '../orders/orders.types.js';
 
 @Injectable()
 export class VendorOrdersRepository {

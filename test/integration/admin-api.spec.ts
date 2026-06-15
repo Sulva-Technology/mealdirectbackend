@@ -213,8 +213,7 @@ describe('admin API', () => {
     });
     expect(settlementPreview.statusCode).toBe(200);
     expect(
-      settlementPreview.json<{ data: { estimatedPayableKobo: number } }>().data
-        .estimatedPayableKobo
+      settlementPreview.json<{ data: { estimatedPayableKobo: number } }>().data.estimatedPayableKobo
     ).toBe(250000);
 
     const approveSettlement = await app.inject({
@@ -230,9 +229,10 @@ describe('admin API', () => {
       headers: { authorization: `Bearer ${token}` }
     });
     expect(system.statusCode).toBe(200);
-    expect(system.json<{ data: { worker: { registeredQueues: string[] } } }>().data.worker.registeredQueues).toContain(
-      'outbox_events'
-    );
+    expect(
+      system.json<{ data: { worker: { registeredQueues: string[] } } }>().data.worker
+        .registeredQueues
+    ).toContain('outbox_events');
 
     const outbox = await app.inject({
       method: 'GET',
@@ -240,9 +240,7 @@ describe('admin API', () => {
       headers: { authorization: `Bearer ${token}` }
     });
     expect(outbox.statusCode).toBe(200);
-    expect(outbox.json<{ data: { eventType: string }[] }>().data[0]?.eventType).toBe(
-      'order.ready'
-    );
+    expect(outbox.json<{ data: { eventType: string }[] }>().data[0]?.eventType).toBe('order.ready');
 
     const process = await app.inject({
       method: 'POST',
