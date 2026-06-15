@@ -34,4 +34,15 @@ describe('OpenAPI contract foundation', () => {
     expect(document.components?.schemas?.ErrorEnvelopeDto).toBeDefined();
     expect(document.components?.schemas?.ListEnvelopeDto).toBeDefined();
   });
+
+  it('documents current-user profile and onboarding endpoints', () => {
+    const document = createOpenApiDocument(app);
+
+    expect(document.paths['/v1/me']).toBeDefined();
+    expect(document.paths['/v1/me']?.get).toBeDefined();
+    expect(document.paths['/v1/me']?.patch).toBeDefined();
+    expect(document.paths['/v1/me/campuses']?.get).toBeDefined();
+    expect(document.paths['/v1/me/complete-onboarding']?.post).toBeDefined();
+    expect(document.paths['/v1/me/default-location']?.put).toBeDefined();
+  });
 });

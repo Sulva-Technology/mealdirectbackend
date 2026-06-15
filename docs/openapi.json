@@ -44,6 +44,104 @@
         "tags": ["auth"]
       }
     },
+    "/v1/me": {
+      "get": {
+        "operationId": "ProfilesController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Current role-aware Meal Direct session.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MeSessionEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["me"]
+      },
+      "patch": {
+        "operationId": "ProfilesController_updateProfile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Updated safe profile fields.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ProfileEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid profile input." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["me"]
+      }
+    },
+    "/v1/me/campuses": {
+      "get": {
+        "operationId": "ProfilesController_campuses",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Active campus memberships for the current user.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CampusMembershipListEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["me"]
+      }
+    },
+    "/v1/me/complete-onboarding": {
+      "post": {
+        "operationId": "ProfilesController_completeOnboarding",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Profile after onboarding completion.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ProfileEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid onboarding input." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "User does not belong to the selected campus." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["me"]
+      }
+    },
+    "/v1/me/default-location": {
+      "put": {
+        "operationId": "ProfilesController_setDefaultLocation",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Profile after default location update.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ProfileEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid default location input." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "User does not belong to the selected campus." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["me"]
+      }
+    },
     "/v1/orders": {
       "post": {
         "operationId": "OrdersController_createOrder",
@@ -125,6 +223,172 @@
       }
     },
     "schemas": {
+      "MeActorDto": {
+        "type": "object",
+        "properties": {
+          "userId": { "type": "string", "format": "uuid" },
+          "role": {
+            "type": "string",
+            "enum": ["customer", "vendor", "rider", "campus_admin", "super_admin"]
+          },
+          "email": { "type": "string" },
+          "campusId": { "type": "string", "format": "uuid" },
+          "vendorId": { "type": "string", "format": "uuid" },
+          "riderId": { "type": "string", "format": "uuid" }
+        },
+        "required": ["userId", "role"]
+      },
+      "ProfileRecordDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "email": { "type": "string", "nullable": true },
+          "displayName": { "type": "string", "nullable": true },
+          "phoneNumber": { "type": "string", "nullable": true },
+          "avatarUrl": { "type": "string", "nullable": true },
+          "accountStatus": { "type": "string", "enum": ["active", "suspended", "deactivated"] },
+          "defaultCampusId": { "type": "string", "format": "uuid", "nullable": true },
+          "defaultLocationId": { "type": "string", "format": "uuid", "nullable": true },
+          "onboardingCompletedAt": { "type": "string", "nullable": true },
+          "onboardingCompleted": { "type": "boolean" },
+          "lastSeenAt": { "type": "string", "nullable": true },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" }
+        },
+        "required": ["id", "accountStatus", "onboardingCompleted", "createdAt", "updatedAt"]
+      },
+      "CampusMembershipDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "campusId": { "type": "string", "format": "uuid" },
+          "campusName": { "type": "string" },
+          "campusSlug": { "type": "string" },
+          "timezone": { "type": "string" },
+          "currency": { "type": "string" },
+          "countryCode": { "type": "string" },
+          "active": { "type": "boolean" },
+          "joinedAt": { "type": "string" }
+        },
+        "required": [
+          "id",
+          "campusId",
+          "campusName",
+          "campusSlug",
+          "timezone",
+          "currency",
+          "countryCode",
+          "active",
+          "joinedAt"
+        ]
+      },
+      "VendorMembershipDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "vendorId": { "type": "string", "format": "uuid" },
+          "campusId": { "type": "string", "format": "uuid" },
+          "vendorDisplayName": { "type": "string" },
+          "vendorSlug": { "type": "string" },
+          "role": { "type": "string", "enum": ["owner", "staff"] },
+          "active": { "type": "boolean" }
+        },
+        "required": [
+          "id",
+          "vendorId",
+          "campusId",
+          "vendorDisplayName",
+          "vendorSlug",
+          "role",
+          "active"
+        ]
+      },
+      "RiderProfileDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "campusId": { "type": "string", "format": "uuid" },
+          "displayName": { "type": "string" },
+          "phone": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "verified", "suspended", "deactivated"]
+          },
+          "active": { "type": "boolean" }
+        },
+        "required": ["id", "campusId", "displayName", "phone", "status", "active"]
+      },
+      "AdminMembershipDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "campusId": { "type": "string", "format": "uuid", "nullable": true },
+          "campusName": { "type": "string", "nullable": true },
+          "role": { "type": "string", "enum": ["campus_admin", "super_admin"] },
+          "active": { "type": "boolean" },
+          "grantedAt": { "type": "string" }
+        },
+        "required": ["id", "role", "active", "grantedAt"]
+      },
+      "MeSessionDto": {
+        "type": "object",
+        "properties": {
+          "actor": { "$ref": "#/components/schemas/MeActorDto" },
+          "profile": { "$ref": "#/components/schemas/ProfileRecordDto" },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["customer", "vendor", "rider", "campus_admin", "super_admin"]
+            }
+          },
+          "campuses": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CampusMembershipDto" }
+          },
+          "vendorMemberships": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/VendorMembershipDto" }
+          },
+          "riderProfiles": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/RiderProfileDto" }
+          },
+          "adminMemberships": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AdminMembershipDto" }
+          }
+        },
+        "required": [
+          "actor",
+          "profile",
+          "roles",
+          "campuses",
+          "vendorMemberships",
+          "riderProfiles",
+          "adminMemberships"
+        ]
+      },
+      "MeSessionEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/MeSessionDto" } },
+        "required": ["data"]
+      },
+      "CampusMembershipListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CampusMembershipDto" }
+          }
+        },
+        "required": ["data"]
+      },
+      "ProfileEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/ProfileRecordDto" } },
+        "required": ["data"]
+      },
       "CursorPaginationMetaDto": {
         "type": "object",
         "properties": {
