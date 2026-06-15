@@ -28,6 +28,10 @@ Meal Direct backend is being built from API foundation into production-hardened 
 - Module 9 now registers protected vendor endpoints for profile, masked payout account, menu metadata, menu item create/read/update/activate/deactivate, menu item schedules, and vendor availability. Inventory remains Module 10.
 - Module 10 vendor inventory contract is sourced from the same vendor prompt pack and uses `GET /v1/vendor/inventory?date=&slotId=`, `PUT /v1/vendor/inventory/:inventoryId`, and `POST /v1/vendor/inventory/:inventoryId/adjustments`.
 - Module 10 reuses existing `menu_item_inventory`, `inventory_adjustments`, and `record_inventory_adjustment`; no DB schema migration was added.
+- Module 12 vendor settlements/reviews contract is sourced from `Meal_Direct_Vendor_Frontend_AI_Studio_Prompts.zip` and uses `GET /v1/vendor/settlements?cursor=&dateFrom=&dateTo=`, `GET /v1/vendor/settlements/:id`, and `GET /v1/vendor/reviews?cursor=&menuItemId=&rating=`.
+- Module 12 reuses existing `settlements`, `settlement_lines`, `reviews`, and `has_vendor_access`; no DB schema migration was added.
+- Vendor review read models intentionally omit `reviewerId` to protect customer identity while preserving order/menu context for permitted vendor users.
+- Vendor order/batch aliases were added for frontend-contract compatibility: `POST /v1/vendor/orders/:orderId/preparing` and `POST /v1/vendor/batches/:batchId/ready-for-pickup`; the existing `/prepare` and `/pickup` routes remain.
 
 ## Current Contracts
 
@@ -51,6 +55,19 @@ Meal Direct backend is being built from API foundation into production-hardened 
 - `GET /v1/vendor/inventory?date=&slotId=`
 - `PUT /v1/vendor/inventory/:inventoryId`
 - `POST /v1/vendor/inventory/:inventoryId/adjustments`
+- `GET /v1/vendor/orders?cursor=&date=&status=&slotId=&zoneId=`
+- `GET /v1/vendor/orders/:orderId`
+- `POST /v1/vendor/orders/:orderId/accept`
+- `POST /v1/vendor/orders/:orderId/prepare`
+- `POST /v1/vendor/orders/:orderId/preparing`
+- `POST /v1/vendor/orders/:orderId/ready`
+- `GET /v1/vendor/batches?date=&status=`
+- `GET /v1/vendor/batches/:batchId`
+- `POST /v1/vendor/batches/:batchId/pickup`
+- `POST /v1/vendor/batches/:batchId/ready-for-pickup`
+- `GET /v1/vendor/settlements?cursor=&dateFrom=&dateTo=`
+- `GET /v1/vendor/settlements/:id`
+- `GET /v1/vendor/reviews?cursor=&menuItemId=&rating=`
 - OpenAPI artifacts in `docs/openapi.json` and `docs/openapi.yaml`
 
 ## Remaining Launch Blockers

@@ -6,7 +6,9 @@ import type {
   CreateReviewInput,
   ReviewEligibility,
   ReviewRecord,
-  ReviewsRepositoryContract
+  ReviewsRepositoryContract,
+  VendorReviewListFilters,
+  VendorReviewRecord
 } from './reviews.types.js';
 
 type ExistsResult = {
@@ -16,6 +18,14 @@ type ExistsResult = {
 @Injectable()
 export class ReviewsRepository implements ReviewsRepositoryContract {
   constructor(@Inject(DatabaseService) private readonly database: DatabaseService) {}
+
+  async assertVendorAccess(vendorId: string, userId: string): Promise<boolean> {
+    const result = await sql<{ hasAccess: boolean }>`
+      select public.has_vendor_access(${vendorId}::uuid, ${userId}::uuid) as "hasAccess"
+    `.execute(this.database.db);
+
+    return result.rows[0]?.hasAccess ?? false;
+  }
 
   async findCustomerReview(
     customerId: string,
@@ -125,5 +135,50 @@ export class ReviewsRepository implements ReviewsRepositoryContract {
     `.execute(this.database.db);
 
     return result.rows[0];
+  }
+
+  async listVendorReviews(
+    vendorId: string,
+    filters: VendorReviewListFilters
+  ): Promise<VendorReviewRecord[]> {
+    const cursorCreatedAt = filters.cursor?.split('|')[0] ?? null;
+    const cursorId = filters.cursor?.split('|')[1] ?? null;
+
+    const result = await sql<VendorReviewRecord>`
+      select
+        r.id::text as "id",
+        r.order_id::text as "orderId",
+        o.order_number as "orderNumber",
+        r.menu_item_id::text as "menuItemId",
+        mi.name as "menuItemName",
+        r.vendor_id::text as "vendorId",
+        r.delivery_batch_id::text as "deliveryBatchId",
+        r.food_rating as "foodRating",
+        r.vendor_rating as "vendorRating",
+        r.delivery_rating as "deliveryRating",
+        r.comment,
+        r.moderation_status::text as "moderationStatus",
+        r.created_at::text as "createdAt",
+        r.updated_at::text as "updatedAt"
+      from public.reviews r
+      join public.orders o on o.id = r.order_id
+      left join public.menu_items mi on mi.id = r.menu_item_id
+      where r.vendor_id = ${vendorId}::uuid
+        and (${filters.menuItemId ?? null}::uuid is null or r.menu_item_id = ${filters.menuItemId ?? null}::uuid)
+        and (
+          ${filters.rating ?? null}::integer is null
+          or r.food_rating = ${filters.rating ?? null}::integer
+          or r.vendor_rating = ${filters.rating ?? null}::integer
+          or r.delivery_rating = ${filters.rating ?? null}::integer
+        )
+        and (
+          ${cursorCreatedAt}::timestamptz is null
+          or (r.created_at, r.id) < (${cursorCreatedAt}::timestamptz, ${cursorId}::uuid)
+        )
+      order by r.created_at desc, r.id desc
+      limit ${filters.limit + 1}
+    `.execute(this.database.db);
+
+    return result.rows;
   }
 }

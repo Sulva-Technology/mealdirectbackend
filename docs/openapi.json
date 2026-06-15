@@ -803,6 +803,171 @@
         "tags": ["vendor"]
       }
     },
+    "/v1/vendor/orders": {
+      "get": {
+        "operationId": "VendorOrdersController_listOrders",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of orders placed with the authenticated vendor.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VendorOrderListEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid query filters." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Vendor role and vendor membership are required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor-orders"]
+      }
+    },
+    "/v1/vendor/orders/{orderId}": {
+      "get": {
+        "operationId": "VendorOrdersController_getOrder",
+        "parameters": [
+          {
+            "name": "orderId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detailed summary of a single vendor order, including items.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VendorOrderDetailEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Vendor role and vendor membership are required." },
+          "404": { "description": "Order not found for this vendor." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor-orders"]
+      }
+    },
+    "/v1/vendor/orders/{orderId}/accept": {
+      "post": {
+        "operationId": "VendorOrdersController_acceptOrder",
+        "parameters": [
+          {
+            "name": "orderId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order accepted by the vendor.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VendorOrderDetailEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid order transition." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Vendor role and vendor membership are required." },
+          "404": { "description": "Order not found for this vendor." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor-orders"]
+      }
+    },
+    "/v1/vendor/orders/{orderId}/prepare": {
+      "post": {
+        "operationId": "VendorOrdersController_prepareOrder",
+        "parameters": [
+          {
+            "name": "orderId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order preparation started by the vendor.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VendorOrderDetailEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid order transition." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Vendor role and vendor membership are required." },
+          "404": { "description": "Order not found for this vendor." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor-orders"]
+      }
+    },
+    "/v1/vendor/orders/{orderId}/preparing": {
+      "post": {
+        "operationId": "VendorOrdersController_preparingOrder",
+        "parameters": [
+          {
+            "name": "orderId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order preparation started by the vendor.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VendorOrderDetailEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid order transition." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Vendor role and vendor membership are required." },
+          "404": { "description": "Order not found for this vendor." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor-orders"]
+      }
+    },
+    "/v1/vendor/orders/{orderId}/ready": {
+      "post": {
+        "operationId": "VendorOrdersController_readyOrder",
+        "parameters": [
+          {
+            "name": "orderId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order marked ready for pickup by the vendor.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VendorOrderDetailEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid order transition." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Vendor role and vendor membership are required." },
+          "404": { "description": "Order not found for this vendor." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor-orders"]
+      }
+    },
     "/v1/catalog/vendors": {
       "get": {
         "operationId": "CatalogController_listVendors",
@@ -1187,6 +1352,113 @@
         "tags": ["payments"]
       }
     },
+    "/v1/vendor/batches": {
+      "get": {
+        "operationId": "VendorBatchesController_listBatches",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of delivery batches associated with the authenticated vendor.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BatchListEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid query filters." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Vendor role and vendor membership are required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor-batches"]
+      }
+    },
+    "/v1/vendor/batches/{batchId}": {
+      "get": {
+        "operationId": "VendorBatchesController_getBatch",
+        "parameters": [
+          {
+            "name": "batchId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detailed summary of a single vendor batch, including its orders.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BatchDetailEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Vendor role and vendor membership are required." },
+          "404": { "description": "Batch not found for this vendor." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor-batches"]
+      }
+    },
+    "/v1/vendor/batches/{batchId}/pickup": {
+      "post": {
+        "operationId": "VendorBatchesController_pickupBatch",
+        "parameters": [
+          {
+            "name": "batchId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Batch ready for pickup, assignments updated to picked_up.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BatchDetailEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid batch transition." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Vendor role and vendor membership are required." },
+          "404": { "description": "Batch not found for this vendor." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor-batches"]
+      }
+    },
+    "/v1/vendor/batches/{batchId}/ready-for-pickup": {
+      "post": {
+        "operationId": "VendorBatchesController_readyForPickupBatch",
+        "parameters": [
+          {
+            "name": "batchId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Batch ready for pickup, assignments updated to picked_up.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BatchDetailEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid batch transition." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Vendor role and vendor membership are required." },
+          "404": { "description": "Batch not found for this vendor." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor-batches"]
+      }
+    },
     "/v1/settlements/vendors/{vendorId}/daily": {
       "post": {
         "operationId": "SettlementsController_generateVendorDailySettlement",
@@ -1207,6 +1479,55 @@
         },
         "security": [{ "supabaseAuth": [] }],
         "tags": ["settlements"]
+      }
+    },
+    "/v1/vendor/settlements": {
+      "get": {
+        "operationId": "VendorSettlementsController_listSettlements",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Cursor-paginated settlements for the authenticated vendor.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VendorSettlementListEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid filters or cursor." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Vendor role and vendor membership are required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor-settlements"]
+      }
+    },
+    "/v1/vendor/settlements/{id}": {
+      "get": {
+        "operationId": "VendorSettlementsController_getSettlement",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Settlement detail with immutable settlement lines.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VendorSettlementDetailEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Vendor role and vendor membership are required." },
+          "404": { "description": "Settlement not found for this vendor." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor-settlements"]
       }
     },
     "/v1/orders/{orderId}/review": {
@@ -1232,6 +1553,26 @@
         },
         "security": [{ "supabaseAuth": [] }],
         "tags": ["reviews"]
+      }
+    },
+    "/v1/vendor/reviews": {
+      "get": {
+        "operationId": "VendorReviewsController_listReviews",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Cursor-paginated customer reviews for the authenticated vendor.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VendorReviewListEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid review filters or cursor." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor-reviews"]
       }
     },
     "/v1/orders/{orderId}/escalations": {
@@ -2022,6 +2363,202 @@
         },
         "required": ["entries"]
       },
+      "OrderSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "orderNumber": { "type": "string" },
+          "customerId": { "type": "string", "format": "uuid" },
+          "campusId": { "type": "string", "format": "uuid" },
+          "vendorId": { "type": "string", "format": "uuid" },
+          "vendorDisplayName": { "type": "string" },
+          "serviceDate": { "type": "string" },
+          "deliverySlotId": { "type": "string", "format": "uuid" },
+          "deliverySlotName": { "type": "string" },
+          "locationId": { "type": "string", "format": "uuid" },
+          "locationName": { "type": "string" },
+          "orderStatus": {
+            "type": "string",
+            "enum": [
+              "accepted",
+              "administratively_completed",
+              "cancelled",
+              "confirmed",
+              "delivered",
+              "expired",
+              "out_for_delivery",
+              "paid",
+              "pending_payment",
+              "preparing",
+              "ready",
+              "refunded"
+            ]
+          },
+          "deliveryMode": { "type": "string" },
+          "foodSubtotalKobo": { "type": "number" },
+          "deliveryFeeKobo": { "type": "number" },
+          "discountKobo": { "type": "number" },
+          "totalKobo": { "type": "number" },
+          "currency": { "type": "string" },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" },
+          "paidAt": { "type": "string", "nullable": true },
+          "deliveredAt": { "type": "string", "nullable": true },
+          "confirmedAt": { "type": "string", "nullable": true }
+        },
+        "required": [
+          "id",
+          "orderNumber",
+          "customerId",
+          "campusId",
+          "vendorId",
+          "vendorDisplayName",
+          "serviceDate",
+          "deliverySlotId",
+          "deliverySlotName",
+          "locationId",
+          "locationName",
+          "orderStatus",
+          "deliveryMode",
+          "foodSubtotalKobo",
+          "deliveryFeeKobo",
+          "discountKobo",
+          "totalKobo",
+          "currency",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "VendorOrderListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/OrderSummaryDto" } }
+        },
+        "required": ["data"]
+      },
+      "OrderItemDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "menuItemId": { "type": "string", "format": "uuid" },
+          "itemName": { "type": "string" },
+          "unitType": { "type": "string" },
+          "unitPriceKobo": { "type": "number" },
+          "quantity": { "type": "number" },
+          "lineTotalKobo": { "type": "number" }
+        },
+        "required": [
+          "id",
+          "menuItemId",
+          "itemName",
+          "unitType",
+          "unitPriceKobo",
+          "quantity",
+          "lineTotalKobo"
+        ]
+      },
+      "PaymentSnapshotDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "provider": { "type": "string" },
+          "providerReference": { "type": "string" },
+          "status": { "type": "string" },
+          "expectedAmountKobo": { "type": "number" },
+          "paidAmountKobo": { "type": "number", "nullable": true },
+          "currency": { "type": "string" },
+          "initializedAt": { "type": "string" },
+          "verifiedAt": { "type": "string", "nullable": true },
+          "paidAt": { "type": "string", "nullable": true }
+        },
+        "required": [
+          "id",
+          "provider",
+          "providerReference",
+          "status",
+          "expectedAmountKobo",
+          "currency",
+          "initializedAt"
+        ]
+      },
+      "OrderDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "orderNumber": { "type": "string" },
+          "customerId": { "type": "string", "format": "uuid" },
+          "campusId": { "type": "string", "format": "uuid" },
+          "vendorId": { "type": "string", "format": "uuid" },
+          "vendorDisplayName": { "type": "string" },
+          "serviceDate": { "type": "string" },
+          "deliverySlotId": { "type": "string", "format": "uuid" },
+          "deliverySlotName": { "type": "string" },
+          "locationId": { "type": "string", "format": "uuid" },
+          "locationName": { "type": "string" },
+          "orderStatus": {
+            "type": "string",
+            "enum": [
+              "accepted",
+              "administratively_completed",
+              "cancelled",
+              "confirmed",
+              "delivered",
+              "expired",
+              "out_for_delivery",
+              "paid",
+              "pending_payment",
+              "preparing",
+              "ready",
+              "refunded"
+            ]
+          },
+          "deliveryMode": { "type": "string" },
+          "foodSubtotalKobo": { "type": "number" },
+          "deliveryFeeKobo": { "type": "number" },
+          "discountKobo": { "type": "number" },
+          "totalKobo": { "type": "number" },
+          "currency": { "type": "string" },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" },
+          "paidAt": { "type": "string", "nullable": true },
+          "deliveredAt": { "type": "string", "nullable": true },
+          "confirmedAt": { "type": "string", "nullable": true },
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/OrderItemDto" } },
+          "latestPayment": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [{ "$ref": "#/components/schemas/PaymentSnapshotDto" }]
+          }
+        },
+        "required": [
+          "id",
+          "orderNumber",
+          "customerId",
+          "campusId",
+          "vendorId",
+          "vendorDisplayName",
+          "serviceDate",
+          "deliverySlotId",
+          "deliverySlotName",
+          "locationId",
+          "locationName",
+          "orderStatus",
+          "deliveryMode",
+          "foodSubtotalKobo",
+          "deliveryFeeKobo",
+          "discountKobo",
+          "totalKobo",
+          "currency",
+          "createdAt",
+          "updatedAt",
+          "items"
+        ]
+      },
+      "VendorOrderDetailEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/OrderDetailDto" } },
+        "required": ["data"]
+      },
       "CatalogVendorDto": {
         "type": "object",
         "properties": {
@@ -2229,102 +2766,12 @@
         "properties": { "data": { "$ref": "#/components/schemas/OrderQuoteDto" } },
         "required": ["data"]
       },
-      "OrderSummaryDto": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "orderNumber": { "type": "string" },
-          "customerId": { "type": "string", "format": "uuid" },
-          "campusId": { "type": "string", "format": "uuid" },
-          "vendorId": { "type": "string", "format": "uuid" },
-          "vendorDisplayName": { "type": "string" },
-          "serviceDate": { "type": "string" },
-          "deliverySlotId": { "type": "string", "format": "uuid" },
-          "deliverySlotName": { "type": "string" },
-          "locationId": { "type": "string", "format": "uuid" },
-          "locationName": { "type": "string" },
-          "orderStatus": {
-            "type": "string",
-            "enum": [
-              "accepted",
-              "administratively_completed",
-              "cancelled",
-              "confirmed",
-              "delivered",
-              "expired",
-              "out_for_delivery",
-              "paid",
-              "pending_payment",
-              "preparing",
-              "ready",
-              "refunded"
-            ]
-          },
-          "deliveryMode": { "type": "string" },
-          "foodSubtotalKobo": { "type": "number" },
-          "deliveryFeeKobo": { "type": "number" },
-          "discountKobo": { "type": "number" },
-          "totalKobo": { "type": "number" },
-          "currency": { "type": "string" },
-          "createdAt": { "type": "string" },
-          "updatedAt": { "type": "string" },
-          "paidAt": { "type": "string", "nullable": true },
-          "deliveredAt": { "type": "string", "nullable": true },
-          "confirmedAt": { "type": "string", "nullable": true }
-        },
-        "required": [
-          "id",
-          "orderNumber",
-          "customerId",
-          "campusId",
-          "vendorId",
-          "vendorDisplayName",
-          "serviceDate",
-          "deliverySlotId",
-          "deliverySlotName",
-          "locationId",
-          "locationName",
-          "orderStatus",
-          "deliveryMode",
-          "foodSubtotalKobo",
-          "deliveryFeeKobo",
-          "discountKobo",
-          "totalKobo",
-          "currency",
-          "createdAt",
-          "updatedAt"
-        ]
-      },
       "OrderListEnvelopeDto": {
         "type": "object",
         "properties": {
           "data": { "type": "array", "items": { "$ref": "#/components/schemas/OrderSummaryDto" } }
         },
         "required": ["data"]
-      },
-      "PaymentSnapshotDto": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "provider": { "type": "string" },
-          "providerReference": { "type": "string" },
-          "status": { "type": "string" },
-          "expectedAmountKobo": { "type": "number" },
-          "paidAmountKobo": { "type": "number", "nullable": true },
-          "currency": { "type": "string" },
-          "initializedAt": { "type": "string" },
-          "verifiedAt": { "type": "string", "nullable": true },
-          "paidAt": { "type": "string", "nullable": true }
-        },
-        "required": [
-          "id",
-          "provider",
-          "providerReference",
-          "status",
-          "expectedAmountKobo",
-          "currency",
-          "initializedAt"
-        ]
       },
       "OrderPaymentStatusDto": {
         "type": "object",
@@ -2369,100 +2816,6 @@
         "type": "object",
         "properties": { "data": { "$ref": "#/components/schemas/DeliveryConfirmationDto" } },
         "required": ["data"]
-      },
-      "OrderItemDto": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "menuItemId": { "type": "string", "format": "uuid" },
-          "itemName": { "type": "string" },
-          "unitType": { "type": "string" },
-          "unitPriceKobo": { "type": "number" },
-          "quantity": { "type": "number" },
-          "lineTotalKobo": { "type": "number" }
-        },
-        "required": [
-          "id",
-          "menuItemId",
-          "itemName",
-          "unitType",
-          "unitPriceKobo",
-          "quantity",
-          "lineTotalKobo"
-        ]
-      },
-      "OrderDetailDto": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "orderNumber": { "type": "string" },
-          "customerId": { "type": "string", "format": "uuid" },
-          "campusId": { "type": "string", "format": "uuid" },
-          "vendorId": { "type": "string", "format": "uuid" },
-          "vendorDisplayName": { "type": "string" },
-          "serviceDate": { "type": "string" },
-          "deliverySlotId": { "type": "string", "format": "uuid" },
-          "deliverySlotName": { "type": "string" },
-          "locationId": { "type": "string", "format": "uuid" },
-          "locationName": { "type": "string" },
-          "orderStatus": {
-            "type": "string",
-            "enum": [
-              "accepted",
-              "administratively_completed",
-              "cancelled",
-              "confirmed",
-              "delivered",
-              "expired",
-              "out_for_delivery",
-              "paid",
-              "pending_payment",
-              "preparing",
-              "ready",
-              "refunded"
-            ]
-          },
-          "deliveryMode": { "type": "string" },
-          "foodSubtotalKobo": { "type": "number" },
-          "deliveryFeeKobo": { "type": "number" },
-          "discountKobo": { "type": "number" },
-          "totalKobo": { "type": "number" },
-          "currency": { "type": "string" },
-          "createdAt": { "type": "string" },
-          "updatedAt": { "type": "string" },
-          "paidAt": { "type": "string", "nullable": true },
-          "deliveredAt": { "type": "string", "nullable": true },
-          "confirmedAt": { "type": "string", "nullable": true },
-          "items": { "type": "array", "items": { "$ref": "#/components/schemas/OrderItemDto" } },
-          "latestPayment": {
-            "nullable": true,
-            "type": "object",
-            "allOf": [{ "$ref": "#/components/schemas/PaymentSnapshotDto" }]
-          }
-        },
-        "required": [
-          "id",
-          "orderNumber",
-          "customerId",
-          "campusId",
-          "vendorId",
-          "vendorDisplayName",
-          "serviceDate",
-          "deliverySlotId",
-          "deliverySlotName",
-          "locationId",
-          "locationName",
-          "orderStatus",
-          "deliveryMode",
-          "foodSubtotalKobo",
-          "deliveryFeeKobo",
-          "discountKobo",
-          "totalKobo",
-          "currency",
-          "createdAt",
-          "updatedAt",
-          "items"
-        ]
       },
       "OrderDetailEnvelopeDto": {
         "type": "object",
@@ -2577,6 +2930,219 @@
         "properties": { "data": { "$ref": "#/components/schemas/RefundDto" } },
         "required": ["data"]
       },
+      "BatchSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "campusId": { "type": "string", "format": "uuid" },
+          "vendorId": { "type": "string", "format": "uuid" },
+          "serviceDate": { "type": "string" },
+          "deliverySlotId": { "type": "string", "format": "uuid" },
+          "zoneId": { "type": "string", "format": "uuid" },
+          "batchNumber": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["open", "closed", "assigned", "in_progress", "completed", "cancelled"]
+          },
+          "deliveryMode": { "type": "string" },
+          "orderCount": { "type": "number" },
+          "deliveryEarningsKobo": { "type": "number" },
+          "cutoffAt": { "type": "string" },
+          "closedAt": { "type": "string", "nullable": true },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" }
+        },
+        "required": [
+          "id",
+          "campusId",
+          "vendorId",
+          "serviceDate",
+          "deliverySlotId",
+          "zoneId",
+          "batchNumber",
+          "status",
+          "deliveryMode",
+          "orderCount",
+          "deliveryEarningsKobo",
+          "cutoffAt",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "BatchListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/BatchSummaryDto" } }
+        },
+        "required": ["data"]
+      },
+      "BatchDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "campusId": { "type": "string", "format": "uuid" },
+          "vendorId": { "type": "string", "format": "uuid" },
+          "serviceDate": { "type": "string" },
+          "deliverySlotId": { "type": "string", "format": "uuid" },
+          "zoneId": { "type": "string", "format": "uuid" },
+          "batchNumber": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["open", "closed", "assigned", "in_progress", "completed", "cancelled"]
+          },
+          "deliveryMode": { "type": "string" },
+          "orderCount": { "type": "number" },
+          "deliveryEarningsKobo": { "type": "number" },
+          "cutoffAt": { "type": "string" },
+          "closedAt": { "type": "string", "nullable": true },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" },
+          "orders": { "type": "array", "items": { "$ref": "#/components/schemas/OrderSummaryDto" } }
+        },
+        "required": [
+          "id",
+          "campusId",
+          "vendorId",
+          "serviceDate",
+          "deliverySlotId",
+          "zoneId",
+          "batchNumber",
+          "status",
+          "deliveryMode",
+          "orderCount",
+          "deliveryEarningsKobo",
+          "cutoffAt",
+          "createdAt",
+          "updatedAt",
+          "orders"
+        ]
+      },
+      "BatchDetailEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/BatchDetailDto" } },
+        "required": ["data"]
+      },
+      "SettlementSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "campusId": { "type": "string", "format": "uuid" },
+          "vendorId": { "type": "string", "format": "uuid", "nullable": true },
+          "riderId": { "type": "string", "format": "uuid", "nullable": true },
+          "settlementDate": { "type": "string", "example": "2026-06-15" },
+          "status": { "type": "string", "enum": ["approved", "cancelled", "draft", "paid"] },
+          "grossFoodAmountKobo": { "type": "number" },
+          "deliveryEarningsKobo": { "type": "number" },
+          "refundsKobo": { "type": "number" },
+          "adjustmentsKobo": { "type": "number" },
+          "payableKobo": { "type": "number" },
+          "paidAt": { "type": "string", "nullable": true },
+          "externalReference": { "type": "string", "nullable": true },
+          "lineCount": { "type": "number" },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" }
+        },
+        "required": [
+          "id",
+          "campusId",
+          "vendorId",
+          "riderId",
+          "settlementDate",
+          "status",
+          "grossFoodAmountKobo",
+          "deliveryEarningsKobo",
+          "refundsKobo",
+          "adjustmentsKobo",
+          "payableKobo",
+          "paidAt",
+          "externalReference",
+          "lineCount",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "VendorSettlementListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SettlementSummaryDto" }
+          }
+        },
+        "required": ["data"]
+      },
+      "SettlementLineDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "settlementId": { "type": "string", "format": "uuid" },
+          "orderId": { "type": "string", "format": "uuid", "nullable": true },
+          "orderNumber": { "type": "string", "nullable": true },
+          "lineType": { "type": "string" },
+          "amountKobo": { "type": "number" },
+          "description": { "type": "string" },
+          "createdAt": { "type": "string" }
+        },
+        "required": [
+          "id",
+          "settlementId",
+          "orderId",
+          "orderNumber",
+          "lineType",
+          "amountKobo",
+          "description",
+          "createdAt"
+        ]
+      },
+      "SettlementDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "campusId": { "type": "string", "format": "uuid" },
+          "vendorId": { "type": "string", "format": "uuid", "nullable": true },
+          "riderId": { "type": "string", "format": "uuid", "nullable": true },
+          "settlementDate": { "type": "string", "example": "2026-06-15" },
+          "status": { "type": "string", "enum": ["approved", "cancelled", "draft", "paid"] },
+          "grossFoodAmountKobo": { "type": "number" },
+          "deliveryEarningsKobo": { "type": "number" },
+          "refundsKobo": { "type": "number" },
+          "adjustmentsKobo": { "type": "number" },
+          "payableKobo": { "type": "number" },
+          "paidAt": { "type": "string", "nullable": true },
+          "externalReference": { "type": "string", "nullable": true },
+          "lineCount": { "type": "number" },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" },
+          "lines": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SettlementLineDto" }
+          }
+        },
+        "required": [
+          "id",
+          "campusId",
+          "vendorId",
+          "riderId",
+          "settlementDate",
+          "status",
+          "grossFoodAmountKobo",
+          "deliveryEarningsKobo",
+          "refundsKobo",
+          "adjustmentsKobo",
+          "payableKobo",
+          "paidAt",
+          "externalReference",
+          "lineCount",
+          "createdAt",
+          "updatedAt",
+          "lines"
+        ]
+      },
+      "VendorSettlementDetailEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/SettlementDetailDto" } },
+        "required": ["data"]
+      },
       "ReviewRecordDto": {
         "type": "object",
         "properties": {
@@ -2599,6 +3165,36 @@
       "ReviewEnvelopeDto": {
         "type": "object",
         "properties": { "data": { "$ref": "#/components/schemas/ReviewRecordDto" } },
+        "required": ["data"]
+      },
+      "VendorReviewRecordDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "orderId": { "type": "string", "format": "uuid" },
+          "orderNumber": { "type": "string", "nullable": true },
+          "menuItemId": { "type": "string", "nullable": true },
+          "menuItemName": { "type": "string", "nullable": true },
+          "vendorId": { "type": "string", "nullable": true },
+          "deliveryBatchId": { "type": "string", "nullable": true },
+          "foodRating": { "type": "number", "nullable": true },
+          "vendorRating": { "type": "number", "nullable": true },
+          "deliveryRating": { "type": "number", "nullable": true },
+          "comment": { "type": "string", "nullable": true },
+          "moderationStatus": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" }
+        },
+        "required": ["id", "orderId", "moderationStatus", "createdAt", "updatedAt"]
+      },
+      "VendorReviewListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/VendorReviewRecordDto" }
+          }
+        },
         "required": ["data"]
       },
       "EscalationRecordDto": {

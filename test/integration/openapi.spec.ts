@@ -152,4 +152,14 @@ describe('OpenAPI contract foundation', () => {
       document.paths['/v1/vendor/inventory/{inventoryId}/adjustments']?.post?.requestBody
     ).toBeDefined();
   });
+
+  it('documents vendor settlement and review endpoints', () => {
+    const document = createOpenApiDocument(app);
+
+    expect(document.paths['/v1/vendor/orders/{orderId}/preparing']?.post).toBeDefined();
+    expect(document.paths['/v1/vendor/batches/{batchId}/ready-for-pickup']?.post).toBeDefined();
+    expect(document.paths['/v1/vendor/settlements']?.get).toBeDefined();
+    expect(document.paths['/v1/vendor/settlements/{id}']?.get).toBeDefined();
+    expect(document.paths['/v1/vendor/reviews']?.get).toBeDefined();
+  });
 });

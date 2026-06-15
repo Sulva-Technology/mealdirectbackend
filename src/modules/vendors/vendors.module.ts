@@ -4,11 +4,15 @@ import { AuthModule } from '../auth/auth.module.js';
 import { VendorsController } from './vendors.controller.js';
 import { VendorsRepository } from './vendors.repository.js';
 import { VendorsService } from './vendors.service.js';
+import { VendorOrdersController } from './vendor-orders.controller.js';
+import { VendorOrdersService } from './vendor-orders.service.js';
+import { VendorOrdersRepository } from './vendor-orders.repository.js';
 
 @Module({
   imports: [AuthModule],
-  controllers: [VendorsController],
-  providers: [VendorsRepository, VendorsService],
-  exports: [VendorsService]
+  controllers: [VendorsController, VendorOrdersController],
+  providers: [VendorsRepository, VendorsService, VendorOrdersRepository, VendorOrdersService],
+  exports: [VendorsService, VendorOrdersService]
 })
 export class VendorsModule {}
+
