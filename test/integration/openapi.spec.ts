@@ -102,4 +102,14 @@ describe('OpenAPI contract foundation', () => {
     expect(document.paths['/v1/orders/{orderId}/escalations']?.post).toBeDefined();
     expect(document.paths['/v1/orders/{orderId}/review']?.post).toBeDefined();
   });
+
+  it('documents notification endpoints', () => {
+    const document = createOpenApiDocument(app);
+
+    expect(document.paths['/v1/notifications']?.get).toBeDefined();
+    expect(document.paths['/v1/notifications/{notificationId}/read']?.post).toBeDefined();
+    expect(document.paths['/v1/notifications/read-all']?.post).toBeDefined();
+    expect(document.paths['/v1/notifications/preferences']?.get).toBeDefined();
+    expect(document.paths['/v1/notifications/preferences']?.put).toBeDefined();
+  });
 });

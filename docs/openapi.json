@@ -809,6 +809,106 @@
         "security": [{ "supabaseAuth": [] }],
         "tags": ["escalations"]
       }
+    },
+    "/v1/notifications": {
+      "get": {
+        "operationId": "NotificationsController_listNotifications",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Current user notification feed.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/NotificationListEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["notifications"]
+      }
+    },
+    "/v1/notifications/read-all": {
+      "post": {
+        "operationId": "NotificationsController_markAllRead",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Marks all current user notifications as read.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MarkAllNotificationsReadEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["notifications"]
+      }
+    },
+    "/v1/notifications/{notificationId}/read": {
+      "post": {
+        "operationId": "NotificationsController_markRead",
+        "parameters": [
+          {
+            "name": "notificationId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Marks one current user notification as read.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/NotificationEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["notifications"]
+      }
+    },
+    "/v1/notifications/preferences": {
+      "get": {
+        "operationId": "NotificationsController_getPreferences",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Current user notification preferences.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/NotificationPreferencesEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["notifications"]
+      },
+      "put": {
+        "operationId": "NotificationsController_updatePreferences",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Updated current user notification preferences.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/NotificationPreferencesEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["notifications"]
+      }
     }
   },
   "info": {
@@ -1690,6 +1790,90 @@
       "EscalationEnvelopeDto": {
         "type": "object",
         "properties": { "data": { "$ref": "#/components/schemas/EscalationRecordDto" } },
+        "required": ["data"]
+      },
+      "NotificationRecordDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "recipientUserId": { "type": "string", "format": "uuid" },
+          "eventType": { "type": "string" },
+          "aggregateType": { "type": "string" },
+          "aggregateId": { "type": "string", "format": "uuid" },
+          "title": { "type": "string" },
+          "body": { "type": "string" },
+          "linkPath": { "type": "string", "nullable": true },
+          "readAt": { "type": "string", "nullable": true },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" }
+        },
+        "required": [
+          "id",
+          "recipientUserId",
+          "eventType",
+          "aggregateType",
+          "aggregateId",
+          "title",
+          "body",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "NotificationListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/NotificationRecordDto" }
+          }
+        },
+        "required": ["data"]
+      },
+      "MarkAllNotificationsReadDto": {
+        "type": "object",
+        "properties": { "updatedCount": { "type": "number" } },
+        "required": ["updatedCount"]
+      },
+      "MarkAllNotificationsReadEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/MarkAllNotificationsReadDto" } },
+        "required": ["data"]
+      },
+      "NotificationEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/NotificationRecordDto" } },
+        "required": ["data"]
+      },
+      "NotificationPreferencesDto": {
+        "type": "object",
+        "properties": {
+          "userId": { "type": "string", "format": "uuid" },
+          "inAppEnabled": { "type": "boolean" },
+          "pushEnabled": { "type": "boolean" },
+          "emailEnabled": { "type": "boolean" },
+          "orderUpdates": { "type": "boolean" },
+          "paymentUpdates": { "type": "boolean" },
+          "deliveryUpdates": { "type": "boolean" },
+          "escalationUpdates": { "type": "boolean" },
+          "settlementUpdates": { "type": "boolean" },
+          "updatedAt": { "type": "string" }
+        },
+        "required": [
+          "userId",
+          "inAppEnabled",
+          "pushEnabled",
+          "emailEnabled",
+          "orderUpdates",
+          "paymentUpdates",
+          "deliveryUpdates",
+          "escalationUpdates",
+          "settlementUpdates",
+          "updatedAt"
+        ]
+      },
+      "NotificationPreferencesEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/NotificationPreferencesDto" } },
         "required": ["data"]
       },
       "CursorPaginationMetaDto": {
