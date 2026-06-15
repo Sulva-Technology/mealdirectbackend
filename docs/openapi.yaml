@@ -611,6 +611,75 @@ paths:
           description: Rider daily settlement was generated idempotently.
       security: *a17
       tags: *a18
+  /v1/orders/{orderId}/review:
+    post:
+      operationId: CustomerReviewsController_createReview
+      parameters:
+        - name: orderId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '201':
+          description: Created or existing customer review for an owned confirmed order.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewEnvelopeDto'
+        '400':
+          description: Invalid review input or ineligible order.
+        '401':
+          description: Missing, invalid, or expired Supabase JWT.
+      security:
+        - supabaseAuth: []
+      tags:
+        - reviews
+  /v1/orders/{orderId}/escalations:
+    get:
+      operationId: CustomerEscalationsController_listEscalations
+      parameters:
+        - name: orderId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: Customer-visible escalations for an owned order.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EscalationListEnvelopeDto'
+        '401': &a19
+          description: Missing, invalid, or expired Supabase JWT.
+      security: &a20
+        - supabaseAuth: []
+      tags: &a21
+        - escalations
+    post:
+      operationId: CustomerEscalationsController_openEscalation
+      parameters:
+        - name: orderId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '201':
+          description: Opened or existing customer escalation for an owned eligible order.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EscalationEnvelopeDto'
+        '400':
+          description: Invalid escalation input or ineligible order.
+        '401': *a19
+      security: *a20
+      tags: *a21
 info:
   title: Meal Direct API
   description: Stable REST API for Meal Direct web and future mobile clients.
@@ -650,7 +719,7 @@ components:
           format: uuid
         role:
           type: string
-          enum: &a19
+          enum: &a22
             - customer
             - vendor
             - rider
@@ -851,7 +920,7 @@ components:
           type: array
           items:
             type: string
-            enum: *a19
+            enum: *a22
         campuses:
           type: array
           items:
@@ -1299,7 +1368,7 @@ components:
           type: string
         orderStatus:
           type: string
-          enum: &a20
+          enum: &a23
             - accepted
             - administratively_completed
             - cancelled
@@ -1410,7 +1479,7 @@ components:
           format: uuid
         orderStatus:
           type: string
-          enum: *a20
+          enum: *a23
         payment:
           nullable: true
           type: object
@@ -1501,7 +1570,7 @@ components:
           type: string
         orderStatus:
           type: string
-          enum: *a20
+          enum: *a23
         deliveryMode:
           type: string
         foodSubtotalKobo:
@@ -1736,6 +1805,130 @@ components:
       properties:
         data:
           $ref: '#/components/schemas/RefundDto'
+      required:
+        - data
+    ReviewRecordDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        orderId:
+          type: string
+          format: uuid
+        reviewerId:
+          type: string
+          format: uuid
+        menuItemId:
+          type: string
+          nullable: true
+        vendorId:
+          type: string
+          nullable: true
+        deliveryBatchId:
+          type: string
+          nullable: true
+        foodRating:
+          type: number
+          nullable: true
+        vendorRating:
+          type: number
+          nullable: true
+        deliveryRating:
+          type: number
+          nullable: true
+        comment:
+          type: string
+          nullable: true
+        moderationStatus:
+          type: string
+          enum:
+            - pending
+            - approved
+            - rejected
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - orderId
+        - reviewerId
+        - moderationStatus
+        - createdAt
+        - updatedAt
+    ReviewEnvelopeDto:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/ReviewRecordDto'
+      required:
+        - data
+    EscalationRecordDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        orderId:
+          type: string
+          format: uuid
+        openedBy:
+          type: string
+          format: uuid
+        category:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum:
+            - open
+            - investigating
+            - resolved
+            - rejected
+        assignedAdminId:
+          type: string
+          nullable: true
+        resolution:
+          type: string
+          nullable: true
+        refundId:
+          type: string
+          nullable: true
+        openedAt:
+          type: string
+        resolvedAt:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - orderId
+        - openedBy
+        - category
+        - description
+        - status
+        - openedAt
+        - createdAt
+        - updatedAt
+    EscalationListEnvelopeDto:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/EscalationRecordDto'
+      required:
+        - data
+    EscalationEnvelopeDto:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/EscalationRecordDto'
       required:
         - data
     CursorPaginationMetaDto:
