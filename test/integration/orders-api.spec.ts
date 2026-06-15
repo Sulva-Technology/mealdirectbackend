@@ -71,4 +71,70 @@ describe('orders API', () => {
       }
     });
   });
+
+  it('validates order quote input before touching the database', async () => {
+    const token = await signCustomerToken();
+    const response = await app.inject({
+      method: 'POST',
+      url: '/v1/orders/quote',
+      headers: {
+        authorization: `Bearer ${token}`
+      },
+      payload: {
+        campusId: 'not-a-uuid',
+        items: []
+      }
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toMatchObject({
+      error: {
+        code: 'VALIDATION_FAILED'
+      }
+    });
+  });
+
+  it('validates order list filters before touching the database', async () => {
+    const token = await signCustomerToken();
+    const response = await app.inject({
+      method: 'GET',
+      url: '/v1/orders?status=unknown',
+      headers: {
+        authorization: `Bearer ${token}`
+      }
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toMatchObject({
+      error: {
+        code: 'VALIDATION_FAILED'
+      }
+    });
+  });
+
+  it('validates customer order object params before touching the database', async () => {
+    const token = await signCustomerToken();
+    const endpoints = [
+      '/v1/orders/not-a-uuid',
+      '/v1/orders/not-a-uuid/payment-status',
+      '/v1/orders/not-a-uuid/confirm-delivery'
+    ];
+
+    for (const url of endpoints) {
+      const response = await app.inject({
+        method: url.endsWith('confirm-delivery') ? 'POST' : 'GET',
+        url,
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.json()).toMatchObject({
+        error: {
+          code: 'VALIDATION_FAILED'
+        }
+      });
+    }
+  });
 });

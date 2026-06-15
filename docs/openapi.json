@@ -476,12 +476,100 @@
         "tags": ["catalog"]
       }
     },
+    "/v1/orders/quote": {
+      "post": {
+        "operationId": "OrdersController_quoteOrder",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Order quote using current menu and slot availability.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OrderQuoteEnvelopeDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["orders"]
+      }
+    },
     "/v1/orders": {
+      "get": {
+        "operationId": "OrdersController_listOrders",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Customer order history.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OrderListEnvelopeDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["orders"]
+      },
       "post": {
         "operationId": "OrdersController_createOrder",
         "parameters": [],
         "responses": {
           "201": { "description": "Order was created idempotently and inventory was reserved." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["orders"]
+      }
+    },
+    "/v1/orders/{orderId}/payment-status": {
+      "get": {
+        "operationId": "OrdersController_paymentStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Customer-visible payment status for an order.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OrderPaymentStatusEnvelopeDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["orders"]
+      }
+    },
+    "/v1/orders/{orderId}/confirm-delivery": {
+      "post": {
+        "operationId": "OrdersController_confirmDelivery",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Customer delivery confirmation.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DeliveryConfirmationEnvelopeDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["orders"]
+      }
+    },
+    "/v1/orders/{orderId}": {
+      "get": {
+        "operationId": "OrdersController_getOrder",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Customer-owned order detail.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OrderDetailEnvelopeDto" }
+              }
+            }
+          }
         },
         "security": [{ "supabaseAuth": [] }],
         "tags": ["orders"]
@@ -938,6 +1026,292 @@
         "properties": {
           "data": { "type": "array", "items": { "$ref": "#/components/schemas/MenuItemDto" } }
         },
+        "required": ["data"]
+      },
+      "OrderQuoteItemDto": {
+        "type": "object",
+        "properties": {
+          "menuItemId": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "quantity": { "type": "number" },
+          "remainingQuantity": { "type": "number" },
+          "unitPriceKobo": { "type": "number" },
+          "lineTotalKobo": { "type": "number" }
+        },
+        "required": [
+          "menuItemId",
+          "name",
+          "quantity",
+          "remainingQuantity",
+          "unitPriceKobo",
+          "lineTotalKobo"
+        ]
+      },
+      "OrderQuoteDto": {
+        "type": "object",
+        "properties": {
+          "currency": { "type": "string" },
+          "foodSubtotalKobo": { "type": "number" },
+          "deliveryFeeKobo": { "type": "number" },
+          "discountKobo": { "type": "number" },
+          "totalKobo": { "type": "number" },
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/OrderQuoteItemDto" }
+          }
+        },
+        "required": [
+          "currency",
+          "foodSubtotalKobo",
+          "deliveryFeeKobo",
+          "discountKobo",
+          "totalKobo",
+          "items"
+        ]
+      },
+      "OrderQuoteEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/OrderQuoteDto" } },
+        "required": ["data"]
+      },
+      "OrderSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "orderNumber": { "type": "string" },
+          "customerId": { "type": "string", "format": "uuid" },
+          "campusId": { "type": "string", "format": "uuid" },
+          "vendorId": { "type": "string", "format": "uuid" },
+          "vendorDisplayName": { "type": "string" },
+          "serviceDate": { "type": "string" },
+          "deliverySlotId": { "type": "string", "format": "uuid" },
+          "deliverySlotName": { "type": "string" },
+          "locationId": { "type": "string", "format": "uuid" },
+          "locationName": { "type": "string" },
+          "orderStatus": {
+            "type": "string",
+            "enum": [
+              "accepted",
+              "administratively_completed",
+              "cancelled",
+              "confirmed",
+              "delivered",
+              "expired",
+              "out_for_delivery",
+              "paid",
+              "pending_payment",
+              "preparing",
+              "ready",
+              "refunded"
+            ]
+          },
+          "deliveryMode": { "type": "string" },
+          "foodSubtotalKobo": { "type": "number" },
+          "deliveryFeeKobo": { "type": "number" },
+          "discountKobo": { "type": "number" },
+          "totalKobo": { "type": "number" },
+          "currency": { "type": "string" },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" },
+          "paidAt": { "type": "string", "nullable": true },
+          "deliveredAt": { "type": "string", "nullable": true },
+          "confirmedAt": { "type": "string", "nullable": true }
+        },
+        "required": [
+          "id",
+          "orderNumber",
+          "customerId",
+          "campusId",
+          "vendorId",
+          "vendorDisplayName",
+          "serviceDate",
+          "deliverySlotId",
+          "deliverySlotName",
+          "locationId",
+          "locationName",
+          "orderStatus",
+          "deliveryMode",
+          "foodSubtotalKobo",
+          "deliveryFeeKobo",
+          "discountKobo",
+          "totalKobo",
+          "currency",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "OrderListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/OrderSummaryDto" } }
+        },
+        "required": ["data"]
+      },
+      "PaymentSnapshotDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "provider": { "type": "string" },
+          "providerReference": { "type": "string" },
+          "status": { "type": "string" },
+          "expectedAmountKobo": { "type": "number" },
+          "paidAmountKobo": { "type": "number", "nullable": true },
+          "currency": { "type": "string" },
+          "initializedAt": { "type": "string" },
+          "verifiedAt": { "type": "string", "nullable": true },
+          "paidAt": { "type": "string", "nullable": true }
+        },
+        "required": [
+          "id",
+          "provider",
+          "providerReference",
+          "status",
+          "expectedAmountKobo",
+          "currency",
+          "initializedAt"
+        ]
+      },
+      "OrderPaymentStatusDto": {
+        "type": "object",
+        "properties": {
+          "orderId": { "type": "string", "format": "uuid" },
+          "orderStatus": {
+            "type": "string",
+            "enum": [
+              "accepted",
+              "administratively_completed",
+              "cancelled",
+              "confirmed",
+              "delivered",
+              "expired",
+              "out_for_delivery",
+              "paid",
+              "pending_payment",
+              "preparing",
+              "ready",
+              "refunded"
+            ]
+          },
+          "payment": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [{ "$ref": "#/components/schemas/PaymentSnapshotDto" }]
+          }
+        },
+        "required": ["orderId", "orderStatus"]
+      },
+      "OrderPaymentStatusEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/OrderPaymentStatusDto" } },
+        "required": ["data"]
+      },
+      "DeliveryConfirmationDto": {
+        "type": "object",
+        "properties": { "confirmationId": { "type": "string", "format": "uuid" } },
+        "required": ["confirmationId"]
+      },
+      "DeliveryConfirmationEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/DeliveryConfirmationDto" } },
+        "required": ["data"]
+      },
+      "OrderItemDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "menuItemId": { "type": "string", "format": "uuid" },
+          "itemName": { "type": "string" },
+          "unitType": { "type": "string" },
+          "unitPriceKobo": { "type": "number" },
+          "quantity": { "type": "number" },
+          "lineTotalKobo": { "type": "number" }
+        },
+        "required": [
+          "id",
+          "menuItemId",
+          "itemName",
+          "unitType",
+          "unitPriceKobo",
+          "quantity",
+          "lineTotalKobo"
+        ]
+      },
+      "OrderDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "orderNumber": { "type": "string" },
+          "customerId": { "type": "string", "format": "uuid" },
+          "campusId": { "type": "string", "format": "uuid" },
+          "vendorId": { "type": "string", "format": "uuid" },
+          "vendorDisplayName": { "type": "string" },
+          "serviceDate": { "type": "string" },
+          "deliverySlotId": { "type": "string", "format": "uuid" },
+          "deliverySlotName": { "type": "string" },
+          "locationId": { "type": "string", "format": "uuid" },
+          "locationName": { "type": "string" },
+          "orderStatus": {
+            "type": "string",
+            "enum": [
+              "accepted",
+              "administratively_completed",
+              "cancelled",
+              "confirmed",
+              "delivered",
+              "expired",
+              "out_for_delivery",
+              "paid",
+              "pending_payment",
+              "preparing",
+              "ready",
+              "refunded"
+            ]
+          },
+          "deliveryMode": { "type": "string" },
+          "foodSubtotalKobo": { "type": "number" },
+          "deliveryFeeKobo": { "type": "number" },
+          "discountKobo": { "type": "number" },
+          "totalKobo": { "type": "number" },
+          "currency": { "type": "string" },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" },
+          "paidAt": { "type": "string", "nullable": true },
+          "deliveredAt": { "type": "string", "nullable": true },
+          "confirmedAt": { "type": "string", "nullable": true },
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/OrderItemDto" } },
+          "latestPayment": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [{ "$ref": "#/components/schemas/PaymentSnapshotDto" }]
+          }
+        },
+        "required": [
+          "id",
+          "orderNumber",
+          "customerId",
+          "campusId",
+          "vendorId",
+          "vendorDisplayName",
+          "serviceDate",
+          "deliverySlotId",
+          "deliverySlotName",
+          "locationId",
+          "locationName",
+          "orderStatus",
+          "deliveryMode",
+          "foodSubtotalKobo",
+          "deliveryFeeKobo",
+          "discountKobo",
+          "totalKobo",
+          "currency",
+          "createdAt",
+          "updatedAt",
+          "items"
+        ]
+      },
+      "OrderDetailEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/OrderDetailDto" } },
         "required": ["data"]
       },
       "CursorPaginationMetaDto": {
