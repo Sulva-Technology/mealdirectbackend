@@ -1,6 +1,19 @@
 import { SwaggerModule, DocumentBuilder, type OpenAPIObject } from '@nestjs/swagger';
 import type { INestApplication } from '@nestjs/common';
 
+import {
+  CursorPaginationMetaDto,
+  CursorPaginationQueryDto,
+  DateRangeQueryDto,
+  ErrorBodyDto,
+  ErrorEnvelopeDto,
+  ListEnvelopeDto,
+  MoneyDto,
+  SortQueryDto,
+  StatusQueryDto,
+  SuccessEnvelopeDto,
+  UuidParamDto
+} from './common/dto/api-contract.dto.js';
 import { EnvService } from './config/env.service.js';
 
 export function createOpenApiDocument(app: INestApplication): OpenAPIObject {
@@ -47,7 +60,21 @@ export function createOpenApiDocument(app: INestApplication): OpenAPIObject {
     )
     .build();
 
-  return SwaggerModule.createDocument(app, config);
+  return SwaggerModule.createDocument(app, config, {
+    extraModels: [
+      CursorPaginationMetaDto,
+      CursorPaginationQueryDto,
+      DateRangeQueryDto,
+      ErrorBodyDto,
+      ErrorEnvelopeDto,
+      ListEnvelopeDto,
+      MoneyDto,
+      SortQueryDto,
+      StatusQueryDto,
+      SuccessEnvelopeDto,
+      UuidParamDto
+    ]
+  });
 }
 
 export function mountOpenApi(app: INestApplication): void {

@@ -117,4 +117,135 @@ components:
       type: http
       description: Internal operations token. Temporary until Super Admin JWT/RBAC is
         implemented.
-  schemas: {}
+  schemas:
+    CursorPaginationMetaDto:
+      type: object
+      properties:
+        hasMore:
+          type: boolean
+          description: True when another page is available.
+        limit:
+          type: number
+          description: Limit applied to the current page.
+          minimum: 1
+        nextCursor:
+          type: string
+          description: Cursor to request the next page.
+      required:
+        - hasMore
+        - limit
+    CursorPaginationQueryDto:
+      type: object
+      properties:
+        cursor:
+          type: string
+          description: Opaque cursor returned by the previous page.
+          example: eyJpZCI6Im9yZGVyLTEifQ
+        limit:
+          type: number
+          description: Maximum number of records to return.
+          default: 20
+          maximum: 100
+          minimum: 1
+    DateRangeQueryDto:
+      type: object
+      properties:
+        dateFrom:
+          type: string
+          description: Inclusive ISO-8601 lower bound for date filtering.
+          example: 2026-06-15T00:00:00.000Z
+        dateTo:
+          type: string
+          description: Inclusive ISO-8601 upper bound for date filtering.
+          example: 2026-06-16T00:00:00.000Z
+    ErrorBodyDto:
+      type: object
+      properties:
+        code:
+          type: string
+          example: VALIDATION_FAILED
+        message:
+          type: string
+          example: Request validation failed
+        requestId:
+          type: string
+          description: Request identifier for support and log correlation.
+        details:
+          description: Safe machine-readable error details.
+          type: array
+          items:
+            type: object
+      required:
+        - code
+        - message
+    ErrorEnvelopeDto:
+      type: object
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorBodyDto'
+      required:
+        - error
+    ListEnvelopeDto:
+      type: object
+      properties:
+        data:
+          description: Response list payload.
+          type: array
+          items:
+            type: object
+        pagination:
+          $ref: '#/components/schemas/CursorPaginationMetaDto'
+        meta:
+          type: object
+          description: Optional response metadata.
+      required:
+        - data
+        - pagination
+    MoneyDto:
+      type: object
+      properties:
+        amountCents:
+          type: number
+          description: Amount in the smallest currency unit.
+          example: 250000
+          minimum: 0
+        currency:
+          type: string
+          description: ISO-4217 uppercase currency code.
+          example: NGN
+          pattern: ^[A-Z]{3}$
+      required:
+        - amountCents
+        - currency
+    SortQueryDto:
+      type: object
+      properties:
+        sort:
+          type: string
+          description: Sort expression in field:direction form, or -field for descending.
+          example: createdAt:desc
+    StatusQueryDto:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Module-specific status filter.
+    SuccessEnvelopeDto:
+      type: object
+      properties:
+        data:
+          type: object
+          description: Response payload.
+        meta:
+          type: object
+          description: Optional response metadata.
+      required:
+        - data
+    UuidParamDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+      required:
+        - id

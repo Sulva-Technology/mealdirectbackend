@@ -24,4 +24,14 @@ describe('OpenAPI contract foundation', () => {
     expect(document.components?.securitySchemes?.supabaseAuth).toBeDefined();
     expect(document.components?.securitySchemes?.idempotencyKey).toBeDefined();
   });
+
+  it('registers shared API contract schemas', () => {
+    const document = createOpenApiDocument(app);
+
+    expect(document.components?.schemas?.CursorPaginationQueryDto).toBeDefined();
+    expect(document.components?.schemas?.CursorPaginationMetaDto).toBeDefined();
+    expect(document.components?.schemas?.MoneyDto).toBeDefined();
+    expect(document.components?.schemas?.ErrorEnvelopeDto).toBeDefined();
+    expect(document.components?.schemas?.ListEnvelopeDto).toBeDefined();
+  });
 });
