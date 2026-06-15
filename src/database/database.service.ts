@@ -15,6 +15,8 @@ type DatabasePoolConfigInput = DatabaseSslConfigInput & {
   DATABASE_POOL_MAX: number;
 };
 
+const connectionStringSslParams = ['ssl', 'sslmode', 'sslcert', 'sslkey', 'sslrootcert', 'sslca'];
+
 export function createPostgresSslConfig(
   config: DatabaseSslConfigInput
 ): false | { rejectUnauthorized: boolean } {
@@ -31,6 +33,23 @@ function connectionStringSslMode(connectionString: string): string | undefined {
   return new URL(connectionString).searchParams.get('sslmode') ?? undefined;
 }
 
+function withoutConnectionStringSslParams(connectionString: string): string {
+  const url = new URL(connectionString);
+  for (const param of connectionStringSslParams) {
+    url.searchParams.delete(param);
+  }
+  return url.toString();
+}
+
+function applyExplicitSslConfig(
+  poolConfig: PoolConfig,
+  config: DatabasePoolConfigInput,
+  ssl: false | { rejectUnauthorized: boolean }
+): void {
+  poolConfig.connectionString = withoutConnectionStringSslParams(config.DATABASE_URL);
+  poolConfig.ssl = ssl;
+}
+
 export function createPostgresPoolConfig(config: DatabasePoolConfigInput): PoolConfig {
   const sslMode = connectionStringSslMode(config.DATABASE_URL);
   const poolConfig: PoolConfig = {
@@ -39,11 +58,11 @@ export function createPostgresPoolConfig(config: DatabasePoolConfigInput): PoolC
   };
 
   if (sslMode === 'disable') {
-    poolConfig.ssl = false;
+    applyExplicitSslConfig(poolConfig, config, false);
   } else if (sslMode === 'require' || sslMode === 'prefer' || sslMode === 'no-verify') {
-    poolConfig.ssl = { rejectUnauthorized: false };
+    applyExplicitSslConfig(poolConfig, config, { rejectUnauthorized: false });
   } else if (config.DATABASE_SSL && !config.DATABASE_SSL_REJECT_UNAUTHORIZED) {
-    poolConfig.ssl = createPostgresSslConfig(config);
+    applyExplicitSslConfig(poolConfig, config, createPostgresSslConfig(config));
   } else if (sslMode === undefined) {
     poolConfig.ssl = createPostgresSslConfig(config);
   }

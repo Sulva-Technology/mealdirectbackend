@@ -43,8 +43,7 @@ describe('database SSL configuration', () => {
         DATABASE_SSL_REJECT_UNAUTHORIZED: false
       })
     ).toEqual({
-      connectionString:
-        'postgresql://postgres:postgres@example.supabase.com:5432/postgres?sslmode=require',
+      connectionString: 'postgresql://postgres:postgres@example.supabase.com:5432/postgres',
       max: 10,
       ssl: {
         rejectUnauthorized: false
@@ -62,8 +61,7 @@ describe('database SSL configuration', () => {
         DATABASE_SSL_REJECT_UNAUTHORIZED: true
       })
     ).toEqual({
-      connectionString:
-        'postgresql://postgres:postgres@example.supabase.com:5432/postgres?sslmode=require',
+      connectionString: 'postgresql://postgres:postgres@example.supabase.com:5432/postgres',
       max: 10,
       ssl: {
         rejectUnauthorized: false
