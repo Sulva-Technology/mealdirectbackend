@@ -22,7 +22,7 @@ Meal Direct backend is being built from API foundation into production-hardened 
 - Live Render smoke test on 2026-06-13 showed `/v1/health/live`, `/docs`, OpenAPI, and unauthenticated guard failures working, but `/v1/health/ready` returned `DATABASE_UNAVAILABLE`.
 - Redacted database diagnostics against the Supabase pooler showed current strict TLS verification fails with `SELF_SIGNED_CERT_IN_CHAIN`; relaxing certificate-chain validation reaches Postgres but the available local production URL then fails password authentication.
 - CORS disallowed-origin preflight previously surfaced as a 500; the app now disables CORS for disallowed origins instead of raising a server error.
-- Render logs confirmed `/v1/health/ready` failed with `SELF_SIGNED_CERT_IN_CHAIN`. `pg-connection-string` treats `sslmode=require` as strict verification by default, so `DatabaseService` now applies `{ rejectUnauthorized: false }` whenever `DATABASE_SSL=true` and `DATABASE_SSL_REJECT_UNAUTHORIZED=false`, even if `DATABASE_URL` includes `sslmode`.
+- Render logs confirmed `/v1/health/ready` failed with `SELF_SIGNED_CERT_IN_CHAIN`. `pg-connection-string` treats `sslmode=require` as strict verification by default, so `DatabaseService` now maps `sslmode=require`, `prefer`, and `no-verify` to `{ rejectUnauthorized: false }`, while preserving strict behavior for `verify-full`.
 - Readiness failures now log sanitized database error metadata under `HealthController` before returning the unchanged public `DATABASE_UNAVAILABLE` response.
 
 ## Current Contracts

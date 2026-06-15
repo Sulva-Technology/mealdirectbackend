@@ -27,19 +27,24 @@ export function createPostgresSslConfig(
   };
 }
 
-function connectionStringHasSslMode(connectionString: string): boolean {
-  return new URL(connectionString).searchParams.has('sslmode');
+function connectionStringSslMode(connectionString: string): string | undefined {
+  return new URL(connectionString).searchParams.get('sslmode') ?? undefined;
 }
 
 export function createPostgresPoolConfig(config: DatabasePoolConfigInput): PoolConfig {
+  const sslMode = connectionStringSslMode(config.DATABASE_URL);
   const poolConfig: PoolConfig = {
     connectionString: config.DATABASE_URL,
     max: config.DATABASE_POOL_MAX
   };
 
-  if (config.DATABASE_SSL && !config.DATABASE_SSL_REJECT_UNAUTHORIZED) {
+  if (sslMode === 'disable') {
+    poolConfig.ssl = false;
+  } else if (sslMode === 'require' || sslMode === 'prefer' || sslMode === 'no-verify') {
+    poolConfig.ssl = { rejectUnauthorized: false };
+  } else if (config.DATABASE_SSL && !config.DATABASE_SSL_REJECT_UNAUTHORIZED) {
     poolConfig.ssl = createPostgresSslConfig(config);
-  } else if (!connectionStringHasSslMode(config.DATABASE_URL)) {
+  } else if (sslMode === undefined) {
     poolConfig.ssl = createPostgresSslConfig(config);
   }
 
