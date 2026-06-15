@@ -84,4 +84,14 @@ describe('OpenAPI contract foundation', () => {
     expect(document.paths['/v1/orders/{orderId}/payment-status']?.get).toBeDefined();
     expect(document.paths['/v1/orders/{orderId}/confirm-delivery']?.post).toBeDefined();
   });
+
+  it('documents payment initialization, reconciliation, and refund endpoints', () => {
+    const document = createOpenApiDocument(app);
+
+    expect(document.paths['/v1/orders/{orderId}/payments/paystack/initialize']?.post).toBeDefined();
+    expect(document.paths['/v1/admin/payments']?.get).toBeDefined();
+    expect(document.paths['/v1/admin/payments/{paymentId}']?.get).toBeDefined();
+    expect(document.paths['/v1/admin/payments/{paymentId}/reconcile']?.post).toBeDefined();
+    expect(document.paths['/v1/admin/payments/{paymentId}/refunds']?.post).toBeDefined();
+  });
 });

@@ -1,0 +1,147 @@
+export type PaymentStatus =
+  | 'failed'
+  | 'initialized'
+  | 'pending'
+  | 'refunded'
+  | 'successful';
+
+export type RefundStatus = 'failed' | 'processed' | 'processing' | 'requested';
+
+export type PaymentInitializationRecord = {
+  id: string;
+  orderId: string;
+  orderNumber: string;
+  customerId: string;
+  customerEmail: string | null;
+  campusId: string;
+  orderStatus: string;
+  orderTotalKobo: number;
+  providerReference: string;
+  paymentStatus: PaymentStatus;
+  expectedAmountKobo: number;
+  currency: string;
+};
+
+export type PaymentRecord = PaymentInitializationRecord & {
+  paidAmountKobo: number | null;
+  providerTransactionId: string | null;
+  providerPayload: Record<string, unknown>;
+  initializedAt: string;
+  paidAt: string | null;
+  verifiedAt: string | null;
+};
+
+export type AdminPaymentRecord = Omit<PaymentRecord, 'providerPayload'>;
+
+export type RefundRecord = {
+  id: string;
+  paymentId: string;
+  orderId: string;
+  providerRefundReference: string | null;
+  amountKobo: number;
+  reasonCode: string;
+  reasonText: string | null;
+  status: RefundStatus;
+  requestedBy: string | null;
+  requestedAt: string;
+  processedAt: string | null;
+};
+
+export type PaystackInitializeInput = {
+  email: string;
+  amountKobo: number;
+  currency: string;
+  reference: string;
+  metadata: Record<string, string>;
+};
+
+export type PaystackInitializeResult = {
+  authorizationUrl: string;
+  accessCode: string;
+  reference: string;
+  providerPayload: Record<string, unknown>;
+};
+
+export type PaystackVerifyResult = {
+  status: string;
+  reference: string;
+  amountKobo: number;
+  currency: string;
+  transactionId: string;
+  providerPayload: Record<string, unknown>;
+};
+
+export type PaystackRefundInput = {
+  transaction: string;
+  amountKobo: number;
+  reasonText?: string;
+};
+
+export type PaystackRefundResult = {
+  id: string | number;
+  status: string;
+  amountKobo: number;
+  providerPayload: Record<string, unknown>;
+};
+
+export type PaystackClientContract = {
+  initializeTransaction: (
+    input: PaystackInitializeInput
+  ) => Promise<PaystackInitializeResult>;
+  verifyTransaction: (reference: string) => Promise<PaystackVerifyResult>;
+  createRefund: (input: PaystackRefundInput) => Promise<PaystackRefundResult>;
+};
+
+export type RefundInput = {
+  amountKobo: number;
+  reasonCode: string;
+  reasonText?: string;
+};
+
+export type PaymentsRepositoryContract = {
+  findCustomerInitializationPayment: (
+    customerId: string,
+    orderId: string
+  ) => Promise<PaymentInitializationRecord | undefined>;
+  markPaymentInitializationPayload: (
+    paymentId: string,
+    providerPayload: Record<string, unknown>
+  ) => Promise<PaymentRecord>;
+  listAdminPayments: (campusId?: string) => Promise<PaymentRecord[]>;
+  findAdminPaymentById: (
+    paymentId: string,
+    campusId?: string
+  ) => Promise<PaymentRecord | undefined>;
+  markPaymentSuccessfulFromProvider: (
+    providerReference: string,
+    providerTransactionId: string,
+    paidAmountKobo: number,
+    providerPayload: Record<string, unknown>
+  ) => Promise<string>;
+  getRefundedAmountKobo: (paymentId: string) => Promise<number>;
+  createRefundRequest: (
+    paymentId: string,
+    input: RefundInput,
+    requestedBy: string
+  ) => Promise<RefundRecord>;
+  updateRefundProviderPayload: (
+    refundId: string,
+    providerRefundReference: string,
+    providerPayload: Record<string, unknown>,
+    status: RefundStatus
+  ) => Promise<RefundRecord>;
+};
+
+export type PaymentInitializationResponse = {
+  paymentId: string;
+  authorizationUrl: string;
+  accessCode: string;
+  reference: string;
+};
+
+export type PaymentReconciliationResponse = {
+  paymentId: string;
+  orderId: string;
+  providerReference: string;
+  status: 'successful';
+};

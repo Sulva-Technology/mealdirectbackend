@@ -472,6 +472,114 @@ paths:
                 $ref: '#/components/schemas/OrderDetailEnvelopeDto'
       security: *a11
       tags: *a12
+  /v1/orders/{orderId}/payments/paystack/initialize:
+    post:
+      operationId: CustomerPaymentsController_initializePaystack
+      parameters:
+        - name: orderId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: Paystack checkout initialization for a customer-owned pending order.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaystackInitializationEnvelopeDto'
+        '400':
+          description: Invalid order or payment state.
+        '401':
+          description: Missing, invalid, or expired Supabase JWT.
+      security:
+        - supabaseAuth: []
+      tags:
+        - payments
+  /v1/admin/payments:
+    get:
+      operationId: AdminPaymentsController_listPayments
+      parameters: []
+      responses:
+        '200':
+          description: Admin-visible payment records scoped by campus for campus admins.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminPaymentListEnvelopeDto'
+        '401': &a13
+          description: Missing, invalid, or expired Supabase JWT.
+        '403': &a14
+          description: Admin role is required.
+      security: &a15
+        - supabaseAuth: []
+      tags: &a16
+        - admin-payments
+  /v1/admin/payments/{paymentId}:
+    get:
+      operationId: AdminPaymentsController_getPayment
+      parameters:
+        - name: paymentId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: Admin-visible payment detail scoped by campus for campus admins.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminPaymentEnvelopeDto'
+        '401': *a13
+        '403': *a14
+      security: *a15
+      tags: *a16
+  /v1/admin/payments/{paymentId}/reconcile:
+    post:
+      operationId: AdminPaymentsController_reconcilePayment
+      parameters:
+        - name: paymentId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: Verifies a Paystack transaction and marks the local payment
+            successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentReconciliationEnvelopeDto'
+        '401': *a13
+        '403': *a14
+      security: *a15
+      tags: *a16
+  /v1/admin/payments/{paymentId}/refunds:
+    post:
+      operationId: AdminPaymentsController_initiateRefund
+      parameters:
+        - name: paymentId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '201':
+          description: Creates a bounded Paystack refund for a successful payment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefundEnvelopeDto'
+        '401': *a13
+        '403': *a14
+      security: *a15
+      tags: *a16
   /v1/payments/webhooks/paystack:
     post:
       operationId: PaystackWebhookController_handlePaystackWebhook
@@ -490,9 +598,9 @@ paths:
       responses:
         '201':
           description: Vendor daily settlement was generated idempotently.
-      security: &a13
+      security: &a17
         - supabaseAuth: []
-      tags: &a14
+      tags: &a18
         - settlements
   /v1/settlements/riders/{riderId}/daily:
     post:
@@ -501,8 +609,8 @@ paths:
       responses:
         '201':
           description: Rider daily settlement was generated idempotently.
-      security: *a13
-      tags: *a14
+      security: *a17
+      tags: *a18
 info:
   title: Meal Direct API
   description: Stable REST API for Meal Direct web and future mobile clients.
@@ -542,7 +650,7 @@ components:
           format: uuid
         role:
           type: string
-          enum: &a15
+          enum: &a19
             - customer
             - vendor
             - rider
@@ -743,7 +851,7 @@ components:
           type: array
           items:
             type: string
-            enum: *a15
+            enum: *a19
         campuses:
           type: array
           items:
@@ -1191,7 +1299,7 @@ components:
           type: string
         orderStatus:
           type: string
-          enum: &a16
+          enum: &a20
             - accepted
             - administratively_completed
             - cancelled
@@ -1302,7 +1410,7 @@ components:
           format: uuid
         orderStatus:
           type: string
-          enum: *a16
+          enum: *a20
         payment:
           nullable: true
           type: object
@@ -1393,7 +1501,7 @@ components:
           type: string
         orderStatus:
           type: string
-          enum: *a16
+          enum: *a20
         deliveryMode:
           type: string
         foodSubtotalKobo:
@@ -1455,6 +1563,179 @@ components:
       properties:
         data:
           $ref: '#/components/schemas/OrderDetailDto'
+      required:
+        - data
+    PaystackInitializationDto:
+      type: object
+      properties:
+        paymentId:
+          type: string
+          format: uuid
+        authorizationUrl:
+          type: string
+        accessCode:
+          type: string
+        reference:
+          type: string
+      required:
+        - paymentId
+        - authorizationUrl
+        - accessCode
+        - reference
+    PaystackInitializationEnvelopeDto:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/PaystackInitializationDto'
+      required:
+        - data
+    AdminPaymentDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        orderId:
+          type: string
+          format: uuid
+        orderNumber:
+          type: string
+        customerId:
+          type: string
+          format: uuid
+        customerEmail:
+          type: string
+          nullable: true
+        campusId:
+          type: string
+          format: uuid
+        orderStatus:
+          type: string
+        orderTotalKobo:
+          type: number
+        providerReference:
+          type: string
+        paymentStatus:
+          type: string
+        expectedAmountKobo:
+          type: number
+        paidAmountKobo:
+          type: number
+          nullable: true
+        providerTransactionId:
+          type: string
+          nullable: true
+        currency:
+          type: string
+        initializedAt:
+          type: string
+        paidAt:
+          type: string
+          nullable: true
+        verifiedAt:
+          type: string
+          nullable: true
+      required:
+        - id
+        - orderId
+        - orderNumber
+        - customerId
+        - campusId
+        - orderStatus
+        - orderTotalKobo
+        - providerReference
+        - paymentStatus
+        - expectedAmountKobo
+        - currency
+        - initializedAt
+    AdminPaymentListEnvelopeDto:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminPaymentDto'
+      required:
+        - data
+    AdminPaymentEnvelopeDto:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/AdminPaymentDto'
+      required:
+        - data
+    PaymentReconciliationDto:
+      type: object
+      properties:
+        paymentId:
+          type: string
+          format: uuid
+        orderId:
+          type: string
+          format: uuid
+        providerReference:
+          type: string
+        status:
+          type: string
+          enum:
+            - successful
+      required:
+        - paymentId
+        - orderId
+        - providerReference
+        - status
+    PaymentReconciliationEnvelopeDto:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/PaymentReconciliationDto'
+      required:
+        - data
+    RefundDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        paymentId:
+          type: string
+          format: uuid
+        orderId:
+          type: string
+          format: uuid
+        providerRefundReference:
+          type: string
+          nullable: true
+        amountKobo:
+          type: number
+        reasonCode:
+          type: string
+        reasonText:
+          type: string
+          nullable: true
+        status:
+          type: string
+        requestedBy:
+          type: string
+          nullable: true
+        requestedAt:
+          type: string
+        processedAt:
+          type: string
+          nullable: true
+      required:
+        - id
+        - paymentId
+        - orderId
+        - amountKobo
+        - reasonCode
+        - status
+        - requestedAt
+    RefundEnvelopeDto:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/RefundDto'
       required:
         - data
     CursorPaginationMetaDto:
