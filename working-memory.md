@@ -22,6 +22,8 @@ Meal Direct backend is being built from API foundation into production-hardened 
 - Live Render smoke test on 2026-06-13 showed `/v1/health/live`, `/docs`, OpenAPI, and unauthenticated guard failures working, but `/v1/health/ready` returned `DATABASE_UNAVAILABLE`.
 - Redacted database diagnostics against the Supabase pooler showed current strict TLS verification fails with `SELF_SIGNED_CERT_IN_CHAIN`; relaxing certificate-chain validation reaches Postgres but the available local production URL then fails password authentication.
 - CORS disallowed-origin preflight previously surfaced as a 500; the app now disables CORS for disallowed origins instead of raising a server error.
+- Second-pass database diagnostics showed the Supabase pooler connection succeeds when node-postgres is allowed to honor `sslmode=require` from the connection string. `DatabaseService` now omits an explicit `ssl` override when `DATABASE_URL` includes `sslmode`.
+- Readiness failures now log sanitized database error metadata under `HealthController` before returning the unchanged public `DATABASE_UNAVAILABLE` response.
 
 ## Current Contracts
 
@@ -44,4 +46,4 @@ Meal Direct backend is being built from API foundation into production-hardened 
 - Remaining vendor/rider/admin/customer endpoint flows and E2E tests.
 - External observability/alerting provider configuration.
 - Full `pnpm db:ci` verification with Supabase CLI and Docker.
-- Render/Supabase secrets still need a corrected `DATABASE_URL` password after deploying the new `DATABASE_SSL_REJECT_UNAUTHORIZED=false` support.
+- After the next Render deploy, check `/v1/health/ready`; if it still fails, inspect Render logs for the sanitized `HealthController` database error code/message.

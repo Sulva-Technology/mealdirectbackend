@@ -1,0 +1,13 @@
+.git
+.github
+.env
+.env.*
+!.env.example
+!.env.development.example
+!.env.staging.example
+!.env.test.example
+node_modules
+dist
+coverage
+supabase/.branches
+supabase/.temp

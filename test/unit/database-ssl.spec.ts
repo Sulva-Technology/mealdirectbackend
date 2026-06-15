@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { createPostgresSslConfig } from '../../src/database/database.service.js';
+import {
+  createPostgresPoolConfig,
+  createPostgresSslConfig
+} from '../../src/database/database.service.js';
 
 describe('database SSL configuration', () => {
   it('disables SSL for local database connections', () => {
@@ -28,5 +31,21 @@ describe('database SSL configuration', () => {
         DATABASE_SSL_REJECT_UNAUTHORIZED: false
       })
     ).toEqual({ rejectUnauthorized: false });
+  });
+
+  it('lets node-postgres honor sslmode from the connection string', () => {
+    expect(
+      createPostgresPoolConfig({
+        DATABASE_URL:
+          'postgresql://postgres:postgres@example.supabase.com:5432/postgres?sslmode=require',
+        DATABASE_POOL_MAX: 10,
+        DATABASE_SSL: true,
+        DATABASE_SSL_REJECT_UNAUTHORIZED: false
+      })
+    ).toEqual({
+      connectionString:
+        'postgresql://postgres:postgres@example.supabase.com:5432/postgres?sslmode=require',
+      max: 10
+    });
   });
 });

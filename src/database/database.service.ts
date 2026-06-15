@@ -1,6 +1,6 @@
 import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common';
 import { Kysely, PostgresDialect, sql } from 'kysely';
-import { Pool } from 'pg';
+import { Pool, type PoolConfig } from 'pg';
 
 import { EnvService } from '../config/env.service.js';
 import type { DatabaseSchema } from './database.types.js';
@@ -8,6 +8,11 @@ import type { DatabaseSchema } from './database.types.js';
 type DatabaseSslConfigInput = {
   DATABASE_SSL: boolean;
   DATABASE_SSL_REJECT_UNAUTHORIZED: boolean;
+};
+
+type DatabasePoolConfigInput = DatabaseSslConfigInput & {
+  DATABASE_URL: string;
+  DATABASE_POOL_MAX: number;
 };
 
 export function createPostgresSslConfig(
@@ -22,6 +27,23 @@ export function createPostgresSslConfig(
   };
 }
 
+function connectionStringHasSslMode(connectionString: string): boolean {
+  return new URL(connectionString).searchParams.has('sslmode');
+}
+
+export function createPostgresPoolConfig(config: DatabasePoolConfigInput): PoolConfig {
+  const poolConfig: PoolConfig = {
+    connectionString: config.DATABASE_URL,
+    max: config.DATABASE_POOL_MAX
+  };
+
+  if (!connectionStringHasSslMode(config.DATABASE_URL)) {
+    poolConfig.ssl = createPostgresSslConfig(config);
+  }
+
+  return poolConfig;
+}
+
 @Injectable()
 export class DatabaseService implements OnModuleDestroy {
   private readonly pool: Pool;
@@ -29,11 +51,7 @@ export class DatabaseService implements OnModuleDestroy {
 
   constructor(@Inject(EnvService) env: EnvService) {
     const config = env.all;
-    this.pool = new Pool({
-      connectionString: config.DATABASE_URL,
-      max: config.DATABASE_POOL_MAX,
-      ssl: createPostgresSslConfig(config)
-    });
+    this.pool = new Pool(createPostgresPoolConfig(config));
 
     this.db = new Kysely<DatabaseSchema>({
       dialect: new PostgresDialect({ pool: this.pool })

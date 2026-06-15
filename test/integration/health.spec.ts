@@ -1,7 +1,8 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 
 import { createApp } from '../../src/app.factory.js';
+import { JsonLogger } from '../../src/common/logging/json-logger.service.js';
 
 describe('health endpoints', () => {
   let app: NestFastifyApplication;
@@ -38,6 +39,9 @@ describe('health endpoints', () => {
   });
 
   it('returns readiness failure when the database is unavailable', async () => {
+    const logger = app.get(JsonLogger);
+    const errorSpy = vi.spyOn(logger, 'error');
+
     const response = await app.inject({
       method: 'GET',
       url: '/v1/health/ready',
@@ -54,6 +58,11 @@ describe('health endpoints', () => {
       },
       requestId: 'test-ready-request'
     });
+    expect(errorSpy).toHaveBeenCalledOnce();
+    expect(errorSpy.mock.calls[0]?.[0]).toMatchObject({
+      message: 'Database health check failed'
+    });
+    expect(errorSpy.mock.calls[0]?.[2]).toBe('HealthController');
   });
 
   it('returns the consistent error envelope for unknown routes', async () => {

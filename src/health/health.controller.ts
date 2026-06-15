@@ -2,6 +2,7 @@ import { Controller, Get, Inject, ServiceUnavailableException } from '@nestjs/co
 import { ApiOkResponse, ApiServiceUnavailableResponse, ApiTags } from '@nestjs/swagger';
 
 import { ErrorCodes } from '../common/errors/error-codes.js';
+import { JsonLogger } from '../common/logging/json-logger.service.js';
 import { EnvService } from '../config/env.service.js';
 import { DatabaseService } from '../database/database.service.js';
 
@@ -22,12 +23,55 @@ type ReadyResponse = LiveResponse & {
   };
 };
 
+function sanitizeDatabaseErrorMessage(message: string): string {
+  return message
+    .replace(/:\/\/[^:\s/@]+:[^@\s/]+@/g, '://[REDACTED]@')
+    .replace(/password\s+"[^"]+"/gi, 'password "[REDACTED]"');
+}
+
+function stringProperty(error: unknown, key: string): string | undefined {
+  if (error === null || typeof error !== 'object') {
+    return undefined;
+  }
+
+  const value = (error as Record<string, unknown>)[key];
+  if (typeof value === 'string' && value.length > 0) {
+    return value;
+  }
+
+  if (typeof value === 'number') {
+    return value.toString();
+  }
+
+  return undefined;
+}
+
+function databaseErrorDetails(error: unknown): Record<string, string> {
+  const details: Record<string, string> = {};
+  const name = error instanceof Error ? error.name : undefined;
+  const message = error instanceof Error ? error.message : undefined;
+  const code = stringProperty(error, 'code');
+
+  if (name !== undefined) {
+    details.name = name;
+  }
+  if (code !== undefined) {
+    details.code = code;
+  }
+  if (message !== undefined) {
+    details.message = sanitizeDatabaseErrorMessage(message);
+  }
+
+  return details;
+}
+
 @ApiTags('health')
 @Controller('health')
 export class HealthController {
   constructor(
     @Inject(DatabaseService) private readonly database: DatabaseService,
-    @Inject(EnvService) private readonly env: EnvService
+    @Inject(EnvService) private readonly env: EnvService,
+    @Inject(JsonLogger) private readonly logger: JsonLogger
   ) {}
 
   @Get('live')
@@ -57,7 +101,16 @@ export class HealthController {
           latencyMs: database.latencyMs
         }
       };
-    } catch {
+    } catch (error) {
+      this.logger.error(
+        {
+          message: 'Database health check failed',
+          databaseError: databaseErrorDetails(error)
+        },
+        error instanceof Error ? error.stack : undefined,
+        'HealthController'
+      );
+
       throw new ServiceUnavailableException({
         code: ErrorCodes.DATABASE_UNAVAILABLE,
         message: 'Database is unavailable.'
