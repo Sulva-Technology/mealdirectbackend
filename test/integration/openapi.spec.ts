@@ -112,4 +112,44 @@ describe('OpenAPI contract foundation', () => {
     expect(document.paths['/v1/notifications/preferences']?.get).toBeDefined();
     expect(document.paths['/v1/notifications/preferences']?.put).toBeDefined();
   });
+
+  it('documents vendor profile, payout, menu, and availability endpoints', () => {
+    const document = createOpenApiDocument(app);
+
+    expect(document.paths['/v1/vendor/profile']?.get).toBeDefined();
+    expect(document.paths['/v1/vendor/profile']?.patch).toBeDefined();
+    expect(document.paths['/v1/vendor/payout-account']?.get).toBeDefined();
+    expect(document.paths['/v1/vendor/payout-account']?.put).toBeDefined();
+    expect(document.paths['/v1/vendor/menu-metadata']?.get).toBeDefined();
+    expect(document.paths['/v1/vendor/menu-items']?.get).toBeDefined();
+    expect(document.paths['/v1/vendor/menu-items']?.post).toBeDefined();
+    expect(document.paths['/v1/vendor/menu-items/{itemId}']?.get).toBeDefined();
+    expect(document.paths['/v1/vendor/menu-items/{itemId}']?.patch).toBeDefined();
+    expect(document.paths['/v1/vendor/menu-items/{itemId}/activate']?.post).toBeDefined();
+    expect(document.paths['/v1/vendor/menu-items/{itemId}/deactivate']?.post).toBeDefined();
+    expect(document.paths['/v1/vendor/menu-items/{itemId}/schedules']?.get).toBeDefined();
+    expect(document.paths['/v1/vendor/menu-items/{itemId}/schedules']?.put).toBeDefined();
+    expect(document.paths['/v1/vendor/availability']?.get).toBeDefined();
+    expect(document.paths['/v1/vendor/availability']?.put).toBeDefined();
+    expect(document.paths['/v1/vendor/profile']?.patch?.requestBody).toBeDefined();
+    expect(document.paths['/v1/vendor/payout-account']?.put?.requestBody).toBeDefined();
+    expect(document.paths['/v1/vendor/menu-items']?.post?.requestBody).toBeDefined();
+    expect(document.paths['/v1/vendor/menu-items/{itemId}']?.patch?.requestBody).toBeDefined();
+    expect(
+      document.paths['/v1/vendor/menu-items/{itemId}/schedules']?.put?.requestBody
+    ).toBeDefined();
+    expect(document.paths['/v1/vendor/availability']?.put?.requestBody).toBeDefined();
+  });
+
+  it('documents vendor inventory endpoints', () => {
+    const document = createOpenApiDocument(app);
+
+    expect(document.paths['/v1/vendor/inventory']?.get).toBeDefined();
+    expect(document.paths['/v1/vendor/inventory/{inventoryId}']?.put).toBeDefined();
+    expect(document.paths['/v1/vendor/inventory/{inventoryId}/adjustments']?.post).toBeDefined();
+    expect(document.paths['/v1/vendor/inventory/{inventoryId}']?.put?.requestBody).toBeDefined();
+    expect(
+      document.paths['/v1/vendor/inventory/{inventoryId}/adjustments']?.post?.requestBody
+    ).toBeDefined();
+  });
 });

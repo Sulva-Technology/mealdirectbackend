@@ -352,6 +352,317 @@ paths:
         '403': *a7
       security: *a8
       tags: *a9
+  /v1/vendor/profile:
+    get:
+      operationId: VendorsController_getProfile
+      parameters: []
+      responses:
+        '200':
+          description: Current vendor profile and approval state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorProfileEnvelopeDto'
+        '401': &a10
+          description: Missing, invalid, or expired Supabase JWT.
+        '403': &a11
+          description: Vendor role and vendor membership are required.
+      security: &a12
+        - supabaseAuth: []
+      tags: &a13
+        - vendor
+    patch:
+      operationId: VendorsController_updateProfile
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateVendorProfileDto'
+      responses:
+        '200':
+          description: Updated safe vendor profile fields.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorProfileEnvelopeDto'
+        '400':
+          description: Invalid vendor profile input.
+        '401': *a10
+        '403': *a11
+      security: *a12
+      tags: *a13
+  /v1/vendor/payout-account:
+    get:
+      operationId: VendorsController_getPayoutAccount
+      parameters: []
+      responses:
+        '200':
+          description: Current masked payout account snapshot, if configured.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorPayoutAccountEnvelopeDto'
+        '401': *a10
+        '403': *a11
+      security: *a12
+      tags: *a13
+    put:
+      operationId: VendorsController_updatePayoutAccount
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertPayoutAccountDto'
+      responses:
+        '200':
+          description: Replaces the active payout account with a masked snapshot.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorPayoutAccountEnvelopeDto'
+        '400':
+          description: Invalid payout account input.
+        '401': *a10
+        '403': *a11
+      security: *a12
+      tags: *a13
+  /v1/vendor/menu-metadata:
+    get:
+      operationId: VendorsController_getMenuMetadata
+      parameters: []
+      responses:
+        '200':
+          description: Vendor menu categories and active unit types.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MenuMetadataEnvelopeDto'
+        '401': *a10
+        '403': *a11
+      security: *a12
+      tags: *a13
+  /v1/vendor/menu-items:
+    get:
+      operationId: VendorsController_listMenuItems
+      parameters: []
+      responses:
+        '200':
+          description: Vendor-owned menu items including inactive historical items.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorMenuItemListEnvelopeDto'
+        '401': *a10
+        '403': *a11
+      security: *a12
+      tags: *a13
+    post:
+      operationId: VendorsController_createMenuItem
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMenuItemDto'
+      responses:
+        '201':
+          description: Created vendor-owned menu item.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorMenuItemEnvelopeDto'
+        '400':
+          description: Invalid menu item input.
+        '401': *a10
+        '403': *a11
+      security: *a12
+      tags: *a13
+  /v1/vendor/menu-items/{itemId}:
+    get:
+      operationId: VendorsController_getMenuItem
+      parameters:
+        - name: itemId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: Vendor-owned menu item detail.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorMenuItemEnvelopeDto'
+        '401': *a10
+        '403': *a11
+        '404':
+          description: Menu item was not found for this vendor.
+      security: *a12
+      tags: *a13
+    patch:
+      operationId: VendorsController_updateMenuItem
+      parameters:
+        - name: itemId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMenuItemDto'
+      responses:
+        '200':
+          description: Updated vendor-owned menu item safe fields.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorMenuItemEnvelopeDto'
+        '400':
+          description: Invalid menu item input.
+        '401': *a10
+        '403': *a11
+        '404':
+          description: Menu item was not found for this vendor.
+      security: *a12
+      tags: *a13
+  /v1/vendor/menu-items/{itemId}/activate:
+    post:
+      operationId: VendorsController_activateMenuItem
+      parameters:
+        - name: itemId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: Activated a vendor-owned menu item.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorMenuItemEnvelopeDto'
+        '401': *a10
+        '403': *a11
+      security: *a12
+      tags: *a13
+  /v1/vendor/menu-items/{itemId}/deactivate:
+    post:
+      operationId: VendorsController_deactivateMenuItem
+      parameters:
+        - name: itemId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: Deactivated a vendor-owned menu item without deleting history.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorMenuItemEnvelopeDto'
+        '401': *a10
+        '403': *a11
+      security: *a12
+      tags: *a13
+  /v1/vendor/menu-items/{itemId}/schedules:
+    get:
+      operationId: VendorsController_listMenuItemSchedules
+      parameters:
+        - name: itemId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: Current slot availability for a vendor-owned menu item.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailabilityListEnvelopeDto'
+        '401': *a10
+        '403': *a11
+      security: *a12
+      tags: *a13
+    put:
+      operationId: VendorsController_replaceMenuItemSchedules
+      parameters:
+        - name: itemId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AvailabilityUpdateDto'
+      responses:
+        '200':
+          description: Replaced slot availability for a vendor-owned menu item.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailabilityListEnvelopeDto'
+        '400':
+          description: Invalid menu item schedule input.
+        '401': *a10
+        '403': *a11
+      security: *a12
+      tags: *a13
+  /v1/vendor/availability:
+    get:
+      operationId: VendorsController_listVendorAvailability
+      parameters: []
+      responses:
+        '200':
+          description: Vendor operating availability by delivery slot and day of week.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailabilityListEnvelopeDto'
+        '401': *a10
+        '403': *a11
+      security: *a12
+      tags: *a13
+    put:
+      operationId: VendorsController_replaceVendorAvailability
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AvailabilityUpdateDto'
+      responses:
+        '200':
+          description: Replaced vendor operating availability by slot and day.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailabilityListEnvelopeDto'
+        '400':
+          description: Invalid vendor availability input.
+        '401': *a10
+        '403': *a11
+      security: *a12
+      tags: *a13
   /v1/catalog/vendors:
     get:
       operationId: CatalogController_listVendors
@@ -365,7 +676,7 @@ paths:
                 $ref: '#/components/schemas/CatalogVendorListEnvelopeDto'
         '400':
           description: Invalid catalog filters.
-      tags: &a10
+      tags: &a14
         - catalog
   /v1/catalog/vendors/{vendorId}:
     get:
@@ -382,7 +693,7 @@ paths:
           description: Invalid vendor ID.
         '404':
           description: Vendor not found or unavailable.
-      tags: *a10
+      tags: *a14
   /v1/catalog/vendors/{vendorId}/menu:
     get:
       operationId: CatalogController_listVendorMenu
@@ -396,7 +707,92 @@ paths:
                 $ref: '#/components/schemas/MenuItemListEnvelopeDto'
         '400':
           description: Invalid vendor ID or menu filters.
-      tags: *a10
+      tags: *a14
+  /v1/vendor/inventory:
+    get:
+      operationId: InventoryController_listInventory
+      parameters: []
+      responses:
+        '200':
+          description: Vendor-owned dated inventory for a service date and optional
+            delivery slot.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorInventoryListEnvelopeDto'
+        '400':
+          description: Invalid inventory filters.
+        '401': &a15
+          description: Missing, invalid, or expired Supabase JWT.
+        '403': &a16
+          description: Vendor role and vendor membership are required.
+      security: &a17
+        - supabaseAuth: []
+      tags: &a18
+        - vendor-inventory
+  /v1/vendor/inventory/{inventoryId}:
+    put:
+      operationId: InventoryController_updateInventory
+      parameters:
+        - name: inventoryId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateInventoryDto'
+      responses:
+        '200':
+          description: Updates the editable starting quantity for a vendor-owned inventory
+            row.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorInventoryEnvelopeDto'
+        '400':
+          description: Invalid inventory quantity or stale state.
+        '401': *a15
+        '403': *a16
+        '404':
+          description: Inventory row was not found for this vendor.
+      security: *a17
+      tags: *a18
+  /v1/vendor/inventory/{inventoryId}/adjustments:
+    post:
+      operationId: InventoryController_createAdjustment
+      parameters:
+        - name: inventoryId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInventoryAdjustmentDto'
+      responses:
+        '201':
+          description: Records an append-only vendor inventory adjustment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryAdjustmentEnvelopeDto'
+        '400':
+          description: Invalid inventory adjustment.
+        '401': *a15
+        '403': *a16
+        '404':
+          description: Inventory row was not found for this vendor.
+      security: *a17
+      tags: *a18
   /v1/orders/quote:
     post:
       operationId: OrdersController_quoteOrder
@@ -408,9 +804,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OrderQuoteEnvelopeDto'
-      security: &a11
+      security: &a19
         - supabaseAuth: []
-      tags: &a12
+      tags: &a20
         - orders
   /v1/orders:
     get:
@@ -423,16 +819,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OrderListEnvelopeDto'
-      security: *a11
-      tags: *a12
+      security: *a19
+      tags: *a20
     post:
       operationId: OrdersController_createOrder
       parameters: []
       responses:
         '201':
           description: Order was created idempotently and inventory was reserved.
-      security: *a11
-      tags: *a12
+      security: *a19
+      tags: *a20
   /v1/orders/{orderId}/payment-status:
     get:
       operationId: OrdersController_paymentStatus
@@ -444,8 +840,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OrderPaymentStatusEnvelopeDto'
-      security: *a11
-      tags: *a12
+      security: *a19
+      tags: *a20
   /v1/orders/{orderId}/confirm-delivery:
     post:
       operationId: OrdersController_confirmDelivery
@@ -457,8 +853,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DeliveryConfirmationEnvelopeDto'
-      security: *a11
-      tags: *a12
+      security: *a19
+      tags: *a20
   /v1/orders/{orderId}:
     get:
       operationId: OrdersController_getOrder
@@ -470,8 +866,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OrderDetailEnvelopeDto'
-      security: *a11
-      tags: *a12
+      security: *a19
+      tags: *a20
   /v1/orders/{orderId}/payments/paystack/initialize:
     post:
       operationId: CustomerPaymentsController_initializePaystack
@@ -508,13 +904,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AdminPaymentListEnvelopeDto'
-        '401': &a13
+        '401': &a21
           description: Missing, invalid, or expired Supabase JWT.
-        '403': &a14
+        '403': &a22
           description: Admin role is required.
-      security: &a15
+      security: &a23
         - supabaseAuth: []
-      tags: &a16
+      tags: &a24
         - admin-payments
   /v1/admin/payments/{paymentId}:
     get:
@@ -533,10 +929,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AdminPaymentEnvelopeDto'
-        '401': *a13
-        '403': *a14
-      security: *a15
-      tags: *a16
+        '401': *a21
+        '403': *a22
+      security: *a23
+      tags: *a24
   /v1/admin/payments/{paymentId}/reconcile:
     post:
       operationId: AdminPaymentsController_reconcilePayment
@@ -555,10 +951,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaymentReconciliationEnvelopeDto'
-        '401': *a13
-        '403': *a14
-      security: *a15
-      tags: *a16
+        '401': *a21
+        '403': *a22
+      security: *a23
+      tags: *a24
   /v1/admin/payments/{paymentId}/refunds:
     post:
       operationId: AdminPaymentsController_initiateRefund
@@ -576,10 +972,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RefundEnvelopeDto'
-        '401': *a13
-        '403': *a14
-      security: *a15
-      tags: *a16
+        '401': *a21
+        '403': *a22
+      security: *a23
+      tags: *a24
   /v1/payments/webhooks/paystack:
     post:
       operationId: PaystackWebhookController_handlePaystackWebhook
@@ -598,9 +994,9 @@ paths:
       responses:
         '201':
           description: Vendor daily settlement was generated idempotently.
-      security: &a17
+      security: &a25
         - supabaseAuth: []
-      tags: &a18
+      tags: &a26
         - settlements
   /v1/settlements/riders/{riderId}/daily:
     post:
@@ -609,8 +1005,8 @@ paths:
       responses:
         '201':
           description: Rider daily settlement was generated idempotently.
-      security: *a17
-      tags: *a18
+      security: *a25
+      tags: *a26
   /v1/orders/{orderId}/review:
     post:
       operationId: CustomerReviewsController_createReview
@@ -653,11 +1049,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EscalationListEnvelopeDto'
-        '401': &a19
+        '401': &a27
           description: Missing, invalid, or expired Supabase JWT.
-      security: &a20
+      security: &a28
         - supabaseAuth: []
-      tags: &a21
+      tags: &a29
         - escalations
     post:
       operationId: CustomerEscalationsController_openEscalation
@@ -677,9 +1073,9 @@ paths:
                 $ref: '#/components/schemas/EscalationEnvelopeDto'
         '400':
           description: Invalid escalation input or ineligible order.
-        '401': *a19
-      security: *a20
-      tags: *a21
+        '401': *a27
+      security: *a28
+      tags: *a29
   /v1/notifications:
     get:
       operationId: NotificationsController_listNotifications
@@ -691,11 +1087,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotificationListEnvelopeDto'
-        '401': &a22
+        '401': &a30
           description: Missing, invalid, or expired Supabase JWT.
-      security: &a23
+      security: &a31
         - supabaseAuth: []
-      tags: &a24
+      tags: &a32
         - notifications
   /v1/notifications/read-all:
     post:
@@ -708,9 +1104,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MarkAllNotificationsReadEnvelopeDto'
-        '401': *a22
-      security: *a23
-      tags: *a24
+        '401': *a30
+      security: *a31
+      tags: *a32
   /v1/notifications/{notificationId}/read:
     post:
       operationId: NotificationsController_markRead
@@ -728,9 +1124,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotificationEnvelopeDto'
-        '401': *a22
-      security: *a23
-      tags: *a24
+        '401': *a30
+      security: *a31
+      tags: *a32
   /v1/notifications/preferences:
     get:
       operationId: NotificationsController_getPreferences
@@ -742,9 +1138,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotificationPreferencesEnvelopeDto'
-        '401': *a22
-      security: *a23
-      tags: *a24
+        '401': *a30
+      security: *a31
+      tags: *a32
     put:
       operationId: NotificationsController_updatePreferences
       parameters: []
@@ -755,9 +1151,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotificationPreferencesEnvelopeDto'
-        '401': *a22
-      security: *a23
-      tags: *a24
+        '401': *a30
+      security: *a31
+      tags: *a32
 info:
   title: Meal Direct API
   description: Stable REST API for Meal Direct web and future mobile clients.
@@ -797,7 +1193,7 @@ components:
           format: uuid
         role:
           type: string
-          enum: &a25
+          enum: &a33
             - customer
             - vendor
             - rider
@@ -998,7 +1394,7 @@ components:
           type: array
           items:
             type: string
-            enum: *a25
+            enum: *a33
         campuses:
           type: array
           items:
@@ -1260,6 +1656,443 @@ components:
           $ref: '#/components/schemas/DeliverySlotRecordDto'
       required:
         - data
+    VendorProfileDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        campusId:
+          type: string
+          format: uuid
+        legalName:
+          type: string
+        displayName:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        logoUrl:
+          type: string
+          nullable: true
+        kitchenLocation:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum:
+            - approved
+            - deactivated
+            - pending
+            - suspended
+        active:
+          type: boolean
+        defaultDeliveryMode:
+          type: string
+          enum: &a34
+            - meal_direct_rider
+            - vendor_delivery
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - campusId
+        - legalName
+        - displayName
+        - slug
+        - status
+        - active
+        - defaultDeliveryMode
+        - createdAt
+        - updatedAt
+    VendorProfileEnvelopeDto:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/VendorProfileDto'
+      required:
+        - data
+    UpdateVendorProfileDto:
+      type: object
+      properties:
+        displayName:
+          type: string
+          maxLength: 160
+          minLength: 1
+        description:
+          type: string
+          maxLength: 1000
+          nullable: true
+        phone:
+          type: string
+          pattern: ^[+0-9][0-9 ()-]{6,24}$
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        logoUrl:
+          type: string
+          maxLength: 2048
+          nullable: true
+        kitchenLocation:
+          type: string
+          maxLength: 300
+          nullable: true
+        defaultDeliveryMode:
+          type: string
+          enum: *a34
+    VendorPayoutAccountDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        vendorId:
+          type: string
+          format: uuid
+        paystackRecipientCode:
+          type: string
+          nullable: true
+        bankName:
+          type: string
+        bankCode:
+          type: string
+          nullable: true
+        maskedAccountNumber:
+          type: string
+        accountName:
+          type: string
+        verifiedAt:
+          type: string
+          nullable: true
+        active:
+          type: boolean
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - vendorId
+        - bankName
+        - maskedAccountNumber
+        - accountName
+        - active
+        - createdAt
+        - updatedAt
+    VendorPayoutAccountEnvelopeDto:
+      type: object
+      properties:
+        data:
+          nullable: true
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/VendorPayoutAccountDto'
+      required:
+        - data
+    UpsertPayoutAccountDto:
+      type: object
+      properties:
+        bankName:
+          type: string
+          maxLength: 120
+          minLength: 1
+        bankCode:
+          type: string
+          maxLength: 20
+          minLength: 1
+        accountName:
+          type: string
+          maxLength: 160
+          minLength: 1
+        accountNumber:
+          type: string
+          description: Full account number for masking before storage.
+        paystackRecipientCode:
+          type: string
+          maxLength: 80
+          minLength: 1
+      required:
+        - bankName
+        - accountName
+        - accountNumber
+    MenuCategoryDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        vendorId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        slug:
+          type: string
+        active:
+          type: boolean
+        displayOrder:
+          type: number
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - vendorId
+        - name
+        - slug
+        - active
+        - displayOrder
+        - createdAt
+        - updatedAt
+    UnitTypeDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        displayName:
+          type: string
+        countsTowardSpoonLimit:
+          type: boolean
+        active:
+          type: boolean
+      required:
+        - id
+        - code
+        - displayName
+        - countsTowardSpoonLimit
+        - active
+    MenuMetadataDto:
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/MenuCategoryDto'
+        unitTypes:
+          type: array
+          items:
+            $ref: '#/components/schemas/UnitTypeDto'
+      required:
+        - categories
+        - unitTypes
+    MenuMetadataEnvelopeDto:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/MenuMetadataDto'
+      required:
+        - data
+    VendorMenuItemDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        vendorId:
+          type: string
+          format: uuid
+        categoryId:
+          type: string
+          format: uuid
+          nullable: true
+        categoryName:
+          type: string
+          nullable: true
+        unitTypeId:
+          type: string
+          format: uuid
+        unitCode:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        imageUrl:
+          type: string
+          nullable: true
+        priceKobo:
+          type: number
+        active:
+          type: boolean
+        displayOrder:
+          type: number
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - vendorId
+        - unitTypeId
+        - unitCode
+        - name
+        - priceKobo
+        - active
+        - displayOrder
+        - createdAt
+        - updatedAt
+    VendorMenuItemListEnvelopeDto:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/VendorMenuItemDto'
+      required:
+        - data
+    CreateMenuItemDto:
+      type: object
+      properties:
+        categoryId:
+          type: string
+          format: uuid
+          nullable: true
+        unitTypeId:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 180
+          minLength: 1
+        description:
+          type: string
+          maxLength: 1000
+          nullable: true
+        imageUrl:
+          type: string
+          maxLength: 2048
+          nullable: true
+        priceKobo:
+          type: number
+          minimum: 0
+        displayOrder:
+          type: number
+          minimum: 0
+      required:
+        - unitTypeId
+        - name
+        - priceKobo
+    VendorMenuItemEnvelopeDto:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/VendorMenuItemDto'
+      required:
+        - data
+    UpdateMenuItemDto:
+      type: object
+      properties:
+        categoryId:
+          type: string
+          format: uuid
+          nullable: true
+        unitTypeId:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 180
+          minLength: 1
+        description:
+          type: string
+          maxLength: 1000
+          nullable: true
+        imageUrl:
+          type: string
+          maxLength: 2048
+          nullable: true
+        priceKobo:
+          type: number
+          minimum: 0
+        displayOrder:
+          type: number
+          minimum: 0
+    AvailabilityEntryResponseDto:
+      type: object
+      properties:
+        deliverySlotId:
+          type: string
+          format: uuid
+        dayOfWeek:
+          type: number
+          maximum: 6
+          minimum: 0
+        available:
+          type: boolean
+        validFrom:
+          type: string
+          example: 2026-06-15
+          nullable: true
+        validUntil:
+          type: string
+          example: 2026-06-30
+          nullable: true
+        id:
+          type: string
+          format: uuid
+      required:
+        - deliverySlotId
+        - dayOfWeek
+        - available
+        - id
+    AvailabilityListEnvelopeDto:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AvailabilityEntryResponseDto'
+      required:
+        - data
+    AvailabilityEntryDto:
+      type: object
+      properties:
+        deliverySlotId:
+          type: string
+          format: uuid
+        dayOfWeek:
+          type: number
+          maximum: 6
+          minimum: 0
+        available:
+          type: boolean
+        validFrom:
+          type: string
+          example: 2026-06-15
+          nullable: true
+        validUntil:
+          type: string
+          example: 2026-06-30
+          nullable: true
+      required:
+        - deliverySlotId
+        - dayOfWeek
+        - available
+    AvailabilityUpdateDto:
+      type: object
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/AvailabilityEntryDto'
+      required:
+        - entries
     CatalogVendorDto:
       type: object
       properties:
@@ -1359,6 +2192,167 @@ components:
             $ref: '#/components/schemas/MenuItemDto'
       required:
         - data
+    InventoryAdjustmentDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        inventoryId:
+          type: string
+          format: uuid
+        adjustmentQuantity:
+          type: number
+        reason:
+          type: string
+        actorUserId:
+          type: string
+          format: uuid
+          nullable: true
+        metadata:
+          type: object
+        createdAt:
+          type: string
+      required:
+        - id
+        - inventoryId
+        - adjustmentQuantity
+        - reason
+        - metadata
+        - createdAt
+    VendorInventoryDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        vendorId:
+          type: string
+          format: uuid
+        menuItemId:
+          type: string
+          format: uuid
+        menuItemName:
+          type: string
+        categoryId:
+          type: string
+          format: uuid
+          nullable: true
+        categoryName:
+          type: string
+          nullable: true
+        unitTypeId:
+          type: string
+          format: uuid
+        unitCode:
+          type: string
+        serviceDate:
+          type: string
+        deliverySlotId:
+          type: string
+          format: uuid
+        deliverySlotName:
+          type: string
+        quantityTotal:
+          type: number
+        quantityReserved:
+          type: number
+        quantitySold:
+          type: number
+        quantityAdjusted:
+          type: number
+        remainingQuantity:
+          type: number
+        active:
+          type: boolean
+        version:
+          type: number
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+        adjustments:
+          type: array
+          items:
+            $ref: '#/components/schemas/InventoryAdjustmentDto'
+      required:
+        - id
+        - vendorId
+        - menuItemId
+        - menuItemName
+        - unitTypeId
+        - unitCode
+        - serviceDate
+        - deliverySlotId
+        - deliverySlotName
+        - quantityTotal
+        - quantityReserved
+        - quantitySold
+        - quantityAdjusted
+        - remainingQuantity
+        - active
+        - version
+        - createdAt
+        - updatedAt
+        - adjustments
+    VendorInventoryListEnvelopeDto:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/VendorInventoryDto'
+      required:
+        - data
+    UpdateInventoryDto:
+      type: object
+      properties:
+        quantityTotal:
+          type: number
+          minimum: 0
+        expectedVersion:
+          type: number
+          minimum: 1
+      required:
+        - quantityTotal
+    VendorInventoryEnvelopeDto:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/VendorInventoryDto'
+      required:
+        - data
+    CreateInventoryAdjustmentDto:
+      type: object
+      properties:
+        adjustmentQuantity:
+          type: number
+        reason:
+          type: string
+          maxLength: 500
+          minLength: 1
+        metadata:
+          type: object
+      required:
+        - adjustmentQuantity
+        - reason
+    InventoryAdjustmentResponseDto:
+      type: object
+      properties:
+        adjustment:
+          $ref: '#/components/schemas/InventoryAdjustmentDto'
+        inventory:
+          $ref: '#/components/schemas/VendorInventoryDto'
+      required:
+        - adjustment
+        - inventory
+    InventoryAdjustmentEnvelopeDto:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/InventoryAdjustmentResponseDto'
+      required:
+        - data
     OrderQuoteItemDto:
       type: object
       properties:
@@ -1446,7 +2440,7 @@ components:
           type: string
         orderStatus:
           type: string
-          enum: &a26
+          enum: &a35
             - accepted
             - administratively_completed
             - cancelled
@@ -1557,7 +2551,7 @@ components:
           format: uuid
         orderStatus:
           type: string
-          enum: *a26
+          enum: *a35
         payment:
           nullable: true
           type: object
@@ -1648,7 +2642,7 @@ components:
           type: string
         orderStatus:
           type: string
-          enum: *a26
+          enum: *a35
         deliveryMode:
           type: string
         foodSubtotalKobo:

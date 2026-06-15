@@ -24,6 +24,10 @@ Meal Direct backend is being built from API foundation into production-hardened 
 - CORS disallowed-origin preflight previously surfaced as a 500; the app now disables CORS for disallowed origins instead of raising a server error.
 - Render logs confirmed `/v1/health/ready` failed with `SELF_SIGNED_CERT_IN_CHAIN`. `pg-connection-string` treats `sslmode=require` as strict verification by default and parsed connection-string values override separately supplied pool config. `DatabaseService` now strips SSL query params from `DATABASE_URL` whenever it supplies an explicit SSL object, preventing `sslmode=require` from overriding `{ rejectUnauthorized: false }`.
 - Readiness failures now log sanitized database error metadata under `HealthController` before returning the unchanged public `DATABASE_UNAVAILABLE` response.
+- Module 9 vendor profile/payout/menu/availability contract is sourced from `Meal_Direct_Vendor_Frontend_AI_Studio_Prompts.zip`; routes are singular `/v1/vendor/...`.
+- Module 9 now registers protected vendor endpoints for profile, masked payout account, menu metadata, menu item create/read/update/activate/deactivate, menu item schedules, and vendor availability. Inventory remains Module 10.
+- Module 10 vendor inventory contract is sourced from the same vendor prompt pack and uses `GET /v1/vendor/inventory?date=&slotId=`, `PUT /v1/vendor/inventory/:inventoryId`, and `POST /v1/vendor/inventory/:inventoryId/adjustments`.
+- Module 10 reuses existing `menu_item_inventory`, `inventory_adjustments`, and `record_inventory_adjustment`; no DB schema migration was added.
 
 ## Current Contracts
 
@@ -35,6 +39,18 @@ Meal Direct backend is being built from API foundation into production-hardened 
 - `POST /v1/settlements/vendors/:vendorId/daily` protected by Supabase JWT and `super_admin` role
 - `POST /v1/settlements/riders/:riderId/daily` protected by Supabase JWT and `super_admin` role
 - `GET /v1/operations/status` protected by `INTERNAL_OPERATIONS_TOKEN`
+- `GET/PATCH /v1/vendor/profile` protected by Supabase JWT, `vendor` role, and `vendor_users` object access
+- `GET/PUT /v1/vendor/payout-account` protected by Supabase JWT, `vendor` role, and masked payout snapshot logic
+- `GET /v1/vendor/menu-metadata`
+- `GET/POST /v1/vendor/menu-items`
+- `GET/PATCH /v1/vendor/menu-items/:itemId`
+- `POST /v1/vendor/menu-items/:itemId/activate`
+- `POST /v1/vendor/menu-items/:itemId/deactivate`
+- `GET/PUT /v1/vendor/menu-items/:itemId/schedules`
+- `GET/PUT /v1/vendor/availability`
+- `GET /v1/vendor/inventory?date=&slotId=`
+- `PUT /v1/vendor/inventory/:inventoryId`
+- `POST /v1/vendor/inventory/:inventoryId/adjustments`
 - OpenAPI artifacts in `docs/openapi.json` and `docs/openapi.yaml`
 
 ## Remaining Launch Blockers
