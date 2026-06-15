@@ -23,6 +23,8 @@ const requiredTables = [
   'settlements',
   'settlement_lines',
   'outbox_events',
+  'notifications',
+  'notification_preferences',
   'audit_logs'
 ] as const;
 
@@ -39,6 +41,8 @@ const requiredFunctions = [
   'transition_order_status',
   'confirm_delivery',
   'open_escalation',
+  'create_notification_for_outbox_event',
+  'notification_topic_enabled',
   'produce_vendor_daily_settlement',
   'produce_rider_daily_settlement',
   'can_read_order',
@@ -106,7 +110,9 @@ describe('production database gates', () => {
       'settlement_lines',
       'delivery_batches',
       'delivery_assignments',
-      'escalations'
+      'escalations',
+      'notifications',
+      'notification_preferences'
     ];
 
     const result = await pool.query<{ relname: string; relrowsecurity: boolean }>(

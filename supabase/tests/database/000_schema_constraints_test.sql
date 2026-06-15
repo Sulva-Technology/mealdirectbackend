@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(16);
+select plan(18);
 
 select has_table('public', 'profiles', 'profiles table exists');
 select has_table('public', 'campuses', 'campuses table exists');
@@ -14,6 +14,8 @@ select has_table('public', 'payments', 'payments table exists');
 select has_table('public', 'delivery_batches', 'delivery_batches table exists');
 select has_table('public', 'settlements', 'settlements table exists');
 select has_table('public', 'outbox_events', 'outbox_events table exists');
+select has_table('public', 'notifications', 'notifications table exists');
+select has_table('public', 'notification_preferences', 'notification_preferences table exists');
 
 select has_fk('public', 'profiles', 'profiles references auth.users');
 select col_type_is('public', 'orders', 'created_at', 'timestamp with time zone', 'orders.created_at uses timestamptz');

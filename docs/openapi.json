@@ -44,7 +44,473 @@
         "tags": ["auth"]
       }
     },
+    "/v1/me": {
+      "get": {
+        "operationId": "ProfilesController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Current role-aware Meal Direct session.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MeSessionEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["me"]
+      },
+      "patch": {
+        "operationId": "ProfilesController_updateProfile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Updated safe profile fields.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ProfileEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid profile input." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["me"]
+      }
+    },
+    "/v1/me/campuses": {
+      "get": {
+        "operationId": "ProfilesController_campuses",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Active campus memberships for the current user.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CampusMembershipListEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["me"]
+      }
+    },
+    "/v1/me/complete-onboarding": {
+      "post": {
+        "operationId": "ProfilesController_completeOnboarding",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Profile after onboarding completion.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ProfileEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid onboarding input." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "User does not belong to the selected campus." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["me"]
+      }
+    },
+    "/v1/me/default-location": {
+      "put": {
+        "operationId": "ProfilesController_setDefaultLocation",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Profile after default location update.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ProfileEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid default location input." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "User does not belong to the selected campus." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["me"]
+      }
+    },
+    "/v1/campuses": {
+      "get": {
+        "operationId": "PublicCampusDirectoryController_listCampuses",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Active campuses available to public clients.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CampusListEnvelopeDto" }
+              }
+            }
+          }
+        },
+        "tags": ["campuses"]
+      }
+    },
+    "/v1/campuses/{campusId}/locations": {
+      "get": {
+        "operationId": "PublicCampusDirectoryController_listLocations",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Active preset delivery locations for a campus.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LocationListEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid campus ID." }
+        },
+        "tags": ["campuses"]
+      }
+    },
+    "/v1/campuses/{campusId}/delivery-slots": {
+      "get": {
+        "operationId": "PublicCampusDirectoryController_listDeliverySlots",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Active delivery slots for a campus, optionally with date cutoffs.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DeliverySlotListEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid campus ID or date filter." }
+        },
+        "tags": ["campuses"]
+      }
+    },
+    "/v1/admin/campuses": {
+      "get": {
+        "operationId": "AdminCampusDirectoryController_listCampuses",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Admin-visible campuses.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CampusListEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-campuses"]
+      },
+      "post": {
+        "operationId": "AdminCampusDirectoryController_createCampus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Created campus.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/CampusEnvelopeDto" } }
+            }
+          },
+          "400": { "description": "Invalid campus input." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-campuses"]
+      }
+    },
+    "/v1/admin/campuses/{campusId}": {
+      "patch": {
+        "operationId": "AdminCampusDirectoryController_updateCampus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Updated campus.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/CampusEnvelopeDto" } }
+            }
+          },
+          "400": { "description": "Invalid campus input." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-campuses"]
+      }
+    },
+    "/v1/admin/campuses/{campusId}/zones": {
+      "get": {
+        "operationId": "AdminCampusDirectoryController_listZones",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Campus zones for admins.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ZoneListEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-campuses"]
+      },
+      "post": {
+        "operationId": "AdminCampusDirectoryController_createZone",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Created campus zone.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ZoneEnvelopeDto" } }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-campuses"]
+      }
+    },
+    "/v1/admin/zones/{zoneId}": {
+      "patch": {
+        "operationId": "AdminCampusDirectoryController_updateZone",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Updated campus zone.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ZoneEnvelopeDto" } }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-campuses"]
+      }
+    },
+    "/v1/admin/campuses/{campusId}/locations": {
+      "get": {
+        "operationId": "AdminCampusDirectoryController_listLocations",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Campus locations for admins.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LocationListEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-campuses"]
+      },
+      "post": {
+        "operationId": "AdminCampusDirectoryController_createLocation",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Created campus location.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LocationEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-campuses"]
+      }
+    },
+    "/v1/admin/locations/{locationId}": {
+      "patch": {
+        "operationId": "AdminCampusDirectoryController_updateLocation",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Updated campus location.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LocationEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-campuses"]
+      }
+    },
+    "/v1/admin/campuses/{campusId}/delivery-slots": {
+      "get": {
+        "operationId": "AdminCampusDirectoryController_listDeliverySlots",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Campus delivery slots for admins.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DeliverySlotListEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-campuses"]
+      },
+      "post": {
+        "operationId": "AdminCampusDirectoryController_createDeliverySlot",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Created campus delivery slot.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DeliverySlotEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-campuses"]
+      }
+    },
+    "/v1/admin/delivery-slots/{slotId}": {
+      "patch": {
+        "operationId": "AdminCampusDirectoryController_updateDeliverySlot",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Updated campus delivery slot.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DeliverySlotEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-campuses"]
+      }
+    },
+    "/v1/catalog/vendors": {
+      "get": {
+        "operationId": "CatalogController_listVendors",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Approved active vendors available for the selected campus/date/slot.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CatalogVendorListEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid catalog filters." }
+        },
+        "tags": ["catalog"]
+      }
+    },
+    "/v1/catalog/vendors/{vendorId}": {
+      "get": {
+        "operationId": "CatalogController_getVendor",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Approved active vendor detail.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CatalogVendorEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid vendor ID." },
+          "404": { "description": "Vendor not found or unavailable." }
+        },
+        "tags": ["catalog"]
+      }
+    },
+    "/v1/catalog/vendors/{vendorId}/menu": {
+      "get": {
+        "operationId": "CatalogController_listVendorMenu",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Approved active menu items for the vendor.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MenuItemListEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid vendor ID or menu filters." }
+        },
+        "tags": ["catalog"]
+      }
+    },
+    "/v1/orders/quote": {
+      "post": {
+        "operationId": "OrdersController_quoteOrder",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Order quote using current menu and slot availability.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OrderQuoteEnvelopeDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["orders"]
+      }
+    },
     "/v1/orders": {
+      "get": {
+        "operationId": "OrdersController_listOrders",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Customer order history.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OrderListEnvelopeDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["orders"]
+      },
       "post": {
         "operationId": "OrdersController_createOrder",
         "parameters": [],
@@ -53,6 +519,186 @@
         },
         "security": [{ "supabaseAuth": [] }],
         "tags": ["orders"]
+      }
+    },
+    "/v1/orders/{orderId}/payment-status": {
+      "get": {
+        "operationId": "OrdersController_paymentStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Customer-visible payment status for an order.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OrderPaymentStatusEnvelopeDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["orders"]
+      }
+    },
+    "/v1/orders/{orderId}/confirm-delivery": {
+      "post": {
+        "operationId": "OrdersController_confirmDelivery",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Customer delivery confirmation.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DeliveryConfirmationEnvelopeDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["orders"]
+      }
+    },
+    "/v1/orders/{orderId}": {
+      "get": {
+        "operationId": "OrdersController_getOrder",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Customer-owned order detail.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OrderDetailEnvelopeDto" }
+              }
+            }
+          }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["orders"]
+      }
+    },
+    "/v1/orders/{orderId}/payments/paystack/initialize": {
+      "post": {
+        "operationId": "CustomerPaymentsController_initializePaystack",
+        "parameters": [
+          {
+            "name": "orderId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paystack checkout initialization for a customer-owned pending order.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaystackInitializationEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid order or payment state." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["payments"]
+      }
+    },
+    "/v1/admin/payments": {
+      "get": {
+        "operationId": "AdminPaymentsController_listPayments",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Admin-visible payment records scoped by campus for campus admins.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminPaymentListEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-payments"]
+      }
+    },
+    "/v1/admin/payments/{paymentId}": {
+      "get": {
+        "operationId": "AdminPaymentsController_getPayment",
+        "parameters": [
+          {
+            "name": "paymentId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Admin-visible payment detail scoped by campus for campus admins.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminPaymentEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-payments"]
+      }
+    },
+    "/v1/admin/payments/{paymentId}/reconcile": {
+      "post": {
+        "operationId": "AdminPaymentsController_reconcilePayment",
+        "parameters": [
+          {
+            "name": "paymentId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Verifies a Paystack transaction and marks the local payment successful.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PaymentReconciliationEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-payments"]
+      }
+    },
+    "/v1/admin/payments/{paymentId}/refunds": {
+      "post": {
+        "operationId": "AdminPaymentsController_initiateRefund",
+        "parameters": [
+          {
+            "name": "paymentId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Creates a bounded Paystack refund for a successful payment.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/RefundEnvelopeDto" } }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-payments"]
       }
     },
     "/v1/payments/webhooks/paystack": {
@@ -86,6 +732,182 @@
         },
         "security": [{ "supabaseAuth": [] }],
         "tags": ["settlements"]
+      }
+    },
+    "/v1/orders/{orderId}/review": {
+      "post": {
+        "operationId": "CustomerReviewsController_createReview",
+        "parameters": [
+          {
+            "name": "orderId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created or existing customer review for an owned confirmed order.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ReviewEnvelopeDto" } }
+            }
+          },
+          "400": { "description": "Invalid review input or ineligible order." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["reviews"]
+      }
+    },
+    "/v1/orders/{orderId}/escalations": {
+      "get": {
+        "operationId": "CustomerEscalationsController_listEscalations",
+        "parameters": [
+          {
+            "name": "orderId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Customer-visible escalations for an owned order.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EscalationListEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["escalations"]
+      },
+      "post": {
+        "operationId": "CustomerEscalationsController_openEscalation",
+        "parameters": [
+          {
+            "name": "orderId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Opened or existing customer escalation for an owned eligible order.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EscalationEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid escalation input or ineligible order." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["escalations"]
+      }
+    },
+    "/v1/notifications": {
+      "get": {
+        "operationId": "NotificationsController_listNotifications",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Current user notification feed.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/NotificationListEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["notifications"]
+      }
+    },
+    "/v1/notifications/read-all": {
+      "post": {
+        "operationId": "NotificationsController_markAllRead",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Marks all current user notifications as read.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MarkAllNotificationsReadEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["notifications"]
+      }
+    },
+    "/v1/notifications/{notificationId}/read": {
+      "post": {
+        "operationId": "NotificationsController_markRead",
+        "parameters": [
+          {
+            "name": "notificationId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Marks one current user notification as read.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/NotificationEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["notifications"]
+      }
+    },
+    "/v1/notifications/preferences": {
+      "get": {
+        "operationId": "NotificationsController_getPreferences",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Current user notification preferences.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/NotificationPreferencesEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["notifications"]
+      },
+      "put": {
+        "operationId": "NotificationsController_updatePreferences",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Updated current user notification preferences.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/NotificationPreferencesEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["notifications"]
       }
     }
   },
@@ -124,6 +946,1063 @@
         "description": "Internal operations token. Temporary until Super Admin JWT/RBAC is implemented."
       }
     },
-    "schemas": {}
+    "schemas": {
+      "MeActorDto": {
+        "type": "object",
+        "properties": {
+          "userId": { "type": "string", "format": "uuid" },
+          "role": {
+            "type": "string",
+            "enum": ["customer", "vendor", "rider", "campus_admin", "super_admin"]
+          },
+          "email": { "type": "string" },
+          "campusId": { "type": "string", "format": "uuid" },
+          "vendorId": { "type": "string", "format": "uuid" },
+          "riderId": { "type": "string", "format": "uuid" }
+        },
+        "required": ["userId", "role"]
+      },
+      "ProfileRecordDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "email": { "type": "string", "nullable": true },
+          "displayName": { "type": "string", "nullable": true },
+          "phoneNumber": { "type": "string", "nullable": true },
+          "avatarUrl": { "type": "string", "nullable": true },
+          "accountStatus": { "type": "string", "enum": ["active", "suspended", "deactivated"] },
+          "defaultCampusId": { "type": "string", "format": "uuid", "nullable": true },
+          "defaultLocationId": { "type": "string", "format": "uuid", "nullable": true },
+          "onboardingCompletedAt": { "type": "string", "nullable": true },
+          "onboardingCompleted": { "type": "boolean" },
+          "lastSeenAt": { "type": "string", "nullable": true },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" }
+        },
+        "required": ["id", "accountStatus", "onboardingCompleted", "createdAt", "updatedAt"]
+      },
+      "CampusMembershipDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "campusId": { "type": "string", "format": "uuid" },
+          "campusName": { "type": "string" },
+          "campusSlug": { "type": "string" },
+          "timezone": { "type": "string" },
+          "currency": { "type": "string" },
+          "countryCode": { "type": "string" },
+          "active": { "type": "boolean" },
+          "joinedAt": { "type": "string" }
+        },
+        "required": [
+          "id",
+          "campusId",
+          "campusName",
+          "campusSlug",
+          "timezone",
+          "currency",
+          "countryCode",
+          "active",
+          "joinedAt"
+        ]
+      },
+      "VendorMembershipDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "vendorId": { "type": "string", "format": "uuid" },
+          "campusId": { "type": "string", "format": "uuid" },
+          "vendorDisplayName": { "type": "string" },
+          "vendorSlug": { "type": "string" },
+          "role": { "type": "string", "enum": ["owner", "staff"] },
+          "active": { "type": "boolean" }
+        },
+        "required": [
+          "id",
+          "vendorId",
+          "campusId",
+          "vendorDisplayName",
+          "vendorSlug",
+          "role",
+          "active"
+        ]
+      },
+      "RiderProfileDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "campusId": { "type": "string", "format": "uuid" },
+          "displayName": { "type": "string" },
+          "phone": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "verified", "suspended", "deactivated"]
+          },
+          "active": { "type": "boolean" }
+        },
+        "required": ["id", "campusId", "displayName", "phone", "status", "active"]
+      },
+      "AdminMembershipDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "campusId": { "type": "string", "format": "uuid", "nullable": true },
+          "campusName": { "type": "string", "nullable": true },
+          "role": { "type": "string", "enum": ["campus_admin", "super_admin"] },
+          "active": { "type": "boolean" },
+          "grantedAt": { "type": "string" }
+        },
+        "required": ["id", "role", "active", "grantedAt"]
+      },
+      "MeSessionDto": {
+        "type": "object",
+        "properties": {
+          "actor": { "$ref": "#/components/schemas/MeActorDto" },
+          "profile": { "$ref": "#/components/schemas/ProfileRecordDto" },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["customer", "vendor", "rider", "campus_admin", "super_admin"]
+            }
+          },
+          "campuses": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CampusMembershipDto" }
+          },
+          "vendorMemberships": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/VendorMembershipDto" }
+          },
+          "riderProfiles": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/RiderProfileDto" }
+          },
+          "adminMemberships": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AdminMembershipDto" }
+          }
+        },
+        "required": [
+          "actor",
+          "profile",
+          "roles",
+          "campuses",
+          "vendorMemberships",
+          "riderProfiles",
+          "adminMemberships"
+        ]
+      },
+      "MeSessionEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/MeSessionDto" } },
+        "required": ["data"]
+      },
+      "CampusMembershipListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CampusMembershipDto" }
+          }
+        },
+        "required": ["data"]
+      },
+      "ProfileEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/ProfileRecordDto" } },
+        "required": ["data"]
+      },
+      "CampusRecordDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "slug": { "type": "string" },
+          "timezone": { "type": "string" },
+          "currency": { "type": "string" },
+          "countryCode": { "type": "string" },
+          "active": { "type": "boolean" },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "timezone",
+          "currency",
+          "countryCode",
+          "active",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "CampusListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/CampusRecordDto" } }
+        },
+        "required": ["data"]
+      },
+      "CampusLocationRecordDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "campusId": { "type": "string", "format": "uuid" },
+          "zoneId": { "type": "string", "format": "uuid" },
+          "zoneName": { "type": "string" },
+          "zoneCode": { "type": "string" },
+          "name": { "type": "string" },
+          "slug": { "type": "string" },
+          "type": { "type": "string", "enum": ["department", "hostel"] },
+          "deliveryInstructions": { "type": "string", "nullable": true },
+          "active": { "type": "boolean" },
+          "displayOrder": { "type": "number" },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" }
+        },
+        "required": [
+          "id",
+          "campusId",
+          "zoneId",
+          "zoneName",
+          "zoneCode",
+          "name",
+          "slug",
+          "type",
+          "active",
+          "displayOrder",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "LocationListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CampusLocationRecordDto" }
+          }
+        },
+        "required": ["data"]
+      },
+      "DeliverySlotRecordDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "campusId": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "deliveryTime": { "type": "string" },
+          "cutoffMinutes": { "type": "number" },
+          "active": { "type": "boolean" },
+          "displayOrder": { "type": "number" },
+          "orderingCutoffAt": { "type": "string", "nullable": true },
+          "acceptingOrders": { "type": "boolean", "nullable": true },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" }
+        },
+        "required": [
+          "id",
+          "campusId",
+          "name",
+          "deliveryTime",
+          "cutoffMinutes",
+          "active",
+          "displayOrder",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "DeliverySlotListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/DeliverySlotRecordDto" }
+          }
+        },
+        "required": ["data"]
+      },
+      "CampusEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/CampusRecordDto" } },
+        "required": ["data"]
+      },
+      "CampusZoneRecordDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "campusId": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "code": { "type": "string" },
+          "active": { "type": "boolean" },
+          "displayOrder": { "type": "number" },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" }
+        },
+        "required": [
+          "id",
+          "campusId",
+          "name",
+          "code",
+          "active",
+          "displayOrder",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "ZoneListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CampusZoneRecordDto" }
+          }
+        },
+        "required": ["data"]
+      },
+      "ZoneEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/CampusZoneRecordDto" } },
+        "required": ["data"]
+      },
+      "LocationEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/CampusLocationRecordDto" } },
+        "required": ["data"]
+      },
+      "DeliverySlotEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/DeliverySlotRecordDto" } },
+        "required": ["data"]
+      },
+      "CatalogVendorDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "campusId": { "type": "string", "format": "uuid" },
+          "displayName": { "type": "string" },
+          "slug": { "type": "string" },
+          "description": { "type": "string", "nullable": true },
+          "logoUrl": { "type": "string", "nullable": true },
+          "kitchenLocation": { "type": "string", "nullable": true },
+          "defaultDeliveryMode": {
+            "type": "string",
+            "enum": ["meal_direct_rider", "vendor_delivery"]
+          }
+        },
+        "required": ["id", "campusId", "displayName", "slug", "defaultDeliveryMode"]
+      },
+      "CatalogVendorListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/CatalogVendorDto" } }
+        },
+        "required": ["data"]
+      },
+      "CatalogVendorEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/CatalogVendorDto" } },
+        "required": ["data"]
+      },
+      "MenuItemDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "vendorId": { "type": "string", "format": "uuid" },
+          "categoryId": { "type": "string", "format": "uuid", "nullable": true },
+          "categoryName": { "type": "string", "nullable": true },
+          "unitTypeId": { "type": "string", "format": "uuid" },
+          "unitCode": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string", "nullable": true },
+          "imageUrl": { "type": "string", "nullable": true },
+          "priceKobo": { "type": "number" },
+          "remainingQuantity": { "type": "number", "nullable": true }
+        },
+        "required": ["id", "vendorId", "unitTypeId", "unitCode", "name", "priceKobo"]
+      },
+      "MenuItemListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/MenuItemDto" } }
+        },
+        "required": ["data"]
+      },
+      "OrderQuoteItemDto": {
+        "type": "object",
+        "properties": {
+          "menuItemId": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "quantity": { "type": "number" },
+          "remainingQuantity": { "type": "number" },
+          "unitPriceKobo": { "type": "number" },
+          "lineTotalKobo": { "type": "number" }
+        },
+        "required": [
+          "menuItemId",
+          "name",
+          "quantity",
+          "remainingQuantity",
+          "unitPriceKobo",
+          "lineTotalKobo"
+        ]
+      },
+      "OrderQuoteDto": {
+        "type": "object",
+        "properties": {
+          "currency": { "type": "string" },
+          "foodSubtotalKobo": { "type": "number" },
+          "deliveryFeeKobo": { "type": "number" },
+          "discountKobo": { "type": "number" },
+          "totalKobo": { "type": "number" },
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/OrderQuoteItemDto" }
+          }
+        },
+        "required": [
+          "currency",
+          "foodSubtotalKobo",
+          "deliveryFeeKobo",
+          "discountKobo",
+          "totalKobo",
+          "items"
+        ]
+      },
+      "OrderQuoteEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/OrderQuoteDto" } },
+        "required": ["data"]
+      },
+      "OrderSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "orderNumber": { "type": "string" },
+          "customerId": { "type": "string", "format": "uuid" },
+          "campusId": { "type": "string", "format": "uuid" },
+          "vendorId": { "type": "string", "format": "uuid" },
+          "vendorDisplayName": { "type": "string" },
+          "serviceDate": { "type": "string" },
+          "deliverySlotId": { "type": "string", "format": "uuid" },
+          "deliverySlotName": { "type": "string" },
+          "locationId": { "type": "string", "format": "uuid" },
+          "locationName": { "type": "string" },
+          "orderStatus": {
+            "type": "string",
+            "enum": [
+              "accepted",
+              "administratively_completed",
+              "cancelled",
+              "confirmed",
+              "delivered",
+              "expired",
+              "out_for_delivery",
+              "paid",
+              "pending_payment",
+              "preparing",
+              "ready",
+              "refunded"
+            ]
+          },
+          "deliveryMode": { "type": "string" },
+          "foodSubtotalKobo": { "type": "number" },
+          "deliveryFeeKobo": { "type": "number" },
+          "discountKobo": { "type": "number" },
+          "totalKobo": { "type": "number" },
+          "currency": { "type": "string" },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" },
+          "paidAt": { "type": "string", "nullable": true },
+          "deliveredAt": { "type": "string", "nullable": true },
+          "confirmedAt": { "type": "string", "nullable": true }
+        },
+        "required": [
+          "id",
+          "orderNumber",
+          "customerId",
+          "campusId",
+          "vendorId",
+          "vendorDisplayName",
+          "serviceDate",
+          "deliverySlotId",
+          "deliverySlotName",
+          "locationId",
+          "locationName",
+          "orderStatus",
+          "deliveryMode",
+          "foodSubtotalKobo",
+          "deliveryFeeKobo",
+          "discountKobo",
+          "totalKobo",
+          "currency",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "OrderListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/OrderSummaryDto" } }
+        },
+        "required": ["data"]
+      },
+      "PaymentSnapshotDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "provider": { "type": "string" },
+          "providerReference": { "type": "string" },
+          "status": { "type": "string" },
+          "expectedAmountKobo": { "type": "number" },
+          "paidAmountKobo": { "type": "number", "nullable": true },
+          "currency": { "type": "string" },
+          "initializedAt": { "type": "string" },
+          "verifiedAt": { "type": "string", "nullable": true },
+          "paidAt": { "type": "string", "nullable": true }
+        },
+        "required": [
+          "id",
+          "provider",
+          "providerReference",
+          "status",
+          "expectedAmountKobo",
+          "currency",
+          "initializedAt"
+        ]
+      },
+      "OrderPaymentStatusDto": {
+        "type": "object",
+        "properties": {
+          "orderId": { "type": "string", "format": "uuid" },
+          "orderStatus": {
+            "type": "string",
+            "enum": [
+              "accepted",
+              "administratively_completed",
+              "cancelled",
+              "confirmed",
+              "delivered",
+              "expired",
+              "out_for_delivery",
+              "paid",
+              "pending_payment",
+              "preparing",
+              "ready",
+              "refunded"
+            ]
+          },
+          "payment": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [{ "$ref": "#/components/schemas/PaymentSnapshotDto" }]
+          }
+        },
+        "required": ["orderId", "orderStatus"]
+      },
+      "OrderPaymentStatusEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/OrderPaymentStatusDto" } },
+        "required": ["data"]
+      },
+      "DeliveryConfirmationDto": {
+        "type": "object",
+        "properties": { "confirmationId": { "type": "string", "format": "uuid" } },
+        "required": ["confirmationId"]
+      },
+      "DeliveryConfirmationEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/DeliveryConfirmationDto" } },
+        "required": ["data"]
+      },
+      "OrderItemDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "menuItemId": { "type": "string", "format": "uuid" },
+          "itemName": { "type": "string" },
+          "unitType": { "type": "string" },
+          "unitPriceKobo": { "type": "number" },
+          "quantity": { "type": "number" },
+          "lineTotalKobo": { "type": "number" }
+        },
+        "required": [
+          "id",
+          "menuItemId",
+          "itemName",
+          "unitType",
+          "unitPriceKobo",
+          "quantity",
+          "lineTotalKobo"
+        ]
+      },
+      "OrderDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "orderNumber": { "type": "string" },
+          "customerId": { "type": "string", "format": "uuid" },
+          "campusId": { "type": "string", "format": "uuid" },
+          "vendorId": { "type": "string", "format": "uuid" },
+          "vendorDisplayName": { "type": "string" },
+          "serviceDate": { "type": "string" },
+          "deliverySlotId": { "type": "string", "format": "uuid" },
+          "deliverySlotName": { "type": "string" },
+          "locationId": { "type": "string", "format": "uuid" },
+          "locationName": { "type": "string" },
+          "orderStatus": {
+            "type": "string",
+            "enum": [
+              "accepted",
+              "administratively_completed",
+              "cancelled",
+              "confirmed",
+              "delivered",
+              "expired",
+              "out_for_delivery",
+              "paid",
+              "pending_payment",
+              "preparing",
+              "ready",
+              "refunded"
+            ]
+          },
+          "deliveryMode": { "type": "string" },
+          "foodSubtotalKobo": { "type": "number" },
+          "deliveryFeeKobo": { "type": "number" },
+          "discountKobo": { "type": "number" },
+          "totalKobo": { "type": "number" },
+          "currency": { "type": "string" },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" },
+          "paidAt": { "type": "string", "nullable": true },
+          "deliveredAt": { "type": "string", "nullable": true },
+          "confirmedAt": { "type": "string", "nullable": true },
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/OrderItemDto" } },
+          "latestPayment": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [{ "$ref": "#/components/schemas/PaymentSnapshotDto" }]
+          }
+        },
+        "required": [
+          "id",
+          "orderNumber",
+          "customerId",
+          "campusId",
+          "vendorId",
+          "vendorDisplayName",
+          "serviceDate",
+          "deliverySlotId",
+          "deliverySlotName",
+          "locationId",
+          "locationName",
+          "orderStatus",
+          "deliveryMode",
+          "foodSubtotalKobo",
+          "deliveryFeeKobo",
+          "discountKobo",
+          "totalKobo",
+          "currency",
+          "createdAt",
+          "updatedAt",
+          "items"
+        ]
+      },
+      "OrderDetailEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/OrderDetailDto" } },
+        "required": ["data"]
+      },
+      "PaystackInitializationDto": {
+        "type": "object",
+        "properties": {
+          "paymentId": { "type": "string", "format": "uuid" },
+          "authorizationUrl": { "type": "string" },
+          "accessCode": { "type": "string" },
+          "reference": { "type": "string" }
+        },
+        "required": ["paymentId", "authorizationUrl", "accessCode", "reference"]
+      },
+      "PaystackInitializationEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/PaystackInitializationDto" } },
+        "required": ["data"]
+      },
+      "AdminPaymentDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "orderId": { "type": "string", "format": "uuid" },
+          "orderNumber": { "type": "string" },
+          "customerId": { "type": "string", "format": "uuid" },
+          "customerEmail": { "type": "string", "nullable": true },
+          "campusId": { "type": "string", "format": "uuid" },
+          "orderStatus": { "type": "string" },
+          "orderTotalKobo": { "type": "number" },
+          "providerReference": { "type": "string" },
+          "paymentStatus": { "type": "string" },
+          "expectedAmountKobo": { "type": "number" },
+          "paidAmountKobo": { "type": "number", "nullable": true },
+          "providerTransactionId": { "type": "string", "nullable": true },
+          "currency": { "type": "string" },
+          "initializedAt": { "type": "string" },
+          "paidAt": { "type": "string", "nullable": true },
+          "verifiedAt": { "type": "string", "nullable": true }
+        },
+        "required": [
+          "id",
+          "orderId",
+          "orderNumber",
+          "customerId",
+          "campusId",
+          "orderStatus",
+          "orderTotalKobo",
+          "providerReference",
+          "paymentStatus",
+          "expectedAmountKobo",
+          "currency",
+          "initializedAt"
+        ]
+      },
+      "AdminPaymentListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/AdminPaymentDto" } }
+        },
+        "required": ["data"]
+      },
+      "AdminPaymentEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/AdminPaymentDto" } },
+        "required": ["data"]
+      },
+      "PaymentReconciliationDto": {
+        "type": "object",
+        "properties": {
+          "paymentId": { "type": "string", "format": "uuid" },
+          "orderId": { "type": "string", "format": "uuid" },
+          "providerReference": { "type": "string" },
+          "status": { "type": "string", "enum": ["successful"] }
+        },
+        "required": ["paymentId", "orderId", "providerReference", "status"]
+      },
+      "PaymentReconciliationEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/PaymentReconciliationDto" } },
+        "required": ["data"]
+      },
+      "RefundDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "paymentId": { "type": "string", "format": "uuid" },
+          "orderId": { "type": "string", "format": "uuid" },
+          "providerRefundReference": { "type": "string", "nullable": true },
+          "amountKobo": { "type": "number" },
+          "reasonCode": { "type": "string" },
+          "reasonText": { "type": "string", "nullable": true },
+          "status": { "type": "string" },
+          "requestedBy": { "type": "string", "nullable": true },
+          "requestedAt": { "type": "string" },
+          "processedAt": { "type": "string", "nullable": true }
+        },
+        "required": [
+          "id",
+          "paymentId",
+          "orderId",
+          "amountKobo",
+          "reasonCode",
+          "status",
+          "requestedAt"
+        ]
+      },
+      "RefundEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/RefundDto" } },
+        "required": ["data"]
+      },
+      "ReviewRecordDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "orderId": { "type": "string", "format": "uuid" },
+          "reviewerId": { "type": "string", "format": "uuid" },
+          "menuItemId": { "type": "string", "nullable": true },
+          "vendorId": { "type": "string", "nullable": true },
+          "deliveryBatchId": { "type": "string", "nullable": true },
+          "foodRating": { "type": "number", "nullable": true },
+          "vendorRating": { "type": "number", "nullable": true },
+          "deliveryRating": { "type": "number", "nullable": true },
+          "comment": { "type": "string", "nullable": true },
+          "moderationStatus": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" }
+        },
+        "required": ["id", "orderId", "reviewerId", "moderationStatus", "createdAt", "updatedAt"]
+      },
+      "ReviewEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/ReviewRecordDto" } },
+        "required": ["data"]
+      },
+      "EscalationRecordDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "orderId": { "type": "string", "format": "uuid" },
+          "openedBy": { "type": "string", "format": "uuid" },
+          "category": { "type": "string" },
+          "description": { "type": "string" },
+          "status": { "type": "string", "enum": ["open", "investigating", "resolved", "rejected"] },
+          "assignedAdminId": { "type": "string", "nullable": true },
+          "resolution": { "type": "string", "nullable": true },
+          "refundId": { "type": "string", "nullable": true },
+          "openedAt": { "type": "string" },
+          "resolvedAt": { "type": "string", "nullable": true },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" }
+        },
+        "required": [
+          "id",
+          "orderId",
+          "openedBy",
+          "category",
+          "description",
+          "status",
+          "openedAt",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "EscalationListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/EscalationRecordDto" }
+          }
+        },
+        "required": ["data"]
+      },
+      "EscalationEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/EscalationRecordDto" } },
+        "required": ["data"]
+      },
+      "NotificationRecordDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "recipientUserId": { "type": "string", "format": "uuid" },
+          "eventType": { "type": "string" },
+          "aggregateType": { "type": "string" },
+          "aggregateId": { "type": "string", "format": "uuid" },
+          "title": { "type": "string" },
+          "body": { "type": "string" },
+          "linkPath": { "type": "string", "nullable": true },
+          "readAt": { "type": "string", "nullable": true },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" }
+        },
+        "required": [
+          "id",
+          "recipientUserId",
+          "eventType",
+          "aggregateType",
+          "aggregateId",
+          "title",
+          "body",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "NotificationListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/NotificationRecordDto" }
+          }
+        },
+        "required": ["data"]
+      },
+      "MarkAllNotificationsReadDto": {
+        "type": "object",
+        "properties": { "updatedCount": { "type": "number" } },
+        "required": ["updatedCount"]
+      },
+      "MarkAllNotificationsReadEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/MarkAllNotificationsReadDto" } },
+        "required": ["data"]
+      },
+      "NotificationEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/NotificationRecordDto" } },
+        "required": ["data"]
+      },
+      "NotificationPreferencesDto": {
+        "type": "object",
+        "properties": {
+          "userId": { "type": "string", "format": "uuid" },
+          "inAppEnabled": { "type": "boolean" },
+          "pushEnabled": { "type": "boolean" },
+          "emailEnabled": { "type": "boolean" },
+          "orderUpdates": { "type": "boolean" },
+          "paymentUpdates": { "type": "boolean" },
+          "deliveryUpdates": { "type": "boolean" },
+          "escalationUpdates": { "type": "boolean" },
+          "settlementUpdates": { "type": "boolean" },
+          "updatedAt": { "type": "string" }
+        },
+        "required": [
+          "userId",
+          "inAppEnabled",
+          "pushEnabled",
+          "emailEnabled",
+          "orderUpdates",
+          "paymentUpdates",
+          "deliveryUpdates",
+          "escalationUpdates",
+          "settlementUpdates",
+          "updatedAt"
+        ]
+      },
+      "NotificationPreferencesEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/NotificationPreferencesDto" } },
+        "required": ["data"]
+      },
+      "CursorPaginationMetaDto": {
+        "type": "object",
+        "properties": {
+          "hasMore": { "type": "boolean", "description": "True when another page is available." },
+          "limit": {
+            "type": "number",
+            "description": "Limit applied to the current page.",
+            "minimum": 1
+          },
+          "nextCursor": { "type": "string", "description": "Cursor to request the next page." }
+        },
+        "required": ["hasMore", "limit"]
+      },
+      "CursorPaginationQueryDto": {
+        "type": "object",
+        "properties": {
+          "cursor": {
+            "type": "string",
+            "description": "Opaque cursor returned by the previous page.",
+            "example": "eyJpZCI6Im9yZGVyLTEifQ"
+          },
+          "limit": {
+            "type": "number",
+            "description": "Maximum number of records to return.",
+            "default": 20,
+            "maximum": 100,
+            "minimum": 1
+          }
+        }
+      },
+      "DateRangeQueryDto": {
+        "type": "object",
+        "properties": {
+          "dateFrom": {
+            "type": "string",
+            "description": "Inclusive ISO-8601 lower bound for date filtering.",
+            "example": "2026-06-15T00:00:00.000Z"
+          },
+          "dateTo": {
+            "type": "string",
+            "description": "Inclusive ISO-8601 upper bound for date filtering.",
+            "example": "2026-06-16T00:00:00.000Z"
+          }
+        }
+      },
+      "ErrorBodyDto": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "string", "example": "VALIDATION_FAILED" },
+          "message": { "type": "string", "example": "Request validation failed" },
+          "requestId": {
+            "type": "string",
+            "description": "Request identifier for support and log correlation."
+          },
+          "details": {
+            "description": "Safe machine-readable error details.",
+            "type": "array",
+            "items": { "type": "object" }
+          }
+        },
+        "required": ["code", "message"]
+      },
+      "ErrorEnvelopeDto": {
+        "type": "object",
+        "properties": { "error": { "$ref": "#/components/schemas/ErrorBodyDto" } },
+        "required": ["error"]
+      },
+      "ListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "description": "Response list payload.",
+            "type": "array",
+            "items": { "type": "object" }
+          },
+          "pagination": { "$ref": "#/components/schemas/CursorPaginationMetaDto" },
+          "meta": { "type": "object", "description": "Optional response metadata." }
+        },
+        "required": ["data", "pagination"]
+      },
+      "MoneyDto": {
+        "type": "object",
+        "properties": {
+          "amountCents": {
+            "type": "number",
+            "description": "Amount in the smallest currency unit.",
+            "example": 250000,
+            "minimum": 0
+          },
+          "currency": {
+            "type": "string",
+            "description": "ISO-4217 uppercase currency code.",
+            "example": "NGN",
+            "pattern": "^[A-Z]{3}$"
+          }
+        },
+        "required": ["amountCents", "currency"]
+      },
+      "SortQueryDto": {
+        "type": "object",
+        "properties": {
+          "sort": {
+            "type": "string",
+            "description": "Sort expression in field:direction form, or -field for descending.",
+            "example": "createdAt:desc"
+          }
+        }
+      },
+      "StatusQueryDto": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "description": "Module-specific status filter." }
+        }
+      },
+      "SuccessEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": { "type": "object", "description": "Response payload." },
+          "meta": { "type": "object", "description": "Optional response metadata." }
+        },
+        "required": ["data"]
+      },
+      "UuidParamDto": {
+        "type": "object",
+        "properties": { "id": { "type": "string", "format": "uuid" } },
+        "required": ["id"]
+      }
+    }
   }
 }
