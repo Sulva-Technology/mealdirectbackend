@@ -45,4 +45,24 @@ describe('OpenAPI contract foundation', () => {
     expect(document.paths['/v1/me/complete-onboarding']?.post).toBeDefined();
     expect(document.paths['/v1/me/default-location']?.put).toBeDefined();
   });
+
+  it('documents campus, location, zone, and delivery slot endpoints', () => {
+    const document = createOpenApiDocument(app);
+
+    expect(document.paths['/v1/campuses']?.get).toBeDefined();
+    expect(document.paths['/v1/campuses/{campusId}/locations']?.get).toBeDefined();
+    expect(document.paths['/v1/campuses/{campusId}/delivery-slots']?.get).toBeDefined();
+    expect(document.paths['/v1/admin/campuses']?.get).toBeDefined();
+    expect(document.paths['/v1/admin/campuses']?.post).toBeDefined();
+    expect(document.paths['/v1/admin/campuses/{campusId}']?.patch).toBeDefined();
+    expect(document.paths['/v1/admin/campuses/{campusId}/zones']?.get).toBeDefined();
+    expect(document.paths['/v1/admin/campuses/{campusId}/zones']?.post).toBeDefined();
+    expect(document.paths['/v1/admin/zones/{zoneId}']?.patch).toBeDefined();
+    expect(document.paths['/v1/admin/campuses/{campusId}/locations']?.get).toBeDefined();
+    expect(document.paths['/v1/admin/campuses/{campusId}/locations']?.post).toBeDefined();
+    expect(document.paths['/v1/admin/locations/{locationId}']?.patch).toBeDefined();
+    expect(document.paths['/v1/admin/campuses/{campusId}/delivery-slots']?.get).toBeDefined();
+    expect(document.paths['/v1/admin/campuses/{campusId}/delivery-slots']?.post).toBeDefined();
+    expect(document.paths['/v1/admin/delivery-slots/{slotId}']?.patch).toBeDefined();
+  });
 });

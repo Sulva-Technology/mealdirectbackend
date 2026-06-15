@@ -142,6 +142,285 @@
         "tags": ["me"]
       }
     },
+    "/v1/campuses": {
+      "get": {
+        "operationId": "PublicCampusDirectoryController_listCampuses",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Active campuses available to public clients.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CampusListEnvelopeDto" }
+              }
+            }
+          }
+        },
+        "tags": ["campuses"]
+      }
+    },
+    "/v1/campuses/{campusId}/locations": {
+      "get": {
+        "operationId": "PublicCampusDirectoryController_listLocations",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Active preset delivery locations for a campus.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LocationListEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid campus ID." }
+        },
+        "tags": ["campuses"]
+      }
+    },
+    "/v1/campuses/{campusId}/delivery-slots": {
+      "get": {
+        "operationId": "PublicCampusDirectoryController_listDeliverySlots",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Active delivery slots for a campus, optionally with date cutoffs.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DeliverySlotListEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid campus ID or date filter." }
+        },
+        "tags": ["campuses"]
+      }
+    },
+    "/v1/admin/campuses": {
+      "get": {
+        "operationId": "AdminCampusDirectoryController_listCampuses",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Admin-visible campuses.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CampusListEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-campuses"]
+      },
+      "post": {
+        "operationId": "AdminCampusDirectoryController_createCampus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Created campus.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/CampusEnvelopeDto" } }
+            }
+          },
+          "400": { "description": "Invalid campus input." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-campuses"]
+      }
+    },
+    "/v1/admin/campuses/{campusId}": {
+      "patch": {
+        "operationId": "AdminCampusDirectoryController_updateCampus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Updated campus.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/CampusEnvelopeDto" } }
+            }
+          },
+          "400": { "description": "Invalid campus input." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-campuses"]
+      }
+    },
+    "/v1/admin/campuses/{campusId}/zones": {
+      "get": {
+        "operationId": "AdminCampusDirectoryController_listZones",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Campus zones for admins.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ZoneListEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-campuses"]
+      },
+      "post": {
+        "operationId": "AdminCampusDirectoryController_createZone",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Created campus zone.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ZoneEnvelopeDto" } }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-campuses"]
+      }
+    },
+    "/v1/admin/zones/{zoneId}": {
+      "patch": {
+        "operationId": "AdminCampusDirectoryController_updateZone",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Updated campus zone.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/ZoneEnvelopeDto" } }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-campuses"]
+      }
+    },
+    "/v1/admin/campuses/{campusId}/locations": {
+      "get": {
+        "operationId": "AdminCampusDirectoryController_listLocations",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Campus locations for admins.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LocationListEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-campuses"]
+      },
+      "post": {
+        "operationId": "AdminCampusDirectoryController_createLocation",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Created campus location.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LocationEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-campuses"]
+      }
+    },
+    "/v1/admin/locations/{locationId}": {
+      "patch": {
+        "operationId": "AdminCampusDirectoryController_updateLocation",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Updated campus location.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LocationEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-campuses"]
+      }
+    },
+    "/v1/admin/campuses/{campusId}/delivery-slots": {
+      "get": {
+        "operationId": "AdminCampusDirectoryController_listDeliverySlots",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Campus delivery slots for admins.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DeliverySlotListEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-campuses"]
+      },
+      "post": {
+        "operationId": "AdminCampusDirectoryController_createDeliverySlot",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Created campus delivery slot.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DeliverySlotEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-campuses"]
+      }
+    },
+    "/v1/admin/delivery-slots/{slotId}": {
+      "patch": {
+        "operationId": "AdminCampusDirectoryController_updateDeliverySlot",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Updated campus delivery slot.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DeliverySlotEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-campuses"]
+      }
+    },
     "/v1/orders": {
       "post": {
         "operationId": "OrdersController_createOrder",
@@ -387,6 +666,170 @@
       "ProfileEnvelopeDto": {
         "type": "object",
         "properties": { "data": { "$ref": "#/components/schemas/ProfileRecordDto" } },
+        "required": ["data"]
+      },
+      "CampusRecordDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "slug": { "type": "string" },
+          "timezone": { "type": "string" },
+          "currency": { "type": "string" },
+          "countryCode": { "type": "string" },
+          "active": { "type": "boolean" },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "timezone",
+          "currency",
+          "countryCode",
+          "active",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "CampusListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/CampusRecordDto" } }
+        },
+        "required": ["data"]
+      },
+      "CampusLocationRecordDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "campusId": { "type": "string", "format": "uuid" },
+          "zoneId": { "type": "string", "format": "uuid" },
+          "zoneName": { "type": "string" },
+          "zoneCode": { "type": "string" },
+          "name": { "type": "string" },
+          "slug": { "type": "string" },
+          "type": { "type": "string", "enum": ["department", "hostel"] },
+          "deliveryInstructions": { "type": "string", "nullable": true },
+          "active": { "type": "boolean" },
+          "displayOrder": { "type": "number" },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" }
+        },
+        "required": [
+          "id",
+          "campusId",
+          "zoneId",
+          "zoneName",
+          "zoneCode",
+          "name",
+          "slug",
+          "type",
+          "active",
+          "displayOrder",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "LocationListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CampusLocationRecordDto" }
+          }
+        },
+        "required": ["data"]
+      },
+      "DeliverySlotRecordDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "campusId": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "deliveryTime": { "type": "string" },
+          "cutoffMinutes": { "type": "number" },
+          "active": { "type": "boolean" },
+          "displayOrder": { "type": "number" },
+          "orderingCutoffAt": { "type": "string", "nullable": true },
+          "acceptingOrders": { "type": "boolean", "nullable": true },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" }
+        },
+        "required": [
+          "id",
+          "campusId",
+          "name",
+          "deliveryTime",
+          "cutoffMinutes",
+          "active",
+          "displayOrder",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "DeliverySlotListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/DeliverySlotRecordDto" }
+          }
+        },
+        "required": ["data"]
+      },
+      "CampusEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/CampusRecordDto" } },
+        "required": ["data"]
+      },
+      "CampusZoneRecordDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "campusId": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "code": { "type": "string" },
+          "active": { "type": "boolean" },
+          "displayOrder": { "type": "number" },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" }
+        },
+        "required": [
+          "id",
+          "campusId",
+          "name",
+          "code",
+          "active",
+          "displayOrder",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "ZoneListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CampusZoneRecordDto" }
+          }
+        },
+        "required": ["data"]
+      },
+      "ZoneEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/CampusZoneRecordDto" } },
+        "required": ["data"]
+      },
+      "LocationEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/CampusLocationRecordDto" } },
+        "required": ["data"]
+      },
+      "DeliverySlotEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/DeliverySlotRecordDto" } },
         "required": ["data"]
       },
       "CursorPaginationMetaDto": {
