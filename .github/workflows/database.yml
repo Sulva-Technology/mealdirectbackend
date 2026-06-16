@@ -10,8 +10,6 @@ jobs:
   supabase:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    env:
-      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
@@ -26,7 +24,7 @@ jobs:
 
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.105.0
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
