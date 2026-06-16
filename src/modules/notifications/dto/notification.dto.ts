@@ -1,11 +1,12 @@
-import { IsBoolean, IsOptional, IsUUID } from 'class-validator';
+import { IsBoolean, IsOptional } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 import { CursorPaginationQueryDto } from '../../../common/dto/api-contract.dto.js';
+import { IsDatabaseUuid } from '../../../common/validation.js';
 
 export class NotificationIdParamDto {
   @ApiProperty({ format: 'uuid', type: String })
-  @IsUUID('4')
+  @IsDatabaseUuid()
   notificationId!: string;
 }
 

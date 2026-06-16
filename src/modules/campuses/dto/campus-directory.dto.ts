@@ -5,7 +5,6 @@ import {
   IsInt,
   IsOptional,
   IsString,
-  IsUUID,
   Matches,
   Max,
   MaxLength,
@@ -13,6 +12,7 @@ import {
   MinLength
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsDatabaseUuid } from '../../../common/validation.js';
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const zoneCodePattern = /^[A-Z0-9_]+$/;
@@ -25,25 +25,25 @@ function trimString(value: unknown): unknown {
 
 export class CampusIdParamDto {
   @ApiProperty({ format: 'uuid', type: String })
-  @IsUUID('4')
+  @IsDatabaseUuid()
   campusId!: string;
 }
 
 export class ZoneIdParamDto {
   @ApiProperty({ format: 'uuid', type: String })
-  @IsUUID('4')
+  @IsDatabaseUuid()
   zoneId!: string;
 }
 
 export class LocationIdParamDto {
   @ApiProperty({ format: 'uuid', type: String })
-  @IsUUID('4')
+  @IsDatabaseUuid()
   locationId!: string;
 }
 
 export class DeliverySlotIdParamDto {
   @ApiProperty({ format: 'uuid', type: String })
-  @IsUUID('4')
+  @IsDatabaseUuid()
   slotId!: string;
 }
 
@@ -190,7 +190,7 @@ export class UpdateZoneDto {
 
 export class CreateLocationDto {
   @ApiProperty({ format: 'uuid', type: String })
-  @IsUUID('4')
+  @IsDatabaseUuid()
   zoneId!: string;
 
   @ApiProperty({ type: String })
@@ -231,7 +231,7 @@ export class CreateLocationDto {
 export class UpdateLocationDto {
   @ApiPropertyOptional({ format: 'uuid', type: String })
   @IsOptional()
-  @IsUUID('4')
+  @IsDatabaseUuid()
   zoneId?: string;
 
   @ApiPropertyOptional({ type: String })

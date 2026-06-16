@@ -5,6 +5,8 @@ export type FakePaystackServer = {
   close: () => Promise<void>;
 };
 
+let refundCounter = 0;
+
 function json(response: ServerResponse, statusCode: number, payload: unknown): void {
   response.writeHead(statusCode, { 'content-type': 'application/json' });
   response.end(JSON.stringify(payload));
@@ -84,10 +86,11 @@ async function handlePaystackRequest(
 
   if (request.url === '/refund' && request.method === 'POST') {
     const body = await readJson(request);
+    refundCounter += 1;
     json(response, 200, {
       data: {
         amount: typeof body.amount === 'number' ? body.amount : 1000,
-        id: 'RF_E2E_001',
+        id: `RF_E2E_${String(Date.now())}_${String(refundCounter)}`,
         status: 'processed'
       },
       message: 'Refund created',

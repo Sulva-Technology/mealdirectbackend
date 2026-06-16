@@ -1,11 +1,11 @@
 import { Type } from 'class-transformer';
+import { IsDatabaseUuid } from '../../../common/validation.js';
 import {
   ArrayMinSize,
   IsArray,
   IsIn,
   IsInt,
   IsOptional,
-  IsUUID,
   Matches,
   Min,
   ValidateNested
@@ -14,7 +14,7 @@ import {
 const deliveryModes = ['vendor_delivery', 'meal_direct_rider'] as const;
 
 export class CreateOrderItemDto {
-  @IsUUID()
+  @IsDatabaseUuid()
   menuItemId!: string;
 
   @IsInt()
@@ -23,19 +23,19 @@ export class CreateOrderItemDto {
 }
 
 export class CreateOrderDto {
-  @IsUUID()
+  @IsDatabaseUuid()
   campusId!: string;
 
-  @IsUUID()
+  @IsDatabaseUuid()
   vendorId!: string;
 
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   serviceDate!: string;
 
-  @IsUUID()
+  @IsDatabaseUuid()
   deliverySlotId!: string;
 
-  @IsUUID()
+  @IsDatabaseUuid()
   locationId!: string;
 
   @IsOptional()

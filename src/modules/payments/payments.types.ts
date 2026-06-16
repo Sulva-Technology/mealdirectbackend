@@ -1,6 +1,12 @@
 export type PaymentStatus = 'failed' | 'initialized' | 'pending' | 'refunded' | 'successful';
 
-export type RefundStatus = 'failed' | 'processed' | 'processing' | 'requested';
+export type RefundStatus =
+  | 'approved'
+  | 'cancelled'
+  | 'failed'
+  | 'processing'
+  | 'requested'
+  | 'succeeded';
 
 export type PaymentInitializationRecord = {
   id: string;

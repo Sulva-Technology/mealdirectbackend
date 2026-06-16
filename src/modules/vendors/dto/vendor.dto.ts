@@ -8,7 +8,6 @@ import {
   IsInt,
   IsOptional,
   IsString,
-  IsUUID,
   Matches,
   Max,
   MaxLength,
@@ -17,6 +16,7 @@ import {
   ValidateNested
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsDatabaseUuid } from '../../../common/validation.js';
 
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 const phonePattern = /^[+0-9][0-9 ()-]{6,24}$/;
@@ -25,7 +25,7 @@ const vendorStatuses = ['approved', 'deactivated', 'pending', 'suspended'] as co
 
 export class MenuItemIdParamDto {
   @ApiProperty({ format: 'uuid', type: String })
-  @IsUUID('4')
+  @IsDatabaseUuid()
   itemId!: string;
 }
 
@@ -110,11 +110,11 @@ export class UpsertPayoutAccountDto {
 export class CreateMenuItemDto {
   @ApiPropertyOptional({ format: 'uuid', nullable: true, type: String })
   @IsOptional()
-  @IsUUID('4')
+  @IsDatabaseUuid()
   categoryId?: string | null;
 
   @ApiProperty({ format: 'uuid', type: String })
-  @IsUUID('4')
+  @IsDatabaseUuid()
   unitTypeId!: string;
 
   @ApiProperty({ maxLength: 180, minLength: 1, type: String })
@@ -154,12 +154,12 @@ export class CreateMenuItemDto {
 export class UpdateMenuItemDto {
   @ApiPropertyOptional({ format: 'uuid', nullable: true, type: String })
   @IsOptional()
-  @IsUUID('4')
+  @IsDatabaseUuid()
   categoryId?: string | null;
 
   @ApiPropertyOptional({ format: 'uuid', type: String })
   @IsOptional()
-  @IsUUID('4')
+  @IsDatabaseUuid()
   unitTypeId?: string;
 
   @ApiPropertyOptional({ maxLength: 180, minLength: 1, type: String })
@@ -200,7 +200,7 @@ export class UpdateMenuItemDto {
 
 export class AvailabilityEntryDto {
   @ApiProperty({ format: 'uuid', type: String })
-  @IsUUID('4')
+  @IsDatabaseUuid()
   deliverySlotId!: string;
 
   @ApiProperty({ maximum: 6, minimum: 0, type: Number })

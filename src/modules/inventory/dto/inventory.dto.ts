@@ -4,7 +4,6 @@ import {
   IsObject,
   IsOptional,
   IsString,
-  IsUUID,
   Matches,
   MaxLength,
   Min,
@@ -12,12 +11,13 @@ import {
   NotEquals
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsDatabaseUuid } from '../../../common/validation.js';
 
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 
 export class InventoryIdParamDto {
   @ApiProperty({ format: 'uuid', type: String })
-  @IsUUID('4')
+  @IsDatabaseUuid()
   inventoryId!: string;
 }
 
@@ -28,7 +28,7 @@ export class VendorInventoryQueryDto {
 
   @ApiPropertyOptional({ format: 'uuid', type: String })
   @IsOptional()
-  @IsUUID('4')
+  @IsDatabaseUuid()
   slotId?: string;
 }
 

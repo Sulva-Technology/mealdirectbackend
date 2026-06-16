@@ -1,6 +1,7 @@
 import { Transform } from 'class-transformer';
-import { IsString, IsUUID, MaxLength, MinLength } from 'class-validator';
+import { IsString, MaxLength, MinLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsDatabaseUuid } from '../../../common/validation.js';
 
 function trimString(value: unknown): unknown {
   return typeof value === 'string' ? value.trim() : value;
@@ -24,7 +25,7 @@ export class CreateEscalationDto {
 
 export class EscalationRecordDto {
   @ApiProperty({ format: 'uuid', type: String })
-  @IsUUID('4')
+  @IsDatabaseUuid()
   id!: string;
 
   @ApiProperty({ format: 'uuid', type: String })

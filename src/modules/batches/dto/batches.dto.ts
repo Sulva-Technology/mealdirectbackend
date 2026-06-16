@@ -1,8 +1,9 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsIn, IsInt, IsOptional, IsUUID, Matches, Max, Min } from 'class-validator';
+import { IsIn, IsInt, IsOptional, Matches, Max, Min } from 'class-validator';
 
 import { OrderSummaryDto } from '../../orders/dto/order-api.dto.js';
+import { IsDatabaseUuid } from '../../../common/validation.js';
 
 const batchStatuses = [
   'open',
@@ -15,7 +16,7 @@ const batchStatuses = [
 
 export class BatchIdParamDto {
   @ApiProperty({ format: 'uuid', type: String })
-  @IsUUID('4')
+  @IsDatabaseUuid()
   batchId!: string;
 }
 

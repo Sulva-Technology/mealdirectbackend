@@ -1,12 +1,12 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
+import { IsDatabaseUuid } from '../../../common/validation.js';
 import {
   IsBoolean,
   IsIn,
   IsInt,
   IsOptional,
   IsString,
-  IsUUID,
   Matches,
   Max,
   MaxLength,
@@ -65,7 +65,7 @@ export class AdminCursorQueryDto {
 export class AdminOrderListQueryDto extends AdminCursorQueryDto {
   @ApiPropertyOptional({ format: 'uuid', type: String })
   @IsOptional()
-  @IsUUID('4')
+  @IsDatabaseUuid()
   campusId?: string;
 
   @ApiPropertyOptional({ enum: orderStatuses, type: String })
@@ -75,12 +75,12 @@ export class AdminOrderListQueryDto extends AdminCursorQueryDto {
 
   @ApiPropertyOptional({ format: 'uuid', type: String })
   @IsOptional()
-  @IsUUID('4')
+  @IsDatabaseUuid()
   vendorId?: string;
 
   @ApiPropertyOptional({ format: 'uuid', type: String })
   @IsOptional()
-  @IsUUID('4')
+  @IsDatabaseUuid()
   slotId?: string;
 
   @ApiPropertyOptional({ pattern: '^\\d{4}-\\d{2}-\\d{2}$', type: String })
@@ -99,7 +99,7 @@ export class AdminOrderListQueryDto extends AdminCursorQueryDto {
 export class AdminBatchListQueryDto extends AdminCursorQueryDto {
   @ApiPropertyOptional({ format: 'uuid', type: String })
   @IsOptional()
-  @IsUUID('4')
+  @IsDatabaseUuid()
   campusId?: string;
 
   @ApiPropertyOptional({ pattern: '^\\d{4}-\\d{2}-\\d{2}$', type: String })
@@ -114,19 +114,19 @@ export class AdminBatchListQueryDto extends AdminCursorQueryDto {
 
   @ApiPropertyOptional({ format: 'uuid', type: String })
   @IsOptional()
-  @IsUUID('4')
+  @IsDatabaseUuid()
   vendorId?: string;
 
   @ApiPropertyOptional({ format: 'uuid', type: String })
   @IsOptional()
-  @IsUUID('4')
+  @IsDatabaseUuid()
   zoneId?: string;
 }
 
 export class AdminDirectoryQueryDto extends AdminCursorQueryDto {
   @ApiPropertyOptional({ format: 'uuid', type: String })
   @IsOptional()
-  @IsUUID('4')
+  @IsDatabaseUuid()
   campusId?: string;
 
   @ApiPropertyOptional({ type: String })
@@ -140,7 +140,7 @@ export class AdminDirectoryQueryDto extends AdminCursorQueryDto {
 export class AdminDashboardQueryDto {
   @ApiPropertyOptional({ format: 'uuid', type: String })
   @IsOptional()
-  @IsUUID('4')
+  @IsDatabaseUuid()
   campusId?: string;
 
   @ApiPropertyOptional({ pattern: '^\\d{4}-\\d{2}-\\d{2}$', type: String })
@@ -173,7 +173,7 @@ export class AdminUserListQueryDto extends AdminDirectoryQueryDto {
 export class AdminInventoryQueryDto {
   @ApiPropertyOptional({ format: 'uuid', type: String })
   @IsOptional()
-  @IsUUID('4')
+  @IsDatabaseUuid()
   campusId?: string;
 
   @ApiPropertyOptional({ pattern: '^\\d{4}-\\d{2}-\\d{2}$', type: String })
@@ -183,12 +183,12 @@ export class AdminInventoryQueryDto {
 
   @ApiPropertyOptional({ format: 'uuid', type: String })
   @IsOptional()
-  @IsUUID('4')
+  @IsDatabaseUuid()
   slotId?: string;
 
   @ApiPropertyOptional({ format: 'uuid', type: String })
   @IsOptional()
-  @IsUUID('4')
+  @IsDatabaseUuid()
   vendorId?: string;
 
   @ApiPropertyOptional({ enum: ['available', 'low', 'sold_out'], type: String })
@@ -200,7 +200,7 @@ export class AdminInventoryQueryDto {
 export class AdminEscalationQueryDto extends AdminCursorQueryDto {
   @ApiPropertyOptional({ format: 'uuid', type: String })
   @IsOptional()
-  @IsUUID('4')
+  @IsDatabaseUuid()
   campusId?: string;
 
   @ApiPropertyOptional({ enum: ['open', 'investigating', 'resolved', 'rejected'], type: String })
@@ -222,7 +222,7 @@ export class AdminEscalationQueryDto extends AdminCursorQueryDto {
 export class AdminSettlementQueryDto extends AdminCursorQueryDto {
   @ApiPropertyOptional({ format: 'uuid', type: String })
   @IsOptional()
-  @IsUUID('4')
+  @IsDatabaseUuid()
   campusId?: string;
 
   @ApiPropertyOptional({ pattern: '^\\d{4}-\\d{2}-\\d{2}$', type: String })
@@ -244,7 +244,7 @@ export class AdminSettlementQueryDto extends AdminCursorQueryDto {
 export class AdminReviewQueryDto extends AdminCursorQueryDto {
   @ApiPropertyOptional({ format: 'uuid', type: String })
   @IsOptional()
-  @IsUUID('4')
+  @IsDatabaseUuid()
   campusId?: string;
 
   @ApiPropertyOptional({ enum: reviewStatuses, type: String })
@@ -262,14 +262,14 @@ export class AdminReviewQueryDto extends AdminCursorQueryDto {
 
   @ApiPropertyOptional({ format: 'uuid', type: String })
   @IsOptional()
-  @IsUUID('4')
+  @IsDatabaseUuid()
   vendorId?: string;
 }
 
 export class AdminAnalyticsQueryDto {
   @ApiPropertyOptional({ format: 'uuid', type: String })
   @IsOptional()
-  @IsUUID('4')
+  @IsDatabaseUuid()
   campusId?: string;
 
   @ApiPropertyOptional({ pattern: '^\\d{4}-\\d{2}-\\d{2}$', type: String })
@@ -291,12 +291,12 @@ export class AdminAnalyticsQueryDto {
 export class AdminAuditLogQueryDto extends AdminCursorQueryDto {
   @ApiPropertyOptional({ format: 'uuid', type: String })
   @IsOptional()
-  @IsUUID('4')
+  @IsDatabaseUuid()
   campusId?: string;
 
   @ApiPropertyOptional({ format: 'uuid', type: String })
   @IsOptional()
-  @IsUUID('4')
+  @IsDatabaseUuid()
   actorId?: string;
 
   @ApiPropertyOptional({ type: String })
@@ -311,7 +311,7 @@ export class AdminAuditLogQueryDto extends AdminCursorQueryDto {
 
   @ApiPropertyOptional({ format: 'uuid', type: String })
   @IsOptional()
-  @IsUUID('4')
+  @IsDatabaseUuid()
   entityId?: string;
 
   @ApiPropertyOptional({ type: String })
@@ -321,42 +321,42 @@ export class AdminAuditLogQueryDto extends AdminCursorQueryDto {
 }
 
 export class UuidIdParamDto {
-  @IsUUID('4')
+  @IsDatabaseUuid()
   id!: string;
 }
 
 export class AdminOrderIdParamDto {
-  @IsUUID('4')
+  @IsDatabaseUuid()
   orderId!: string;
 }
 
 export class AdminBatchIdParamDto {
-  @IsUUID('4')
+  @IsDatabaseUuid()
   batchId!: string;
 }
 
 export class AdminVendorIdParamDto {
-  @IsUUID('4')
+  @IsDatabaseUuid()
   vendorId!: string;
 }
 
 export class AdminRiderIdParamDto {
-  @IsUUID('4')
+  @IsDatabaseUuid()
   riderId!: string;
 }
 
 export class AdminUserIdParamDto {
-  @IsUUID('4')
+  @IsDatabaseUuid()
   userId!: string;
 }
 
 export class AdminInventoryIdParamDto {
-  @IsUUID('4')
+  @IsDatabaseUuid()
   inventoryId!: string;
 }
 
 export class AdminReviewIdParamDto {
-  @IsUUID('4')
+  @IsDatabaseUuid()
   reviewId!: string;
 }
 
@@ -381,12 +381,12 @@ export class AdminReasonDto {
 }
 
 export class AdminAssignRiderDto {
-  @IsUUID('4')
+  @IsDatabaseUuid()
   riderId!: string;
 }
 
 export class AdminVendorDeliveryDto {
-  @IsUUID('4')
+  @IsDatabaseUuid()
   vendorId!: string;
 }
 
@@ -406,7 +406,7 @@ export class AdminSettlementGenerationDto {
   @IsIn(beneficiaryTypes)
   beneficiaryType!: (typeof beneficiaryTypes)[number];
 
-  @IsUUID('4')
+  @IsDatabaseUuid()
   beneficiaryId!: string;
 
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
@@ -434,7 +434,7 @@ export class AdminSettlementAdjustmentDto {
 }
 
 export class AdminCreateVendorDto {
-  @IsUUID('4')
+  @IsDatabaseUuid()
   campusId!: string;
 
   @Transform(({ value }) => trimString(value))
@@ -479,7 +479,7 @@ export class AdminPatchVendorDto {
 }
 
 export class AdminVendorUserDto {
-  @IsUUID('4')
+  @IsDatabaseUuid()
   userId!: string;
 
   @IsIn(['owner', 'staff'])
@@ -492,7 +492,7 @@ export class AdminModerateReviewDto {
 }
 
 export class AdminEscalationAssignDto {
-  @IsUUID('4')
+  @IsDatabaseUuid()
   adminUserId!: string;
 }
 
@@ -505,13 +505,13 @@ export class AdminEscalationResolveDto {
 }
 
 export class AdminCreateMembershipDto {
-  @IsUUID('4')
+  @IsDatabaseUuid()
   userId!: string;
 
   @IsIn(['campus_admin', 'super_admin'])
   role!: 'campus_admin' | 'super_admin';
 
   @IsOptional()
-  @IsUUID('4')
+  @IsDatabaseUuid()
   campusId?: string;
 }

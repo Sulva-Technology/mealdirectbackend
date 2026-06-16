@@ -1,17 +1,18 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsUUID, Matches } from 'class-validator';
+import { IsOptional, Matches } from 'class-validator';
+import { IsDatabaseUuid } from '../../../common/validation.js';
 
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 
 export class VendorIdParamDto {
   @ApiProperty({ format: 'uuid', type: String })
-  @IsUUID('4')
+  @IsDatabaseUuid()
   vendorId!: string;
 }
 
 export class VendorListQueryDto {
   @ApiProperty({ format: 'uuid', type: String })
-  @IsUUID('4')
+  @IsDatabaseUuid()
   campusId!: string;
 
   @ApiPropertyOptional({ example: '2026-06-15', type: String })
@@ -21,12 +22,12 @@ export class VendorListQueryDto {
 
   @ApiPropertyOptional({ format: 'uuid', type: String })
   @IsOptional()
-  @IsUUID('4')
+  @IsDatabaseUuid()
   slotId?: string;
 
   @ApiPropertyOptional({ format: 'uuid', type: String })
   @IsOptional()
-  @IsUUID('4')
+  @IsDatabaseUuid()
   locationId?: string;
 }
 
@@ -38,7 +39,7 @@ export class VendorMenuQueryDto {
 
   @ApiPropertyOptional({ format: 'uuid', type: String })
   @IsOptional()
-  @IsUUID('4')
+  @IsDatabaseUuid()
   slotId?: string;
 }
 
