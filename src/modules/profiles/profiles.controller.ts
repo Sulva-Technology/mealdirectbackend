@@ -33,7 +33,10 @@ export class ProfilesController {
   constructor(@Inject(ProfilesService) private readonly profiles: ProfilesService) {}
 
   @Get('me')
-  @ApiOkResponse({ description: 'Current role-aware Meal Direct session.', type: MeSessionEnvelopeDto })
+  @ApiOkResponse({
+    description: 'Current role-aware Meal Direct session.',
+    type: MeSessionEnvelopeDto
+  })
   async me(@CurrentActor() actor: AuthenticatedActor): Promise<SuccessEnvelope<MeSession>> {
     return createSuccessEnvelope(await this.profiles.getCurrentUser(actor));
   }
@@ -75,7 +78,10 @@ export class ProfilesController {
   }
 
   @Put('me/default-location')
-  @ApiOkResponse({ description: 'Profile after default location update.', type: ProfileEnvelopeDto })
+  @ApiOkResponse({
+    description: 'Profile after default location update.',
+    type: ProfileEnvelopeDto
+  })
   @ApiBadRequestResponse({ description: 'Invalid default location input.' })
   @ApiForbiddenResponse({ description: 'User does not belong to the selected campus.' })
   async setDefaultLocation(

@@ -67,6 +67,7 @@ const envSchema = z
     RELEASE_VERSION: z.string().min(1).default('local'),
     COMMIT_SHA: z.string().min(1).default('unknown'),
     RESERVATION_TTL_SECONDS: z.coerce.number().int().positive().default(900),
+    PAYSTACK_BASE_URL: z.url().default('https://api.paystack.co'),
     PAYSTACK_SECRET_KEY: optionalSecret,
     PAYSTACK_WEBHOOK_INBOX_MODE: z.enum(['database', 'memory']).default('database'),
     INTERNAL_OPERATIONS_TOKEN: optionalSecret
@@ -104,6 +105,13 @@ const envSchema = z
         code: 'custom',
         path: ['PAYSTACK_WEBHOOK_INBOX_MODE'],
         message: 'PAYSTACK_WEBHOOK_INBOX_MODE must be database outside development and test'
+      });
+    }
+    if (env.NODE_ENV === 'production' && env.PAYSTACK_BASE_URL !== 'https://api.paystack.co') {
+      context.addIssue({
+        code: 'custom',
+        path: ['PAYSTACK_BASE_URL'],
+        message: 'PAYSTACK_BASE_URL must be https://api.paystack.co in production'
       });
     }
   });

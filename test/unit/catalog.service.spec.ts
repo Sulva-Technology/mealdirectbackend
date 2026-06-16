@@ -86,7 +86,8 @@ describe('CatalogService', () => {
         slotId: '66666666-6666-4666-8666-666666666666'
       })
     ).resolves.toEqual([menuItem]);
-    await expect(service.listVendorMenu(vendor.id, { slotId: menuItem.id })).rejects
-      .toBeInstanceOf(BadRequestException);
+    await expect(service.listVendorMenu(vendor.id, { slotId: menuItem.id })).rejects.toBeInstanceOf(
+      BadRequestException
+    );
   });
 });

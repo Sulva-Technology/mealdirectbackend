@@ -70,7 +70,10 @@ export class PublicCampusDirectoryController {
   constructor(@Inject(CampusDirectoryService) private readonly campuses: CampusDirectoryService) {}
 
   @Get()
-  @ApiOkResponse({ description: 'Active campuses available to public clients.', type: CampusListEnvelopeDto })
+  @ApiOkResponse({
+    description: 'Active campuses available to public clients.',
+    type: CampusListEnvelopeDto
+  })
   async listCampuses(): Promise<ListEnvelope<CampusRecord>> {
     return listEnvelope(await this.campuses.listPublicCampuses());
   }
@@ -214,7 +217,10 @@ export class AdminCampusDirectoryController {
   }
 
   @Get('campuses/:campusId/delivery-slots')
-  @ApiOkResponse({ description: 'Campus delivery slots for admins.', type: DeliverySlotListEnvelopeDto })
+  @ApiOkResponse({
+    description: 'Campus delivery slots for admins.',
+    type: DeliverySlotListEnvelopeDto
+  })
   async listDeliverySlots(
     @CurrentActor() actor: AuthenticatedActor,
     @Param() params: CampusIdParamDto

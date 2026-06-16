@@ -92,7 +92,10 @@ export class CampusDirectoryRepository implements CampusDirectoryRepositoryContr
     return campus;
   }
 
-  async updateCampus(campusId: string, input: UpdateCampusInput): Promise<CampusRecord | undefined> {
+  async updateCampus(
+    campusId: string,
+    input: UpdateCampusInput
+  ): Promise<CampusRecord | undefined> {
     const hasName = Object.hasOwn(input, 'name');
     const hasSlug = Object.hasOwn(input, 'slug');
     const hasTimezone = Object.hasOwn(input, 'timezone');
@@ -144,7 +147,10 @@ export class CampusDirectoryRepository implements CampusDirectoryRepositoryContr
     return result.rows;
   }
 
-  async createZone(campusId: string, input: CreateZoneInput): Promise<CampusZoneRecord | undefined> {
+  async createZone(
+    campusId: string,
+    input: CreateZoneInput
+  ): Promise<CampusZoneRecord | undefined> {
     const result = await sql<CampusZoneRecord>`
       insert into public.campus_zones (campus_id, name, code, active, display_order)
       values (

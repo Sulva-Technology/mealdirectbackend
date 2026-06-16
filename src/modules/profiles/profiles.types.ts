@@ -100,10 +100,7 @@ export type ProfilesRepositoryContract = {
   findRiderProfiles: (userId: string) => Promise<RiderProfile[]>;
   isActiveCampusMember: (userId: string, campusId: string) => Promise<boolean>;
   isActiveCampusLocation: (campusId: string, locationId: string) => Promise<boolean>;
-  updateProfile: (
-    userId: string,
-    input: ProfileUpdateInput
-  ) => Promise<ProfileRecord | undefined>;
+  updateProfile: (userId: string, input: ProfileUpdateInput) => Promise<ProfileRecord | undefined>;
   completeOnboarding: (
     userId: string,
     input: CompleteOnboardingInput

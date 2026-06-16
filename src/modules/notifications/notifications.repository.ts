@@ -78,10 +78,7 @@ export class NotificationsRepository implements NotificationsRepositoryContract 
     );
   }
 
-  async markRead(
-    userId: string,
-    notificationId: string
-  ): Promise<NotificationRecord | undefined> {
+  async markRead(userId: string, notificationId: string): Promise<NotificationRecord | undefined> {
     const result = await sql<NotificationRecord>`
       update public.notifications
       set read_at = coalesce(read_at, now())

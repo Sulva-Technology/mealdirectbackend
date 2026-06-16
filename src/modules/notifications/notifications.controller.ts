@@ -1,4 +1,15 @@
-import { Body, Controller, Get, HttpCode, Inject, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Inject,
+  Param,
+  Post,
+  Put,
+  Query,
+  UseGuards
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOkResponse,
@@ -34,9 +45,7 @@ import type {
 @Controller('notifications')
 @UseGuards(JwtAuthGuard)
 export class NotificationsController {
-  constructor(
-    @Inject(NotificationsService) private readonly notifications: NotificationsService
-  ) {}
+  constructor(@Inject(NotificationsService) private readonly notifications: NotificationsService) {}
 
   @Get()
   @ApiOkResponse({

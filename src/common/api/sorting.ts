@@ -21,7 +21,8 @@ export function parseSort<TField extends string>(
   const trimmed = value.trim();
   const directionFromPrefix = trimmed.startsWith('-') ? 'desc' : undefined;
   const withoutPrefix = directionFromPrefix === undefined ? trimmed : trimmed.slice(1);
-  const [field, rawDirection = directionFromPrefix ?? fallback.direction] = withoutPrefix.split(':');
+  const [field, rawDirection = directionFromPrefix ?? fallback.direction] =
+    withoutPrefix.split(':');
 
   if (field === undefined || !allowedFields.includes(field as TField)) {
     throw new Error('Unsupported sort field.');

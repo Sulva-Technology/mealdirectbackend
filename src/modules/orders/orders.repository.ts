@@ -99,10 +99,7 @@ export class OrdersRepository implements OrdersRepositoryContract {
     return result.rows;
   }
 
-  async listCustomerOrders(
-    customerId: string,
-    filters: OrderListFilters
-  ): Promise<OrderSummary[]> {
+  async listCustomerOrders(customerId: string, filters: OrderListFilters): Promise<OrderSummary[]> {
     const result = await sql<OrderSummary>`
       select
         o.id::text as "id",

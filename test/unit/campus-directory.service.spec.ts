@@ -144,8 +144,9 @@ describe('CampusDirectoryService', () => {
   });
 
   it('prevents campus admins from mutating other campuses', async () => {
-    await expect(service.updateCampus(campusAdmin, otherCampusId, { active: false })).rejects
-      .toBeInstanceOf(ForbiddenException);
+    await expect(
+      service.updateCampus(campusAdmin, otherCampusId, { active: false })
+    ).rejects.toBeInstanceOf(ForbiddenException);
     expect(repository.updateCampus).not.toHaveBeenCalled();
   });
 

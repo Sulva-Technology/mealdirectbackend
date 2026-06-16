@@ -6,13 +6,17 @@ import {
   NotFoundException
 } from '@nestjs/common';
 
+import { createCursorPage, decodeCursor, encodeCursor } from '../../common/api/pagination.js';
+import type { CursorPage, CursorPayload } from '../../common/api/pagination.js';
 import { ErrorCodes } from '../../common/errors/error-codes.js';
 import type { AuthenticatedActor } from '../auth/actor-context.js';
+import type { VendorReviewListQueryDto } from './dto/review.dto.js';
 import { ReviewsRepository } from './reviews.repository.js';
 import type {
   CreateReviewInput,
   ReviewRecord,
-  ReviewsRepositoryContract
+  ReviewsRepositoryContract,
+  VendorReviewRecord
 } from './reviews.types.js';
 
 const reviewableStatuses = new Set(['administratively_completed', 'confirmed']);
@@ -36,6 +40,21 @@ function notFound(message: string): NotFoundException {
     code: ErrorCodes.NOT_FOUND,
     message
   });
+}
+
+function decodeReviewCursor(cursor: string): string {
+  let payload: CursorPayload;
+  try {
+    payload = decodeCursor(cursor);
+  } catch {
+    throw badRequest('Invalid review cursor.');
+  }
+
+  if (typeof payload.createdAt !== 'string' || typeof payload.id !== 'string') {
+    throw badRequest('Invalid review cursor.');
+  }
+
+  return `${payload.createdAt}|${payload.id}`;
 }
 
 @Injectable()
@@ -85,6 +104,27 @@ export class ReviewsService {
     throw badRequest('Review could not be created for this order.');
   }
 
+  async listVendorReviews(
+    actor: AuthenticatedActor,
+    query: VendorReviewListQueryDto
+  ): Promise<CursorPage<VendorReviewRecord>> {
+    const vendorId = await this.assertAndGetVendorId(actor);
+    const limit = query.limit ?? 20;
+    const rows = await this.repository.listVendorReviews(vendorId, {
+      ...(query.cursor === undefined ? {} : { cursor: decodeReviewCursor(query.cursor) }),
+      ...(query.menuItemId === undefined ? {} : { menuItemId: query.menuItemId }),
+      ...(query.rating === undefined ? {} : { rating: query.rating }),
+      limit
+    });
+
+    return createCursorPage(rows, limit, (review) =>
+      encodeCursor({
+        createdAt: review.createdAt,
+        id: review.id
+      })
+    );
+  }
+
   private assertCustomer(actor: AuthenticatedActor): void {
     if (actor.role !== 'customer') {
       throw forbidden('Customer access is required.');
@@ -99,5 +139,17 @@ export class ReviewsService {
     ) {
       throw badRequest('At least one rating is required.');
     }
+  }
+
+  private async assertAndGetVendorId(actor: AuthenticatedActor): Promise<string> {
+    if (actor.role !== 'vendor' || actor.vendorId === undefined || actor.vendorId.length === 0) {
+      throw forbidden('Vendor access is required.');
+    }
+
+    if (!(await this.repository.assertVendorAccess(actor.vendorId, actor.userId))) {
+      throw forbidden('Vendor access is required.');
+    }
+
+    return actor.vendorId;
   }
 }

@@ -1,5 +1,10 @@
 import { Controller, Get, Inject, Param, Query } from '@nestjs/common';
-import { ApiBadRequestResponse, ApiNotFoundResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiTags
+} from '@nestjs/swagger';
 
 import { createListEnvelope, createSuccessEnvelope } from '../../common/api/response.js';
 import type { ListEnvelope, SuccessEnvelope } from '../../common/api/response.js';
@@ -40,9 +45,7 @@ export class CatalogController {
   @ApiOkResponse({ description: 'Approved active vendor detail.', type: CatalogVendorEnvelopeDto })
   @ApiBadRequestResponse({ description: 'Invalid vendor ID.' })
   @ApiNotFoundResponse({ description: 'Vendor not found or unavailable.' })
-  async getVendor(
-    @Param() params: VendorIdParamDto
-  ): Promise<SuccessEnvelope<CatalogVendor>> {
+  async getVendor(@Param() params: VendorIdParamDto): Promise<SuccessEnvelope<CatalogVendor>> {
     return createSuccessEnvelope(await this.catalog.getVendor(params.vendorId));
   }
 

@@ -27,8 +27,15 @@ Do not commit real values. Store staging and production values only in platform 
 | `RELEASE_VERSION`                  | staging, production | no     | Release identifier                                                                 |
 | `COMMIT_SHA`                       | staging, production | no     | Deployed commit SHA                                                                |
 | `RESERVATION_TTL_SECONDS`          | all                 | no     | Inventory reservation TTL                                                          |
+| `PAYSTACK_BASE_URL`                | all                 | no     | Paystack API base URL; must be `https://api.paystack.co` in production             |
 | `PAYSTACK_SECRET_KEY`              | staging, production | yes    | Paystack secret key                                                                |
 | `PAYSTACK_WEBHOOK_INBOX_MODE`      | all                 | no     | `database` outside test                                                            |
 | `INTERNAL_OPERATIONS_TOKEN`        | staging, production | yes    | Temporary operations endpoint token                                                |
+| `E2E_DATABASE_URL`                 | E2E only            | yes    | Dedicated hosted Supabase E2E database URL; must match `DATABASE_URL` in E2E       |
+| `E2E_TEST_NAMESPACE`               | E2E only            | no     | Safe namespace prefix such as `e2e_meal_direct_<run_id>`                           |
+| `PRODUCTION_API_BASE_URL`          | smoke only          | no     | Production API URL used by `pnpm smoke:production`                                 |
+| `SMOKE_FRONTEND_ORIGINS`           | smoke only          | no     | Optional frontend origin override for smoke checks                                 |
 
 Staging and production must use different Supabase projects, database credentials, Paystack keys, operations tokens, and frontend origins.
+
+Hosted E2E must use a third isolated Supabase project or a staging project that can be safely mutated. Never point `pnpm test:e2e:hosted` at `.env.production`; use `pnpm smoke:production` for production, which performs read-only checks plus unsigned-webhook rejection.

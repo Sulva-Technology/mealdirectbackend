@@ -11,12 +11,7 @@ import {
   Query,
   UseGuards
 } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiCreatedResponse,
-  ApiOkResponse,
-  ApiTags
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 
 import { createListEnvelope, createSuccessEnvelope } from '../../common/api/response.js';
 import type { ListEnvelope, SuccessEnvelope } from '../../common/api/response.js';
@@ -38,12 +33,7 @@ import {
   OrderQuoteEnvelopeDto
 } from './dto/order-api.dto.js';
 import { OrdersService } from './orders.service.js';
-import type {
-  OrderDetail,
-  OrderPaymentStatus,
-  OrderQuote,
-  OrderSummary
-} from './orders.types.js';
+import type { OrderDetail, OrderPaymentStatus, OrderQuote, OrderSummary } from './orders.types.js';
 
 function requireIdempotencyKey(value: string | string[] | undefined): string {
   try {
@@ -51,8 +41,7 @@ function requireIdempotencyKey(value: string | string[] | undefined): string {
   } catch (error) {
     throw new BadRequestException({
       code: ErrorCodes.VALIDATION_FAILED,
-      message:
-        error instanceof Error ? error.message : 'Idempotency-Key header is invalid.'
+      message: error instanceof Error ? error.message : 'Idempotency-Key header is invalid.'
     });
   }
 }
@@ -66,7 +55,10 @@ export class OrdersController {
 
   @Post('quote')
   @RequireRoles('customer')
-  @ApiOkResponse({ description: 'Order quote using current menu and slot availability.', type: OrderQuoteEnvelopeDto })
+  @ApiOkResponse({
+    description: 'Order quote using current menu and slot availability.',
+    type: OrderQuoteEnvelopeDto
+  })
   async quoteOrder(
     @CurrentActor() actor: AuthenticatedActor,
     @Body() input: CreateOrderDto
@@ -99,7 +91,10 @@ export class OrdersController {
 
   @Get(':orderId/payment-status')
   @RequireRoles('customer')
-  @ApiOkResponse({ description: 'Customer-visible payment status for an order.', type: OrderPaymentStatusEnvelopeDto })
+  @ApiOkResponse({
+    description: 'Customer-visible payment status for an order.',
+    type: OrderPaymentStatusEnvelopeDto
+  })
   async paymentStatus(
     @CurrentActor() actor: AuthenticatedActor,
     @Param() params: OrderIdParamDto
@@ -109,7 +104,10 @@ export class OrdersController {
 
   @Post(':orderId/confirm-delivery')
   @RequireRoles('customer')
-  @ApiOkResponse({ description: 'Customer delivery confirmation.', type: DeliveryConfirmationEnvelopeDto })
+  @ApiOkResponse({
+    description: 'Customer delivery confirmation.',
+    type: DeliveryConfirmationEnvelopeDto
+  })
   async confirmDelivery(
     @CurrentActor() actor: AuthenticatedActor,
     @Param() params: OrderIdParamDto

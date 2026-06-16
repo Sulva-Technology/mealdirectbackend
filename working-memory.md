@@ -28,6 +28,17 @@ Meal Direct backend is being built from API foundation into production-hardened 
 - Module 9 now registers protected vendor endpoints for profile, masked payout account, menu metadata, menu item create/read/update/activate/deactivate, menu item schedules, and vendor availability. Inventory remains Module 10.
 - Module 10 vendor inventory contract is sourced from the same vendor prompt pack and uses `GET /v1/vendor/inventory?date=&slotId=`, `PUT /v1/vendor/inventory/:inventoryId`, and `POST /v1/vendor/inventory/:inventoryId/adjustments`.
 - Module 10 reuses existing `menu_item_inventory`, `inventory_adjustments`, and `record_inventory_adjustment`; no DB schema migration was added.
+- Module 12 vendor settlements/reviews contract is sourced from `Meal_Direct_Vendor_Frontend_AI_Studio_Prompts.zip` and uses `GET /v1/vendor/settlements?cursor=&dateFrom=&dateTo=`, `GET /v1/vendor/settlements/:id`, and `GET /v1/vendor/reviews?cursor=&menuItemId=&rating=`.
+- Module 12 reuses existing `settlements`, `settlement_lines`, `reviews`, and `has_vendor_access`; no DB schema migration was added.
+- Vendor review read models intentionally omit `reviewerId` to protect customer identity while preserving order/menu context for permitted vendor users.
+- Vendor order/batch aliases were added for frontend-contract compatibility: `POST /v1/vendor/orders/:orderId/preparing` and `POST /v1/vendor/batches/:batchId/ready-for-pickup`; the existing `/prepare` and `/pickup` routes remain.
+- Modules 13-15 rider contract is sourced from `Meal_Direct_Rider_Frontend_AI_Studio_Prompts.zip` and uses singular `/v1/rider/...` routes for profile, assignments, delivery order flow, issues, earnings, and settlements.
+- Modules 13-15 reuse existing `riders`, `delivery_assignments`, `delivery_batches`, `delivery_batch_orders`, `orders`, `escalations`, `settlements`, `settlement_lines`, `has_rider_access`, and `transition_order_status`; no DB schema migration was added.
+- Rider profile lookup supports JWT `rider_id` when present and falls back to `riders.user_id` for older tokens. Operational rider endpoints require an active verified rider.
+- Rider delivery issue reporting uses `public.escalations` with `rider_`-prefixed categories; riders cannot decide refunds.
+- Modules 16-20 admin contract is sourced from `Meal_Direct_Admin_Frontend_AI_Studio_Prompts.zip` and uses `/v1/admin/...` routes for session, dashboard, order ops, batch assignment, vendor/rider directories, inventory adjustments, escalations, settlements, reviews, users, admin memberships, analytics, and audit logs.
+- Admin service scoping pins `campus_admin` actors to their JWT `campus_id`; `super_admin` can query globally or by requested campus. User status changes and admin membership management are super-admin-only.
+- Module 21 is implemented over existing `public.outbox_events`, exposing admin-only system summary, outbox listing, and available-event claiming endpoints. Claiming leases outbox events for a worker and does not mark them processed without a real handler.
 
 ## Current Contracts
 
@@ -51,15 +62,102 @@ Meal Direct backend is being built from API foundation into production-hardened 
 - `GET /v1/vendor/inventory?date=&slotId=`
 - `PUT /v1/vendor/inventory/:inventoryId`
 - `POST /v1/vendor/inventory/:inventoryId/adjustments`
+- `GET /v1/vendor/orders?cursor=&date=&status=&slotId=&zoneId=`
+- `GET /v1/vendor/orders/:orderId`
+- `POST /v1/vendor/orders/:orderId/accept`
+- `POST /v1/vendor/orders/:orderId/prepare`
+- `POST /v1/vendor/orders/:orderId/preparing`
+- `POST /v1/vendor/orders/:orderId/ready`
+- `GET /v1/vendor/batches?date=&status=`
+- `GET /v1/vendor/batches/:batchId`
+- `POST /v1/vendor/batches/:batchId/pickup`
+- `POST /v1/vendor/batches/:batchId/ready-for-pickup`
+- `GET /v1/vendor/settlements?cursor=&dateFrom=&dateTo=`
+- `GET /v1/vendor/settlements/:id`
+- `GET /v1/vendor/reviews?cursor=&menuItemId=&rating=`
+- `GET/PATCH /v1/rider/profile`
+- `GET /v1/rider/assignments?cursor=&date=&status=`
+- `GET /v1/rider/assignments/:assignmentId`
+- `POST /v1/rider/assignments/:assignmentId/accept`
+- `POST /v1/rider/assignments/:assignmentId/picked-up`
+- `GET /v1/rider/orders/:orderId`
+- `POST /v1/rider/orders/:orderId/out-for-delivery`
+- `POST /v1/rider/orders/:orderId/delivered`
+- `POST /v1/rider/orders/:orderId/issues`
+- `GET /v1/rider/earnings?dateFrom=&dateTo=`
+- `GET /v1/rider/settlements?cursor=&status=`
+- `GET /v1/rider/settlements/:id`
+- `GET /v1/admin/session`
+- `GET /v1/admin/dashboard?campusId=&date=`
+- `GET /v1/admin/orders?campusId=&date=&status=&vendorId=&slotId=&search=`
+- `GET /v1/admin/orders/:orderId`
+- `POST /v1/admin/orders/:orderId/cancel`
+- `POST /v1/admin/orders/:orderId/status-transition`
+- `GET /v1/admin/batches?campusId=&date=&status=&vendorId=&zoneId=`
+- `GET /v1/admin/batches/:batchId`
+- `POST /v1/admin/batches/:batchId/close`
+- `POST /v1/admin/batches/:batchId/assign-rider`
+- `POST /v1/admin/batches/:batchId/assign-vendor-delivery`
+- `POST /v1/admin/batches/:batchId/reassign-rider`
+- `POST /v1/admin/batches/:batchId/cancel-assignment`
+- `GET/POST /v1/admin/vendors`
+- `GET/PATCH /v1/admin/vendors/:vendorId`
+- `POST /v1/admin/vendors/:vendorId/approve`
+- `POST /v1/admin/vendors/:vendorId/suspend`
+- `POST /v1/admin/vendors/:vendorId/activate`
+- `POST /v1/admin/vendors/:vendorId/users`
+- `GET /v1/admin/vendors/:vendorId/performance`
+- `GET /v1/admin/riders`
+- `GET /v1/admin/riders/:riderId`
+- `GET /v1/admin/riders/:riderId/assignments`
+- `GET /v1/admin/riders/:riderId/settlements`
+- `POST /v1/admin/riders/:riderId/verify`
+- `POST /v1/admin/riders/:riderId/suspend`
+- `POST /v1/admin/riders/:riderId/activate`
+- `GET /v1/admin/inventory?campusId=&date=&slotId=&vendorId=&state=`
+- `POST /v1/admin/inventory/:inventoryId/adjustments`
+- `GET /v1/admin/escalations`
+- `GET /v1/admin/escalations/:id`
+- `POST /v1/admin/escalations/:id/assign`
+- `POST /v1/admin/escalations/:id/request-evidence`
+- `POST /v1/admin/escalations/:id/resolve`
+- `POST /v1/admin/escalations/:id/refunds`
+- `GET /v1/admin/settlements`
+- `POST /v1/admin/settlements/preview`
+- `POST /v1/admin/settlements/generate`
+- `GET /v1/admin/settlements/:id`
+- `POST /v1/admin/settlements/:id/approve`
+- `POST /v1/admin/settlements/:id/mark-paid`
+- `POST /v1/admin/settlements/:id/adjustments`
+- `GET /v1/admin/reviews`
+- `POST /v1/admin/reviews/:reviewId/moderate`
+- `GET /v1/admin/users`
+- `GET /v1/admin/users/:userId`
+- `POST /v1/admin/users/:userId/suspend`
+- `POST /v1/admin/users/:userId/activate`
+- `GET/POST /v1/admin/admin-memberships`
+- `POST /v1/admin/admin-memberships/:id/revoke`
+- `POST /v1/admin/admin-memberships/:id/activate`
+- `GET /v1/admin/analytics`
+- `GET /v1/admin/audit-logs`
+- `GET /v1/admin/system`
+- `GET /v1/admin/jobs/outbox?status=&eventType=&limit=`
+- `POST /v1/admin/jobs/outbox/process`
 - OpenAPI artifacts in `docs/openapi.json` and `docs/openapi.yaml`
 
 ## Remaining Launch Blockers
 
-- Applying Supabase JWT/RBAC guards to all business routes.
-- Object-level authorization in business routes.
-- Paystack initialization and refund workflow.
-- Live database verification for order reservation, payment webhook side effects, and settlement generation.
-- Remaining vendor/rider/admin/customer endpoint flows and E2E tests.
+- Hosted Supabase E2E execution with `.env.e2e`/CI E2E secrets using a separate mutable E2E or staging project.
+- Production smoke execution with `.env.production`/production smoke secrets after deploy; this must remain read-only.
 - External observability/alerting provider configuration.
 - Full `pnpm db:ci` verification with Supabase CLI and Docker.
 - After the next Render deploy, check `/v1/health/ready`; if it still fails, inspect Render logs for the sanitized `HealthController` database error code/message.
+
+## Production Readiness Harness Added
+
+- `pnpm test:e2e:hosted` runs the hosted Supabase E2E Vitest config in `vitest.e2e.config.ts`.
+- `pnpm smoke:production` runs read-only production checks from `scripts/smoke-production.ts`.
+- `pnpm readiness:launch` chains format, lint, typecheck, unit/integration tests, critical-test check, OpenAPI check, build, hosted E2E, and production smoke.
+- `.env.e2e.example` documents isolated hosted E2E variables and refuses production/unsafe namespaces through `test/e2e/setup-e2e.ts`.
+- `.env.production.example`, deployment docs, CI jobs, observability docs, and runbooks now include E2E/staging/production readiness gates.
+- Paystack is now testable through `PAYSTACK_BASE_URL`; production requires `https://api.paystack.co`.

@@ -1,9 +1,4 @@
-export type PaymentStatus =
-  | 'failed'
-  | 'initialized'
-  | 'pending'
-  | 'refunded'
-  | 'successful';
+export type PaymentStatus = 'failed' | 'initialized' | 'pending' | 'refunded' | 'successful';
 
 export type RefundStatus = 'failed' | 'processed' | 'processing' | 'requested';
 
@@ -85,9 +80,7 @@ export type PaystackRefundResult = {
 };
 
 export type PaystackClientContract = {
-  initializeTransaction: (
-    input: PaystackInitializeInput
-  ) => Promise<PaystackInitializeResult>;
+  initializeTransaction: (input: PaystackInitializeInput) => Promise<PaystackInitializeResult>;
   verifyTransaction: (reference: string) => Promise<PaystackVerifyResult>;
   createRefund: (input: PaystackRefundInput) => Promise<PaystackRefundResult>;
 };

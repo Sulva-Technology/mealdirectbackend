@@ -113,10 +113,7 @@ export type OrdersRepositoryContract = {
   ) => Promise<{ orderId: string }>;
   quoteOrder: (input: CreateOrderDto) => Promise<OrderQuoteItem[]>;
   listCustomerOrders: (customerId: string, filters: OrderListFilters) => Promise<OrderSummary[]>;
-  findCustomerOrderById: (
-    customerId: string,
-    orderId: string
-  ) => Promise<OrderDetail | undefined>;
+  findCustomerOrderById: (customerId: string, orderId: string) => Promise<OrderDetail | undefined>;
   findPaymentStatus: (
     customerId: string,
     orderId: string

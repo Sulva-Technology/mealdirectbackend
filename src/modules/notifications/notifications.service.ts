@@ -53,10 +53,7 @@ export class NotificationsService {
     return this.repository.listUserNotifications(actor.userId, normalized);
   }
 
-  async markRead(
-    actor: AuthenticatedActor,
-    notificationId: string
-  ): Promise<NotificationRecord> {
+  async markRead(actor: AuthenticatedActor, notificationId: string): Promise<NotificationRecord> {
     const notification = await this.repository.markRead(actor.userId, notificationId);
     if (notification === undefined) {
       throw notFound('Notification was not found.');

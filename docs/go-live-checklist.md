@@ -3,6 +3,15 @@
 - Paystack live keys stored in production secret management.
 - Paystack webhook URL configured to production API.
 - Paystack webhook signature test passed.
+- Hosted E2E Supabase project is separate from production.
+- `pnpm test:e2e:hosted` passed against hosted E2E/staging.
+- `pnpm smoke:production` passed after deployment.
+- `pnpm readiness:launch` passed in the launch environment.
+- `pnpm db:ci` passed with Supabase CLI and Docker available.
+- Production migrations were run once from the controlled release process.
+- Supabase backups/PITR policy confirmed.
+- Supabase connection pooler settings confirmed.
+- RLS status confirmed for production tables.
 - Google OAuth production redirects configured.
 - User frontend domain configured.
 - Vendor frontend domain configured.

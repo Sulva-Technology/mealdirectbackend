@@ -3,10 +3,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { AuthenticatedActor } from '../../src/modules/auth/actor-context.js';
 import { ReviewsService } from '../../src/modules/reviews/reviews.service.js';
+import { encodeCursor } from '../../src/common/api/pagination.js';
 import type {
   ReviewEligibility,
   ReviewRecord,
-  ReviewsRepositoryContract
+  ReviewsRepositoryContract,
+  VendorReviewRecord
 } from '../../src/modules/reviews/reviews.types.js';
 
 const customer: AuthenticatedActor = {
@@ -28,6 +30,13 @@ const eligibility: ReviewEligibility = {
 };
 
 const menuItemId = '88888888-8888-4888-8888-888888888888';
+const vendorId = '66666666-6666-4666-8666-666666666666';
+
+const vendor: AuthenticatedActor = {
+  userId: '99999999-9999-4999-8999-999999999999',
+  role: 'vendor',
+  vendorId
+};
 
 const review: ReviewRecord = {
   comment: 'Very good.',
@@ -45,12 +54,31 @@ const review: ReviewRecord = {
   vendorRating: 5
 };
 
+const vendorReview: VendorReviewRecord = {
+  comment: 'Very good.',
+  createdAt: '2026-06-15T09:00:00.000Z',
+  deliveryBatchId: eligibility.deliveryBatchId,
+  deliveryRating: 4,
+  foodRating: 5,
+  id: review.id,
+  menuItemId,
+  menuItemName: 'Jollof rice',
+  moderationStatus: 'pending',
+  orderId: eligibility.orderId,
+  orderNumber: 'MD-1001',
+  updatedAt: '2026-06-15T09:00:00.000Z',
+  vendorId,
+  vendorRating: 5
+};
+
 function createRepository(): ReviewsRepositoryContract {
   return {
+    assertVendorAccess: vi.fn().mockResolvedValue(true),
     createCustomerReview: vi.fn().mockResolvedValue(review),
     customerOrderContainsMenuItem: vi.fn().mockResolvedValue(true),
     findCustomerReview: vi.fn().mockResolvedValue(undefined),
-    findCustomerReviewEligibility: vi.fn().mockResolvedValue(eligibility)
+    findCustomerReviewEligibility: vi.fn().mockResolvedValue(eligibility),
+    listVendorReviews: vi.fn().mockResolvedValue([vendorReview])
   };
 }
 
@@ -137,5 +165,50 @@ describe('ReviewsService', () => {
         vendorRating: 5
       })
     ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('lists vendor reviews through vendor membership and cursor filters', async () => {
+    const cursor = encodeCursor({
+      createdAt: vendorReview.createdAt,
+      id: vendorReview.id
+    });
+
+    await expect(
+      service.listVendorReviews(vendor, {
+        cursor,
+        limit: 10,
+        menuItemId,
+        rating: 5
+      })
+    ).resolves.toMatchObject({
+      items: [vendorReview],
+      pagination: {
+        hasMore: false,
+        limit: 10
+      }
+    });
+
+    expect(repository.assertVendorAccess).toHaveBeenCalledWith(vendorId, vendor.userId);
+    expect(repository.listVendorReviews).toHaveBeenCalledWith(vendorId, {
+      cursor: `${vendorReview.createdAt}|${vendorReview.id}`,
+      limit: 10,
+      menuItemId,
+      rating: 5
+    });
+  });
+
+  it('rejects vendor review access without vendor membership or a valid cursor', async () => {
+    vi.mocked(repository.assertVendorAccess).mockResolvedValueOnce(false);
+
+    await expect(service.listVendorReviews(vendor, { limit: 20 })).rejects.toBeInstanceOf(
+      ForbiddenException
+    );
+
+    await expect(
+      service.listVendorReviews(vendor, {
+        cursor: 'not-a-cursor',
+        limit: 20
+      })
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 });

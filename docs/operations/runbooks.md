@@ -26,8 +26,9 @@
 
 1. Verify signature and event reference.
 2. Check `payment_events` for duplicate or failed processing.
-3. Reprocess only idempotently.
-4. Reconcile order status with Paystack transaction state.
+3. Compare Paystack transaction state with the local `payments` row.
+4. Reprocess only idempotently through the verified webhook/reconciliation path.
+5. Confirm `orders.order_status`, `payments.status`, and any outbox events agree.
 
 ## Duplicate Payment
 
@@ -71,6 +72,30 @@
 2. Recompute from settled orders, delivery assignments, refunds, and adjustments.
 3. Create correction lines, never edit immutable historical records.
 4. Obtain finance approval before payout.
+
+## Stuck Outbox Events
+
+1. Check `/v1/admin/jobs/outbox?status=available` and `status=locked`.
+2. Identify events with stale `locked_at` or repeated `last_error`.
+3. Confirm the worker is running and has database connectivity.
+4. Release or retry only events whose handler is idempotent.
+5. Track backlog count until it returns to the normal operating range.
+
+## Readiness Failure
+
+1. Check `/v1/health/live`; if live fails, treat as API outage.
+2. Check `/v1/health/ready` and sanitized `HealthController` database error logs.
+3. Verify Supabase connection string, SSL flags, pooler status, and credentials.
+4. Keep deployments paused while readiness is failing.
+5. Run `pnpm smoke:production` after recovery.
+
+## Settlement Correction
+
+1. Freeze the affected settlement before mark-paid.
+2. Add an adjustment through the admin settlement adjustment endpoint.
+3. Include a human-readable description that references the incident/support ticket.
+4. Re-run settlement detail and audit-log checks before payout.
+5. Do not edit historical settlement lines directly.
 
 ## Compromised Admin Account
 

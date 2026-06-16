@@ -7,5 +7,6 @@ coverage/
 !.env.development.example
 !.env.test.example
 !.env.staging.example
+!.env.e2e.example
 !.env.production.example
 supabase/types/database.types.ts

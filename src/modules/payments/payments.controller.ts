@@ -102,10 +102,13 @@ export class AdminPaymentsController {
     @CurrentActor() actor: AuthenticatedActor
   ): Promise<ListEnvelope<AdminPaymentRecord>> {
     const payments = await this.payments.listAdminPayments(actor);
-    return createListEnvelope(payments.map((payment) => toAdminPaymentRecord(payment)), {
-      hasMore: false,
-      limit: payments.length
-    });
+    return createListEnvelope(
+      payments.map((payment) => toAdminPaymentRecord(payment)),
+      {
+        hasMore: false,
+        limit: payments.length
+      }
+    );
   }
 
   @Get(':paymentId')
@@ -151,6 +154,8 @@ export class AdminPaymentsController {
     @Param() params: PaymentIdParamDto,
     @Body() input: InitiateRefundDto
   ): Promise<SuccessEnvelope<RefundRecord>> {
-    return createSuccessEnvelope(await this.payments.initiateRefund(actor, params.paymentId, input));
+    return createSuccessEnvelope(
+      await this.payments.initiateRefund(actor, params.paymentId, input)
+    );
   }
 }
