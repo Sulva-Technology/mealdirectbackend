@@ -74,7 +74,7 @@ jobs:
 
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 2.105.0
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
