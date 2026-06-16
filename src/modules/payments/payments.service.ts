@@ -183,7 +183,7 @@ export class PaymentsService {
   }
 
   private mapRefundStatus(providerStatus: string): RefundStatus {
-    if (providerStatus === 'processed' || providerStatus === 'success') return 'processed';
+    if (providerStatus === 'processed' || providerStatus === 'success') return 'succeeded';
     if (providerStatus === 'failed') return 'failed';
     return 'processing';
   }

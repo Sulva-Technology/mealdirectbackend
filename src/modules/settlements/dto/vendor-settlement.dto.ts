@@ -1,12 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, IsUUID, Matches, Max, Min } from 'class-validator';
+import { IsInt, IsOptional, Matches, Max, Min } from 'class-validator';
+import { IsDatabaseUuid } from '../../../common/validation.js';
 
 const settlementStatuses = ['approved', 'cancelled', 'draft', 'paid'] as const;
 
 export class VendorSettlementIdParamDto {
   @ApiProperty({ format: 'uuid', type: String })
-  @IsUUID('4')
+  @IsDatabaseUuid()
   id!: string;
 }
 

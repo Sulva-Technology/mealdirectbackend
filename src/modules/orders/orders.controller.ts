@@ -54,6 +54,7 @@ export class OrdersController {
   constructor(@Inject(OrdersService) private readonly orders: OrdersService) {}
 
   @Post('quote')
+  @HttpCode(200)
   @RequireRoles('customer')
   @ApiOkResponse({
     description: 'Order quote using current menu and slot availability.',

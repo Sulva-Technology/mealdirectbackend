@@ -1,8 +1,9 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsIn, IsInt, IsOptional, IsUUID, Matches, Max, Min } from 'class-validator';
+import { IsIn, IsInt, IsOptional, Matches, Max, Min } from 'class-validator';
 
 import { OrderDetailDto, OrderSummaryDto } from '../../orders/dto/order-api.dto.js';
+import { IsDatabaseUuid } from '../../../common/validation.js';
 
 const orderStatuses = [
   'accepted',
@@ -21,7 +22,7 @@ const orderStatuses = [
 
 export class VendorOrderIdParamDto {
   @ApiProperty({ format: 'uuid', type: String })
-  @IsUUID('4')
+  @IsDatabaseUuid()
   orderId!: string;
 }
 

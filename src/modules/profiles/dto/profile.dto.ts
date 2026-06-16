@@ -1,16 +1,9 @@
 import { Transform } from 'class-transformer';
-import {
-  IsOptional,
-  IsString,
-  IsUUID,
-  IsUrl,
-  Matches,
-  MaxLength,
-  MinLength
-} from 'class-validator';
+import { IsOptional, IsString, IsUrl, Matches, MaxLength, MinLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 import { actorRoles } from '../../../domain/authorization.js';
+import { IsDatabaseUuid } from '../../../common/validation.js';
 
 const phonePattern = /^[+0-9][0-9 ()-]{6,24}$/;
 
@@ -57,11 +50,11 @@ export class UpdateProfileDto {
 
 export class CompleteOnboardingDto {
   @ApiProperty({ format: 'uuid', type: String })
-  @IsUUID('4')
+  @IsDatabaseUuid()
   defaultCampusId!: string;
 
   @ApiProperty({ format: 'uuid', type: String })
-  @IsUUID('4')
+  @IsDatabaseUuid()
   defaultLocationId!: string;
 
   @ApiProperty({ example: '+2348012345678', type: String })
@@ -72,11 +65,11 @@ export class CompleteOnboardingDto {
 
 export class DefaultLocationDto {
   @ApiProperty({ format: 'uuid', type: String })
-  @IsUUID('4')
+  @IsDatabaseUuid()
   campusId!: string;
 
   @ApiProperty({ format: 'uuid', type: String })
-  @IsUUID('4')
+  @IsDatabaseUuid()
   locationId!: string;
 }
 

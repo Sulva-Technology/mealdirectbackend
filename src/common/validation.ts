@@ -1,7 +1,17 @@
 import { BadRequestException, ValidationPipe } from '@nestjs/common';
-import type { ValidationError } from 'class-validator';
+import { Matches } from 'class-validator';
+import type { ValidationError, ValidationOptions } from 'class-validator';
 
 import { ErrorCodes } from './errors/error-codes.js';
+
+const postgresUuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function IsDatabaseUuid(options?: ValidationOptions): PropertyDecorator {
+  return Matches(postgresUuidPattern, {
+    message: '$property must be a UUID',
+    ...options
+  });
+}
 
 function flattenValidationErrors(errors: readonly ValidationError[]): Record<string, unknown>[] {
   return errors.flatMap((error) => {

@@ -5,7 +5,6 @@ import {
   IsInt,
   IsOptional,
   IsString,
-  IsUUID,
   Matches,
   Max,
   MaxLength,
@@ -14,6 +13,7 @@ import {
 } from 'class-validator';
 
 import { OrderDetailDto } from '../../orders/dto/order-api.dto.js';
+import { IsDatabaseUuid } from '../../../common/validation.js';
 
 const riderStatuses = ['deactivated', 'pending', 'suspended', 'verified'] as const;
 const assignmentStatuses = ['accepted', 'assigned', 'cancelled', 'completed', 'picked_up'] as const;
@@ -89,19 +89,19 @@ export class RiderProfileEnvelopeDto {
 
 export class RiderAssignmentIdParamDto {
   @ApiProperty({ format: 'uuid', type: String })
-  @IsUUID('4')
+  @IsDatabaseUuid()
   assignmentId!: string;
 }
 
 export class RiderOrderIdParamDto {
   @ApiProperty({ format: 'uuid', type: String })
-  @IsUUID('4')
+  @IsDatabaseUuid()
   orderId!: string;
 }
 
 export class RiderSettlementIdParamDto {
   @ApiProperty({ format: 'uuid', type: String })
-  @IsUUID('4')
+  @IsDatabaseUuid()
   id!: string;
 }
 

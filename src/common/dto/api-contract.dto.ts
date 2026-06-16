@@ -1,18 +1,9 @@
 import { Type } from 'class-transformer';
-import {
-  IsIn,
-  IsInt,
-  IsISO8601,
-  IsOptional,
-  IsString,
-  IsUUID,
-  Matches,
-  Max,
-  Min
-} from 'class-validator';
+import { IsIn, IsInt, IsISO8601, IsOptional, IsString, Matches, Max, Min } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 import { maxCursorLimit } from '../api/pagination.js';
+import { IsDatabaseUuid } from '../validation.js';
 
 export class CursorPaginationQueryDto {
   @ApiPropertyOptional({
@@ -61,7 +52,7 @@ export class DateRangeQueryDto {
 
 export class UuidParamDto {
   @ApiProperty({ format: 'uuid', type: String })
-  @IsUUID('4')
+  @IsDatabaseUuid()
   id!: string;
 }
 

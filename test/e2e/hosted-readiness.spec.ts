@@ -6,7 +6,7 @@ import type { Pool } from 'pg';
 
 import { createApp } from '../../src/app.factory.js';
 import { authHeader } from './helpers/auth.js';
-import { cleanupOrders, createE2EPool } from './helpers/db.js';
+import { cleanupE2ERefunds, cleanupOrders, createE2EPool } from './helpers/db.js';
 import { startFakePaystack, type FakePaystackServer } from './helpers/fake-paystack.js';
 import { fixtures } from './helpers/fixtures.js';
 
@@ -62,12 +62,14 @@ describe('hosted Supabase production-readiness E2E', () => {
     paystack = await startFakePaystack();
     expect(paystack.baseUrl).toBe(process.env.PAYSTACK_BASE_URL);
     pool = createE2EPool();
+    await cleanupE2ERefunds(pool);
     app = await createApp();
     await app.init();
     await app.getHttpAdapter().getInstance().ready();
   });
 
   afterEach(async () => {
+    await cleanupE2ERefunds(pool);
     await cleanupOrders(pool, createdOrderIds.splice(0));
   });
 
@@ -176,8 +178,7 @@ describe('hosted Supabase production-readiness E2E', () => {
     });
     expect(paymentStatus.statusCode).toBe(200);
     expect(
-      paymentStatus.json<Envelope<{ payment: { paymentStatus: string } }>>().data.payment
-        .paymentStatus
+      paymentStatus.json<Envelope<{ payment: { status: string } }>>().data.payment.status
     ).toBe('successful');
 
     const notifications = await app.inject({
@@ -260,7 +261,7 @@ describe('hosted Supabase production-readiness E2E', () => {
       method: 'POST',
       payload: {
         amountKobo: 1000,
-        reasonCode: 'e2e_small_refund',
+        reasonCode: `${e2eNamespace()}_small_refund`,
         reasonText: 'Hosted E2E fake Paystack refund.'
       },
       url: `/v1/admin/payments/${fixtures.paymentId}/refunds`

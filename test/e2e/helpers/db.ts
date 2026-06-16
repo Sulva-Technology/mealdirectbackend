@@ -20,7 +20,8 @@ export async function cleanupOrders(pool: Pool, orderIds: readonly string[]): Pr
 
   await pool.query('begin');
   try {
-    await pool.query('delete from public.notifications where entity_id = any($1::uuid[])', [
+    await pool.query("set local session_replication_role = 'replica'");
+    await pool.query('delete from public.notifications where aggregate_id = any($1::uuid[])', [
       orderIds
     ]);
     await pool.query('delete from public.outbox_events where aggregate_id = any($1::uuid[])', [
@@ -46,4 +47,13 @@ export async function cleanupOrders(pool: Pool, orderIds: readonly string[]): Pr
     await pool.query('rollback');
     throw error;
   }
+}
+
+export async function cleanupE2ERefunds(pool: Pool): Promise<void> {
+  const namespace = process.env.E2E_TEST_NAMESPACE;
+  if (namespace === undefined) {
+    throw new Error('E2E_TEST_NAMESPACE is required for refund cleanup.');
+  }
+
+  await pool.query('delete from public.refunds where reason_code like $1', [`${namespace}%`]);
 }

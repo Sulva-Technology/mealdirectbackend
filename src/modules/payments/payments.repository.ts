@@ -255,7 +255,7 @@ export class PaymentsRepository implements PaymentsRepositoryContract {
       set provider_refund_reference = ${providerRefundReference},
           provider_payload = ${JSON.stringify(providerPayload)}::jsonb,
           status = ${status}::public.refund_status,
-          processed_at = case when ${status} = 'processed' then now() else processed_at end
+          processed_at = case when ${status} = 'succeeded' then now() else processed_at end
       where id = ${refundId}::uuid
       returning
         id::text as "id",
