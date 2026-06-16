@@ -13,16 +13,22 @@ type OpenApiDocument = {
 };
 
 function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (
-    value === undefined ||
-    value.trim().length === 0 ||
-    value.trim().toLowerCase() === 'undefined' ||
-    value.trim().toLowerCase() === 'null'
-  ) {
+  const value = optionalEnv(name);
+  if (value === undefined) {
     throw new Error(`${name} is required for production smoke checks.`);
   }
   return value;
+}
+
+function optionalEnv(name: string): string | undefined {
+  const value = process.env[name];
+  if (value === undefined) return undefined;
+  const trimmed = value.trim();
+  if (trimmed.length === 0) return undefined;
+  if (trimmed.toLowerCase() === 'undefined' || trimmed.toLowerCase() === 'null') {
+    return undefined;
+  }
+  return trimmed;
 }
 
 function apiUrl(path: string): URL {
@@ -103,7 +109,11 @@ async function assertRemoteOpenApiMatchesLocal(): Promise<void> {
 
 loadDotenv({ path: '.env.production', override: false });
 
-process.env.SMOKE_BASE_URL ??= process.env.PRODUCTION_API_BASE_URL ?? process.env.API_BASE_URL;
+process.env.SMOKE_BASE_URL =
+  optionalEnv('SMOKE_BASE_URL') ??
+  optionalEnv('PRODUCTION_API_BASE_URL') ??
+  optionalEnv('API_BASE_URL') ??
+  'https://mealdirectbackend.onrender.com';
 
 if (process.env.NODE_ENV !== undefined && process.env.NODE_ENV !== 'production') {
   throw new Error('smoke:production must run with NODE_ENV unset or production.');
