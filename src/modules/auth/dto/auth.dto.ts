@@ -22,6 +22,11 @@ export class SignUpDto {
   @Transform(({ value }) => trimString(value))
   @IsString()
   fullName?: string;
+
+  @ApiPropertyOptional({ type: String, example: 'http://localhost:3000/auth/callback', description: 'Redirect URL after clicking email confirmation.' })
+  @IsOptional()
+  @IsString()
+  redirectTo?: string;
 }
 
 export class LoginDto {

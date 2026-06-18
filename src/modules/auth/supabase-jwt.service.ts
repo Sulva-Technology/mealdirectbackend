@@ -34,8 +34,15 @@ export class SupabaseJwtService {
       throw unauthorized('JWT verification is not configured.');
     }
 
+    let secretKey: Uint8Array;
+    if (/^[A-Za-z0-9+/=]+$/.test(jwtSecret) && jwtSecret.length % 4 === 0 && jwtSecret.length > 32) {
+      secretKey = Buffer.from(jwtSecret, 'base64');
+    } else {
+      secretKey = new TextEncoder().encode(jwtSecret);
+    }
+
     try {
-      const { payload } = await jwtVerify(token, new TextEncoder().encode(jwtSecret), {
+      const { payload } = await jwtVerify(token, secretKey, {
         issuer: this.env.get('SUPABASE_JWT_ISSUER'),
         audience: this.env.get('SUPABASE_JWT_AUDIENCE')
       });

@@ -120,13 +120,20 @@ describe('Supabase JWT authentication', () => {
         payload: {
           email: 'test@example.com',
           password: 'Password123!',
-          fullName: 'Test User'
+          fullName: 'Test User',
+          redirectTo: 'http://localhost:3000/auth/callback'
         }
       });
 
       expect(response.statusCode).toBe(201);
       expect(response.json()).toEqual(mockResponse);
-      expect(signUpSpy).toHaveBeenCalledWith('test@example.com', 'Password123!', 'customer', 'Test User');
+      expect(signUpSpy).toHaveBeenCalledWith(
+        'test@example.com',
+        'Password123!',
+        'customer',
+        'Test User',
+        'http://localhost:3000/auth/callback'
+      );
     });
 
     it('customer/login returns 200 and tokens', async () => {
