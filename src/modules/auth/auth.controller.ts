@@ -36,7 +36,7 @@ export class AuthController {
   @ApiCreatedResponse({ type: AuthTokensResponseDto, description: 'Customer registered successfully.' })
   @ApiBadRequestResponse({ description: 'Registration failed due to invalid input or duplicate email.' })
   async customerSignUp(@Body() dto: SignUpDto): Promise<AuthTokensResponseDto> {
-    return this.authService.signUp(dto.email, dto.password, 'customer', dto.fullName);
+    return this.authService.signUp(dto.email, dto.password, 'customer', dto.fullName, dto.redirectTo);
   }
 
   @Post('customer/login')
@@ -52,7 +52,7 @@ export class AuthController {
   @ApiCreatedResponse({ type: AuthTokensResponseDto, description: 'Vendor registered successfully.' })
   @ApiBadRequestResponse({ description: 'Registration failed.' })
   async vendorSignUp(@Body() dto: SignUpDto): Promise<AuthTokensResponseDto> {
-    return this.authService.signUp(dto.email, dto.password, 'vendor', dto.fullName);
+    return this.authService.signUp(dto.email, dto.password, 'vendor', dto.fullName, dto.redirectTo);
   }
 
   @Post('vendor/login')
@@ -68,7 +68,7 @@ export class AuthController {
   @ApiCreatedResponse({ type: AuthTokensResponseDto, description: 'Rider registered successfully.' })
   @ApiBadRequestResponse({ description: 'Registration failed.' })
   async riderSignUp(@Body() dto: SignUpDto): Promise<AuthTokensResponseDto> {
-    return this.authService.signUp(dto.email, dto.password, 'rider', dto.fullName);
+    return this.authService.signUp(dto.email, dto.password, 'rider', dto.fullName, dto.redirectTo);
   }
 
   @Post('rider/login')
