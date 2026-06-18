@@ -6,7 +6,8 @@ export const ErrorCodes = {
   UNAUTHORIZED: 'UNAUTHORIZED',
   FORBIDDEN: 'FORBIDDEN',
   DATABASE_UNAVAILABLE: 'DATABASE_UNAVAILABLE',
-  RATE_LIMITED: 'RATE_LIMITED'
+  RATE_LIMITED: 'RATE_LIMITED',
+  AUTH_FAILED: 'AUTH_FAILED'
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];

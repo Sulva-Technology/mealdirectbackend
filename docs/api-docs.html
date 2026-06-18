@@ -1,4 +1,26 @@
-{
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Meal Direct API Documentation</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700" rel="stylesheet">
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+    <script>
+      // Workaround for Redoc's dependencies checking process.env in browser contexts
+      window.process = { env: { NODE_ENV: 'production' } };
+    </script>
+  </head>
+  <body>
+    <div id="redoc-container"></div>
+    <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"> </script>
+    <script>
+      const spec = {
   "openapi": "3.0.0",
   "paths": {
     "/v1/health/live": {
@@ -5128,3 +5150,16 @@
     }
   }
 }
+;
+      Redoc.init(spec, {
+        theme: {
+          colors: {
+            primary: {
+              main: '#3F51B5'
+            }
+          }
+        }
+      }, document.getElementById('redoc-container'));
+    </script>
+  </body>
+</html>

@@ -56,6 +56,7 @@ const envSchema = z
     SUPABASE_URL: z.url(),
     SUPABASE_JWT_ISSUER: z.url(),
     SUPABASE_JWT_AUDIENCE: z.string().min(1).default('authenticated'),
+    SUPABASE_ANON_KEY: z.string().min(1),
     SUPABASE_JWT_SECRET: optionalSecret,
     CORS_ALLOWED_ORIGINS: csvList.default(defaultCorsOrigins.split(',')),
     LOG_LEVEL: z.enum(['silent', 'debug', 'info', 'warn', 'error']).default('info'),
