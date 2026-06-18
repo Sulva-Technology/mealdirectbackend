@@ -1,4 +1,16 @@
-const baseUrl = process.env.SMOKE_BASE_URL ?? process.env.API_BASE_URL ?? 'http://127.0.0.1:4000';
+function optionalEnv(name) {
+  const value = process.env[name];
+  if (value === undefined) return undefined;
+  const trimmed = value.trim();
+  if (trimmed.length === 0) return undefined;
+  if (trimmed.toLowerCase() === 'undefined' || trimmed.toLowerCase() === 'null') {
+    return undefined;
+  }
+  return trimmed;
+}
+
+const baseUrl =
+  optionalEnv('SMOKE_BASE_URL') ?? optionalEnv('API_BASE_URL') ?? 'http://127.0.0.1:4000';
 const expectedOrigins = (
   process.env.SMOKE_FRONTEND_ORIGINS ??
   process.env.CORS_ALLOWED_ORIGINS ??

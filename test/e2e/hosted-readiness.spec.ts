@@ -69,14 +69,16 @@ describe('hosted Supabase production-readiness E2E', () => {
   });
 
   afterEach(async () => {
-    await cleanupE2ERefunds(pool);
-    await cleanupOrders(pool, createdOrderIds.splice(0));
+    if (pool !== undefined) {
+      await cleanupE2ERefunds(pool);
+      await cleanupOrders(pool, createdOrderIds.splice(0));
+    }
   });
 
   afterAll(async () => {
-    await app.close();
-    await paystack.close();
-    await pool.end();
+    await app?.close();
+    await paystack?.close();
+    await pool?.end();
   });
 
   it('proves customer catalog, order, Paystack initialization, webhook, and notification flow', async () => {

@@ -8,7 +8,8 @@ const validEnv = {
   DATABASE_SSL: 'false',
   SUPABASE_URL: 'http://127.0.0.1:54321',
   SUPABASE_JWT_ISSUER: 'http://127.0.0.1:54321/auth/v1',
-  SUPABASE_JWT_AUDIENCE: 'authenticated'
+  SUPABASE_JWT_AUDIENCE: 'authenticated',
+  SUPABASE_ANON_KEY: 'test-anon-key'
 };
 
 describe('environment validation', () => {

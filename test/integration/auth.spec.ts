@@ -1,8 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SignJWT } from 'jose';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 
 import { createApp } from '../../src/app.factory.js';
+import { SupabaseAuthService } from '../../src/modules/auth/supabase-auth.service.js';
 
 const testSecret = new TextEncoder().encode('test-jwt-secret-at-least-32-characters-long');
 const issuer = 'http://127.0.0.1:54321/auth/v1';
@@ -99,6 +100,98 @@ describe('Supabase JWT authentication', () => {
         role: 'campus_admin',
         campusId: 'campus-a'
       }
+    });
+  });
+
+  describe('public auth endpoints', () => {
+    it('customer/signup returns 201 and tokens', async () => {
+      const authService = app.get(SupabaseAuthService);
+      const mockResponse = {
+        accessToken: 'mock-access-token',
+        refreshToken: 'mock-refresh-token',
+        expiresIn: 3600,
+        user: { id: 'user-uuid', email: 'test@example.com', role: 'customer' }
+      };
+      const signUpSpy = vi.spyOn(authService, 'signUp').mockResolvedValue(mockResponse);
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/v1/auth/customer/signup',
+        payload: {
+          email: 'test@example.com',
+          password: 'Password123!',
+          fullName: 'Test User'
+        }
+      });
+
+      expect(response.statusCode).toBe(201);
+      expect(response.json()).toEqual(mockResponse);
+      expect(signUpSpy).toHaveBeenCalledWith('test@example.com', 'Password123!', 'customer', 'Test User');
+    });
+
+    it('customer/login returns 200 and tokens', async () => {
+      const authService = app.get(SupabaseAuthService);
+      const mockResponse = {
+        accessToken: 'mock-access-token',
+        refreshToken: 'mock-refresh-token',
+        expiresIn: 3600,
+        user: { id: 'user-uuid', email: 'test@example.com', role: 'customer' }
+      };
+      const signInSpy = vi.spyOn(authService, 'signIn').mockResolvedValue(mockResponse);
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/v1/auth/customer/login',
+        payload: {
+          email: 'test@example.com',
+          password: 'Password123!'
+        }
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json()).toEqual(mockResponse);
+      expect(signInSpy).toHaveBeenCalledWith('test@example.com', 'Password123!', ['customer']);
+    });
+
+    it('refresh returns 200 and new tokens', async () => {
+      const authService = app.get(SupabaseAuthService);
+      const mockResponse = {
+        accessToken: 'new-access-token',
+        refreshToken: 'new-refresh-token',
+        expiresIn: 3600,
+        user: { id: 'user-uuid', email: 'test@example.com', role: 'customer' }
+      };
+      const refreshSpy = vi.spyOn(authService, 'refresh').mockResolvedValue(mockResponse);
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/v1/auth/refresh',
+        payload: {
+          refreshToken: 'old-refresh-token'
+        }
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json()).toEqual(mockResponse);
+      expect(refreshSpy).toHaveBeenCalledWith('old-refresh-token');
+    });
+
+    it('logout returns 200', async () => {
+      const authService = app.get(SupabaseAuthService);
+      const signOutSpy = vi.spyOn(authService, 'signOut').mockResolvedValue(undefined);
+      const token = await signToken();
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/v1/auth/logout',
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json()).toEqual({ success: true });
+      expect(signOutSpy).toHaveBeenCalledWith(token);
     });
   });
 });

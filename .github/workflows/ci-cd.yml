@@ -125,7 +125,12 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Staging smoke tests
-        run: pnpm smoke:api
+        run: |
+          if [ -z "${SMOKE_BASE_URL}" ]; then
+            echo "::notice::Skipping staging smoke because STAGING_API_BASE_URL is not configured."
+            exit 0
+          fi
+          pnpm smoke:api
         env:
           SMOKE_BASE_URL: ${{ secrets.STAGING_API_BASE_URL }}
           SMOKE_FRONTEND_ORIGINS: ${{ secrets.STAGING_FRONTEND_ORIGINS }}
@@ -149,8 +154,59 @@ jobs:
           node-version: 24
           cache: pnpm
 
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.105.0
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Select E2E target
+        id: e2e-target
+        shell: bash
+        env:
+          SECRET_E2E_DATABASE_URL: ${{ secrets.E2E_DATABASE_URL }}
+          SECRET_E2E_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
+          SECRET_E2E_SUPABASE_JWT_SECRET: ${{ secrets.E2E_SUPABASE_JWT_SECRET }}
+          SECRET_E2E_INTERNAL_OPERATIONS_TOKEN: ${{ secrets.E2E_INTERNAL_OPERATIONS_TOKEN }}
+        run: |
+          case "${SECRET_E2E_DATABASE_URL}" in
+            ""|*localhost*|*127.0.0.1*|*::1*)
+              echo "::notice::Hosted E2E database secret is empty or local; using local Supabase fallback."
+              echo "mode=local" >> "${GITHUB_OUTPUT}"
+              echo "DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres" >> "${GITHUB_ENV}"
+              echo "E2E_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres" >> "${GITHUB_ENV}"
+              echo "DATABASE_SSL=false" >> "${GITHUB_ENV}"
+              echo "DATABASE_SSL_REJECT_UNAUTHORIZED=false" >> "${GITHUB_ENV}"
+              echo "SUPABASE_URL=http://127.0.0.1:54321" >> "${GITHUB_ENV}"
+              echo "SUPABASE_JWT_ISSUER=http://127.0.0.1:54321/auth/v1" >> "${GITHUB_ENV}"
+              echo "SUPABASE_JWT_AUDIENCE=authenticated" >> "${GITHUB_ENV}"
+              echo "SUPABASE_JWT_SECRET=super-secret-jwt-token-with-at-least-32-characters-long" >> "${GITHUB_ENV}"
+              echo "INTERNAL_OPERATIONS_TOKEN=e2e-operations-token" >> "${GITHUB_ENV}"
+              ;;
+            *)
+              if [ -z "${SECRET_E2E_SUPABASE_URL}" ] || [ -z "${SECRET_E2E_SUPABASE_JWT_SECRET}" ] || [ -z "${SECRET_E2E_INTERNAL_OPERATIONS_TOKEN}" ]; then
+                echo "::error::Hosted E2E requires E2E_DATABASE_URL, E2E_SUPABASE_URL, E2E_SUPABASE_JWT_SECRET, and E2E_INTERNAL_OPERATIONS_TOKEN."
+                exit 1
+              fi
+              echo "mode=hosted" >> "${GITHUB_OUTPUT}"
+              echo "DATABASE_URL=${SECRET_E2E_DATABASE_URL}" >> "${GITHUB_ENV}"
+              echo "E2E_DATABASE_URL=${SECRET_E2E_DATABASE_URL}" >> "${GITHUB_ENV}"
+              echo "DATABASE_SSL=true" >> "${GITHUB_ENV}"
+              echo "DATABASE_SSL_REJECT_UNAUTHORIZED=false" >> "${GITHUB_ENV}"
+              echo "SUPABASE_URL=${SECRET_E2E_SUPABASE_URL}" >> "${GITHUB_ENV}"
+              echo "SUPABASE_JWT_ISSUER=${SECRET_E2E_SUPABASE_URL}/auth/v1" >> "${GITHUB_ENV}"
+              echo "SUPABASE_JWT_AUDIENCE=authenticated" >> "${GITHUB_ENV}"
+              echo "SUPABASE_JWT_SECRET=${SECRET_E2E_SUPABASE_JWT_SECRET}" >> "${GITHUB_ENV}"
+              echo "INTERNAL_OPERATIONS_TOKEN=${SECRET_E2E_INTERNAL_OPERATIONS_TOKEN}" >> "${GITHUB_ENV}"
+              ;;
+          esac
+
+      - name: Start local Supabase for E2E fallback
+        if: steps.e2e-target.outputs.mode == 'local'
+        run: |
+          pnpm supabase:start
+          pnpm db:reset
 
       - name: Build
         run: pnpm build
@@ -162,18 +218,9 @@ jobs:
           HOST: 127.0.0.1
           PORT: 0
           API_PREFIX: v1
-          DATABASE_URL: ${{ secrets.E2E_DATABASE_URL }}
-          E2E_DATABASE_URL: ${{ secrets.E2E_DATABASE_URL }}
-          DATABASE_SSL: 'true'
-          DATABASE_SSL_REJECT_UNAUTHORIZED: 'false'
-          SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
-          SUPABASE_JWT_ISSUER: ${{ secrets.E2E_SUPABASE_URL }}/auth/v1
-          SUPABASE_JWT_AUDIENCE: authenticated
-          SUPABASE_JWT_SECRET: ${{ secrets.E2E_SUPABASE_JWT_SECRET }}
           PAYSTACK_BASE_URL: http://127.0.0.1:59999
           PAYSTACK_SECRET_KEY: e2e-paystack-secret
           PAYSTACK_WEBHOOK_INBOX_MODE: database
-          INTERNAL_OPERATIONS_TOKEN: ${{ secrets.E2E_INTERNAL_OPERATIONS_TOKEN }}
           E2E_TEST_NAMESPACE: e2e_meal_direct_${{ github.run_id }}
 
   production-smoke:
@@ -201,6 +248,6 @@ jobs:
         run: pnpm smoke:production
         env:
           NODE_ENV: production
-          SMOKE_BASE_URL: ${{ secrets.PRODUCTION_API_BASE_URL }}
+          SMOKE_BASE_URL: ${{ secrets.PRODUCTION_API_BASE_URL || vars.PRODUCTION_API_BASE_URL || 'https://mealdirectbackend.onrender.com' }}
           SMOKE_FRONTEND_ORIGINS: ${{ secrets.PRODUCTION_FRONTEND_ORIGINS }}
           INTERNAL_OPERATIONS_TOKEN: ${{ secrets.PRODUCTION_INTERNAL_OPERATIONS_TOKEN }}
