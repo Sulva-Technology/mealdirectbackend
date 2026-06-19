@@ -39,3 +39,23 @@ Do not commit real values. Store staging and production values only in platform 
 Staging and production must use different Supabase projects, database credentials, Paystack keys, operations tokens, and frontend origins.
 
 Hosted E2E must use a third isolated Supabase project or a staging project that can be safely mutated. Never point `pnpm test:e2e:hosted` at `.env.production`; use `pnpm smoke:production` for production, which performs read-only checks plus unsigned-webhook rejection.
+
+## Supabase database connection (production/staging)
+
+Use the **Session pooler** connection string from Supabase →
+Project Settings → Database → Connection string → "Session pooler":
+
+```
+DATABASE_URL=postgresql://postgres.<project-ref>:<db-password>@aws-0-<region>.pooler.supabase.com:5432/postgres
+DATABASE_SSL=true
+DATABASE_SSL_REJECT_UNAUTHORIZED=false
+DATABASE_POOL_MAX=10
+```
+
+Notes:
+- The username MUST include the project ref suffix (`postgres.<project-ref>`); a bare
+  `postgres` username fails password auth against the pooler.
+- Do not append `?sslmode=...`; the app supplies an explicit SSL object and strips
+  `sslmode` from the URL (see `createPostgresPoolConfig`).
+- `DATABASE_SSL_REJECT_UNAUTHORIZED=false` avoids `SELF_SIGNED_CERT_IN_CHAIN` against the
+  pooler chain while keeping TLS in transit.
