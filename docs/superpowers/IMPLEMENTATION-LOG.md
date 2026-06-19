@@ -34,8 +34,13 @@ Phase 1 local gates green: typecheck, lint, vitest unit (126), db:lint.
 DB-backed (db:reset/db:test/integration) + worker-outbox spec deferred to USER (Docker).
 
 ## Phase 2 — Automation
-- [ ] T1 zone-based delivery fee
-- [ ] T2 promotions engine
-- [ ] T3 rider availability flag
-- [ ] T4 auto rider dispatch
-- [ ] T5 reconcile TS order-status enum with DB
+- [x] T1 zone-based delivery fee — `6f88c8b`
+- [x] T2 promotions engine — `270b709`
+- [x] T3 rider availability flag — `77cf0d5`
+- [x] T4 auto rider dispatch — `665f898`
+- [x] T5 reconcile TS order-status enum with DB — `f8fcda9`
+
+Phase 2 local gates green: typecheck, lint, vitest unit (138), db:lint, openapi:generate.
+
+## Phase 3 — Money & hardening
+(in progress)
