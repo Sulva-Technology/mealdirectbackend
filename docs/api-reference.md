@@ -3341,3 +3341,35 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 ---
 
+
+## Realtime
+
+Live updates are delivered over Supabase Realtime (`postgres_changes`) rather than polling.
+Clients connect with `supabase-js` using the authenticated user's JWT; row-level security is
+enforced on every change event over the channel, so a subscriber only receives rows it is
+permitted to read.
+
+Subscribed tables and recommended filters:
+
+* `public.orders` — filter `customer_id=eq.<uid>`. Customers receive status transitions for
+  their own orders. Row shape matches the `GET /v1/orders/{orderId}` payload.
+* `public.notifications` — filter `recipient_user_id=eq.<uid>`. New in-app notifications are
+  materialized from outbox events; row shape matches the `GET /v1/notifications` list items.
+* `public.delivery_assignments` — riders subscribe to their assignments; access is constrained
+  by the existing RLS policies on the table.
+
+Example subscription:
+
+```ts
+supabase
+  .channel('orders')
+  .on(
+    'postgres_changes',
+    { event: '*', schema: 'public', table: 'orders', filter: `customer_id=eq.${userId}` },
+    (payload) => handleOrderChange(payload.new)
+  )
+  .subscribe();
+```
+
+Realtime is a read-side projection only; all mutations continue to go through the REST API,
+which remains the source of truth and emits the events that drive these change feeds.
