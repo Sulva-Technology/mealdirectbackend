@@ -1,5 +1,5 @@
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import { jwtVerify, type JWTPayload } from 'jose';
+import { createRemoteJWKSet, jwtVerify, type JWTPayload } from 'jose';
 
 import { ErrorCodes } from '../../common/errors/error-codes.js';
 import { EnvService } from '../../config/env.service.js';
@@ -26,9 +26,26 @@ function unauthorized(message = 'Invalid or expired bearer token.'): Unauthorize
 
 @Injectable()
 export class SupabaseJwtService {
+  private jwks?: ReturnType<typeof createRemoteJWKSet>;
+
   constructor(@Inject(EnvService) private readonly env: EnvService) {}
 
   async verifyToken(token: string): Promise<AuthenticatedActor> {
+    const options = {
+      issuer: this.env.get('SUPABASE_JWT_ISSUER'),
+      audience: this.env.get('SUPABASE_JWT_AUDIENCE')
+    };
+
+    const jwksUrl = this.env.get('SUPABASE_JWKS_URL');
+    if (jwksUrl !== undefined) {
+      try {
+        const { payload } = await jwtVerify(token, this.resolveJwks(jwksUrl), options);
+        return this.toActor(payload);
+      } catch {
+        throw unauthorized();
+      }
+    }
+
     const jwtSecret = this.env.get('SUPABASE_JWT_SECRET');
     if (jwtSecret === undefined) {
       throw unauthorized('JWT verification is not configured.');
@@ -42,14 +59,16 @@ export class SupabaseJwtService {
     }
 
     try {
-      const { payload } = await jwtVerify(token, secretKey, {
-        issuer: this.env.get('SUPABASE_JWT_ISSUER'),
-        audience: this.env.get('SUPABASE_JWT_AUDIENCE')
-      });
+      const { payload } = await jwtVerify(token, secretKey, options);
       return this.toActor(payload);
     } catch {
       throw unauthorized();
     }
+  }
+
+  private resolveJwks(jwksUrl: string): ReturnType<typeof createRemoteJWKSet> {
+    this.jwks ??= createRemoteJWKSet(new URL(jwksUrl));
+    return this.jwks;
   }
 
   private toActor(claims: JWTPayload): AuthenticatedActor {

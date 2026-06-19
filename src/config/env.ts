@@ -58,6 +58,7 @@ const envSchema = z
     SUPABASE_JWT_AUDIENCE: z.string().min(1).default('authenticated'),
     SUPABASE_ANON_KEY: z.string().min(1),
     SUPABASE_JWT_SECRET: optionalSecret,
+    SUPABASE_JWKS_URL: z.url().optional(),
     CORS_ALLOWED_ORIGINS: csvList.default(defaultCorsOrigins.split(',')),
     LOG_LEVEL: z.enum(['silent', 'debug', 'info', 'warn', 'error']).default('info'),
     BODY_LIMIT_BYTES: z.coerce.number().int().positive().max(10_485_760).default(1_048_576),
@@ -105,11 +106,15 @@ const envSchema = z
         message: 'INTERNAL_OPERATIONS_TOKEN must be configured outside development and test'
       });
     }
-    if ((env.NODE_ENV === 'production' || env.NODE_ENV === 'staging') && !env.SUPABASE_JWT_SECRET) {
+    if (
+      (env.NODE_ENV === 'production' || env.NODE_ENV === 'staging') &&
+      !env.SUPABASE_JWT_SECRET &&
+      !env.SUPABASE_JWKS_URL
+    ) {
       context.addIssue({
         code: 'custom',
         path: ['SUPABASE_JWT_SECRET'],
-        message: 'SUPABASE_JWT_SECRET must be configured until JWKS verification is introduced'
+        message: 'SUPABASE_JWT_SECRET or SUPABASE_JWKS_URL must be configured outside development and test'
       });
     }
     if (
