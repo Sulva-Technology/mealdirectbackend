@@ -173,6 +173,23 @@ export class SupabaseAuthService {
     };
   }
 
+  async requestPasswordReset(email: string): Promise<void> {
+    // Swallow provider errors so the response never reveals whether an account exists.
+    try {
+      await this.getClient().auth.resetPasswordForEmail(email);
+    } catch {
+      // intentionally ignored to prevent user enumeration
+    }
+  }
+
+  async resendConfirmation(email: string): Promise<void> {
+    try {
+      await this.getClient().auth.resend({ type: 'signup', email });
+    } catch {
+      // intentionally ignored to prevent user enumeration
+    }
+  }
+
   async signOut(accessToken: string): Promise<void> {
     const { error } = await this.getClient(accessToken).auth.signOut();
     if (error) {

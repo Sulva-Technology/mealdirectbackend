@@ -37,6 +37,18 @@ export class RefreshDto {
   refreshToken!: string;
 }
 
+export class EmailRequestDto {
+  @ApiProperty({ type: String, example: 'user@example.com', description: 'The email address of the user.' })
+  @Transform(({ value }) => trimString(value))
+  @IsEmail()
+  email!: string;
+}
+
+export class AuthMessageResponseDto {
+  @ApiProperty({ type: String, description: 'A non-enumerating confirmation message.' })
+  message!: string;
+}
+
 export class AuthUserDto {
   @ApiProperty({ type: String, format: 'uuid', description: 'The unique identifier of the user.' })
   id!: string;

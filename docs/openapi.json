@@ -180,6 +180,40 @@
         "tags": ["auth"]
       }
     },
+    "/v1/auth/password-reset": {
+      "post": {
+        "operationId": "AuthController_requestPasswordReset",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "A password reset email is sent if the account exists (non-enumerating).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthMessageResponseDto" }
+              }
+            }
+          }
+        },
+        "tags": ["auth"]
+      }
+    },
+    "/v1/auth/resend-confirmation": {
+      "post": {
+        "operationId": "AuthController_resendConfirmation",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "A confirmation email is resent if the account is unconfirmed (non-enumerating).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthMessageResponseDto" }
+              }
+            }
+          }
+        },
+        "tags": ["auth"]
+      }
+    },
     "/v1/auth/logout": {
       "post": {
         "operationId": "AuthController_logout",
@@ -3146,6 +3180,13 @@
           }
         },
         "required": ["user"]
+      },
+      "AuthMessageResponseDto": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string", "description": "A non-enumerating confirmation message." }
+        },
+        "required": ["message"]
       },
       "MeActorDto": {
         "type": "object",
