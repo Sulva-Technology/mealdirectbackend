@@ -197,9 +197,33 @@ describe('production domain rules', () => {
     expect(
       mapPaystackEvent({ event: 'transfer.success', data: { reference: 'transfer-ref' } })
     ).toEqual({
+      type: 'TRANSFER_RECONCILED',
+      providerReference: 'transfer-ref',
+      status: 'success'
+    });
+
+    expect(
+      mapPaystackEvent({ event: 'transfer.failed', data: { reference: 'transfer-ref' } })
+    ).toEqual({
+      type: 'TRANSFER_RECONCILED',
+      providerReference: 'transfer-ref',
+      status: 'failed'
+    });
+
+    expect(
+      mapPaystackEvent({ event: 'transfer.reversed', data: { reference: 'transfer-ref' } })
+    ).toEqual({
+      type: 'TRANSFER_RECONCILED',
+      providerReference: 'transfer-ref',
+      status: 'reversed'
+    });
+
+    expect(
+      mapPaystackEvent({ event: 'unknown.event', data: { reference: 'r' } })
+    ).toEqual({
       type: 'IGNORED',
       reason: 'UNMAPPED_EVENT',
-      providerEvent: 'transfer.success'
+      providerEvent: 'unknown.event'
     });
   });
 });

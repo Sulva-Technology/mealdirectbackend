@@ -104,6 +104,10 @@ export class PaystackWebhookService {
         await this.markPaymentSuccessful(trx, payload, event);
       }
 
+      if (event.type === 'TRANSFER_RECONCILED') {
+        await this.reconcileTransfer(trx, payload, event.providerReference, event.status);
+      }
+
       return {
         status: 'accepted',
         eventType: event.type,
@@ -148,6 +152,21 @@ export class PaystackWebhookService {
         ${event.providerReference},
         ${transactionId},
         ${event.amountKobo},
+        ${JSON.stringify(payload)}::jsonb
+      )
+    `.execute(trx);
+  }
+
+  private async reconcileTransfer(
+    trx: Kysely<DatabaseSchema>,
+    payload: PaystackWebhookEvent,
+    reference: string,
+    status: 'success' | 'failed' | 'reversed'
+  ): Promise<void> {
+    await sql`
+      select public.reconcile_payout_transfer(
+        ${reference},
+        ${status},
         ${JSON.stringify(payload)}::jsonb
       )
     `.execute(trx);

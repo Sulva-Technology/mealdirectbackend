@@ -73,6 +73,33 @@ describe('Paystack webhook endpoint', () => {
     });
   });
 
+  it('accepts a correctly signed transfer success webhook', async () => {
+    const rawBody = JSON.stringify({
+      event: 'transfer.success',
+      data: {
+        reference: 'MD-transfer-1',
+        status: 'success'
+      }
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: webhookPath,
+      headers: {
+        'content-type': 'application/json',
+        'x-paystack-signature': sign(rawBody)
+      },
+      payload: rawBody
+    });
+
+    expect(response.statusCode).toBe(202);
+    expect(response.json()).toEqual({
+      status: 'accepted',
+      eventType: 'TRANSFER_RECONCILED',
+      providerReference: 'MD-transfer-1'
+    });
+  });
+
   it('treats duplicate webhook deliveries as idempotent duplicates', async () => {
     const rawBody = JSON.stringify({
       event: 'charge.success',
