@@ -43,4 +43,23 @@ DB-backed (db:reset/db:test/integration) + worker-outbox spec deferred to USER (
 Phase 2 local gates green: typecheck, lint, vitest unit (138), db:lint, openapi:generate.
 
 ## Phase 3 — Money & hardening
-(in progress)
+- [x] T1 Paystack transfer client methods — `7998a58`
+- [x] T2 payout transfers table + reconciliation fn — `6fa6d98`
+- [x] T3 gated payout service (PAYOUTS_ENABLED) — `19a84b2`
+- [x] T4 transfer webhook reconciliation — `b4acebd`
+- [x] T5 asymmetric JWKS verification (HS256 fallback) — `62ff7b7`
+- [x] T6 password reset + resend confirmation — `ab34a65`
+- [x] T7 remove empty placeholder modules — `20ff555`
+- [x] T8 observability + go-live docs — this commit
+
+Phase 3 local gates green: typecheck, lint, vitest unit (147), db:lint, openapi:generate.
+
+## USER/infra remaining (Docker + hosted gates)
+- P0-T5: `pnpm db:ci` (Docker), deploy staging, `/v1/health/ready`, `test:e2e:hosted`,
+  `smoke:production`, confirm pg_cron firing.
+- All DB-backed verification: `pnpm db:reset && pnpm db:test` (pgTAP suites incl. new
+  promotions/rider-availability/auto-dispatch/payout transfers), `pnpm db:types`.
+- Provider secrets: Resend, FCM, Paystack transfers (+ balance funding), Sentry DSN,
+  SUPABASE_JWKS_URL.
+- Run `pnpm readiness:launch` in the launch environment; keep `PAYOUTS_ENABLED=false` until a
+  controlled enablement.

@@ -34,6 +34,14 @@
 - Rider agreement approved.
 - Monitoring dashboards active.
 - Alerts routed to on-call owner.
+- `SENTRY_DSN` + `SENTRY_ENVIRONMENT` set in production; release/commit tagging confirmed.
+- Outbox worker deployed; email (Resend) and push (FCM) credentials configured.
+- Supabase Realtime publication enabled for order/notification/assignment changes.
+- Zone delivery fees configured per campus zone; promotion codes seeded/validated.
+- Rider availability + auto-dispatch verified (available verified riders assigned on `order.ready`).
+- `SUPABASE_JWKS_URL` configured for asymmetric JWT verification (HS256 secret retained as fallback).
+- Email confirmations enabled (`enable_confirmations = true`); password-reset/resend flows verified.
+- `PAYOUTS_ENABLED` left `false` until a controlled enablement; transfer recipient + balance funding confirmed first.
 - Backups configured.
 - Restore drill completed.
 - Launch-day smoke test completed for customer, vendor, rider, and admin flows.
