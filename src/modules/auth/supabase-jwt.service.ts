@@ -1,4 +1,4 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { createRemoteJWKSet, jwtVerify, type JWTPayload } from 'jose';
 
 import { ErrorCodes } from '../../common/errors/error-codes.js';
@@ -26,9 +26,18 @@ function unauthorized(message = 'Invalid or expired bearer token.'): Unauthorize
 
 @Injectable()
 export class SupabaseJwtService {
+  private readonly logger = new Logger(SupabaseJwtService.name);
   private jwks?: ReturnType<typeof createRemoteJWKSet>;
 
   constructor(@Inject(EnvService) private readonly env: EnvService) {}
+
+  private logFailure(error: unknown): void {
+    const reason =
+      error instanceof Error
+        ? `${(error as { code?: string }).code ?? error.name}: ${error.message}`
+        : String(error);
+    this.logger.debug(`JWT verification failed — ${reason}`);
+  }
 
   async verifyToken(token: string): Promise<AuthenticatedActor> {
     const options = {
@@ -41,7 +50,8 @@ export class SupabaseJwtService {
       try {
         const { payload } = await jwtVerify(token, this.resolveJwks(jwksUrl), options);
         return this.toActor(payload);
-      } catch {
+      } catch (error) {
+        this.logFailure(error);
         throw unauthorized();
       }
     }
@@ -61,7 +71,8 @@ export class SupabaseJwtService {
     try {
       const { payload } = await jwtVerify(token, secretKey, options);
       return this.toActor(payload);
-    } catch {
+    } catch (error) {
+      this.logFailure(error);
       throw unauthorized();
     }
   }
