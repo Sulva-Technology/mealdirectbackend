@@ -1433,6 +1433,23 @@ paths:
         '403': *a37
       security: *a38
       tags: *a39
+  /v1/rider/availability:
+    patch:
+      operationId: RidersController_setAvailability
+      parameters: []
+      responses:
+        '200':
+          description: Updated rider availability flag.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiderProfileEnvelopeDto'
+        '400':
+          description: Invalid availability input.
+        '401': *a36
+        '403': *a37
+      security: *a38
+      tags: *a39
   /v1/rider/assignments:
     get:
       operationId: RidersController_listAssignments
@@ -1678,6 +1695,16 @@ paths:
       responses:
         '201':
           description: Rider daily settlement was generated idempotently.
+      security: *a40
+      tags: *a41
+  /v1/settlements/{settlementId}/pay:
+    post:
+      operationId: SettlementsController_paySettlement
+      parameters: []
+      responses:
+        '200':
+          description: Initiated (or returned the existing) automated payout transfer for
+            a settlement.
       security: *a40
       tags: *a41
   /v1/vendor/settlements:

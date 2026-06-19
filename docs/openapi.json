@@ -1697,6 +1697,27 @@
         "tags": ["rider"]
       }
     },
+    "/v1/rider/availability": {
+      "patch": {
+        "operationId": "RidersController_setAvailability",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Updated rider availability flag.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RiderProfileEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid availability input." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Verified active rider access is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["rider"]
+      }
+    },
     "/v1/rider/assignments": {
       "get": {
         "operationId": "RidersController_listAssignments",
@@ -1997,6 +2018,19 @@
         "parameters": [],
         "responses": {
           "201": { "description": "Rider daily settlement was generated idempotently." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["settlements"]
+      }
+    },
+    "/v1/settlements/{settlementId}/pay": {
+      "post": {
+        "operationId": "SettlementsController_paySettlement",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Initiated (or returned the existing) automated payout transfer for a settlement."
+          }
         },
         "security": [{ "supabaseAuth": [] }],
         "tags": ["settlements"]

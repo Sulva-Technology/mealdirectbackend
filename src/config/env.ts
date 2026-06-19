@@ -84,7 +84,8 @@ const envSchema = z
     EMAIL_FROM: z.string().min(1).default('Meal Direct <no-reply@mealdirect.com>'),
     FCM_PROJECT_ID: optionalSecret,
     FCM_CLIENT_EMAIL: optionalSecret,
-    FCM_PRIVATE_KEY: optionalSecret
+    FCM_PRIVATE_KEY: optionalSecret,
+    PAYOUTS_ENABLED: booleanFromString.default(false)
   })
   .superRefine((env, context) => {
     if ((env.NODE_ENV === 'production' || env.NODE_ENV === 'staging') && !env.DATABASE_SSL) {

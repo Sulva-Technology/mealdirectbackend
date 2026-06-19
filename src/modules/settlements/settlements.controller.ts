@@ -1,5 +1,5 @@
 import { Body, Controller, Inject, Param, Post, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 
 import { CurrentActor } from '../auth/current-actor.decorator.js';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
@@ -11,6 +11,8 @@ import {
   RiderSettlementParamsDto,
   VendorSettlementParamsDto
 } from './dto/generate-settlement.dto.js';
+import { PayoutService } from './payout.service.js';
+import type { PayoutTransferRecord } from './payout.types.js';
 import { SettlementsService } from './settlements.service.js';
 
 @ApiTags('settlements')
@@ -19,7 +21,10 @@ import { SettlementsService } from './settlements.service.js';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @RequireRoles('super_admin')
 export class SettlementsController {
-  constructor(@Inject(SettlementsService) private readonly settlements: SettlementsService) {}
+  constructor(
+    @Inject(SettlementsService) private readonly settlements: SettlementsService,
+    @Inject(PayoutService) private readonly payouts: PayoutService
+  ) {}
 
   @Post('vendors/:vendorId/daily')
   @ApiCreatedResponse({ description: 'Vendor daily settlement was generated idempotently.' })
@@ -47,5 +52,16 @@ export class SettlementsController {
       params.riderId,
       input.settlementDate
     );
+  }
+
+  @Post(':settlementId/pay')
+  @ApiOkResponse({
+    description: 'Initiated (or returned the existing) automated payout transfer for a settlement.'
+  })
+  paySettlement(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Param('settlementId') settlementId: string
+  ): Promise<PayoutTransferRecord> {
+    return this.payouts.payToSettlement(actor, settlementId);
   }
 }
