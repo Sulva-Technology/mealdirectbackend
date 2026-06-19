@@ -67,11 +67,22 @@ const envSchema = z
     TRACE_ID_HEADER: z.string().min(1).default('x-trace-id'),
     RELEASE_VERSION: z.string().min(1).default('local'),
     COMMIT_SHA: z.string().min(1).default('unknown'),
+    WORKER_POLL_INTERVAL_MS: z.coerce.number().int().positive().default(2000),
+    WORKER_BATCH_SIZE: z.coerce.number().int().positive().default(10),
+    WORKER_MAX_ATTEMPTS: z.coerce.number().int().positive().default(5),
     RESERVATION_TTL_SECONDS: z.coerce.number().int().positive().default(900),
     PAYSTACK_BASE_URL: z.url().default('https://api.paystack.co'),
     PAYSTACK_SECRET_KEY: optionalSecret,
     PAYSTACK_WEBHOOK_INBOX_MODE: z.enum(['database', 'memory']).default('database'),
-    INTERNAL_OPERATIONS_TOKEN: optionalSecret
+    INTERNAL_OPERATIONS_TOKEN: optionalSecret,
+    SENTRY_DSN: optionalSecret,
+    SENTRY_ENVIRONMENT: z.string().min(1).optional(),
+    SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0),
+    RESEND_API_KEY: optionalSecret,
+    EMAIL_FROM: z.string().min(1).default('Meal Direct <no-reply@mealdirect.com>'),
+    FCM_PROJECT_ID: optionalSecret,
+    FCM_CLIENT_EMAIL: optionalSecret,
+    FCM_PRIVATE_KEY: optionalSecret
   })
   .superRefine((env, context) => {
     if ((env.NODE_ENV === 'production' || env.NODE_ENV === 'staging') && !env.DATABASE_SSL) {
@@ -113,6 +124,13 @@ const envSchema = z
         code: 'custom',
         path: ['PAYSTACK_BASE_URL'],
         message: 'PAYSTACK_BASE_URL must be https://api.paystack.co in production'
+      });
+    }
+    if ((env.NODE_ENV === 'production' || env.NODE_ENV === 'staging') && !env.RESEND_API_KEY) {
+      context.addIssue({
+        code: 'custom',
+        path: ['RESEND_API_KEY'],
+        message: 'RESEND_API_KEY must be configured outside development and test'
       });
     }
   });

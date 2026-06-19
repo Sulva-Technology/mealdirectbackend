@@ -12,6 +12,7 @@ import type { SafeErrorDetails } from '../errors/error-envelope.js';
 import { createErrorEnvelope } from '../errors/error-envelope.js';
 import { getRequestId } from '../request/request-id.js';
 import { JsonLogger } from '../logging/json-logger.service.js';
+import { NoopErrorReporter, type ErrorReporter } from '../observability/error-reporter.js';
 
 type ExceptionResponse = {
   code?: string;
@@ -46,7 +47,10 @@ function normalizeMessage(message: ExceptionResponse['message'], fallback: strin
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
-  constructor(private readonly logger: JsonLogger) {}
+  constructor(
+    private readonly logger: JsonLogger,
+    private readonly reporter: ErrorReporter = new NoopErrorReporter()
+  ) {}
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const context = host.switchToHttp();
@@ -69,6 +73,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       void reply.status(status).send(envelope);
       return;
     }
+
+    this.reporter.captureException(exception);
 
     this.logger.error(
       {
