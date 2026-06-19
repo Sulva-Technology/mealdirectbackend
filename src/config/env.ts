@@ -77,7 +77,9 @@ const envSchema = z
     INTERNAL_OPERATIONS_TOKEN: optionalSecret,
     SENTRY_DSN: optionalSecret,
     SENTRY_ENVIRONMENT: z.string().min(1).optional(),
-    SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0)
+    SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0),
+    RESEND_API_KEY: optionalSecret,
+    EMAIL_FROM: z.string().min(1).default('Meal Direct <no-reply@mealdirect.com>')
   })
   .superRefine((env, context) => {
     if ((env.NODE_ENV === 'production' || env.NODE_ENV === 'staging') && !env.DATABASE_SSL) {
@@ -119,6 +121,13 @@ const envSchema = z
         code: 'custom',
         path: ['PAYSTACK_BASE_URL'],
         message: 'PAYSTACK_BASE_URL must be https://api.paystack.co in production'
+      });
+    }
+    if ((env.NODE_ENV === 'production' || env.NODE_ENV === 'staging') && !env.RESEND_API_KEY) {
+      context.addIssue({
+        code: 'custom',
+        path: ['RESEND_API_KEY'],
+        message: 'RESEND_API_KEY must be configured outside development and test'
       });
     }
   });
