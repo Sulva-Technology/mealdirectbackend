@@ -88,7 +88,8 @@ function createRepository(): OrdersRepositoryContract {
       payment: null
     }),
     listCustomerOrders: vi.fn().mockResolvedValue([orderDetail]),
-    quoteOrder: vi.fn().mockResolvedValue([quoteItem])
+    quoteOrder: vi.fn().mockResolvedValue([quoteItem]),
+    findZoneDeliveryFeeKobo: vi.fn().mockResolvedValue(null)
   };
 }
 
@@ -125,6 +126,21 @@ describe('OrdersService', () => {
       items: [quoteItem],
       totalKobo: 520000
     });
+  });
+
+  it('prefers the zone delivery fee over the configured fallback', async () => {
+    vi.mocked(repository.findZoneDeliveryFeeKobo).mockResolvedValue(25000);
+
+    await expect(service.quoteOrder(customer, orderInput)).resolves.toEqual({
+      currency: 'NGN',
+      deliveryFeeKobo: 25000,
+      serviceFeeKobo: 0,
+      discountKobo: 0,
+      foodSubtotalKobo: 500000,
+      items: [quoteItem],
+      totalKobo: 525000
+    });
+    expect(repository.findZoneDeliveryFeeKobo).toHaveBeenCalledWith(orderInput.locationId);
   });
 
   it('rejects quote items that are unavailable for the requested slot', async () => {

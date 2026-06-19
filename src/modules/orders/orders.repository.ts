@@ -66,6 +66,17 @@ export class OrdersRepository implements OrdersRepositoryContract {
     return { orderId };
   }
 
+  async findZoneDeliveryFeeKobo(locationId: string): Promise<number | null> {
+    const result = await sql<{ deliveryFeeKobo: number }>`
+      select cz.delivery_fee_kobo as "deliveryFeeKobo"
+      from public.campus_locations cl
+      join public.campus_zones cz on cz.id = cl.zone_id
+      where cl.id = ${locationId}::uuid
+    `.execute(this.database.db);
+
+    return result.rows[0]?.deliveryFeeKobo ?? null;
+  }
+
   async quoteOrder(input: CreateOrderDto): Promise<OrderQuoteItem[]> {
     const items = input.items.map((item) => ({
       menu_item_id: item.menuItemId,

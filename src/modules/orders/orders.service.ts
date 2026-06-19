@@ -44,12 +44,14 @@ export class OrdersService {
     const quotedItems = await this.repository.quoteOrder(input);
     this.assertAllItemsQuoted(input, quotedItems);
 
+    const zoneFeeKobo = await this.repository.findZoneDeliveryFeeKobo(input.locationId);
+
     const pricing = calculateOrderPricing({
       lines: quotedItems.map((item) => ({
         unitPriceCents: item.unitPriceKobo,
         quantity: item.quantity
       })),
-      deliveryFeeCents: this.env.get('DELIVERY_FEE_KOBO'),
+      deliveryFeeCents: zoneFeeKobo ?? this.env.get('DELIVERY_FEE_KOBO'),
       serviceFeeCents: this.env.get('SERVICE_FEE_KOBO')
     });
 
