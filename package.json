@@ -31,6 +31,7 @@
     "openapi:check": "pnpm openapi:generate && git diff --exit-code -- docs/openapi.json docs/openapi.yaml",
     "smoke:api": "node scripts/smoke-api.mjs",
     "smoke:production": "tsx scripts/smoke-production.ts",
+    "db:preflight": "tsx scripts/db-preflight.ts",
     "readiness:launch": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm test:no-skips && pnpm openapi:check && pnpm build && pnpm test:e2e:hosted && pnpm smoke:production",
     "supabase:start": "supabase start",
     "db:reset": "supabase db reset",
