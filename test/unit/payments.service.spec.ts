@@ -101,6 +101,15 @@ function createPaystack(): PaystackClientContract {
       reference: payment.providerReference,
       status: 'success',
       transactionId: '4099260516'
+    }),
+    createTransferRecipient: vi.fn().mockResolvedValue({
+      providerPayload: { status: true },
+      recipientCode: 'RCP_test'
+    }),
+    initiateTransfer: vi.fn().mockResolvedValue({
+      providerPayload: { status: true },
+      status: 'pending',
+      transferCode: 'TRF_test'
     })
   };
 }
