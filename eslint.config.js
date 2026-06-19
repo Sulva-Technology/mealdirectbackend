@@ -11,7 +11,8 @@ export default tseslint.config(
       'supabase/types/**',
       'eslint.config.js',
       'scripts/*.mjs',
-      'load/**/*.js'
+      'load/**/*.js',
+      'docs/api-docs/**'
     ]
   },
   js.configs.recommended,
