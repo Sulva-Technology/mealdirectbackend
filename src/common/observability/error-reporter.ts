@@ -1,6 +1,6 @@
-export interface ErrorReporter {
-  captureException(error: unknown): void;
-}
+export type ErrorReporter = {
+  captureException: (error: unknown) => void;
+};
 
 export class NoopErrorReporter implements ErrorReporter {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
