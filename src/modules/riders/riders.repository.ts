@@ -45,6 +45,7 @@ export class RidersRepository implements RidersRepositoryContract {
         r.phone,
         r.status::text as "status",
         r.active,
+        r.available,
         r.verified_at::text as "verifiedAt",
         r.created_at::text as "createdAt",
         r.updated_at::text as "updatedAt"
@@ -84,6 +85,36 @@ export class RidersRepository implements RidersRepositoryContract {
         phone,
         status::text as "status",
         active,
+        available,
+        verified_at::text as "verifiedAt",
+        created_at::text as "createdAt",
+        updated_at::text as "updatedAt"
+    `.execute(this.database.db);
+
+    return result.rows[0];
+  }
+
+  async setRiderAvailability(
+    riderId: string,
+    userId: string,
+    available: boolean
+  ): Promise<RiderProfile | undefined> {
+    const result = await sql<RiderProfile>`
+      update public.riders
+      set available = ${available},
+          updated_at = now()
+      where id = ${riderId}::uuid
+        and user_id = ${userId}::uuid
+      returning
+        id::text as "id",
+        campus_id::text as "campusId",
+        (select c.name from public.campuses c where c.id = riders.campus_id) as "campusName",
+        user_id::text as "userId",
+        display_name as "displayName",
+        phone,
+        status::text as "status",
+        active,
+        available,
         verified_at::text as "verifiedAt",
         created_at::text as "createdAt",
         updated_at::text as "updatedAt"

@@ -58,6 +58,7 @@ const envSchema = z
     SUPABASE_JWT_AUDIENCE: z.string().min(1).default('authenticated'),
     SUPABASE_ANON_KEY: z.string().min(1),
     SUPABASE_JWT_SECRET: optionalSecret,
+    SUPABASE_JWKS_URL: z.url().optional(),
     CORS_ALLOWED_ORIGINS: csvList.default(defaultCorsOrigins.split(',')),
     LOG_LEVEL: z.enum(['silent', 'debug', 'info', 'warn', 'error']).default('info'),
     BODY_LIMIT_BYTES: z.coerce.number().int().positive().max(10_485_760).default(1_048_576),
@@ -71,6 +72,8 @@ const envSchema = z
     WORKER_BATCH_SIZE: z.coerce.number().int().positive().default(10),
     WORKER_MAX_ATTEMPTS: z.coerce.number().int().positive().default(5),
     RESERVATION_TTL_SECONDS: z.coerce.number().int().positive().default(900),
+    DELIVERY_FEE_KOBO: z.coerce.number().int().nonnegative().default(15_000),
+    SERVICE_FEE_KOBO: z.coerce.number().int().nonnegative().default(0),
     PAYSTACK_BASE_URL: z.url().default('https://api.paystack.co'),
     PAYSTACK_SECRET_KEY: optionalSecret,
     PAYSTACK_WEBHOOK_INBOX_MODE: z.enum(['database', 'memory']).default('database'),
@@ -82,7 +85,8 @@ const envSchema = z
     EMAIL_FROM: z.string().min(1).default('Meal Direct <no-reply@mealdirect.com>'),
     FCM_PROJECT_ID: optionalSecret,
     FCM_CLIENT_EMAIL: optionalSecret,
-    FCM_PRIVATE_KEY: optionalSecret
+    FCM_PRIVATE_KEY: optionalSecret,
+    PAYOUTS_ENABLED: booleanFromString.default(false)
   })
   .superRefine((env, context) => {
     if ((env.NODE_ENV === 'production' || env.NODE_ENV === 'staging') && !env.DATABASE_SSL) {
@@ -102,11 +106,15 @@ const envSchema = z
         message: 'INTERNAL_OPERATIONS_TOKEN must be configured outside development and test'
       });
     }
-    if ((env.NODE_ENV === 'production' || env.NODE_ENV === 'staging') && !env.SUPABASE_JWT_SECRET) {
+    if (
+      (env.NODE_ENV === 'production' || env.NODE_ENV === 'staging') &&
+      !env.SUPABASE_JWT_SECRET &&
+      !env.SUPABASE_JWKS_URL
+    ) {
       context.addIssue({
         code: 'custom',
         path: ['SUPABASE_JWT_SECRET'],
-        message: 'SUPABASE_JWT_SECRET must be configured until JWKS verification is introduced'
+        message: 'SUPABASE_JWT_SECRET or SUPABASE_JWKS_URL must be configured outside development and test'
       });
     }
     if (

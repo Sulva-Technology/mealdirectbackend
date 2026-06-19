@@ -10,3 +10,6 @@ coverage/
 !.env.e2e.example
 !.env.production.example
 supabase/types/database.types.ts
+
+# Generated API docs build artifacts
+docs/api-docs/

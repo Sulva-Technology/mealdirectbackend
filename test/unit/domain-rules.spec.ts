@@ -74,9 +74,14 @@ describe('production domain rules', () => {
 
   it('allows only expected order status transitions', () => {
     expect(canTransitionOrderStatus('pending_payment', 'paid')).toBe(true);
+    expect(canTransitionOrderStatus('pending_payment', 'expired')).toBe(true);
     expect(canTransitionOrderStatus('paid', 'preparing')).toBe(false);
-    expect(canTransitionOrderStatus('completed', 'refunded')).toBe(false);
-    expect(canTransitionOrderStatus('escalated', 'refunded')).toBe(true);
+    expect(canTransitionOrderStatus('ready', 'out_for_delivery')).toBe(true);
+    expect(canTransitionOrderStatus('out_for_delivery', 'delivered')).toBe(true);
+    expect(canTransitionOrderStatus('delivered', 'administratively_completed')).toBe(true);
+    expect(canTransitionOrderStatus('confirmed', 'refunded')).toBe(true);
+    expect(canTransitionOrderStatus('administratively_completed', 'refunded')).toBe(true);
+    expect(canTransitionOrderStatus('refunded', 'paid')).toBe(false);
   });
 
   it('calculates delivery earnings and settlement payables', () => {
@@ -192,9 +197,33 @@ describe('production domain rules', () => {
     expect(
       mapPaystackEvent({ event: 'transfer.success', data: { reference: 'transfer-ref' } })
     ).toEqual({
+      type: 'TRANSFER_RECONCILED',
+      providerReference: 'transfer-ref',
+      status: 'success'
+    });
+
+    expect(
+      mapPaystackEvent({ event: 'transfer.failed', data: { reference: 'transfer-ref' } })
+    ).toEqual({
+      type: 'TRANSFER_RECONCILED',
+      providerReference: 'transfer-ref',
+      status: 'failed'
+    });
+
+    expect(
+      mapPaystackEvent({ event: 'transfer.reversed', data: { reference: 'transfer-ref' } })
+    ).toEqual({
+      type: 'TRANSFER_RECONCILED',
+      providerReference: 'transfer-ref',
+      status: 'reversed'
+    });
+
+    expect(
+      mapPaystackEvent({ event: 'unknown.event', data: { reference: 'r' } })
+    ).toEqual({
       type: 'IGNORED',
       reason: 'UNMAPPED_EVENT',
-      providerEvent: 'transfer.success'
+      providerEvent: 'unknown.event'
     });
   });
 });

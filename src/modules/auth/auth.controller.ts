@@ -20,7 +20,14 @@ import {
 
 import type { AuthenticatedActor } from './actor-context.js';
 import { CurrentActor } from './current-actor.decorator.js';
-import { AuthTokensResponseDto, LoginDto, RefreshDto, SignUpDto } from './dto/auth.dto.js';
+import {
+  AuthMessageResponseDto,
+  AuthTokensResponseDto,
+  EmailRequestDto,
+  LoginDto,
+  RefreshDto,
+  SignUpDto
+} from './dto/auth.dto.js';
 import { JwtAuthGuard } from './jwt-auth.guard.js';
 import { SupabaseAuthService } from './supabase-auth.service.js';
 
@@ -36,7 +43,7 @@ export class AuthController {
   @ApiCreatedResponse({ type: AuthTokensResponseDto, description: 'Customer registered successfully.' })
   @ApiBadRequestResponse({ description: 'Registration failed due to invalid input or duplicate email.' })
   async customerSignUp(@Body() dto: SignUpDto): Promise<AuthTokensResponseDto> {
-    return this.authService.signUp(dto.email, dto.password, 'customer', dto.fullName, dto.redirectTo);
+    return this.authService.signUp(dto.email, dto.password, 'customer');
   }
 
   @Post('customer/login')
@@ -52,7 +59,7 @@ export class AuthController {
   @ApiCreatedResponse({ type: AuthTokensResponseDto, description: 'Vendor registered successfully.' })
   @ApiBadRequestResponse({ description: 'Registration failed.' })
   async vendorSignUp(@Body() dto: SignUpDto): Promise<AuthTokensResponseDto> {
-    return this.authService.signUp(dto.email, dto.password, 'vendor', dto.fullName, dto.redirectTo);
+    return this.authService.signUp(dto.email, dto.password, 'vendor');
   }
 
   @Post('vendor/login')
@@ -68,7 +75,7 @@ export class AuthController {
   @ApiCreatedResponse({ type: AuthTokensResponseDto, description: 'Rider registered successfully.' })
   @ApiBadRequestResponse({ description: 'Registration failed.' })
   async riderSignUp(@Body() dto: SignUpDto): Promise<AuthTokensResponseDto> {
-    return this.authService.signUp(dto.email, dto.password, 'rider', dto.fullName, dto.redirectTo);
+    return this.authService.signUp(dto.email, dto.password, 'rider');
   }
 
   @Post('rider/login')
@@ -95,6 +102,28 @@ export class AuthController {
   @ApiUnauthorizedResponse({ description: 'Invalid refresh token.' })
   async refresh(@Body() dto: RefreshDto): Promise<AuthTokensResponseDto> {
     return this.authService.refresh(dto.refreshToken);
+  }
+
+  @Post('password-reset')
+  @HttpCode(200)
+  @ApiOkResponse({
+    type: AuthMessageResponseDto,
+    description: 'A password reset email is sent if the account exists (non-enumerating).'
+  })
+  async requestPasswordReset(@Body() dto: EmailRequestDto): Promise<AuthMessageResponseDto> {
+    await this.authService.requestPasswordReset(dto.email);
+    return { message: 'If an account exists for that email, a password reset link has been sent.' };
+  }
+
+  @Post('resend-confirmation')
+  @HttpCode(200)
+  @ApiOkResponse({
+    type: AuthMessageResponseDto,
+    description: 'A confirmation email is resent if the account is unconfirmed (non-enumerating).'
+  })
+  async resendConfirmation(@Body() dto: EmailRequestDto): Promise<AuthMessageResponseDto> {
+    await this.authService.resendConfirmation(dto.email);
+    return { message: 'If an account exists for that email, a confirmation link has been sent.' };
   }
 
   @ApiBearerAuth('supabaseAuth')

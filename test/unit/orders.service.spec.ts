@@ -3,12 +3,21 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { AuthenticatedActor } from '../../src/modules/auth/actor-context.js';
 import type { CreateOrderDto } from '../../src/modules/orders/dto/create-order.dto.js';
+import type { EnvService } from '../../src/config/env.service.js';
 import { OrdersService } from '../../src/modules/orders/orders.service.js';
 import type {
   OrderDetail,
   OrderQuoteItem,
   OrdersRepositoryContract
 } from '../../src/modules/orders/orders.types.js';
+
+function createEnv(overrides: { DELIVERY_FEE_KOBO?: number; SERVICE_FEE_KOBO?: number } = {}): EnvService {
+  const values: Record<string, number> = {
+    DELIVERY_FEE_KOBO: overrides.DELIVERY_FEE_KOBO ?? 15000,
+    SERVICE_FEE_KOBO: overrides.SERVICE_FEE_KOBO ?? 0
+  };
+  return { get: (key: string) => values[key] } as unknown as EnvService;
+}
 
 const customer: AuthenticatedActor = {
   userId: '11111111-1111-4111-8111-111111111111',
@@ -79,7 +88,8 @@ function createRepository(): OrdersRepositoryContract {
       payment: null
     }),
     listCustomerOrders: vi.fn().mockResolvedValue([orderDetail]),
-    quoteOrder: vi.fn().mockResolvedValue([quoteItem])
+    quoteOrder: vi.fn().mockResolvedValue([quoteItem]),
+    findZoneDeliveryFeeKobo: vi.fn().mockResolvedValue(null)
   };
 }
 
@@ -89,18 +99,48 @@ describe('OrdersService', () => {
 
   beforeEach(() => {
     repository = createRepository();
-    service = new OrdersService(repository);
+    service = new OrdersService(repository, createEnv());
   });
 
   it('quotes order totals from available menu items', async () => {
     await expect(service.quoteOrder(customer, orderInput)).resolves.toEqual({
       currency: 'NGN',
       deliveryFeeKobo: 15000,
+      serviceFeeKobo: 0,
       discountKobo: 0,
       foodSubtotalKobo: 500000,
       items: [quoteItem],
       totalKobo: 515000
     });
+  });
+
+  it('includes the configured service fee in the quote total', async () => {
+    service = new OrdersService(repository, createEnv({ SERVICE_FEE_KOBO: 5000 }));
+
+    await expect(service.quoteOrder(customer, orderInput)).resolves.toEqual({
+      currency: 'NGN',
+      deliveryFeeKobo: 15000,
+      serviceFeeKobo: 5000,
+      discountKobo: 0,
+      foodSubtotalKobo: 500000,
+      items: [quoteItem],
+      totalKobo: 520000
+    });
+  });
+
+  it('prefers the zone delivery fee over the configured fallback', async () => {
+    vi.mocked(repository.findZoneDeliveryFeeKobo).mockResolvedValue(25000);
+
+    await expect(service.quoteOrder(customer, orderInput)).resolves.toEqual({
+      currency: 'NGN',
+      deliveryFeeKobo: 25000,
+      serviceFeeKobo: 0,
+      discountKobo: 0,
+      foodSubtotalKobo: 500000,
+      items: [quoteItem],
+      totalKobo: 525000
+    });
+    expect(repository.findZoneDeliveryFeeKobo).toHaveBeenCalledWith(orderInput.locationId);
   });
 
   it('rejects quote items that are unavailable for the requested slot', async () => {

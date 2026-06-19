@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsString, MinLength } from 'class-validator';
 
 function trimString(value: unknown): unknown {
   return typeof value === 'string' ? value.trim() : value;
@@ -16,17 +16,6 @@ export class SignUpDto {
   @IsString()
   @MinLength(6)
   password!: string;
-
-  @ApiPropertyOptional({ type: String, example: 'John Doe', description: 'The full name of the user.' })
-  @IsOptional()
-  @Transform(({ value }) => trimString(value))
-  @IsString()
-  fullName?: string;
-
-  @ApiPropertyOptional({ type: String, example: 'http://localhost:3000/auth/callback', description: 'Redirect URL after clicking email confirmation.' })
-  @IsOptional()
-  @IsString()
-  redirectTo?: string;
 }
 
 export class LoginDto {
@@ -46,6 +35,18 @@ export class RefreshDto {
   @IsString()
   @MinLength(1)
   refreshToken!: string;
+}
+
+export class EmailRequestDto {
+  @ApiProperty({ type: String, example: 'user@example.com', description: 'The email address of the user.' })
+  @Transform(({ value }) => trimString(value))
+  @IsEmail()
+  email!: string;
+}
+
+export class AuthMessageResponseDto {
+  @ApiProperty({ type: String, description: 'A non-enumerating confirmation message.' })
+  message!: string;
 }
 
 export class AuthUserDto {

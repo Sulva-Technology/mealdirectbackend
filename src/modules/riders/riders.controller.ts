@@ -30,6 +30,7 @@ import { RequireRoles } from '../auth/roles.decorator.js';
 import { RolesGuard } from '../auth/roles.guard.js';
 import {
   CreateRiderIssueDto,
+  RiderAvailabilityDto,
   RiderAssignmentDetailEnvelopeDto,
   RiderAssignmentIdParamDto,
   RiderAssignmentListEnvelopeDto,
@@ -85,6 +86,19 @@ export class RidersController {
     @Body() input: RiderProfileUpdateDto
   ): Promise<SuccessEnvelope<RiderProfile>> {
     return createSuccessEnvelope(await this.riders.updateProfile(actor, input));
+  }
+
+  @Patch('availability')
+  @ApiOkResponse({
+    description: 'Updated rider availability flag.',
+    type: RiderProfileEnvelopeDto
+  })
+  @ApiBadRequestResponse({ description: 'Invalid availability input.' })
+  async setAvailability(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Body() input: RiderAvailabilityDto
+  ): Promise<SuccessEnvelope<RiderProfile>> {
+    return createSuccessEnvelope(await this.riders.setAvailability(actor, input.available));
   }
 
   @Get('assignments')

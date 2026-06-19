@@ -42,6 +42,7 @@ async function signToken(role: string): Promise<string> {
 
 const profile: RiderProfile = {
   active: true,
+  available: false,
   campusId: '77777777-7777-4777-8777-777777777777',
   campusName: 'Venite University',
   createdAt: '2026-06-15T09:00:00.000Z',
@@ -233,6 +234,7 @@ describe('rider API', () => {
     const token = await signToken('rider');
     vi.spyOn(service, 'getProfile').mockResolvedValue(profile);
     vi.spyOn(service, 'updateProfile').mockResolvedValue(profile);
+    vi.spyOn(service, 'setAvailability').mockResolvedValue({ ...profile, available: true });
     vi.spyOn(service, 'listAssignments').mockResolvedValue({
       items: [assignment],
       pagination: { hasMore: false, limit: 20 }
@@ -270,6 +272,15 @@ describe('rider API', () => {
     });
     expect(profileResponse.statusCode).toBe(200);
     expect(profileResponse.json<{ data: RiderProfile }>().data.id).toBe(riderId);
+
+    const availabilityResponse = await app.inject({
+      method: 'PATCH',
+      url: '/v1/rider/availability',
+      headers: { authorization: `Bearer ${token}` },
+      payload: { available: true }
+    });
+    expect(availabilityResponse.statusCode).toBe(200);
+    expect(availabilityResponse.json<{ data: RiderProfile }>().data.available).toBe(true);
 
     const assignmentsResponse = await app.inject({
       method: 'GET',

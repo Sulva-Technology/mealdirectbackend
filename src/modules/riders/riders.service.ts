@@ -95,6 +95,19 @@ export class RidersService {
     return updated;
   }
 
+  async setAvailability(actor: AuthenticatedActor, available: boolean): Promise<RiderProfile> {
+    const profile = await this.resolveRiderProfile(actor, { requireActiveVerified: true });
+    const updated = await this.repository.setRiderAvailability(
+      profile.id,
+      actor.userId,
+      available
+    );
+    if (updated === undefined) {
+      throw notFound('Rider profile was not found.');
+    }
+    return updated;
+  }
+
   async listAssignments(
     actor: AuthenticatedActor,
     query: RiderAssignmentListQueryDto

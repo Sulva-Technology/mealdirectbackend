@@ -183,6 +183,50 @@ describe('Supabase JWT authentication', () => {
       expect(refreshSpy).toHaveBeenCalledWith('old-refresh-token');
     });
 
+    it('password-reset returns 200 with a non-enumerating message', async () => {
+      const authService = app.get(SupabaseAuthService);
+      const resetSpy = vi
+        .spyOn(authService, 'requestPasswordReset')
+        .mockResolvedValue(undefined);
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/v1/auth/password-reset',
+        payload: { email: 'test@example.com' }
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json<{ message: string }>().message).toMatch(/password reset/i);
+      expect(resetSpy).toHaveBeenCalledWith('test@example.com');
+    });
+
+    it('password-reset validates the email shape', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/v1/auth/password-reset',
+        payload: { email: 'not-an-email' }
+      });
+
+      expect(response.statusCode).toBe(400);
+    });
+
+    it('resend-confirmation returns 200 with a non-enumerating message', async () => {
+      const authService = app.get(SupabaseAuthService);
+      const resendSpy = vi
+        .spyOn(authService, 'resendConfirmation')
+        .mockResolvedValue(undefined);
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/v1/auth/resend-confirmation',
+        payload: { email: 'test@example.com' }
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json<{ message: string }>().message).toMatch(/confirmation/i);
+      expect(resendSpy).toHaveBeenCalledWith('test@example.com');
+    });
+
     it('logout returns 200', async () => {
       const authService = app.get(SupabaseAuthService);
       const signOutSpy = vi.spyOn(authService, 'signOut').mockResolvedValue(undefined);

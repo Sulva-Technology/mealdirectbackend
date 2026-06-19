@@ -37,25 +37,16 @@ export class SupabaseAuthService {
   async signUp(
     email: string,
     password: string,
-    role: string,
-    fullName?: string,
-    redirectTo?: string
+    role: string
   ): Promise<AuthTokensResponseDto> {
-    const options: { emailRedirectTo?: string; data: Record<string, unknown> } = {
-      data: {
-        meal_direct_role: role,
-        ...(fullName ? { full_name: fullName } : {})
-      }
-    };
-
-    if (redirectTo) {
-      options.emailRedirectTo = redirectTo;
-    }
-
     const { data, error } = await this.getClient().auth.signUp({
       email,
       password,
-      options
+      options: {
+        data: {
+          meal_direct_role: role
+        }
+      }
     });
 
     if (error) {
@@ -180,6 +171,23 @@ export class SupabaseAuthService {
         role
       }
     };
+  }
+
+  async requestPasswordReset(email: string): Promise<void> {
+    // Swallow provider errors so the response never reveals whether an account exists.
+    try {
+      await this.getClient().auth.resetPasswordForEmail(email);
+    } catch {
+      // intentionally ignored to prevent user enumeration
+    }
+  }
+
+  async resendConfirmation(email: string): Promise<void> {
+    try {
+      await this.getClient().auth.resend({ type: 'signup', email });
+    } catch {
+      // intentionally ignored to prevent user enumeration
+    }
   }
 
   async signOut(accessToken: string): Promise<void> {

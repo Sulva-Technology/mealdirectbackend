@@ -18,6 +18,7 @@ export type RiderProfile = {
   phone: string;
   status: RiderStatus;
   active: boolean;
+  available: boolean;
   verifiedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -158,6 +159,11 @@ export type RidersRepositoryContract = {
     riderId: string,
     userId: string,
     input: RiderProfileUpdateInput
+  ) => Promise<RiderProfile | undefined>;
+  setRiderAvailability: (
+    riderId: string,
+    userId: string,
+    available: boolean
   ) => Promise<RiderProfile | undefined>;
   assertRiderAccess: (riderId: string, userId: string) => Promise<boolean>;
   listAssignments: (

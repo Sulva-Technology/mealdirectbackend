@@ -35,6 +35,7 @@ export type OrderQuote = {
   currency: 'NGN';
   foodSubtotalKobo: number;
   deliveryFeeKobo: number;
+  serviceFeeKobo: number;
   discountKobo: number;
   totalKobo: number;
   items: OrderQuoteItem[];
@@ -112,6 +113,7 @@ export type OrdersRepositoryContract = {
     requestHash: string
   ) => Promise<{ orderId: string }>;
   quoteOrder: (input: CreateOrderDto) => Promise<OrderQuoteItem[]>;
+  findZoneDeliveryFeeKobo: (locationId: string) => Promise<number | null>;
   listCustomerOrders: (customerId: string, filters: OrderListFilters) => Promise<OrderSummary[]>;
   findCustomerOrderById: (customerId: string, orderId: string) => Promise<OrderDetail | undefined>;
   findPaymentStatus: (

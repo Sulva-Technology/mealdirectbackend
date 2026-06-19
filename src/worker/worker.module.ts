@@ -8,6 +8,8 @@ import { DeviceTokensRepository } from '../modules/notifications/device-tokens.r
 import { EmailChannel } from '../notifications/channels/email.channel.js';
 import { PushChannel } from '../notifications/channels/push.channel.js';
 import { HandlerRegistry } from './handler-registry.js';
+import { AutoDispatchHandler } from './handlers/auto-dispatch.handler.js';
+import { DispatchReadsRepository } from './handlers/dispatch-reads.repository.js';
 import { NotificationDispatchHandler } from './handlers/notification-dispatch.handler.js';
 import { NotificationReadsRepository } from './handlers/notification-reads.repository.js';
 import { OutboxProcessor } from './outbox-processor.js';
@@ -19,6 +21,7 @@ import { createEmailTransport, createPushSender } from './transports.js';
   providers: [
     OutboxRepository,
     NotificationReadsRepository,
+    DispatchReadsRepository,
     DeviceTokensRepository,
     {
       provide: EmailChannel,
@@ -42,15 +45,25 @@ import { createEmailTransport, createPushSender } from './transports.js';
       inject: [NotificationReadsRepository, EmailChannel, PushChannel]
     },
     {
+      provide: AutoDispatchHandler,
+      useFactory: (reads: DispatchReadsRepository): AutoDispatchHandler =>
+        new AutoDispatchHandler(reads),
+      inject: [DispatchReadsRepository]
+    },
+    {
       provide: HandlerRegistry,
-      useFactory: (dispatch: NotificationDispatchHandler): HandlerRegistry => {
+      useFactory: (
+        dispatch: NotificationDispatchHandler,
+        autoDispatch: AutoDispatchHandler
+      ): HandlerRegistry => {
         const registry = new HandlerRegistry();
         for (const prefix of ['order.', 'payment.', 'settlement.']) {
           registry.registerPrefix(prefix, dispatch.handle);
         }
+        registry.register('order.ready', autoDispatch.handle);
         return registry;
       },
-      inject: [NotificationDispatchHandler]
+      inject: [NotificationDispatchHandler, AutoDispatchHandler]
     },
     {
       provide: OutboxProcessor,

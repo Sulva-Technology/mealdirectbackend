@@ -180,6 +180,40 @@
         "tags": ["auth"]
       }
     },
+    "/v1/auth/password-reset": {
+      "post": {
+        "operationId": "AuthController_requestPasswordReset",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "A password reset email is sent if the account exists (non-enumerating).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthMessageResponseDto" }
+              }
+            }
+          }
+        },
+        "tags": ["auth"]
+      }
+    },
+    "/v1/auth/resend-confirmation": {
+      "post": {
+        "operationId": "AuthController_resendConfirmation",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "A confirmation email is resent if the account is unconfirmed (non-enumerating).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthMessageResponseDto" }
+              }
+            }
+          }
+        },
+        "tags": ["auth"]
+      }
+    },
     "/v1/auth/logout": {
       "post": {
         "operationId": "AuthController_logout",
@@ -1512,6 +1546,44 @@
         "tags": ["payments"]
       }
     },
+    "/v1/promotions/validate": {
+      "post": {
+        "operationId": "PromotionsController_validate",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Validated the promotion code and returned the discount in kobo."
+          }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["promotions"]
+      }
+    },
+    "/v1/admin/promotions": {
+      "post": {
+        "operationId": "AdminPromotionsController_create",
+        "parameters": [],
+        "responses": { "200": { "description": "Created a promotion code." } },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["promotions"]
+      },
+      "get": {
+        "operationId": "AdminPromotionsController_list",
+        "parameters": [],
+        "responses": { "200": { "description": "Listed all promotion codes." } },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["promotions"]
+      }
+    },
+    "/v1/admin/promotions/{id}/deactivate": {
+      "post": {
+        "operationId": "AdminPromotionsController_deactivate",
+        "parameters": [],
+        "responses": { "200": { "description": "Deactivated a promotion code." } },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["promotions"]
+      }
+    },
     "/v1/vendor/batches": {
       "get": {
         "operationId": "VendorBatchesController_listBatches",
@@ -1652,6 +1724,27 @@
             }
           },
           "400": { "description": "Invalid profile input." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Verified active rider access is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["rider"]
+      }
+    },
+    "/v1/rider/availability": {
+      "patch": {
+        "operationId": "RidersController_setAvailability",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Updated rider availability flag.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RiderProfileEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid availability input." },
           "401": { "description": "Missing, invalid, or expired Supabase JWT." },
           "403": { "description": "Verified active rider access is required." }
         },
@@ -1959,6 +2052,19 @@
         "parameters": [],
         "responses": {
           "201": { "description": "Rider daily settlement was generated idempotently." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["settlements"]
+      }
+    },
+    "/v1/settlements/{settlementId}/pay": {
+      "post": {
+        "operationId": "SettlementsController_paySettlement",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Initiated (or returned the existing) automated payout transfer for a settlement."
+          }
         },
         "security": [{ "supabaseAuth": [] }],
         "tags": ["settlements"]
@@ -2938,6 +3044,32 @@
         "tags": ["notifications"]
       }
     },
+    "/v1/me/device-tokens": {
+      "post": {
+        "operationId": "DeviceTokensController_register",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Registers (or refreshes) a push device token for the current user."
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["notifications"]
+      }
+    },
+    "/v1/me/device-tokens/{token}": {
+      "delete": {
+        "operationId": "DeviceTokensController_remove",
+        "parameters": [],
+        "responses": {
+          "204": { "description": "Unregisters a push device token for the current user." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["notifications"]
+      }
+    },
     "/v1/admin/system": {
       "get": {
         "operationId": "JobsController_getSystemSummary",
@@ -3048,6 +3180,13 @@
           }
         },
         "required": ["user"]
+      },
+      "AuthMessageResponseDto": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string", "description": "A non-enumerating confirmation message." }
+        },
+        "required": ["message"]
       },
       "MeActorDto": {
         "type": "object",
@@ -4031,6 +4170,7 @@
           "currency": { "type": "string" },
           "foodSubtotalKobo": { "type": "number" },
           "deliveryFeeKobo": { "type": "number" },
+          "serviceFeeKobo": { "type": "number" },
           "discountKobo": { "type": "number" },
           "totalKobo": { "type": "number" },
           "items": {
@@ -4042,6 +4182,7 @@
           "currency",
           "foodSubtotalKobo",
           "deliveryFeeKobo",
+          "serviceFeeKobo",
           "discountKobo",
           "totalKobo",
           "items"

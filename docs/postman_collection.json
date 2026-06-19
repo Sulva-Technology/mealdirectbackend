@@ -309,10 +309,22 @@
                           {
                             "key": "Accept",
                             "value": "application/json"
+                          },
+                          {
+                            "key": "Content-Type",
+                            "value": "application/json"
                           }
                         ],
                         "method": "POST",
-                        "body": {},
+                        "body": {
+                          "mode": "raw",
+                          "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123!\"\n}",
+                          "options": {
+                            "raw": {
+                              "language": "json"
+                            }
+                          }
+                        },
                         "auth": null
                       },
                       "response": [
@@ -340,7 +352,15 @@
                               }
                             ],
                             "method": "POST",
-                            "body": {}
+                            "body": {
+                              "mode": "raw",
+                              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123!\"\n}",
+                              "options": {
+                                "raw": {
+                                  "language": "json"
+                                }
+                              }
+                            }
                           },
                           "status": "Created",
                           "code": 201,
@@ -372,7 +392,15 @@
                               "variable": []
                             },
                             "method": "POST",
-                            "body": {}
+                            "body": {
+                              "mode": "raw",
+                              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123!\"\n}",
+                              "options": {
+                                "raw": {
+                                  "language": "json"
+                                }
+                              }
+                            }
                           },
                           "status": "Bad Request",
                           "code": 400,
@@ -415,10 +443,22 @@
                           {
                             "key": "Accept",
                             "value": "application/json"
+                          },
+                          {
+                            "key": "Content-Type",
+                            "value": "application/json"
                           }
                         ],
                         "method": "POST",
-                        "body": {},
+                        "body": {
+                          "mode": "raw",
+                          "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123!\"\n}",
+                          "options": {
+                            "raw": {
+                              "language": "json"
+                            }
+                          }
+                        },
                         "auth": null
                       },
                       "response": [
@@ -446,7 +486,15 @@
                               }
                             ],
                             "method": "POST",
-                            "body": {}
+                            "body": {
+                              "mode": "raw",
+                              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123!\"\n}",
+                              "options": {
+                                "raw": {
+                                  "language": "json"
+                                }
+                              }
+                            }
                           },
                           "status": "OK",
                           "code": 200,
@@ -478,7 +526,15 @@
                               "variable": []
                             },
                             "method": "POST",
-                            "body": {}
+                            "body": {
+                              "mode": "raw",
+                              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123!\"\n}",
+                              "options": {
+                                "raw": {
+                                  "language": "json"
+                                }
+                              }
+                            }
                           },
                           "status": "Unauthorized",
                           "code": 401,
@@ -504,7 +560,15 @@
                               "variable": []
                             },
                             "method": "POST",
-                            "body": {}
+                            "body": {
+                              "mode": "raw",
+                              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123!\"\n}",
+                              "options": {
+                                "raw": {
+                                  "language": "json"
+                                }
+                              }
+                            }
                           },
                           "status": "Forbidden",
                           "code": 403,
@@ -553,10 +617,22 @@
                           {
                             "key": "Accept",
                             "value": "application/json"
+                          },
+                          {
+                            "key": "Content-Type",
+                            "value": "application/json"
                           }
                         ],
                         "method": "POST",
-                        "body": {},
+                        "body": {
+                          "mode": "raw",
+                          "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123!\"\n}",
+                          "options": {
+                            "raw": {
+                              "language": "json"
+                            }
+                          }
+                        },
                         "auth": null
                       },
                       "response": [
@@ -584,7 +660,15 @@
                               }
                             ],
                             "method": "POST",
-                            "body": {}
+                            "body": {
+                              "mode": "raw",
+                              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123!\"\n}",
+                              "options": {
+                                "raw": {
+                                  "language": "json"
+                                }
+                              }
+                            }
                           },
                           "status": "Created",
                           "code": 201,
@@ -616,7 +700,15 @@
                               "variable": []
                             },
                             "method": "POST",
-                            "body": {}
+                            "body": {
+                              "mode": "raw",
+                              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123!\"\n}",
+                              "options": {
+                                "raw": {
+                                  "language": "json"
+                                }
+                              }
+                            }
                           },
                           "status": "Bad Request",
                           "code": 400,
@@ -659,10 +751,22 @@
                           {
                             "key": "Accept",
                             "value": "application/json"
+                          },
+                          {
+                            "key": "Content-Type",
+                            "value": "application/json"
                           }
                         ],
                         "method": "POST",
-                        "body": {},
+                        "body": {
+                          "mode": "raw",
+                          "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123!\"\n}",
+                          "options": {
+                            "raw": {
+                              "language": "json"
+                            }
+                          }
+                        },
                         "auth": null
                       },
                       "response": [
@@ -690,7 +794,15 @@
                               }
                             ],
                             "method": "POST",
-                            "body": {}
+                            "body": {
+                              "mode": "raw",
+                              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123!\"\n}",
+                              "options": {
+                                "raw": {
+                                  "language": "json"
+                                }
+                              }
+                            }
                           },
                           "status": "OK",
                           "code": 200,
@@ -722,7 +834,15 @@
                               "variable": []
                             },
                             "method": "POST",
-                            "body": {}
+                            "body": {
+                              "mode": "raw",
+                              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123!\"\n}",
+                              "options": {
+                                "raw": {
+                                  "language": "json"
+                                }
+                              }
+                            }
                           },
                           "status": "Unauthorized",
                           "code": 401,
@@ -748,7 +868,15 @@
                               "variable": []
                             },
                             "method": "POST",
-                            "body": {}
+                            "body": {
+                              "mode": "raw",
+                              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123!\"\n}",
+                              "options": {
+                                "raw": {
+                                  "language": "json"
+                                }
+                              }
+                            }
                           },
                           "status": "Forbidden",
                           "code": 403,
@@ -797,10 +925,22 @@
                           {
                             "key": "Accept",
                             "value": "application/json"
+                          },
+                          {
+                            "key": "Content-Type",
+                            "value": "application/json"
                           }
                         ],
                         "method": "POST",
-                        "body": {},
+                        "body": {
+                          "mode": "raw",
+                          "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123!\"\n}",
+                          "options": {
+                            "raw": {
+                              "language": "json"
+                            }
+                          }
+                        },
                         "auth": null
                       },
                       "response": [
@@ -828,7 +968,15 @@
                               }
                             ],
                             "method": "POST",
-                            "body": {}
+                            "body": {
+                              "mode": "raw",
+                              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123!\"\n}",
+                              "options": {
+                                "raw": {
+                                  "language": "json"
+                                }
+                              }
+                            }
                           },
                           "status": "Created",
                           "code": 201,
@@ -860,7 +1008,15 @@
                               "variable": []
                             },
                             "method": "POST",
-                            "body": {}
+                            "body": {
+                              "mode": "raw",
+                              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123!\"\n}",
+                              "options": {
+                                "raw": {
+                                  "language": "json"
+                                }
+                              }
+                            }
                           },
                           "status": "Bad Request",
                           "code": 400,
@@ -903,10 +1059,22 @@
                           {
                             "key": "Accept",
                             "value": "application/json"
+                          },
+                          {
+                            "key": "Content-Type",
+                            "value": "application/json"
                           }
                         ],
                         "method": "POST",
-                        "body": {},
+                        "body": {
+                          "mode": "raw",
+                          "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123!\"\n}",
+                          "options": {
+                            "raw": {
+                              "language": "json"
+                            }
+                          }
+                        },
                         "auth": null
                       },
                       "response": [
@@ -934,7 +1102,15 @@
                               }
                             ],
                             "method": "POST",
-                            "body": {}
+                            "body": {
+                              "mode": "raw",
+                              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123!\"\n}",
+                              "options": {
+                                "raw": {
+                                  "language": "json"
+                                }
+                              }
+                            }
                           },
                           "status": "OK",
                           "code": 200,
@@ -966,7 +1142,15 @@
                               "variable": []
                             },
                             "method": "POST",
-                            "body": {}
+                            "body": {
+                              "mode": "raw",
+                              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123!\"\n}",
+                              "options": {
+                                "raw": {
+                                  "language": "json"
+                                }
+                              }
+                            }
                           },
                           "status": "Unauthorized",
                           "code": 401,
@@ -992,7 +1176,15 @@
                               "variable": []
                             },
                             "method": "POST",
-                            "body": {}
+                            "body": {
+                              "mode": "raw",
+                              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123!\"\n}",
+                              "options": {
+                                "raw": {
+                                  "language": "json"
+                                }
+                              }
+                            }
                           },
                           "status": "Forbidden",
                           "code": 403,
@@ -1041,10 +1233,22 @@
                           {
                             "key": "Accept",
                             "value": "application/json"
+                          },
+                          {
+                            "key": "Content-Type",
+                            "value": "application/json"
                           }
                         ],
                         "method": "POST",
-                        "body": {},
+                        "body": {
+                          "mode": "raw",
+                          "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123!\"\n}",
+                          "options": {
+                            "raw": {
+                              "language": "json"
+                            }
+                          }
+                        },
                         "auth": null
                       },
                       "response": [
@@ -1072,7 +1276,15 @@
                               }
                             ],
                             "method": "POST",
-                            "body": {}
+                            "body": {
+                              "mode": "raw",
+                              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123!\"\n}",
+                              "options": {
+                                "raw": {
+                                  "language": "json"
+                                }
+                              }
+                            }
                           },
                           "status": "OK",
                           "code": 200,
@@ -1104,7 +1316,15 @@
                               "variable": []
                             },
                             "method": "POST",
-                            "body": {}
+                            "body": {
+                              "mode": "raw",
+                              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123!\"\n}",
+                              "options": {
+                                "raw": {
+                                  "language": "json"
+                                }
+                              }
+                            }
                           },
                           "status": "Unauthorized",
                           "code": 401,
@@ -1130,7 +1350,15 @@
                               "variable": []
                             },
                             "method": "POST",
-                            "body": {}
+                            "body": {
+                              "mode": "raw",
+                              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"Password123!\"\n}",
+                              "options": {
+                                "raw": {
+                                  "language": "json"
+                                }
+                              }
+                            }
                           },
                           "status": "Forbidden",
                           "code": 403,
@@ -1174,10 +1402,22 @@
                       {
                         "key": "Accept",
                         "value": "application/json"
+                      },
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
                       }
                     ],
                     "method": "POST",
-                    "body": {},
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"refreshToken\": \"<paste-refresh-token-here>\"\n}",
+                      "options": {
+                        "raw": {
+                          "language": "json"
+                        }
+                      }
+                    },
                     "auth": null
                   },
                   "response": [
@@ -1204,7 +1444,15 @@
                           }
                         ],
                         "method": "POST",
-                        "body": {}
+                        "body": {
+                          "mode": "raw",
+                          "raw": "{\n  \"refreshToken\": \"<paste-refresh-token-here>\"\n}",
+                          "options": {
+                            "raw": {
+                              "language": "json"
+                            }
+                          }
+                        }
                       },
                       "status": "OK",
                       "code": 200,
@@ -1235,7 +1483,15 @@
                           "variable": []
                         },
                         "method": "POST",
-                        "body": {}
+                        "body": {
+                          "mode": "raw",
+                          "raw": "{\n  \"refreshToken\": \"<paste-refresh-token-here>\"\n}",
+                          "options": {
+                            "raw": {
+                              "language": "json"
+                            }
+                          }
+                        }
                       },
                       "status": "Unauthorized",
                       "code": 401,

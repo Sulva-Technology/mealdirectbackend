@@ -6,8 +6,12 @@ import type {
   PaystackClientContract,
   PaystackInitializeInput,
   PaystackInitializeResult,
+  PaystackRecipientInput,
+  PaystackRecipientResult,
   PaystackRefundInput,
   PaystackRefundResult,
+  PaystackTransferInput,
+  PaystackTransferResult,
   PaystackVerifyResult
 } from './payments.types.js';
 
@@ -138,6 +142,57 @@ export class PaystackClient implements PaystackClientContract {
       providerPayload: this.providerPayload(envelope),
       status
     };
+  }
+
+  async createTransferRecipient(
+    input: PaystackRecipientInput
+  ): Promise<PaystackRecipientResult> {
+    const envelope = await this.request('/transferrecipient', {
+      method: 'POST',
+      body: JSON.stringify({
+        type: 'nuban',
+        name: input.name,
+        account_number: input.accountNumber,
+        bank_code: input.bankCode,
+        currency: input.currency
+      })
+    });
+
+    if (!isRecord(envelope.data)) {
+      throw badGateway('Paystack recipient returned an invalid response.');
+    }
+
+    const recipientCode = stringFrom(envelope.data.recipient_code);
+    if (recipientCode === undefined) {
+      throw badGateway('Paystack recipient response was missing a code.');
+    }
+
+    return { providerPayload: this.providerPayload(envelope), recipientCode };
+  }
+
+  async initiateTransfer(input: PaystackTransferInput): Promise<PaystackTransferResult> {
+    const envelope = await this.request('/transfer', {
+      method: 'POST',
+      body: JSON.stringify({
+        source: 'balance',
+        amount: input.amountKobo,
+        recipient: input.recipientCode,
+        reference: input.reference,
+        reason: input.reason
+      })
+    });
+
+    if (!isRecord(envelope.data)) {
+      throw badGateway('Paystack transfer returned an invalid response.');
+    }
+
+    const transferCode = stringFrom(envelope.data.transfer_code);
+    const status = stringFrom(envelope.data.status) ?? 'pending';
+    if (transferCode === undefined) {
+      throw badGateway('Paystack transfer response was missing a code.');
+    }
+
+    return { providerPayload: this.providerPayload(envelope), status, transferCode };
   }
 
   private async request(path: string, init: RequestInit): Promise<PaystackEnvelope> {

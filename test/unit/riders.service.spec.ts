@@ -35,6 +35,7 @@ const customer: AuthenticatedActor = {
 
 const profile: RiderProfile = {
   active: true,
+  available: false,
   campusId: '77777777-7777-4777-8777-777777777777',
   campusName: 'Venite University',
   createdAt: '2026-06-15T09:00:00.000Z',
@@ -167,6 +168,7 @@ function createRepository(): MockRidersRepository {
     listAssignments: vi.fn().mockResolvedValue([assignment]),
     listRiderSettlements: vi.fn().mockResolvedValue([settlement]),
     markAssignmentPickedUp: vi.fn().mockResolvedValue({ ...assignment, status: 'picked_up' }),
+    setRiderAvailability: vi.fn().mockResolvedValue({ ...profile, available: true }),
     transitionAssignedOrderStatus: vi.fn().mockResolvedValue('out_for_delivery'),
     updateRiderProfile: vi.fn().mockResolvedValue(profile)
   };
@@ -195,6 +197,15 @@ describe('RidersService', () => {
       displayName: 'Ada Rider',
       phone: '+2348012345678'
     });
+  });
+
+  it('sets availability for a verified active rider', async () => {
+    await expect(service.setAvailability(actor, true)).resolves.toMatchObject({
+      available: true
+    });
+
+    expect(repository.assertRiderAccess).toHaveBeenCalledWith(riderId, userId);
+    expect(repository.setRiderAvailability).toHaveBeenCalledWith(riderId, userId, true);
   });
 
   it('lists assignments with cursor and scoped rider access', async () => {

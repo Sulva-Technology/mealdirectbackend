@@ -1,6 +1,8 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 
 import { ErrorCodes } from '../../common/errors/error-codes.js';
+import { EnvService } from '../../config/env.service.js';
+import { calculateOrderPricing } from '../../domain/pricing.js';
 import type { AuthenticatedActor } from '../auth/actor-context.js';
 import type { CreateOrderDto } from './dto/create-order.dto.js';
 import { hashOrderRequest, OrdersRepository } from './orders.repository.js';
@@ -13,9 +15,6 @@ import type {
   OrdersRepositoryContract,
   OrderSummary
 } from './orders.types.js';
-
-const deliveryFeeKobo = 15_000;
-const discountKobo = 0;
 
 function customerOnly(actor: AuthenticatedActor): void {
   if (actor.role !== 'customer') {
@@ -35,22 +34,35 @@ function notFound(message: string): NotFoundException {
 
 @Injectable()
 export class OrdersService {
-  constructor(@Inject(OrdersRepository) private readonly repository: OrdersRepositoryContract) {}
+  constructor(
+    @Inject(OrdersRepository) private readonly repository: OrdersRepositoryContract,
+    @Inject(EnvService) private readonly env: EnvService
+  ) {}
 
   async quoteOrder(actor: AuthenticatedActor, input: CreateOrderDto): Promise<OrderQuote> {
     customerOnly(actor);
     const quotedItems = await this.repository.quoteOrder(input);
     this.assertAllItemsQuoted(input, quotedItems);
 
-    const foodSubtotalKobo = quotedItems.reduce((total, item) => total + item.lineTotalKobo, 0);
+    const zoneFeeKobo = await this.repository.findZoneDeliveryFeeKobo(input.locationId);
+
+    const pricing = calculateOrderPricing({
+      lines: quotedItems.map((item) => ({
+        unitPriceCents: item.unitPriceKobo,
+        quantity: item.quantity
+      })),
+      deliveryFeeCents: zoneFeeKobo ?? this.env.get('DELIVERY_FEE_KOBO'),
+      serviceFeeCents: this.env.get('SERVICE_FEE_KOBO')
+    });
 
     return {
       currency: 'NGN',
-      deliveryFeeKobo,
-      discountKobo,
-      foodSubtotalKobo,
+      deliveryFeeKobo: pricing.deliveryFeeCents,
+      serviceFeeKobo: pricing.serviceFeeCents,
+      discountKobo: pricing.discountCents,
+      foodSubtotalKobo: pricing.subtotalCents,
       items: quotedItems,
-      totalKobo: foodSubtotalKobo + deliveryFeeKobo - discountKobo
+      totalKobo: pricing.totalCents
     };
   }
 

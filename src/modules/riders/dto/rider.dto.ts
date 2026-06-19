@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import {
+  IsBoolean,
   IsIn,
   IsInt,
   IsOptional,
@@ -47,6 +48,12 @@ export class RiderProfileUpdateDto {
   phone?: string;
 }
 
+export class RiderAvailabilityDto {
+  @ApiProperty({ type: Boolean })
+  @IsBoolean()
+  available!: boolean;
+}
+
 export class RiderProfileDto {
   @ApiProperty({ format: 'uuid', type: String })
   id!: string;
@@ -71,6 +78,9 @@ export class RiderProfileDto {
 
   @ApiProperty({ type: Boolean })
   active!: boolean;
+
+  @ApiProperty({ type: Boolean })
+  available!: boolean;
 
   @ApiPropertyOptional({ nullable: true, type: String })
   verifiedAt!: string | null;

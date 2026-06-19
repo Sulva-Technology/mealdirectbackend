@@ -25,6 +25,11 @@ export type PaymentDomainEvent =
       amountKobo?: number;
     }
   | {
+      type: 'TRANSFER_RECONCILED';
+      providerReference: string;
+      status: 'success' | 'failed' | 'reversed';
+    }
+  | {
       type: 'IGNORED';
       reason: 'UNMAPPED_EVENT' | 'MISSING_REFERENCE';
       providerEvent: string;
@@ -61,6 +66,20 @@ export function mapPaystackEvent(input: PaystackWebhookEvent): PaymentDomainEven
       type: 'REFUND_SUCCEEDED',
       providerReference: reference,
       ...(input.data?.amount === undefined ? {} : { amountKobo: input.data.amount })
+    };
+  }
+
+  const transferStatus: Record<string, 'success' | 'failed' | 'reversed' | undefined> = {
+    'transfer.success': 'success',
+    'transfer.failed': 'failed',
+    'transfer.reversed': 'reversed'
+  };
+  const mappedTransfer = transferStatus[input.event];
+  if (mappedTransfer !== undefined) {
+    return {
+      type: 'TRANSFER_RECONCILED',
+      providerReference: reference,
+      status: mappedTransfer
     };
   }
 
