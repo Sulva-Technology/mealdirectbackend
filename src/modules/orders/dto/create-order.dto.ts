@@ -6,7 +6,9 @@ import {
   IsIn,
   IsInt,
   IsOptional,
+  IsString,
   Matches,
+  MaxLength,
   Min,
   ValidateNested
 } from 'class-validator';
@@ -41,6 +43,11 @@ export class CreateOrderDto {
   @IsOptional()
   @IsIn(deliveryModes)
   deliveryMode?: (typeof deliveryModes)[number];
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  promotionCode?: string;
 
   @IsArray()
   @ArrayMinSize(1)

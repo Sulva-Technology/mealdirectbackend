@@ -13,6 +13,7 @@ import { NotificationsModule } from './notifications/notifications.module.js';
 import { OrdersModule } from './orders/orders.module.js';
 import { PaymentsModule } from './payments/payments.module.js';
 import { ProfilesModule } from './profiles/profiles.module.js';
+import { PromotionsModule } from './promotions/promotions.module.js';
 import { ReviewsModule } from './reviews/reviews.module.js';
 import { RidersModule } from './riders/riders.module.js';
 import { SettlementsModule } from './settlements/settlements.module.js';
@@ -30,6 +31,7 @@ export const capabilityModules = [
   InventoryModule,
   OrdersModule,
   PaymentsModule,
+  PromotionsModule,
   BatchesModule,
   DeliveriesModule,
   RidersModule,

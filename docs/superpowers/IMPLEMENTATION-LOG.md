@@ -1,0 +1,41 @@
+# Implementation Log — Production Readiness (Phases 0–3)
+
+Executing the four phase plans via subagent-driven-development.
+
+## Environment constraint (important)
+- **Docker is NOT available** in the implementation environment (`docker: command not found`;
+  local Supabase pooler unreachable). Therefore `pnpm db:reset`, `pnpm db:test` (pgTAP),
+  `pnpm db:ci`, and DB-backed `test/integration` specs **cannot be run here**.
+- What IS runnable here: `pnpm typecheck`, `pnpm lint`, `pnpm db:lint` (node script),
+  `pnpm vitest run test/unit` (pure unit tests with fakes), `pnpm openapi:generate/check`.
+- **User runs** all Docker/DB-backed verification + staging/hosted/smoke gates and supplies
+  provider secrets (Resend / FCM / Paystack transfers / Sentry DSN).
+
+## Phase 0 — Production connectivity
+- [x] T1 docs + .env pooler guidance — commit `0c7dd53`
+- [x] T2 db:preflight script — commit `e31f994`
+- [x] T3 pg_cron maintenance schedule — commit `351ac33` (db:test deferred to user)
+- [x] T4 Sentry error reporting — commits `c65cd94` + `a266107` (lint fix)
+- [ ] T5 staging readiness gate — USER (infra: pnpm ci w/ Docker, deploy, hosted E2E, smoke, confirm cron)
+
+Phase 0 local gates green: typecheck, lint, vitest unit (117), db:lint, openapi:generate.
+
+## Phase 1 — Async core
+- [x] T1 outbox lifecycle DB fns — `5cbff8b`
+- [x] T2 emit order-lifecycle events + notification mapping — `97c3d27`
+- [x] T3 worker outbox repo + processor + registry — `d7904c8`
+- [x] T4 email channel (Resend) — `7fd6d81`
+- [x] T5 push channel (FCM) + device tokens — `9c582f4`
+- [x] T6 notification dispatch handler + delivery log + worker wiring — `87246a6`
+- [x] T7 enable Supabase Realtime (publication) — `e5f518b`
+- [x] T8 order quote via calculateOrderPricing — `d66c89c`
+
+Phase 1 local gates green: typecheck, lint, vitest unit (126), db:lint.
+DB-backed (db:reset/db:test/integration) + worker-outbox spec deferred to USER (Docker).
+
+## Phase 2 — Automation
+- [ ] T1 zone-based delivery fee
+- [ ] T2 promotions engine
+- [ ] T3 rider availability flag
+- [ ] T4 auto rider dispatch
+- [ ] T5 reconcile TS order-status enum with DB

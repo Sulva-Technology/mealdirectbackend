@@ -1512,6 +1512,44 @@
         "tags": ["payments"]
       }
     },
+    "/v1/promotions/validate": {
+      "post": {
+        "operationId": "PromotionsController_validate",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Validated the promotion code and returned the discount in kobo."
+          }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["promotions"]
+      }
+    },
+    "/v1/admin/promotions": {
+      "post": {
+        "operationId": "AdminPromotionsController_create",
+        "parameters": [],
+        "responses": { "200": { "description": "Created a promotion code." } },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["promotions"]
+      },
+      "get": {
+        "operationId": "AdminPromotionsController_list",
+        "parameters": [],
+        "responses": { "200": { "description": "Listed all promotion codes." } },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["promotions"]
+      }
+    },
+    "/v1/admin/promotions/{id}/deactivate": {
+      "post": {
+        "operationId": "AdminPromotionsController_deactivate",
+        "parameters": [],
+        "responses": { "200": { "description": "Deactivated a promotion code." } },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["promotions"]
+      }
+    },
     "/v1/vendor/batches": {
       "get": {
         "operationId": "VendorBatchesController_listBatches",

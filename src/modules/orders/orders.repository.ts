@@ -54,7 +54,8 @@ export class OrdersRepository implements OrdersRepositoryContract {
         ${input.deliveryMode ?? null}::public.delivery_mode,
         ${JSON.stringify(items)}::jsonb,
         ${idempotencyKey},
-        ${requestHash}
+        ${requestHash},
+        ${input.promotionCode ?? null}
       ) as order_id
     `.execute(this.database.db);
 

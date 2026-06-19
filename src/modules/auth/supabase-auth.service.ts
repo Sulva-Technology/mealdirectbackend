@@ -37,25 +37,16 @@ export class SupabaseAuthService {
   async signUp(
     email: string,
     password: string,
-    role: string,
-    fullName?: string,
-    redirectTo?: string
+    role: string
   ): Promise<AuthTokensResponseDto> {
-    const options: { emailRedirectTo?: string; data: Record<string, unknown> } = {
-      data: {
-        meal_direct_role: role,
-        ...(fullName ? { full_name: fullName } : {})
-      }
-    };
-
-    if (redirectTo) {
-      options.emailRedirectTo = redirectTo;
-    }
-
     const { data, error } = await this.getClient().auth.signUp({
       email,
       password,
-      options
+      options: {
+        data: {
+          meal_direct_role: role
+        }
+      }
     });
 
     if (error) {
