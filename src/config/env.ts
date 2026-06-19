@@ -79,7 +79,10 @@ const envSchema = z
     SENTRY_ENVIRONMENT: z.string().min(1).optional(),
     SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0),
     RESEND_API_KEY: optionalSecret,
-    EMAIL_FROM: z.string().min(1).default('Meal Direct <no-reply@mealdirect.com>')
+    EMAIL_FROM: z.string().min(1).default('Meal Direct <no-reply@mealdirect.com>'),
+    FCM_PROJECT_ID: optionalSecret,
+    FCM_CLIENT_EMAIL: optionalSecret,
+    FCM_PRIVATE_KEY: optionalSecret
   })
   .superRefine((env, context) => {
     if ((env.NODE_ENV === 'production' || env.NODE_ENV === 'staging') && !env.DATABASE_SSL) {
