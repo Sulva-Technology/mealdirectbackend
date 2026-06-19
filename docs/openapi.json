@@ -2938,6 +2938,32 @@
         "tags": ["notifications"]
       }
     },
+    "/v1/me/device-tokens": {
+      "post": {
+        "operationId": "DeviceTokensController_register",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Registers (or refreshes) a push device token for the current user."
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["notifications"]
+      }
+    },
+    "/v1/me/device-tokens/{token}": {
+      "delete": {
+        "operationId": "DeviceTokensController_remove",
+        "parameters": [],
+        "responses": {
+          "204": { "description": "Unregisters a push device token for the current user." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["notifications"]
+      }
+    },
     "/v1/admin/system": {
       "get": {
         "operationId": "JobsController_getSystemSummary",
@@ -4031,6 +4057,7 @@
           "currency": { "type": "string" },
           "foodSubtotalKobo": { "type": "number" },
           "deliveryFeeKobo": { "type": "number" },
+          "serviceFeeKobo": { "type": "number" },
           "discountKobo": { "type": "number" },
           "totalKobo": { "type": "number" },
           "items": {
@@ -4042,6 +4069,7 @@
           "currency",
           "foodSubtotalKobo",
           "deliveryFeeKobo",
+          "serviceFeeKobo",
           "discountKobo",
           "totalKobo",
           "items"

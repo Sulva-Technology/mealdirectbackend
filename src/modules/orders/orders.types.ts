@@ -35,6 +35,7 @@ export type OrderQuote = {
   currency: 'NGN';
   foodSubtotalKobo: number;
   deliveryFeeKobo: number;
+  serviceFeeKobo: number;
   discountKobo: number;
   totalKobo: number;
   items: OrderQuoteItem[];

@@ -71,6 +71,8 @@ const envSchema = z
     WORKER_BATCH_SIZE: z.coerce.number().int().positive().default(10),
     WORKER_MAX_ATTEMPTS: z.coerce.number().int().positive().default(5),
     RESERVATION_TTL_SECONDS: z.coerce.number().int().positive().default(900),
+    DELIVERY_FEE_KOBO: z.coerce.number().int().nonnegative().default(15_000),
+    SERVICE_FEE_KOBO: z.coerce.number().int().nonnegative().default(0),
     PAYSTACK_BASE_URL: z.url().default('https://api.paystack.co'),
     PAYSTACK_SECRET_KEY: optionalSecret,
     PAYSTACK_WEBHOOK_INBOX_MODE: z.enum(['database', 'memory']).default('database'),

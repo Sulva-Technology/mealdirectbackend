@@ -61,6 +61,9 @@ export class OrderQuoteDto {
   deliveryFeeKobo!: number;
 
   @ApiProperty({ type: Number })
+  serviceFeeKobo!: number;
+
+  @ApiProperty({ type: Number })
   discountKobo!: number;
 
   @ApiProperty({ type: Number })

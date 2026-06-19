@@ -2474,6 +2474,29 @@ paths:
         '401': *a51
       security: *a52
       tags: *a53
+  /v1/me/device-tokens:
+    post:
+      operationId: DeviceTokensController_register
+      parameters: []
+      responses:
+        '204':
+          description: Registers (or refreshes) a push device token for the current user.
+        '401': &a54
+          description: Missing, invalid, or expired Supabase JWT.
+      security: &a55
+        - supabaseAuth: []
+      tags: &a56
+        - notifications
+  /v1/me/device-tokens/{token}:
+    delete:
+      operationId: DeviceTokensController_remove
+      parameters: []
+      responses:
+        '204':
+          description: Unregisters a push device token for the current user.
+        '401': *a54
+      security: *a55
+      tags: *a56
   /v1/admin/system:
     get:
       operationId: JobsController_getSystemSummary
@@ -2481,13 +2504,13 @@ paths:
       responses:
         '200':
           description: Worker and outbox operational summary.
-        '401': &a54
+        '401': &a57
           description: Missing, invalid, or expired Supabase JWT.
-        '403': &a55
+        '403': &a58
           description: Admin role is required.
-      security: &a56
+      security: &a59
         - supabaseAuth: []
-      tags: &a57
+      tags: &a60
         - admin-jobs
   /v1/admin/jobs/outbox:
     get:
@@ -2496,10 +2519,10 @@ paths:
       responses:
         '200':
           description: Outbox event list for admin operations.
-        '401': *a54
-        '403': *a55
-      security: *a56
-      tags: *a57
+        '401': *a57
+        '403': *a58
+      security: *a59
+      tags: *a60
   /v1/admin/jobs/outbox/process:
     post:
       operationId: JobsController_processOutboxEvents
@@ -2507,10 +2530,10 @@ paths:
       responses:
         '200':
           description: Claims currently available outbox events for a worker.
-        '401': *a54
-        '403': *a55
-      security: *a56
-      tags: *a57
+        '401': *a57
+        '403': *a58
+      security: *a59
+      tags: *a60
 info:
   title: Meal Direct API
   description: Stable REST API for Meal Direct web and future mobile clients.
@@ -2590,7 +2613,7 @@ components:
           format: uuid
         role:
           type: string
-          enum: &a58
+          enum: &a61
             - customer
             - vendor
             - rider
@@ -2791,7 +2814,7 @@ components:
           type: array
           items:
             type: string
-            enum: *a58
+            enum: *a61
         campuses:
           type: array
           items:
@@ -3094,7 +3117,7 @@ components:
           type: boolean
         defaultDeliveryMode:
           type: string
-          enum: &a59
+          enum: &a62
             - meal_direct_rider
             - vendor_delivery
         createdAt:
@@ -3147,7 +3170,7 @@ components:
           nullable: true
         defaultDeliveryMode:
           type: string
-          enum: *a59
+          enum: *a62
     VendorPayoutAccountDto:
       type: object
       properties:
@@ -3523,7 +3546,7 @@ components:
           type: string
         orderStatus:
           type: string
-          enum: &a60
+          enum: &a63
             - accepted
             - administratively_completed
             - cancelled
@@ -3686,7 +3709,7 @@ components:
           type: string
         orderStatus:
           type: string
-          enum: *a60
+          enum: *a63
         deliveryMode:
           type: string
         foodSubtotalKobo:
@@ -4042,6 +4065,8 @@ components:
           type: number
         deliveryFeeKobo:
           type: number
+        serviceFeeKobo:
+          type: number
         discountKobo:
           type: number
         totalKobo:
@@ -4054,6 +4079,7 @@ components:
         - currency
         - foodSubtotalKobo
         - deliveryFeeKobo
+        - serviceFeeKobo
         - discountKobo
         - totalKobo
         - items
@@ -4081,7 +4107,7 @@ components:
           format: uuid
         orderStatus:
           type: string
-          enum: *a60
+          enum: *a63
         payment:
           nullable: true
           type: object
@@ -4316,7 +4342,7 @@ components:
           type: string
         status:
           type: string
-          enum: &a61
+          enum: &a64
             - open
             - closed
             - assigned
@@ -4386,7 +4412,7 @@ components:
           type: string
         status:
           type: string
-          enum: *a61
+          enum: *a64
         deliveryMode:
           type: string
         orderCount:
@@ -4472,7 +4498,7 @@ components:
           type: string
         status:
           type: string
-          enum: &a62
+          enum: &a65
             - accepted
             - assigned
             - cancelled
@@ -4557,7 +4583,7 @@ components:
           type: string
         status:
           type: string
-          enum: *a62
+          enum: *a65
         batchStatus:
           type: string
         orderCount:
@@ -4637,7 +4663,7 @@ components:
           type: string
         orderStatus:
           type: string
-          enum: *a60
+          enum: *a63
         deliveryMode:
           type: string
         foodSubtotalKobo:
@@ -4680,7 +4706,7 @@ components:
           format: uuid
         assignmentStatus:
           type: string
-          enum: *a62
+          enum: *a65
         customerDisplayName:
           type: string
           nullable: true
@@ -4787,7 +4813,7 @@ components:
           nullable: true
         settlementStatus:
           type: string
-          enum: &a63
+          enum: &a66
             - approved
             - cancelled
             - draft
@@ -4867,7 +4893,7 @@ components:
           type: string
         status:
           type: string
-          enum: *a63
+          enum: *a66
         deliveryEarningsKobo:
           type: number
         adjustmentsKobo:
@@ -4954,7 +4980,7 @@ components:
           type: string
         status:
           type: string
-          enum: *a63
+          enum: *a66
         deliveryEarningsKobo:
           type: number
         adjustmentsKobo:
@@ -5019,7 +5045,7 @@ components:
           example: 2026-06-15
         status:
           type: string
-          enum: &a64
+          enum: &a67
             - approved
             - cancelled
             - draft
@@ -5127,7 +5153,7 @@ components:
           example: 2026-06-15
         status:
           type: string
-          enum: *a64
+          enum: *a67
         grossFoodAmountKobo:
           type: number
         deliveryEarningsKobo:
