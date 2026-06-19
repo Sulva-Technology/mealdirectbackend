@@ -71,7 +71,10 @@ const envSchema = z
     PAYSTACK_BASE_URL: z.url().default('https://api.paystack.co'),
     PAYSTACK_SECRET_KEY: optionalSecret,
     PAYSTACK_WEBHOOK_INBOX_MODE: z.enum(['database', 'memory']).default('database'),
-    INTERNAL_OPERATIONS_TOKEN: optionalSecret
+    INTERNAL_OPERATIONS_TOKEN: optionalSecret,
+    SENTRY_DSN: optionalSecret,
+    SENTRY_ENVIRONMENT: z.string().min(1).optional(),
+    SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0)
   })
   .superRefine((env, context) => {
     if ((env.NODE_ENV === 'production' || env.NODE_ENV === 'staging') && !env.DATABASE_SSL) {

@@ -7,9 +7,16 @@ import { FastifyAdapter, type NestFastifyApplication } from '@nestjs/platform-fa
 import { NestFactory } from '@nestjs/core';
 import type { FastifyInstance } from 'fastify';
 
+import * as Sentry from '@sentry/node';
+
 import { AppModule } from './app.module.js';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter.js';
 import { JsonLogger } from './common/logging/json-logger.service.js';
+import {
+  NoopErrorReporter,
+  SentryErrorReporter,
+  type ErrorReporter
+} from './common/observability/error-reporter.js';
 import { redactRecord } from './common/logging/redact.js';
 import { MetricsService } from './common/observability/metrics.service.js';
 import { attachRequestId, extractTraceId } from './common/request/request-id.js';
@@ -23,10 +30,23 @@ export type CreateAppOptions = {
   enableOpenApi?: boolean;
 };
 
-function configureGlobals(app: INestApplication): void {
+function createErrorReporter(config: AppEnvironment): ErrorReporter {
+  if (config.SENTRY_DSN === undefined) {
+    return new NoopErrorReporter();
+  }
+  Sentry.init({
+    dsn: config.SENTRY_DSN,
+    environment: config.SENTRY_ENVIRONMENT ?? config.NODE_ENV,
+    tracesSampleRate: config.SENTRY_TRACES_SAMPLE_RATE,
+    release: config.RELEASE_VERSION
+  });
+  return new SentryErrorReporter(Sentry);
+}
+
+function configureGlobals(app: INestApplication, reporter: ErrorReporter): void {
   const logger = app.get(JsonLogger);
   app.useLogger(logger);
-  app.useGlobalFilters(new GlobalExceptionFilter(logger));
+  app.useGlobalFilters(new GlobalExceptionFilter(logger, reporter));
   app.useGlobalPipes(createValidationPipe());
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 }
@@ -131,7 +151,7 @@ export async function createApp(options: CreateAppOptions = {}): Promise<NestFas
   });
 
   app.setGlobalPrefix(config.API_PREFIX);
-  configureGlobals(app);
+  configureGlobals(app, createErrorReporter(config));
 
   if (options.enableOpenApi ?? true) {
     mountOpenApi(app);
