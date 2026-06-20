@@ -615,6 +615,33 @@
         "tags": ["admin-campuses"]
       }
     },
+    "/v1/vendor/onboard": {
+      "post": {
+        "operationId": "VendorsController_onboard",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/OnboardVendorDto" } }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Provisions the vendor record and links the caller as owner. The client must refresh its session afterwards to receive the vendor_id claim.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VendorOnboardEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid onboarding input or unknown campus." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Vendor role and vendor membership are required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor"]
+      }
+    },
     "/v1/vendor/profile": {
       "get": {
         "operationId": "VendorsController_getProfile",
@@ -1314,6 +1341,12 @@
       "post": {
         "operationId": "OrdersController_quoteOrder",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/CreateOrderDto" } }
+          }
+        },
         "responses": {
           "200": {
             "description": "Order quote using current menu and slot availability.",
@@ -1348,6 +1381,12 @@
       "post": {
         "operationId": "OrdersController_createOrder",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/CreateOrderDto" } }
+          }
+        },
         "responses": {
           "201": { "description": "Order was created idempotently and inventory was reserved." }
         },
@@ -3518,6 +3557,30 @@
         "properties": { "data": { "$ref": "#/components/schemas/DeliverySlotRecordDto" } },
         "required": ["data"]
       },
+      "OnboardVendorDto": {
+        "type": "object",
+        "properties": {
+          "campusId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Campus the vendor operates on."
+          },
+          "legalName": {
+            "type": "string",
+            "maxLength": 160,
+            "minLength": 2,
+            "description": "Registered/legal business name."
+          },
+          "displayName": {
+            "type": "string",
+            "maxLength": 160,
+            "minLength": 2,
+            "description": "Public display name."
+          },
+          "phone": { "type": "string", "pattern": "^[+0-9][0-9 ()-]{6,24}$" }
+        },
+        "required": ["campusId", "legalName", "displayName"]
+      },
       "VendorProfileDto": {
         "type": "object",
         "properties": {
@@ -3555,6 +3618,22 @@
           "createdAt",
           "updatedAt"
         ]
+      },
+      "VendorOnboardResultDto": {
+        "type": "object",
+        "properties": {
+          "vendor": { "$ref": "#/components/schemas/VendorProfileDto" },
+          "tokenRefreshRequired": {
+            "type": "boolean",
+            "description": "Always true: the client must refresh its session so the new vendor_id appears in the JWT."
+          }
+        },
+        "required": ["vendor", "tokenRefreshRequired"]
+      },
+      "VendorOnboardEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/VendorOnboardResultDto" } },
+        "required": ["data"]
       },
       "VendorProfileEnvelopeDto": {
         "type": "object",
@@ -3820,6 +3899,7 @@
             ]
           },
           "deliveryMode": { "type": "string" },
+          "specialInstructions": { "type": "string", "nullable": true },
           "foodSubtotalKobo": { "type": "number" },
           "deliveryFeeKobo": { "type": "number" },
           "discountKobo": { "type": "number" },
@@ -3870,7 +3950,8 @@
           "unitType": { "type": "string" },
           "unitPriceKobo": { "type": "number" },
           "quantity": { "type": "number" },
-          "lineTotalKobo": { "type": "number" }
+          "lineTotalKobo": { "type": "number" },
+          "customization": { "type": "object", "additionalProperties": true }
         },
         "required": [
           "id",
@@ -3879,7 +3960,8 @@
           "unitType",
           "unitPriceKobo",
           "quantity",
-          "lineTotalKobo"
+          "lineTotalKobo",
+          "customization"
         ]
       },
       "PaymentSnapshotDto": {
@@ -3938,6 +4020,7 @@
             ]
           },
           "deliveryMode": { "type": "string" },
+          "specialInstructions": { "type": "string", "nullable": true },
           "foodSubtotalKobo": { "type": "number" },
           "deliveryFeeKobo": { "type": "number" },
           "discountKobo": { "type": "number" },
@@ -4144,6 +4227,46 @@
         "type": "object",
         "properties": { "data": { "$ref": "#/components/schemas/InventoryAdjustmentResponseDto" } },
         "required": ["data"]
+      },
+      "CreateOrderItemDto": {
+        "type": "object",
+        "properties": {
+          "menuItemId": { "type": "string", "format": "uuid" },
+          "quantity": { "type": "number", "minimum": 1 },
+          "customization": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Per-item customization object (e.g. spoonsCount, customFoodType, customProtein, customFoodSelections, drinks). Stored and returned verbatim."
+          }
+        },
+        "required": ["menuItemId", "quantity"]
+      },
+      "CreateOrderDto": {
+        "type": "object",
+        "properties": {
+          "campusId": { "type": "string", "format": "uuid" },
+          "vendorId": { "type": "string", "format": "uuid" },
+          "serviceDate": {
+            "type": "string",
+            "example": "2026-06-20",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "deliverySlotId": { "type": "string", "format": "uuid" },
+          "locationId": { "type": "string", "format": "uuid" },
+          "deliveryMode": { "type": "string", "enum": ["vendor_delivery", "meal_direct_rider"] },
+          "promotionCode": { "type": "string", "maxLength": 64 },
+          "specialInstructions": {
+            "type": "string",
+            "description": "Order-level delivery note / special instructions.",
+            "maxLength": 1000
+          },
+          "items": {
+            "minItems": 1,
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CreateOrderItemDto" }
+          }
+        },
+        "required": ["campusId", "vendorId", "serviceDate", "deliverySlotId", "locationId", "items"]
       },
       "OrderQuoteItemDto": {
         "type": "object",
@@ -4595,6 +4718,7 @@
             ]
           },
           "deliveryMode": { "type": "string" },
+          "specialInstructions": { "type": "string", "nullable": true },
           "foodSubtotalKobo": { "type": "number" },
           "deliveryFeeKobo": { "type": "number" },
           "discountKobo": { "type": "number" },

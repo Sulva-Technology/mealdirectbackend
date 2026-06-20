@@ -113,6 +113,9 @@ export class OrderSummaryDto {
   @ApiProperty({ type: String })
   deliveryMode!: string;
 
+  @ApiPropertyOptional({ nullable: true, type: String })
+  specialInstructions!: string | null;
+
   @ApiProperty({ type: Number })
   foodSubtotalKobo!: number;
 
@@ -165,6 +168,9 @@ export class OrderItemDto {
 
   @ApiProperty({ type: Number })
   lineTotalKobo!: number;
+
+  @ApiProperty({ type: Object, additionalProperties: true })
+  customization!: Record<string, unknown>;
 }
 
 export class PaymentSnapshotDto {

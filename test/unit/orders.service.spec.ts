@@ -61,6 +61,7 @@ const orderDetail: OrderDetail = {
   locationName: 'Hall One',
   orderStatus: 'pending_payment',
   deliveryMode: 'meal_direct_rider',
+  specialInstructions: null,
   foodSubtotalKobo: 500000,
   deliveryFeeKobo: 15000,
   discountKobo: 0,

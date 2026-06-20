@@ -39,6 +39,7 @@ const mockOrder: OrderDetail = {
   locationName: 'Main gate',
   orderStatus: 'paid',
   deliveryMode: 'meal_direct_rider',
+  specialInstructions: null,
   foodSubtotalKobo: 250000,
   deliveryFeeKobo: 15000,
   discountKobo: 0,
