@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Inject,
   Injectable,
@@ -8,6 +9,7 @@ import {
 
 import { ErrorCodes } from '../../common/errors/error-codes.js';
 import type { AuthenticatedActor } from '../auth/actor-context.js';
+import { SupabaseAuthService } from '../auth/supabase-auth.service.js';
 import { VendorsRepository } from './vendors.repository.js';
 import type {
   AvailabilityUpdateInput,
@@ -17,12 +19,44 @@ import type {
   MenuMetadata,
   UpsertMenuItemInput,
   VendorAvailabilityEntry,
+  VendorOnboardInput,
   VendorPayoutAccount,
   VendorPayoutAccountInput,
   VendorProfile,
   VendorProfileUpdateInput,
   VendorsRepositoryContract
 } from './vendors.types.js';
+
+// Self-service vendors are auto-approved for now. Flip to false (admin approval)
+// when the review workflow is introduced — see auth onboarding design.
+const VENDOR_AUTO_APPROVE = true;
+
+export type VendorOnboardResult = {
+  vendor: VendorProfile;
+  tokenRefreshRequired: boolean;
+};
+
+function conflict(message: string): ConflictException {
+  return new ConflictException({ code: ErrorCodes.CONFLICT, message });
+}
+
+function postgresErrorCode(error: unknown): string | undefined {
+  return typeof error === 'object' && error !== null
+    ? (error as { code?: string }).code
+    : undefined;
+}
+
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function randomSlugSuffix(): string {
+  return Math.random().toString(36).slice(2, 6).replace(/[^a-z0-9]/g, '0');
+}
 
 function forbidden(message: string): ForbiddenException {
   return new ForbiddenException({
@@ -127,7 +161,76 @@ function normalizeMenuItemInput(input: UpsertMenuItemInput): UpsertMenuItemInput
 
 @Injectable()
 export class VendorsService {
-  constructor(@Inject(VendorsRepository) private readonly repository: VendorsRepositoryContract) {}
+  constructor(
+    @Inject(VendorsRepository) private readonly repository: VendorsRepositoryContract,
+    @Inject(SupabaseAuthService) private readonly auth: SupabaseAuthService
+  ) {}
+
+  /**
+   * Self-service vendor onboarding: provisions the vendor record + owner link and
+   * writes meal_direct_role + vendor_id into the caller's app_metadata. The new
+   * vendor_id only reaches the JWT after the client refreshes its session, hence
+   * tokenRefreshRequired.
+   */
+  async onboardVendor(
+    actor: AuthenticatedActor,
+    input: VendorOnboardInput
+  ): Promise<VendorOnboardResult> {
+    if (actor.role !== 'vendor') {
+      throw forbidden('Vendor access is required.');
+    }
+
+    const alreadyLinked = await this.repository.findVendorIdForUser(actor.userId);
+    if (alreadyLinked !== undefined) {
+      throw conflict('This account is already linked to a vendor.');
+    }
+
+    const legalName = input.legalName.trim();
+    const displayName = input.displayName.trim();
+    const phone = normalizeOptionalString(input.phone);
+    const baseSlug = slugify(displayName);
+    if (baseSlug.length === 0) {
+      throw badRequest('Display name must contain at least one letter or digit.');
+    }
+
+    let vendor: VendorProfile | undefined;
+    for (let attempt = 0; attempt < 4 && vendor === undefined; attempt += 1) {
+      const slug = attempt === 0 ? baseSlug : `${baseSlug}-${randomSlugSuffix()}`;
+      try {
+        vendor = await this.repository.onboardVendor({
+          campusId: input.campusId,
+          legalName,
+          displayName,
+          ...(phone === undefined ? {} : { phone }),
+          slug,
+          userId: actor.userId,
+          autoApprove: VENDOR_AUTO_APPROVE
+        });
+      } catch (error) {
+        const code = postgresErrorCode(error);
+        if (code === '23503') {
+          // foreign key violation — campus_id does not exist
+          throw badRequest('Campus was not found.');
+        }
+        if (code === '23505' && attempt < 3) {
+          // unique (campus_id, slug) collision — retry with a suffixed slug
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    if (vendor === undefined) {
+      throw conflict('Could not generate a unique vendor handle; try a different display name.');
+    }
+
+    await this.auth.setUserAppMetadata(actor.userId, {
+      meal_direct_role: 'vendor',
+      vendor_id: vendor.id
+    });
+
+    return { vendor, tokenRefreshRequired: true };
+  }
 
   async getProfile(actor: AuthenticatedActor, vendorId: string): Promise<VendorProfile> {
     await this.assertActorCanUseVendor(actor, vendorId);

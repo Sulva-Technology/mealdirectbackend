@@ -29,6 +29,45 @@ export class MenuItemIdParamDto {
   itemId!: string;
 }
 
+export class OnboardVendorDto {
+  @ApiProperty({ format: 'uuid', type: String, description: 'Campus the vendor operates on.' })
+  @IsDatabaseUuid()
+  campusId!: string;
+
+  @ApiProperty({ maxLength: 160, minLength: 2, type: String, description: 'Registered/legal business name.' })
+  @IsString()
+  @MinLength(2)
+  @MaxLength(160)
+  legalName!: string;
+
+  @ApiProperty({ maxLength: 160, minLength: 2, type: String, description: 'Public display name.' })
+  @IsString()
+  @MinLength(2)
+  @MaxLength(160)
+  displayName!: string;
+
+  @ApiPropertyOptional({ pattern: phonePattern.source, type: String })
+  @IsOptional()
+  @Matches(phonePattern)
+  phone?: string;
+}
+
+export class VendorOnboardResultDto {
+  @ApiProperty({ type: () => VendorProfileDto })
+  vendor!: VendorProfileDto;
+
+  @ApiProperty({
+    type: Boolean,
+    description: 'Always true: the client must refresh its session so the new vendor_id appears in the JWT.'
+  })
+  tokenRefreshRequired!: boolean;
+}
+
+export class VendorOnboardEnvelopeDto {
+  @ApiProperty({ type: () => VendorOnboardResultDto })
+  data!: VendorOnboardResultDto;
+}
+
 export class UpdateVendorProfileDto {
   @ApiPropertyOptional({ maxLength: 160, minLength: 1, type: String })
   @IsOptional()

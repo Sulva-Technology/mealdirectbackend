@@ -2,9 +2,33 @@ import { Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/commo
 import { createRemoteJWKSet, jwtVerify, type JWTPayload } from 'jose';
 
 import { ErrorCodes } from '../../common/errors/error-codes.js';
+import type { ActorRole } from '../../domain/authorization.js';
 import { EnvService } from '../../config/env.service.js';
 import type { AuthenticatedActor } from './actor-context.js';
 import { isActorRole } from './actor-context.js';
+
+// Roles a user is allowed to self-select at signup. Privileged roles
+// (campus_admin, super_admin) must ONLY ever come from app_metadata, which is
+// not user-editable. user_metadata IS user-editable, so it can never grant them.
+const selfServiceRoles: readonly ActorRole[] = ['customer', 'vendor', 'rider'];
+
+// app_metadata is authoritative. user_metadata.meal_direct_role is honored only
+// transitionally and only for self-service roles, to keep pre-migration users
+// working until their app_metadata is backfilled. Drop the fallback after backfill.
+function resolveRole(
+  appMetadata: Record<string, unknown>,
+  userMetadata: Record<string, unknown>
+): ActorRole {
+  const appRole = appMetadata.meal_direct_role ?? appMetadata.role;
+  if (isActorRole(appRole)) {
+    return appRole;
+  }
+  const userRole = userMetadata.meal_direct_role;
+  if (isActorRole(userRole) && selfServiceRoles.includes(userRole)) {
+    return userRole;
+  }
+  return 'customer';
+}
 
 function objectValue(value: unknown): Record<string, unknown> {
   if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
@@ -90,9 +114,7 @@ export class SupabaseJwtService {
 
     const appMetadata = objectValue(claims.app_metadata);
     const userMetadata = objectValue(claims.user_metadata);
-    const rawRole =
-      appMetadata.meal_direct_role ?? appMetadata.role ?? userMetadata.meal_direct_role;
-    const role = isActorRole(rawRole) ? rawRole : 'customer';
+    const role = resolveRole(appMetadata, userMetadata);
     const email = stringValue(claims.email);
     const campusId = stringValue(appMetadata.campus_id);
     const vendorId = stringValue(appMetadata.vendor_id);

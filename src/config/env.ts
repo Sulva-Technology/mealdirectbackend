@@ -57,6 +57,7 @@ const envSchema = z
     SUPABASE_JWT_ISSUER: z.url(),
     SUPABASE_JWT_AUDIENCE: z.string().min(1).default('authenticated'),
     SUPABASE_ANON_KEY: z.string().min(1),
+    SUPABASE_SERVICE_ROLE_KEY: optionalSecret,
     SUPABASE_JWT_SECRET: optionalSecret,
     SUPABASE_JWKS_URL: z.url().optional(),
     CORS_ALLOWED_ORIGINS: csvList.default(defaultCorsOrigins.split(',')),
@@ -115,6 +116,16 @@ const envSchema = z
         code: 'custom',
         path: ['SUPABASE_JWT_SECRET'],
         message: 'SUPABASE_JWT_SECRET or SUPABASE_JWKS_URL must be configured outside development and test'
+      });
+    }
+    if (
+      (env.NODE_ENV === 'production' || env.NODE_ENV === 'staging') &&
+      !env.SUPABASE_SERVICE_ROLE_KEY
+    ) {
+      context.addIssue({
+        code: 'custom',
+        path: ['SUPABASE_SERVICE_ROLE_KEY'],
+        message: 'SUPABASE_SERVICE_ROLE_KEY must be configured outside development and test (required to set app_metadata)'
       });
     }
     if (

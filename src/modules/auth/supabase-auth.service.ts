@@ -1,4 +1,11 @@
-import { BadRequestException, ForbiddenException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+  Logger,
+  UnauthorizedException
+} from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
 
 type MealDirectUserMetadata = {
@@ -12,7 +19,55 @@ import type { AuthTokensResponseDto } from './dto/auth.dto.js';
 
 @Injectable()
 export class SupabaseAuthService {
+  private readonly logger = new Logger(SupabaseAuthService.name);
+
   constructor(@Inject(EnvService) private readonly env: EnvService) {}
+
+  private getAdminClient() {
+    const serviceRoleKey = this.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    if (serviceRoleKey === undefined) {
+      return undefined;
+    }
+    return createClient(this.env.get('SUPABASE_URL'), serviceRoleKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false
+      }
+    });
+  }
+
+  /**
+   * Merge keys into a user's app_metadata using the service_role key. app_metadata
+   * is the authoritative, non-user-editable store for role and tenancy ids
+   * (meal_direct_role, vendor_id, rider_id). Requires SUPABASE_SERVICE_ROLE_KEY.
+   * The change only appears in the user's JWT after the session is refreshed.
+   */
+  async setUserAppMetadata(userId: string, metadata: Record<string, unknown>): Promise<void> {
+    const admin = this.getAdminClient();
+    if (admin === undefined) {
+      throw new BadRequestException({
+        code: ErrorCodes.AUTH_FAILED,
+        message: 'Server is not configured to update user roles (SUPABASE_SERVICE_ROLE_KEY missing).'
+      });
+    }
+
+    const existing = await admin.auth.admin.getUserById(userId);
+    if (existing.error) {
+      throw new BadRequestException({
+        code: ErrorCodes.AUTH_FAILED,
+        message: existing.error.message
+      });
+    }
+
+    const merged = { ...(existing.data.user?.app_metadata ?? {}), ...metadata };
+    const { error } = await admin.auth.admin.updateUserById(userId, { app_metadata: merged });
+    if (error) {
+      throw new BadRequestException({
+        code: ErrorCodes.AUTH_FAILED,
+        message: error.message
+      });
+    }
+  }
 
   private getClient(accessToken?: string) {
     const supabaseUrl = this.env.get('SUPABASE_URL');
@@ -62,6 +117,20 @@ export class SupabaseAuthService {
         code: ErrorCodes.AUTH_FAILED,
         message: 'Failed to create user.'
       });
+    }
+
+    // Promote the role into app_metadata (authoritative, non-user-editable).
+    // Best-effort: if the service_role key is not configured the role still lives
+    // in user_metadata, which the JWT verifier honors transitionally.
+    if (this.env.get('SUPABASE_SERVICE_ROLE_KEY') !== undefined) {
+      try {
+        await this.setUserAppMetadata(user.id, { meal_direct_role: role });
+      } catch (error) {
+        this.logger.error(
+          `Failed to set app_metadata.meal_direct_role for ${user.id}`,
+          error instanceof Error ? error.stack : String(error)
+        );
+      }
     }
 
     const appMetadata = (user.app_metadata ?? {}) as MealDirectUserMetadata;
