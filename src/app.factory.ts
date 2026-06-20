@@ -103,6 +103,13 @@ export async function createApp(options: CreateAppOptions = {}): Promise<NestFas
       }
       callback(null, false);
     },
+    methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      config.REQUEST_ID_HEADER,
+      config.TRACE_ID_HEADER
+    ],
     credentials: true
   });
 
