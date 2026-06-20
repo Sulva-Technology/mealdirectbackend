@@ -52,22 +52,6 @@ export class OnboardVendorDto {
   phone?: string;
 }
 
-export class VendorOnboardResultDto {
-  @ApiProperty({ type: () => VendorProfileDto })
-  vendor!: VendorProfileDto;
-
-  @ApiProperty({
-    type: Boolean,
-    description: 'Always true: the client must refresh its session so the new vendor_id appears in the JWT.'
-  })
-  tokenRefreshRequired!: boolean;
-}
-
-export class VendorOnboardEnvelopeDto {
-  @ApiProperty({ type: () => VendorOnboardResultDto })
-  data!: VendorOnboardResultDto;
-}
-
 export class UpdateVendorProfileDto {
   @ApiPropertyOptional({ maxLength: 160, minLength: 1, type: String })
   @IsOptional()
@@ -323,6 +307,22 @@ export class VendorProfileDto {
 export class VendorProfileEnvelopeDto {
   @ApiProperty({ type: () => VendorProfileDto })
   data!: VendorProfileDto;
+}
+
+export class VendorOnboardResultDto {
+  @ApiProperty({ type: () => VendorProfileDto })
+  vendor!: VendorProfileDto;
+
+  @ApiProperty({
+    type: Boolean,
+    description: 'Always true: the client must refresh its session so the new vendor_id appears in the JWT.'
+  })
+  tokenRefreshRequired!: boolean;
+}
+
+export class VendorOnboardEnvelopeDto {
+  @ApiProperty({ type: () => VendorOnboardResultDto })
+  data!: VendorOnboardResultDto;
 }
 
 export class VendorPayoutAccountDto {
