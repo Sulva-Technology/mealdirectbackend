@@ -302,6 +302,7 @@ export class RidersRepository implements RidersRepositoryContract {
         cz.name as "zoneName",
         o.order_status::text as "orderStatus",
         o.delivery_mode::text as "deliveryMode",
+        o.special_instructions as "specialInstructions",
         o.food_subtotal_kobo as "foodSubtotalKobo",
         o.delivery_fee_kobo as "deliveryFeeKobo",
         o.discount_kobo as "discountKobo",
@@ -584,6 +585,7 @@ export class RidersRepository implements RidersRepositoryContract {
         cl.name as "locationName",
         o.order_status::text as "orderStatus",
         o.delivery_mode::text as "deliveryMode",
+        o.special_instructions as "specialInstructions",
         o.food_subtotal_kobo as "foodSubtotalKobo",
         o.delivery_fee_kobo as "deliveryFeeKobo",
         o.discount_kobo as "discountKobo",
@@ -615,7 +617,8 @@ export class RidersRepository implements RidersRepositoryContract {
         unit_type as "unitType",
         unit_price_kobo as "unitPriceKobo",
         quantity,
-        line_total_kobo as "lineTotalKobo"
+        line_total_kobo as "lineTotalKobo",
+        customization
       from public.order_items
       where order_id = ${orderId}::uuid
       order by created_at

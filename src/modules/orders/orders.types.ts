@@ -49,6 +49,7 @@ export type OrderItem = {
   unitPriceKobo: number;
   quantity: number;
   lineTotalKobo: number;
+  customization: Record<string, unknown>;
 };
 
 export type PaymentSnapshot = {
@@ -78,6 +79,7 @@ export type OrderSummary = {
   locationName: string;
   orderStatus: OrderStatus;
   deliveryMode: string;
+  specialInstructions: string | null;
   foodSubtotalKobo: number;
   deliveryFeeKobo: number;
   discountKobo: number;

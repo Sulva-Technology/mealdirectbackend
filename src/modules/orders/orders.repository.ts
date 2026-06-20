@@ -40,7 +40,8 @@ export class OrdersRepository implements OrdersRepositoryContract {
   ): Promise<{ orderId: string }> {
     const items = input.items.map((item) => ({
       menu_item_id: item.menuItemId,
-      quantity: item.quantity
+      quantity: item.quantity,
+      customization: item.customization ?? {}
     }));
 
     const result = await sql<CreateOrderResult>`
@@ -55,7 +56,8 @@ export class OrdersRepository implements OrdersRepositoryContract {
         ${JSON.stringify(items)}::jsonb,
         ${idempotencyKey},
         ${requestHash},
-        ${input.promotionCode ?? null}
+        ${input.promotionCode ?? null},
+        ${input.specialInstructions ?? null}
       ) as order_id
     `.execute(this.database.db);
 
@@ -127,6 +129,7 @@ export class OrdersRepository implements OrdersRepositoryContract {
         cl.name as "locationName",
         o.order_status::text as "orderStatus",
         o.delivery_mode::text as "deliveryMode",
+        o.special_instructions as "specialInstructions",
         o.food_subtotal_kobo as "foodSubtotalKobo",
         o.delivery_fee_kobo as "deliveryFeeKobo",
         o.discount_kobo as "discountKobo",
@@ -213,6 +216,7 @@ export class OrdersRepository implements OrdersRepositoryContract {
         cl.name as "locationName",
         o.order_status::text as "orderStatus",
         o.delivery_mode::text as "deliveryMode",
+        o.special_instructions as "specialInstructions",
         o.food_subtotal_kobo as "foodSubtotalKobo",
         o.delivery_fee_kobo as "deliveryFeeKobo",
         o.discount_kobo as "discountKobo",
@@ -241,7 +245,8 @@ export class OrdersRepository implements OrdersRepositoryContract {
         unit_type as "unitType",
         unit_price_kobo as "unitPriceKobo",
         quantity,
-        line_total_kobo as "lineTotalKobo"
+        line_total_kobo as "lineTotalKobo",
+        customization
       from public.order_items
       where order_id = ${orderId}::uuid
       order by created_at

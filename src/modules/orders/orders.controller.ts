@@ -11,7 +11,7 @@ import {
   Query,
   UseGuards
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 
 import { createListEnvelope, createSuccessEnvelope } from '../../common/api/response.js';
 import type { ListEnvelope, SuccessEnvelope } from '../../common/api/response.js';
@@ -56,6 +56,7 @@ export class OrdersController {
   @Post('quote')
   @HttpCode(200)
   @RequireRoles('customer')
+  @ApiBody({ type: CreateOrderDto })
   @ApiOkResponse({
     description: 'Order quote using current menu and slot availability.',
     type: OrderQuoteEnvelopeDto
@@ -81,6 +82,7 @@ export class OrdersController {
   @Post()
   @HttpCode(201)
   @RequireRoles('customer')
+  @ApiBody({ type: CreateOrderDto })
   @ApiCreatedResponse({ description: 'Order was created idempotently and inventory was reserved.' })
   async createOrder(
     @CurrentActor() actor: AuthenticatedActor,

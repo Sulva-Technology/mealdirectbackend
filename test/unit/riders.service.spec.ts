@@ -86,6 +86,7 @@ const order: RiderOrderDetail = {
   deliveryFeeKobo: 15000,
   deliveryInstructions: 'Call at the gate.',
   deliveryMode: 'meal_direct_rider',
+  specialInstructions: null,
   deliverySlotId: assignment.deliverySlotId,
   deliverySlotName: assignment.deliverySlotName,
   discountKobo: 0,
