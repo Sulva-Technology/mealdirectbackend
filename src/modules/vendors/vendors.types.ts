@@ -19,6 +19,19 @@ export type VendorProfile = {
   updatedAt: string;
 };
 
+export type VendorOnboardInput = {
+  campusId: string;
+  legalName: string;
+  displayName: string;
+  phone?: string;
+};
+
+export type VendorOnboardRepositoryInput = VendorOnboardInput & {
+  slug: string;
+  userId: string;
+  autoApprove: boolean;
+};
+
 export type VendorProfileUpdateInput = {
   displayName?: string;
   description?: string | null;
@@ -143,6 +156,8 @@ export type MenuItemScheduleUpdateInput = {
 
 export type VendorsRepositoryContract = {
   assertVendorAccess: (vendorId: string, userId: string) => Promise<boolean>;
+  findVendorIdForUser: (userId: string) => Promise<string | undefined>;
+  onboardVendor: (input: VendorOnboardRepositoryInput) => Promise<VendorProfile>;
   findVendorProfile: (vendorId: string) => Promise<VendorProfile | undefined>;
   updateVendorProfile: (
     vendorId: string,

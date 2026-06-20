@@ -1,7 +1,13 @@
-import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  NotFoundException
+} from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { AuthenticatedActor } from '../../src/modules/auth/actor-context.js';
+import type { SupabaseAuthService } from '../../src/modules/auth/supabase-auth.service.js';
 import { VendorsService } from '../../src/modules/vendors/vendors.service.js';
 import type {
   MenuItemRecord,
@@ -63,6 +69,8 @@ const menuItem: MenuItemRecord = {
 function createRepository(): VendorsRepositoryContract {
   return {
     assertVendorAccess: vi.fn().mockResolvedValue(true),
+    findVendorIdForUser: vi.fn().mockResolvedValue(undefined),
+    onboardVendor: vi.fn().mockResolvedValue(vendorProfile),
     findVendorProfile: vi.fn().mockResolvedValue(vendorProfile),
     updateVendorProfile: vi.fn().mockResolvedValue(vendorProfile),
     findActivePayoutAccount: vi.fn().mockResolvedValue(undefined),
@@ -104,13 +112,84 @@ function createRepository(): VendorsRepositoryContract {
   };
 }
 
+function createAuth(): SupabaseAuthService {
+  return {
+    setUserAppMetadata: vi.fn().mockResolvedValue(undefined)
+  } as unknown as SupabaseAuthService;
+}
+
 describe('VendorsService', () => {
   let repository: VendorsRepositoryContract;
+  let auth: SupabaseAuthService;
   let service: VendorsService;
 
   beforeEach(() => {
     repository = createRepository();
-    service = new VendorsService(repository);
+    auth = createAuth();
+    service = new VendorsService(repository, auth);
+  });
+
+  describe('onboardVendor', () => {
+    const onboardActor: AuthenticatedActor = { userId, role: 'vendor' };
+    const input = {
+      campusId: '88888888-8888-4888-8888-888888888888',
+      legalName: 'Ada Kitchen Limited',
+      displayName: 'Ada Kitchen'
+    };
+
+    it('provisions a vendor and writes app_metadata, requiring a token refresh', async () => {
+      const result = await service.onboardVendor(onboardActor, input);
+
+      expect(repository.onboardVendor).toHaveBeenCalledWith(
+        expect.objectContaining({
+          campusId: input.campusId,
+          legalName: 'Ada Kitchen Limited',
+          displayName: 'Ada Kitchen',
+          slug: 'ada-kitchen',
+          userId,
+          autoApprove: true
+        })
+      );
+      expect(auth.setUserAppMetadata).toHaveBeenCalledWith(userId, {
+        meal_direct_role: 'vendor',
+        vendor_id: vendorId
+      });
+      expect(result).toEqual({ vendor: vendorProfile, tokenRefreshRequired: true });
+    });
+
+    it('rejects onboarding when the account is already linked to a vendor', async () => {
+      vi.mocked(repository.findVendorIdForUser).mockResolvedValue(vendorId);
+
+      await expect(service.onboardVendor(onboardActor, input)).rejects.toBeInstanceOf(
+        ConflictException
+      );
+      expect(repository.onboardVendor).not.toHaveBeenCalled();
+      expect(auth.setUserAppMetadata).not.toHaveBeenCalled();
+    });
+
+    it('retries with a suffixed slug when the handle collides', async () => {
+      const uniqueViolation = Object.assign(new Error('duplicate key'), { code: '23505' });
+      vi.mocked(repository.onboardVendor)
+        .mockRejectedValueOnce(uniqueViolation)
+        .mockResolvedValueOnce(vendorProfile);
+
+      const result = await service.onboardVendor(onboardActor, input);
+
+      expect(repository.onboardVendor).toHaveBeenCalledTimes(2);
+      const secondCall = vi.mocked(repository.onboardVendor).mock.calls[1];
+      expect(secondCall?.[0].slug).toMatch(/^ada-kitchen-[a-z0-9]{4}$/);
+      expect(result.tokenRefreshRequired).toBe(true);
+    });
+
+    it('maps an unknown campus (foreign key violation) to a bad request', async () => {
+      const fkViolation = Object.assign(new Error('fk violation'), { code: '23503' });
+      vi.mocked(repository.onboardVendor).mockRejectedValue(fkViolation);
+
+      await expect(service.onboardVendor(onboardActor, input)).rejects.toBeInstanceOf(
+        BadRequestException
+      );
+      expect(auth.setUserAppMetadata).not.toHaveBeenCalled();
+    });
   });
 
   it('requires vendor object access before returning a vendor profile', async () => {

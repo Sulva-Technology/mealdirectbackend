@@ -36,14 +36,17 @@ import {
   CreateMenuItemDto,
   MenuItemIdParamDto,
   MenuMetadataEnvelopeDto,
+  OnboardVendorDto,
   UpdateMenuItemDto,
   UpdateVendorProfileDto,
   UpsertPayoutAccountDto,
   VendorMenuItemEnvelopeDto,
   VendorMenuItemListEnvelopeDto,
+  VendorOnboardEnvelopeDto,
   VendorPayoutAccountEnvelopeDto,
   VendorProfileEnvelopeDto
 } from './dto/vendor.dto.js';
+import type { VendorOnboardResult } from './vendors.service.js';
 import { VendorsService } from './vendors.service.js';
 import type {
   MenuItemAvailabilityEntry,
@@ -74,6 +77,20 @@ function vendorIdFromActor(actor: AuthenticatedActor): string {
 @RequireRoles('vendor')
 export class VendorsController {
   constructor(@Inject(VendorsService) private readonly vendors: VendorsService) {}
+
+  @Post('onboard')
+  @ApiCreatedResponse({
+    description: 'Provisions the vendor record and links the caller as owner. The client must refresh its session afterwards to receive the vendor_id claim.',
+    type: VendorOnboardEnvelopeDto
+  })
+  @ApiBadRequestResponse({ description: 'Invalid onboarding input or unknown campus.' })
+  @ApiBody({ type: OnboardVendorDto })
+  async onboard(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Body() input: OnboardVendorDto
+  ): Promise<SuccessEnvelope<VendorOnboardResult>> {
+    return createSuccessEnvelope(await this.vendors.onboardVendor(actor, input));
+  }
 
   @Get('profile')
   @ApiOkResponse({

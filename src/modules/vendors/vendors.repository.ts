@@ -10,6 +10,7 @@ import type {
   UpsertMenuCategoryInput,
   UpsertMenuItemInput,
   VendorAvailabilityEntry,
+  VendorOnboardRepositoryInput,
   VendorPayoutAccount,
   VendorPayoutAccountRecordInput,
   VendorProfile,
@@ -39,6 +40,84 @@ export class VendorsRepository implements VendorsRepositoryContract {
     `.execute(this.database.db);
 
     return result.rows[0]?.hasAccess ?? false;
+  }
+
+  async findVendorIdForUser(userId: string): Promise<string | undefined> {
+    const result = await sql<OwnerResult>`
+      select vendor_id::text as "vendorId"
+      from public.vendor_users
+      where user_id = ${userId}::uuid
+        and active
+      order by created_at
+      limit 1
+    `.execute(this.database.db);
+
+    return result.rows[0]?.vendorId;
+  }
+
+  async onboardVendor(input: VendorOnboardRepositoryInput): Promise<VendorProfile> {
+    return this.database.db.transaction().execute(async (trx) => {
+      const inserted = await sql<IdResult>`
+        insert into public.vendors (
+          campus_id,
+          legal_name,
+          display_name,
+          slug,
+          phone,
+          status,
+          approved_at,
+          active
+        )
+        values (
+          ${input.campusId}::uuid,
+          ${input.legalName},
+          ${input.displayName},
+          ${input.slug},
+          ${input.phone ?? null},
+          ${input.autoApprove ? 'approved' : 'pending'}::public.vendor_status,
+          ${input.autoApprove ? sql`now()` : null},
+          ${input.autoApprove}
+        )
+        returning id::text as "id"
+      `.execute(trx);
+
+      const vendorId = inserted.rows[0]?.id;
+      if (vendorId === undefined) {
+        throw new Error('Vendor insert did not return a row.');
+      }
+
+      await sql`
+        insert into public.vendor_users (vendor_id, user_id, role)
+        values (${vendorId}::uuid, ${input.userId}::uuid, 'owner'::public.vendor_user_role)
+      `.execute(trx);
+
+      const profile = await sql<VendorProfile>`
+        select
+          id::text as "id",
+          campus_id::text as "campusId",
+          legal_name as "legalName",
+          display_name as "displayName",
+          slug,
+          description,
+          phone,
+          email::text as "email",
+          logo_url as "logoUrl",
+          kitchen_location as "kitchenLocation",
+          status::text as "status",
+          active,
+          default_delivery_mode::text as "defaultDeliveryMode",
+          created_at::text as "createdAt",
+          updated_at::text as "updatedAt"
+        from public.vendors
+        where id = ${vendorId}::uuid
+      `.execute(trx);
+
+      const row = profile.rows[0];
+      if (row === undefined) {
+        throw new Error('Vendor onboarding did not return a profile.');
+      }
+      return row;
+    });
   }
 
   async findVendorProfile(vendorId: string): Promise<VendorProfile | undefined> {
