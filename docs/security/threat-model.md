@@ -4,8 +4,8 @@ Status: draft, repository-grounded. This model uses the current backend and data
 
 ## Assumptions
 
-- Public frontends are `user.mealdirect.com`, `vendor.mealdirect.com`, `rider.mealdirect.com`, and `admin.mealdirect.com`.
-- Public API is served by Render at `api.mealdirect.com`.
+- Public frontends are `user.mealdirectly.com`, `vendor.mealdirectly.com`, `rider.mealdirectly.com`, and `admin.mealdirectly.com`.
+- Public API is served by Render at `api.mealdirectly.com`.
 - Supabase Auth issues JWTs and PostgreSQL remains the source of truth.
 - Paystack handles payment initialization, webhooks, refunds, and payout references.
 - Customer, vendor, rider, admin, payment, settlement, notification, and outbox handlers are implemented; hosted E2E and production smoke remain the launch proof gates.

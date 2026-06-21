@@ -17,7 +17,7 @@
 - Vendor frontend domain configured.
 - Rider frontend domain configured.
 - Admin frontend domain configured.
-- API domain `api.mealdirect.com` configured.
+- API domain `api.mealdirectly.com` configured.
 - TLS active for all public domains.
 - Exact CORS origins configured.
 - Vendor records loaded and verified.

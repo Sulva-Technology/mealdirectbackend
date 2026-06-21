@@ -19,7 +19,7 @@ describe('environment validation', () => {
     expect(env.NODE_ENV).toBe('test');
     expect(env.DATABASE_SSL).toBe(false);
     expect(env.DATABASE_SSL_REJECT_UNAUTHORIZED).toBe(true);
-    expect(env.CORS_ALLOWED_ORIGINS).toContain('https://user.mealdirect.com');
+    expect(env.CORS_ALLOWED_ORIGINS).toContain('https://user.mealdirectly.com');
     expect(env.PAYSTACK_BASE_URL).toBe('https://api.paystack.co');
   });
 

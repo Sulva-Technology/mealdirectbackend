@@ -15,7 +15,7 @@ process.env.SUPABASE_JWT_AUDIENCE = 'authenticated';
 process.env.SUPABASE_ANON_KEY = 'test-anon-key';
 process.env.SUPABASE_JWT_SECRET = 'test-jwt-secret-at-least-32-characters-long';
 process.env.CORS_ALLOWED_ORIGINS =
-  'https://user.mealdirect.com,https://vendor.mealdirect.com,https://rider.mealdirect.com,https://admin.mealdirect.com,http://localhost:3000';
+  'https://user.mealdirectly.com,https://vendor.mealdirectly.com,https://rider.mealdirectly.com,https://admin.mealdirectly.com,http://localhost:3000';
 process.env.LOG_LEVEL = 'silent';
 process.env.BODY_LIMIT_BYTES = '1048576';
 process.env.RATE_LIMIT_MAX = '120';

@@ -86,7 +86,7 @@ describe.skipIf(connectionString === undefined)('worker outbox drain', () => {
 
     const outboxRepo = new OutboxRepository(database);
     const reads = new NotificationReadsRepository(database);
-    const email = new EmailChannel(transport, 'Meal Direct <test@mealdirect.com>');
+    const email = new EmailChannel(transport, 'Meal Direct <test@mealdirectly.com>');
     const push = new PushChannel(
       { send: (): Promise<void> => Promise.resolve() },
       { tokensForUser: (): Promise<string[]> => Promise.resolve([]) }

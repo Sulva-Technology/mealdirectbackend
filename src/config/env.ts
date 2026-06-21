@@ -25,10 +25,10 @@ const csvList = z
   .pipe(z.array(z.url()));
 
 const defaultCorsOrigins = [
-  'https://user.mealdirect.com',
-  'https://vendor.mealdirect.com',
-  'https://rider.mealdirect.com',
-  'https://admin.mealdirect.com',
+  'https://user.mealdirectly.com',
+  'https://vendor.mealdirectly.com',
+  'https://rider.mealdirectly.com',
+  'https://admin.mealdirectly.com',
   'http://localhost:3000',
   'http://localhost:3001',
   'http://localhost:3002',
@@ -83,7 +83,7 @@ const envSchema = z
     SENTRY_ENVIRONMENT: z.string().min(1).optional(),
     SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0),
     RESEND_API_KEY: optionalSecret,
-    EMAIL_FROM: z.string().min(1).default('Meal Direct <no-reply@mealdirect.com>'),
+    EMAIL_FROM: z.string().min(1).default('Meal Direct <no-reply@mealdirectly.com>'),
     FCM_PROJECT_ID: optionalSecret,
     FCM_CLIENT_EMAIL: optionalSecret,
     FCM_PRIVATE_KEY: optionalSecret,
