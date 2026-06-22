@@ -108,7 +108,8 @@ export async function createApp(options: CreateAppOptions = {}): Promise<NestFas
       'Content-Type',
       'Authorization',
       config.REQUEST_ID_HEADER,
-      config.TRACE_ID_HEADER
+      config.TRACE_ID_HEADER,
+      'Idempotency-Key'
     ],
     credentials: true
   });
