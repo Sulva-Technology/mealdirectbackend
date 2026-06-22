@@ -61,6 +61,12 @@ const envSchema = z
     SUPABASE_JWT_SECRET: optionalSecret,
     SUPABASE_JWKS_URL: z.url().optional(),
     CORS_ALLOWED_ORIGINS: csvList.default(defaultCorsOrigins.split(',')),
+    // Public base URLs of each role's web app. Used to build Supabase auth
+    // emailRedirectTo / redirectTo links so confirmation and reset emails land
+    // on the correct front-end. Must be allow-listed in supabase auth settings.
+    APP_URL_CUSTOMER: z.url().default('https://user.mealdirectly.com'),
+    APP_URL_VENDOR: z.url().default('https://vendor.mealdirectly.com'),
+    APP_URL_RIDER: z.url().default('https://rider.mealdirectly.com'),
     LOG_LEVEL: z.enum(['silent', 'debug', 'info', 'warn', 'error']).default('info'),
     BODY_LIMIT_BYTES: z.coerce.number().int().positive().max(10_485_760).default(1_048_576),
     RATE_LIMIT_MAX: z.coerce.number().int().positive().default(120),

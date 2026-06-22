@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsOptional, IsString, IsUrl, MinLength } from 'class-validator';
 
 function trimString(value: unknown): unknown {
   return typeof value === 'string' ? value.trim() : value;
@@ -16,6 +16,34 @@ export class SignUpDto {
   @IsString()
   @MinLength(6)
   password!: string;
+
+  @ApiPropertyOptional({ type: String, example: 'Jane Doe', description: "The user's full name, stored in profile metadata." })
+  @Transform(({ value }) => trimString(value))
+  @IsOptional()
+  @IsString()
+  fullName?: string;
+
+  @ApiPropertyOptional({
+    type: String,
+    example: 'https://user.mealdirectly.com/auth/callback',
+    description:
+      'URL the confirmation email links back to. Must be allow-listed in Supabase auth settings; otherwise Supabase falls back to its configured site URL. When omitted the server uses the role default.'
+  })
+  @Transform(({ value }) => trimString(value))
+  @IsOptional()
+  @IsUrl({ require_tld: false })
+  redirectTo?: string;
+
+  @ApiPropertyOptional({
+    deprecated: true,
+    type: String,
+    example: 'https://user.mealdirectly.com/auth/callback',
+    description: 'Deprecated alias for redirectTo (Supabase SDK naming). Use redirectTo instead.'
+  })
+  @Transform(({ value }) => trimString(value))
+  @IsOptional()
+  @IsUrl({ require_tld: false })
+  emailRedirectTo?: string;
 }
 
 export class LoginDto {

@@ -69,6 +69,26 @@ export class SupabaseAuthService {
     }
   }
 
+  /**
+   * Public base URL of the web app that the given role signs in to. Confirmation
+   * and password-reset emails must redirect back to the matching front-end.
+   */
+  private appBaseUrlForRole(role: string): string {
+    switch (role) {
+      case 'vendor':
+        return this.env.get('APP_URL_VENDOR');
+      case 'rider':
+        return this.env.get('APP_URL_RIDER');
+      default:
+        return this.env.get('APP_URL_CUSTOMER');
+    }
+  }
+
+  /** Supabase auth redirect target (the front-end route that handles the email link). */
+  private authRedirectUrl(role: string): string {
+    return `${this.appBaseUrlForRole(role)}/auth/callback`;
+  }
+
   private getClient(accessToken?: string) {
     const supabaseUrl = this.env.get('SUPABASE_URL');
     const supabaseAnonKey = this.env.get('SUPABASE_ANON_KEY');
@@ -92,14 +112,21 @@ export class SupabaseAuthService {
   async signUp(
     email: string,
     password: string,
-    role: string
+    role: string,
+    fullName?: string,
+    redirectTo?: string
   ): Promise<AuthTokensResponseDto> {
     const { data, error } = await this.getClient().auth.signUp({
       email,
       password,
       options: {
+        // Honor a caller-supplied redirect (e.g. the front-end's own callback),
+        // falling back to the role's default app. Supabase only follows
+        // allow-listed URLs, so an unknown value safely degrades to site_url.
+        emailRedirectTo: redirectTo ?? this.authRedirectUrl(role),
         data: {
-          meal_direct_role: role
+          meal_direct_role: role,
+          ...(fullName ? { full_name: fullName } : {})
         }
       }
     });
@@ -245,7 +272,9 @@ export class SupabaseAuthService {
   async requestPasswordReset(email: string): Promise<void> {
     // Swallow provider errors so the response never reveals whether an account exists.
     try {
-      await this.getClient().auth.resetPasswordForEmail(email);
+      await this.getClient().auth.resetPasswordForEmail(email, {
+        redirectTo: this.authRedirectUrl('customer')
+      });
     } catch {
       // intentionally ignored to prevent user enumeration
     }
@@ -253,7 +282,13 @@ export class SupabaseAuthService {
 
   async resendConfirmation(email: string): Promise<void> {
     try {
-      await this.getClient().auth.resend({ type: 'signup', email });
+      await this.getClient().auth.resend({
+        type: 'signup',
+        email,
+        options: {
+          emailRedirectTo: this.authRedirectUrl('customer')
+        }
+      });
     } catch {
       // intentionally ignored to prevent user enumeration
     }

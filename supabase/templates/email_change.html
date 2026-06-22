@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Confirm your new email</title>
+  </head>
+  <body style="margin:0;padding:0;background-color:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f5;padding:24px 0;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background-color:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+            <tr>
+              <td style="background-color:#0B6B4F;padding:28px 32px;">
+                <img src="https://www.mealdirectly.com/logo.png" alt="MealDirectly" height="32" style="display:block;height:32px;border:0;" />
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:36px 32px 8px 32px;">
+                <h1 style="margin:0 0 12px 0;font-size:22px;line-height:1.3;color:#1a1a1a;">Confirm your new email</h1>
+                <p style="margin:0 0 24px 0;font-size:15px;line-height:1.6;color:#4b5563;">
+                  We received a request to change your MealDirectly email from
+                  <strong style="color:#1a1a1a;">{{ .Email }}</strong> to
+                  <strong style="color:#1a1a1a;">{{ .NewEmail }}</strong>. Tap below to confirm.
+                </p>
+                <table role="presentation" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="border-radius:10px;background-color:#0B6B4F;">
+                      <a href="{{ .ConfirmationURL }}" target="_blank" style="display:inline-block;padding:14px 28px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:10px;">Confirm email change</a>
+                    </td>
+                  </tr>
+                </table>
+                <p style="margin:24px 0 0 0;font-size:13px;line-height:1.6;color:#6b7280;">
+                  Button not working? Paste this link into your browser:<br />
+                  <a href="{{ .ConfirmationURL }}" style="color:#0B6B4F;word-break:break-all;">{{ .ConfirmationURL }}</a>
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:24px 32px 32px 32px;">
+                <hr style="border:none;border-top:1px solid #eeeeee;margin:0 0 16px 0;" />
+                <p style="margin:0;font-size:12px;line-height:1.6;color:#9ca3af;">
+                  Didn't request this change? Ignore this email and your address stays the same.
+                </p>
+              </td>
+            </tr>
+          </table>
+          <p style="margin:16px 0 0 0;font-size:11px;color:#9ca3af;">© MealDirectly · Campus meals, delivered.</p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

@@ -48,7 +48,10 @@ additional_redirect_urls = [
   "http://localhost:3000",
   "http://localhost:3001",
   "http://localhost:3002",
-  "http://localhost:3003"
+  "http://localhost:3003",
+  "https://user.mealdirectly.com/auth/callback",
+  "https://vendor.mealdirectly.com/auth/callback",
+  "https://rider.mealdirectly.com/auth/callback"
 ]
 jwt_expiry = 3600
 enable_signup = true
@@ -58,6 +61,30 @@ enable_anonymous_sign_ins = false
 enable_signup = true
 double_confirm_changes = true
 enable_confirmations = true
+
+[auth.email.template.confirmation]
+subject = "Confirm your MealDirectly email"
+content_path = "./templates/confirmation.html"
+
+[auth.email.template.magic_link]
+subject = "Your MealDirectly sign-in link"
+content_path = "./templates/magic_link.html"
+
+[auth.email.template.recovery]
+subject = "Reset your MealDirectly password"
+content_path = "./templates/recovery.html"
+
+[auth.email.template.invite]
+subject = "You're invited to MealDirectly"
+content_path = "./templates/invite.html"
+
+[auth.email.template.email_change]
+subject = "Confirm your new MealDirectly email"
+content_path = "./templates/email_change.html"
+
+[auth.email.template.reauthentication]
+subject = "Your MealDirectly verification code"
+content_path = "./templates/reauthentication.html"
 
 [auth.external.google]
 enabled = false
