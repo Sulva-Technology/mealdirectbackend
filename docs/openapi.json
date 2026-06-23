@@ -307,9 +307,10 @@
               }
             }
           },
-          "400": { "description": "Invalid onboarding input." },
-          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
-          "403": { "description": "User does not belong to the selected campus." }
+          "400": {
+            "description": "Invalid onboarding input, or location not in the selected active campus."
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
         },
         "security": [{ "supabaseAuth": [] }],
         "tags": ["me"]
@@ -328,9 +329,10 @@
               }
             }
           },
-          "400": { "description": "Invalid default location input." },
-          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
-          "403": { "description": "User does not belong to the selected campus." }
+          "400": {
+            "description": "Invalid default location input, or location not in the selected active campus."
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
         },
         "security": [{ "supabaseAuth": [] }],
         "tags": ["me"]

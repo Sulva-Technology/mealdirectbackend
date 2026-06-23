@@ -261,10 +261,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/ProfileEnvelopeDto'
         '400':
-          description: Invalid onboarding input.
+          description: Invalid onboarding input, or location not in the selected active
+            campus.
         '401': *a3
-        '403':
-          description: User does not belong to the selected campus.
       security: *a4
       tags: *a5
   /v1/me/default-location:
@@ -279,10 +278,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/ProfileEnvelopeDto'
         '400':
-          description: Invalid default location input.
+          description: Invalid default location input, or location not in the selected
+            active campus.
         '401': *a3
-        '403':
-          description: User does not belong to the selected campus.
       security: *a4
       tags: *a5
   /v1/campuses:

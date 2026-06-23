@@ -2,7 +2,6 @@ import { Body, Controller, Get, Inject, Patch, Post, Put, UseGuards } from '@nes
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
-  ApiForbiddenResponse,
   ApiOkResponse,
   ApiTags,
   ApiUnauthorizedResponse
@@ -68,8 +67,9 @@ export class ProfilesController {
 
   @Post('me/complete-onboarding')
   @ApiOkResponse({ description: 'Profile after onboarding completion.', type: ProfileEnvelopeDto })
-  @ApiBadRequestResponse({ description: 'Invalid onboarding input.' })
-  @ApiForbiddenResponse({ description: 'User does not belong to the selected campus.' })
+  @ApiBadRequestResponse({
+    description: 'Invalid onboarding input, or location not in the selected active campus.'
+  })
   async completeOnboarding(
     @CurrentActor() actor: AuthenticatedActor,
     @Body() input: CompleteOnboardingDto
@@ -82,8 +82,9 @@ export class ProfilesController {
     description: 'Profile after default location update.',
     type: ProfileEnvelopeDto
   })
-  @ApiBadRequestResponse({ description: 'Invalid default location input.' })
-  @ApiForbiddenResponse({ description: 'User does not belong to the selected campus.' })
+  @ApiBadRequestResponse({
+    description: 'Invalid default location input, or location not in the selected active campus.'
+  })
   async setDefaultLocation(
     @CurrentActor() actor: AuthenticatedActor,
     @Body() input: DefaultLocationDto

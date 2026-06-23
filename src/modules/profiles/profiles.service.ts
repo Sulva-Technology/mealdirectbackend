@@ -1,10 +1,4 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Inject,
-  Injectable,
-  NotFoundException
-} from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 
 import { ErrorCodes } from '../../common/errors/error-codes.js';
 import type { ActorRole } from '../../domain/authorization.js';
@@ -118,7 +112,8 @@ export class ProfilesService {
     input: CompleteOnboardingInput
   ): Promise<ProfileResponse> {
     await this.repository.ensureProfile(actor);
-    await this.assertCanUseLocation(actor.userId, input.defaultCampusId, input.defaultLocationId);
+    await this.assertActiveLocation(input.defaultCampusId, input.defaultLocationId);
+    await this.repository.joinCampus(actor.userId, input.defaultCampusId);
 
     const profile = await this.repository.completeOnboarding(actor.userId, {
       ...input,
@@ -136,7 +131,8 @@ export class ProfilesService {
     input: DefaultLocationInput
   ): Promise<ProfileResponse> {
     await this.repository.ensureProfile(actor);
-    await this.assertCanUseLocation(actor.userId, input.campusId, input.locationId);
+    await this.assertActiveLocation(input.campusId, input.locationId);
+    await this.repository.joinCampus(actor.userId, input.campusId);
 
     const profile = await this.repository.setDefaultLocation(actor.userId, input);
     if (profile === undefined) {
@@ -146,18 +142,7 @@ export class ProfilesService {
     return toProfileResponse(profile);
   }
 
-  private async assertCanUseLocation(
-    userId: string,
-    campusId: string,
-    locationId: string
-  ): Promise<void> {
-    if (!(await this.repository.isActiveCampusMember(userId, campusId))) {
-      throw new ForbiddenException({
-        code: ErrorCodes.FORBIDDEN,
-        message: 'You do not belong to the selected campus.'
-      });
-    }
-
+  private async assertActiveLocation(campusId: string, locationId: string): Promise<void> {
     if (!(await this.repository.isActiveCampusLocation(campusId, locationId))) {
       throw new BadRequestException({
         code: ErrorCodes.VALIDATION_FAILED,

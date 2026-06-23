@@ -172,6 +172,15 @@ export class ProfilesRepository implements ProfilesRepositoryContract {
     return result.rows[0]?.exists ?? false;
   }
 
+  async joinCampus(userId: string, campusId: string): Promise<void> {
+    await sql`
+      insert into public.campus_memberships (user_id, campus_id, active)
+      values (${userId}::uuid, ${campusId}::uuid, true)
+      on conflict on constraint campus_memberships_user_campus_unique
+      do update set active = true
+    `.execute(this.database.db);
+  }
+
   async updateProfile(
     userId: string,
     input: ProfileUpdateInput

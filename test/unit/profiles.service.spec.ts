@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { AuthenticatedActor } from '../../src/modules/auth/actor-context.js';
@@ -83,6 +83,7 @@ function createRepository(): ProfilesRepositoryContract {
     findAdminMemberships: vi.fn().mockResolvedValue([adminMembership]),
     isActiveCampusMember: vi.fn().mockResolvedValue(true),
     isActiveCampusLocation: vi.fn().mockResolvedValue(true),
+    joinCampus: vi.fn().mockResolvedValue(undefined),
     updateProfile: vi.fn().mockResolvedValue({ ...profile, displayName: 'Ada' }),
     completeOnboarding: vi.fn().mockResolvedValue({
       ...profile,
@@ -127,7 +128,7 @@ describe('ProfilesService', () => {
     });
   });
 
-  it('requires campus membership before completing onboarding', async () => {
+  it('auto-joins the selected campus when completing onboarding for a non-member', async () => {
     vi.mocked(repository.isActiveCampusMember).mockResolvedValue(false);
     const input: CompleteOnboardingDto = {
       defaultCampusId: campusMembership.campusId,
@@ -135,10 +136,11 @@ describe('ProfilesService', () => {
       phoneNumber: '+2348012345678'
     };
 
-    await expect(service.completeOnboarding(actor, input)).rejects.toBeInstanceOf(
-      ForbiddenException
-    );
-    expect(repository.completeOnboarding).not.toHaveBeenCalled();
+    await expect(service.completeOnboarding(actor, input)).resolves.toMatchObject({
+      onboardingCompleted: true
+    });
+    expect(repository.joinCampus).toHaveBeenCalledWith(actor.userId, campusMembership.campusId);
+    expect(repository.completeOnboarding).toHaveBeenCalled();
   });
 
   it('rejects default locations outside the selected active campus', async () => {
