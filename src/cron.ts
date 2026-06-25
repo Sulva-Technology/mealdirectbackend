@@ -12,7 +12,11 @@ import {
   parseEnvironment
 } from './config/env.js';
 
-const cronJobs = ['release-expired-reservations', 'close-batches-at-cutoff'] as const;
+const cronJobs = [
+  'release-expired-reservations',
+  'close-batches-at-cutoff',
+  'generate-inventory-horizon'
+] as const;
 type CronJob = (typeof cronJobs)[number];
 
 function parseCronJob(rawJob: string | undefined): CronJob {
@@ -44,6 +48,9 @@ async function runCronJob(job: CronJob): Promise<void> {
     }
     if (job === 'close-batches-at-cutoff') {
       await sql`select public.close_batches_at_cutoff()`.execute(database.db);
+    }
+    if (job === 'generate-inventory-horizon') {
+      await sql`select public.generate_inventory_horizon(7)`.execute(database.db);
     }
 
     logger.log({ message: 'Cron job completed', job }, 'Cron');

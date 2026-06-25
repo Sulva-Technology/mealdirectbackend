@@ -53,6 +53,12 @@ export class InventoryRepository implements InventoryRepositoryContract {
     return result.rows[0]?.hasAccess ?? false;
   }
 
+  async ensureInventoryForDate(vendorId: string, date: string): Promise<void> {
+    await sql`
+      select public.generate_menu_item_inventory(${date}::date, ${vendorId}::uuid)
+    `.execute(this.database.db);
+  }
+
   async listInventory(vendorId: string, filters: InventoryListFilters): Promise<InventoryRecord[]> {
     const result = await sql<InventoryRow>`
       select

@@ -71,6 +71,7 @@ export class InventoryService {
     filters: InventoryListFilters
   ): Promise<InventoryRecord[]> {
     const vendorId = await this.assertActorCanUseVendor(actor);
+    await this.repository.ensureInventoryForDate(vendorId, filters.date);
     return this.repository.listInventory(vendorId, filters);
   }
 

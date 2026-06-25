@@ -62,6 +62,7 @@ const adjustment: InventoryAdjustmentRecord = {
 function createRepository(): InventoryRepositoryContract {
   return {
     assertVendorAccess: vi.fn().mockResolvedValue(true),
+    ensureInventoryForDate: vi.fn().mockResolvedValue(undefined),
     listInventory: vi.fn().mockResolvedValue([inventory]),
     findInventoryForVendor: vi.fn().mockResolvedValue(inventory),
     updateInventoryTotal: vi.fn().mockResolvedValue({ ...inventory, quantityTotal: 12 }),
@@ -95,6 +96,13 @@ describe('InventoryService', () => {
       })
     ).rejects.toBeInstanceOf(ForbiddenException);
     expect(repository.listInventory).not.toHaveBeenCalled();
+  });
+
+  it('generates inventory for the requested date before listing', async () => {
+    await service.listInventory(actor, { date: '2026-06-16' });
+
+    expect(repository.ensureInventoryForDate).toHaveBeenCalledWith(vendorId, '2026-06-16');
+    expect(repository.listInventory).toHaveBeenCalledWith(vendorId, { date: '2026-06-16' });
   });
 
   it('rejects total quantity updates below reserved and sold units', async () => {

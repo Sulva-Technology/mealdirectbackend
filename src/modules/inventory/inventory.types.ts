@@ -55,6 +55,7 @@ export type InventoryAdjustmentResponse = {
 
 export type InventoryRepositoryContract = {
   assertVendorAccess: (vendorId: string, userId: string) => Promise<boolean>;
+  ensureInventoryForDate: (vendorId: string, date: string) => Promise<void>;
   listInventory: (vendorId: string, filters: InventoryListFilters) => Promise<InventoryRecord[]>;
   findInventoryForVendor: (
     vendorId: string,
