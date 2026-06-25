@@ -198,4 +198,5 @@ export type VendorsRepositoryContract = {
     menuItemId: string,
     entries: MenuItemAvailabilityEntry[]
   ) => Promise<MenuItemAvailabilityEntry[]>;
+  regenerateInventoryHorizon: (vendorId: string) => Promise<void>;
 };

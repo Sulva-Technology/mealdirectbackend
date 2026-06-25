@@ -642,4 +642,16 @@ export class VendorsRepository implements VendorsRepositoryContract {
 
     return this.listMenuItemAvailability(menuItemId);
   }
+
+  // Materializes inventory rows (quantity 0) for today through today + 7 days
+  // for this vendor so newly-available items are immediately stockable instead
+  // of waiting for the nightly generate-inventory-horizon cron. generate_menu_item_inventory
+  // only inserts missing (item, slot, date) combinations, so it never overwrites
+  // vendor-edited quantities.
+  async regenerateInventoryHorizon(vendorId: string): Promise<void> {
+    await sql`
+      select public.generate_menu_item_inventory((current_date + offset)::date, ${vendorId}::uuid)
+      from generate_series(0, 7) as offset
+    `.execute(this.database.db);
+  }
 }

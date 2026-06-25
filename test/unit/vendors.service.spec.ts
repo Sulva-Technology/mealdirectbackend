@@ -108,7 +108,8 @@ function createRepository(): VendorsRepositoryContract {
     listVendorAvailability: vi.fn().mockResolvedValue([]),
     replaceVendorAvailability: vi.fn().mockResolvedValue([]),
     listMenuItemAvailability: vi.fn().mockResolvedValue([]),
-    replaceMenuItemAvailability: vi.fn().mockResolvedValue([])
+    replaceMenuItemAvailability: vi.fn().mockResolvedValue([]),
+    regenerateInventoryHorizon: vi.fn().mockResolvedValue(undefined)
   };
 }
 
@@ -276,5 +277,25 @@ describe('VendorsService', () => {
       service.replaceVendorAvailability(actor, vendorId, { entries })
     ).rejects.toBeInstanceOf(BadRequestException);
     expect(repository.replaceVendorAvailability).not.toHaveBeenCalled();
+  });
+
+  it('regenerates the inventory horizon after replacing vendor availability', async () => {
+    const entries: VendorAvailabilityEntry[] = [
+      { vendorId, deliverySlotId: slotId, dayOfWeek: 4, available: true }
+    ];
+
+    await service.replaceVendorAvailability(actor, vendorId, { entries });
+
+    expect(repository.replaceVendorAvailability).toHaveBeenCalledTimes(1);
+    expect(repository.regenerateInventoryHorizon).toHaveBeenCalledWith(vendorId);
+  });
+
+  it('regenerates the inventory horizon after replacing menu item schedules', async () => {
+    const entries = [{ deliverySlotId: slotId, dayOfWeek: 4, available: true }];
+
+    await service.replaceMenuItemSchedules(actor, vendorId, menuItemId, { entries });
+
+    expect(repository.replaceMenuItemAvailability).toHaveBeenCalledTimes(1);
+    expect(repository.regenerateInventoryHorizon).toHaveBeenCalledWith(vendorId);
   });
 });

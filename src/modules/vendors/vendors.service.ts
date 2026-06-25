@@ -406,7 +406,7 @@ export class VendorsService {
     await this.assertActorCanUseVendor(actor, vendorId);
     assertScheduleEntries(input.entries);
 
-    return this.repository.replaceVendorAvailability(
+    const result = await this.repository.replaceVendorAvailability(
       vendorId,
       input.entries.map((entry) => ({
         deliverySlotId: entry.deliverySlotId,
@@ -416,6 +416,12 @@ export class VendorsService {
         validUntil: entry.validUntil ?? null
       }))
     );
+
+    // Vendor slot availability gates inventory generation; refresh the horizon so
+    // items become stockable today instead of after the nightly cron.
+    await this.repository.regenerateInventoryHorizon(vendorId);
+
+    return result;
   }
 
   async listMenuItemSchedules(
@@ -438,7 +444,7 @@ export class VendorsService {
     await this.assertMenuItemBelongsToVendor(vendorId, menuItemId);
     assertScheduleEntries(input.entries);
 
-    return this.repository.replaceMenuItemAvailability(
+    const result = await this.repository.replaceMenuItemAvailability(
       menuItemId,
       input.entries.map((entry) => ({
         deliverySlotId: entry.deliverySlotId,
@@ -448,6 +454,12 @@ export class VendorsService {
         validUntil: entry.validUntil ?? null
       }))
     );
+
+    // Menu-item slot availability gates inventory generation; refresh the horizon
+    // so the item becomes stockable today instead of after the nightly cron.
+    await this.repository.regenerateInventoryHorizon(vendorId);
+
+    return result;
   }
 
   private async setMenuItemActive(

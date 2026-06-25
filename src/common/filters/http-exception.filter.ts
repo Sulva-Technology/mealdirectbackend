@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
+import { mapDatabaseError } from '../errors/database-error.js';
 import { ErrorCodes } from '../errors/error-codes.js';
 import type { SafeErrorDetails } from '../errors/error-envelope.js';
 import { createErrorEnvelope } from '../errors/error-envelope.js';
@@ -58,10 +59,13 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const request = context.getRequest<FastifyRequest>();
     const requestId = getRequestId(request);
 
-    if (exception instanceof HttpException) {
-      const status = exception.getStatus();
-      const response = normalizeExceptionResponse(exception);
-      const message = normalizeMessage(response.message, exception.message);
+    const httpException =
+      exception instanceof HttpException ? exception : mapDatabaseError(exception);
+
+    if (httpException !== undefined) {
+      const status = httpException.getStatus();
+      const response = normalizeExceptionResponse(httpException);
+      const message = normalizeMessage(response.message, httpException.message);
 
       const envelope = createErrorEnvelope({
         code: response.code ?? mapStatusToCode(status),
