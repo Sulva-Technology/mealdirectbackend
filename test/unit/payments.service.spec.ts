@@ -70,6 +70,7 @@ const refund: RefundRecord = {
 function createRepository(): PaymentsRepositoryContract {
   return {
     findCustomerInitializationPayment: vi.fn().mockResolvedValue(payment),
+    findStuckPaystackPayments: vi.fn().mockResolvedValue([payment]),
     markPaymentInitializationPayload: vi.fn().mockResolvedValue(paymentRecord),
     listAdminPayments: vi.fn().mockResolvedValue([paymentRecord]),
     findAdminPaymentById: vi.fn().mockResolvedValue(paymentRecord),
@@ -252,6 +253,42 @@ describe('PaymentsService', () => {
     await expect(
       service.verifyPendingOrderPayment(customer.userId, payment.orderId)
     ).resolves.toBeUndefined();
+    expect(repository.markPaymentSuccessfulFromProvider).not.toHaveBeenCalled();
+  });
+
+  it('reconciles stuck pending payments in a background sweep independent of customer polling', async () => {
+    await expect(service.reconcilePendingPayments()).resolves.toEqual({
+      scanned: 1,
+      reconciled: 1
+    });
+
+    expect(repository.findStuckPaystackPayments).toHaveBeenCalledWith(120, 100);
+    expect(paystack.verifyTransaction).toHaveBeenCalledWith(payment.providerReference);
+    expect(repository.markPaymentSuccessfulFromProvider).toHaveBeenCalledWith(
+      payment.providerReference,
+      '4099260516',
+      payment.expectedAmountKobo,
+      { status: true }
+    );
+  });
+
+  it('sweep leaves non-success and mismatched payments pending without throwing', async () => {
+    vi.mocked(repository.findStuckPaystackPayments).mockResolvedValue([payment, payment]);
+    vi.mocked(paystack.verifyTransaction)
+      .mockResolvedValueOnce({
+        amountKobo: payment.expectedAmountKobo,
+        currency: 'NGN',
+        providerPayload: { status: true },
+        reference: payment.providerReference,
+        status: 'abandoned',
+        transactionId: '4099260516'
+      })
+      .mockRejectedValueOnce(new Error('paystack down'));
+
+    await expect(service.reconcilePendingPayments()).resolves.toEqual({
+      scanned: 2,
+      reconciled: 0
+    });
     expect(repository.markPaymentSuccessfulFromProvider).not.toHaveBeenCalled();
   });
 

@@ -12,6 +12,7 @@ import type { AuthenticatedActor } from '../auth/actor-context.js';
 import { PaystackClient } from './paystack.client.js';
 import { PaymentsRepository } from './payments.repository.js';
 import type {
+  PaymentInitializationRecord,
   PaymentInitializationResponse,
   PaymentRecord,
   PaymentReconciliationResponse,
@@ -74,23 +75,65 @@ export class PaymentsService {
     }
     if (payment === undefined) return; // no initialized/pending paystack payment — nothing to verify
 
+    await this.tryReconcilePayment(payment);
+  }
+
+  /**
+   * Background sweep so payment resolution never depends on a webhook delivery or the customer
+   * sitting on the payment-status poll screen. Verifies every still-pending Paystack payment
+   * older than the stale window and marks paid those Paystack reports as a matching success.
+   * Best-effort per payment — one failure never blocks the rest of the batch.
+   */
+  async reconcilePendingPayments(options?: {
+    staleSeconds?: number;
+    limit?: number;
+  }): Promise<{ scanned: number; reconciled: number }> {
+    const staleSeconds = options?.staleSeconds ?? 120;
+    const limit = options?.limit ?? 100;
+
+    let payments;
+    try {
+      payments = await this.repository.findStuckPaystackPayments(staleSeconds, limit);
+    } catch (error) {
+      this.logger.warn(`Could not load stuck payments for reconciliation: ${describeError(error)}`);
+      return { scanned: 0, reconciled: 0 };
+    }
+
+    let reconciled = 0;
+    for (const payment of payments) {
+      if (await this.tryReconcilePayment(payment)) reconciled += 1;
+    }
+
+    this.logger.log(
+      `Payment reconciliation sweep: scanned ${String(payments.length)}, reconciled ${String(reconciled)}`
+    );
+    return { scanned: payments.length, reconciled };
+  }
+
+  /**
+   * Verify a single pending payment against Paystack and mark it paid on a matching success.
+   * Returns true only when the payment was marked successful. Idempotent and best-effort:
+   * provider/mismatch failures are logged and swallowed so callers never break.
+   */
+  private async tryReconcilePayment(payment: PaymentInitializationRecord): Promise<boolean> {
+    const orderId = payment.orderId;
     try {
       const verified = await this.paystack.verifyTransaction(payment.providerReference);
 
-      if (verified.status !== 'success') return; // abandoned/failed/ongoing — leave pending
+      if (verified.status !== 'success') return false; // abandoned/failed/ongoing — leave pending
       if (verified.reference !== payment.providerReference) {
         this.logger.warn(`Paystack reference mismatch for order ${orderId}`);
-        return;
+        return false;
       }
       if (verified.amountKobo !== payment.expectedAmountKobo) {
         this.logger.warn(
           `Paystack amount mismatch for order ${orderId}: got ${String(verified.amountKobo)}, expected ${String(payment.expectedAmountKobo)}`
         );
-        return;
+        return false;
       }
       if (verified.currency !== payment.currency) {
         this.logger.warn(`Paystack currency mismatch for order ${orderId}`);
-        return;
+        return false;
       }
 
       await this.repository.markPaymentSuccessfulFromProvider(
@@ -99,10 +142,12 @@ export class PaymentsService {
         verified.amountKobo,
         verified.providerPayload
       );
+      return true;
     } catch (error) {
       this.logger.warn(
         `Paystack verification fallback failed for order ${orderId}: ${describeError(error)}`
       );
+      return false;
     }
   }
 

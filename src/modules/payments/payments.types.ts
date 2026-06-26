@@ -129,6 +129,10 @@ export type PaymentsRepositoryContract = {
     customerId: string,
     orderId: string
   ) => Promise<PaymentInitializationRecord | undefined>;
+  findStuckPaystackPayments: (
+    staleSeconds: number,
+    limit: number
+  ) => Promise<PaymentInitializationRecord[]>;
   markPaymentInitializationPayload: (
     paymentId: string,
     providerPayload: Record<string, unknown>

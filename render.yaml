@@ -109,3 +109,28 @@ services:
         sync: false
       - key: INTERNAL_OPERATIONS_TOKEN
         sync: false
+  - type: cron
+    name: meal-direct-reconcile-payments
+    runtime: docker
+    schedule: '*/2 * * * *'
+    dockerfilePath: ./Dockerfile
+    dockerCommand: node dist/cron.js reconcile-pending-payments
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_SSL
+        value: true
+      - key: DATABASE_SSL_REJECT_UNAUTHORIZED
+        value: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_JWT_ISSUER
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      - key: INTERNAL_OPERATIONS_TOKEN
+        sync: false
+      - key: PAYSTACK_SECRET_KEY
+        sync: false

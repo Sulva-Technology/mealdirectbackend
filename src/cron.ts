@@ -6,6 +6,7 @@ import { sql } from 'kysely';
 import { AppModule } from './app.module.js';
 import { JsonLogger } from './common/logging/json-logger.service.js';
 import { DatabaseService } from './database/database.service.js';
+import { PaymentsService } from './modules/payments/payments.service.js';
 import {
   EnvironmentValidationError,
   loadEnvironmentFiles,
@@ -15,7 +16,8 @@ import {
 const cronJobs = [
   'release-expired-reservations',
   'close-batches-at-cutoff',
-  'generate-inventory-horizon'
+  'generate-inventory-horizon',
+  'reconcile-pending-payments'
 ] as const;
 type CronJob = (typeof cronJobs)[number];
 
@@ -51,6 +53,10 @@ async function runCronJob(job: CronJob): Promise<void> {
     }
     if (job === 'generate-inventory-horizon') {
       await sql`select public.generate_inventory_horizon(7)`.execute(database.db);
+    }
+    if (job === 'reconcile-pending-payments') {
+      const result = await app.get(PaymentsService).reconcilePendingPayments();
+      logger.log({ message: 'Reconciled pending payments', job, ...result }, 'Cron');
     }
 
     logger.log({ message: 'Cron job completed', job }, 'Cron');

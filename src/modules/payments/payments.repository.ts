@@ -55,6 +55,38 @@ export class PaymentsRepository implements PaymentsRepositoryContract {
     return result.rows[0];
   }
 
+  async findStuckPaystackPayments(
+    staleSeconds: number,
+    limit: number
+  ): Promise<PaymentInitializationRecord[]> {
+    const result = await sql<PaymentInitializationRecord>`
+      select
+        p.id::text as "id",
+        o.id::text as "orderId",
+        o.order_number as "orderNumber",
+        o.customer_id::text as "customerId",
+        pr.email::text as "customerEmail",
+        o.campus_id::text as "campusId",
+        o.order_status::text as "orderStatus",
+        o.total_kobo as "orderTotalKobo",
+        p.provider_reference as "providerReference",
+        p.status::text as "paymentStatus",
+        p.expected_amount_kobo as "expectedAmountKobo",
+        p.currency
+      from public.payments p
+      join public.orders o on o.id = p.order_id
+      join public.profiles pr on pr.id = o.customer_id
+      where p.provider = 'paystack'::public.payment_provider
+        and p.status in ('initialized', 'pending')
+        and o.order_status = 'pending_payment'::public.order_status
+        and p.created_at < now() - make_interval(secs => ${staleSeconds})
+      order by p.created_at asc
+      limit ${limit}
+    `.execute(this.database.db);
+
+    return result.rows;
+  }
+
   async markPaymentInitializationPayload(
     paymentId: string,
     providerPayload: Record<string, unknown>
