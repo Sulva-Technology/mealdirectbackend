@@ -97,6 +97,41 @@ export class RiderProfileEnvelopeDto {
   data!: RiderProfileDto;
 }
 
+export class OnboardRiderDto {
+  @ApiProperty({ format: 'uuid', type: String, description: 'Campus the rider delivers on.' })
+  @IsDatabaseUuid()
+  campusId!: string;
+
+  @ApiProperty({ maxLength: 120, minLength: 2, type: String, description: 'Public display name.' })
+  @Transform(({ value }) => trimString(value))
+  @IsString()
+  @MinLength(2)
+  @MaxLength(120)
+  displayName!: string;
+
+  @ApiProperty({ pattern: '^[+0-9][0-9 ()-]{6,24}$', type: String })
+  @Transform(({ value }) => trimString(value))
+  @IsString()
+  @Matches(/^[+0-9][0-9 ()-]{6,24}$/)
+  phone!: string;
+}
+
+export class RiderOnboardResultDto {
+  @ApiProperty({ type: () => RiderProfileDto })
+  rider!: RiderProfileDto;
+
+  @ApiProperty({
+    type: Boolean,
+    description: 'The client must refresh its session to receive the rider_id claim.'
+  })
+  tokenRefreshRequired!: boolean;
+}
+
+export class RiderOnboardEnvelopeDto {
+  @ApiProperty({ type: () => RiderOnboardResultDto })
+  data!: RiderOnboardResultDto;
+}
+
 export class RiderAssignmentIdParamDto {
   @ApiProperty({ format: 'uuid', type: String })
   @IsDatabaseUuid()

@@ -36,7 +36,8 @@ export class OrdersRepository implements OrdersRepositoryContract {
     customerId: string,
     input: CreateOrderDto,
     idempotencyKey: string,
-    requestHash: string
+    requestHash: string,
+    serviceFeeKobo: number
   ): Promise<{ orderId: string }> {
     const items = input.items.map((item) => ({
       menu_item_id: item.menuItemId,
@@ -57,7 +58,8 @@ export class OrdersRepository implements OrdersRepositoryContract {
         ${idempotencyKey},
         ${requestHash},
         ${input.promotionCode ?? null},
-        ${input.specialInstructions ?? null}
+        ${input.specialInstructions ?? null},
+        ${serviceFeeKobo}::integer
       ) as order_id
     `.execute(this.database.db);
 
@@ -132,6 +134,7 @@ export class OrdersRepository implements OrdersRepositoryContract {
         o.special_instructions as "specialInstructions",
         o.food_subtotal_kobo as "foodSubtotalKobo",
         o.delivery_fee_kobo as "deliveryFeeKobo",
+        o.service_fee_kobo as "serviceFeeKobo",
         o.discount_kobo as "discountKobo",
         o.total_kobo as "totalKobo",
         o.currency,
@@ -219,6 +222,7 @@ export class OrdersRepository implements OrdersRepositoryContract {
         o.special_instructions as "specialInstructions",
         o.food_subtotal_kobo as "foodSubtotalKobo",
         o.delivery_fee_kobo as "deliveryFeeKobo",
+        o.service_fee_kobo as "serviceFeeKobo",
         o.discount_kobo as "discountKobo",
         o.total_kobo as "totalKobo",
         o.currency,

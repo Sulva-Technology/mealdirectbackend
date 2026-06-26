@@ -3746,6 +3746,8 @@ components:
           type: number
         deliveryFeeKobo:
           type: number
+        serviceFeeKobo:
+          type: number
         discountKobo:
           type: number
         totalKobo:
@@ -3781,6 +3783,7 @@ components:
         - deliveryMode
         - foodSubtotalKobo
         - deliveryFeeKobo
+        - serviceFeeKobo
         - discountKobo
         - totalKobo
         - currency
@@ -3904,6 +3907,8 @@ components:
           type: number
         deliveryFeeKobo:
           type: number
+        serviceFeeKobo:
+          type: number
         discountKobo:
           type: number
         totalKobo:
@@ -3948,6 +3953,7 @@ components:
         - deliveryMode
         - foodSubtotalKobo
         - deliveryFeeKobo
+        - serviceFeeKobo
         - discountKobo
         - totalKobo
         - currency
@@ -4922,6 +4928,8 @@ components:
           type: number
         deliveryFeeKobo:
           type: number
+        serviceFeeKobo:
+          type: number
         discountKobo:
           type: number
         totalKobo:
@@ -4986,6 +4994,7 @@ components:
         - deliveryMode
         - foodSubtotalKobo
         - deliveryFeeKobo
+        - serviceFeeKobo
         - discountKobo
         - totalKobo
         - currency

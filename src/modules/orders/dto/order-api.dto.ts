@@ -123,6 +123,9 @@ export class OrderSummaryDto {
   deliveryFeeKobo!: number;
 
   @ApiProperty({ type: Number })
+  serviceFeeKobo!: number;
+
+  @ApiProperty({ type: Number })
   discountKobo!: number;
 
   @ApiProperty({ type: Number })

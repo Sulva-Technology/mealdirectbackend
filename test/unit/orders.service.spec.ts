@@ -64,6 +64,7 @@ const orderDetail: OrderDetail = {
   specialInstructions: null,
   foodSubtotalKobo: 500000,
   deliveryFeeKobo: 15000,
+  serviceFeeKobo: 0,
   discountKobo: 0,
   totalKobo: 515000,
   currency: 'NGN',

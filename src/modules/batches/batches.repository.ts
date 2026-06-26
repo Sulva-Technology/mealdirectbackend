@@ -89,6 +89,7 @@ export class BatchesRepository implements BatchesRepositoryContract {
         o.delivery_mode::text as "deliveryMode",
         o.food_subtotal_kobo as "foodSubtotalKobo",
         o.delivery_fee_kobo as "deliveryFeeKobo",
+        o.service_fee_kobo as "serviceFeeKobo",
         o.discount_kobo as "discountKobo",
         o.total_kobo as "totalKobo",
         o.currency,

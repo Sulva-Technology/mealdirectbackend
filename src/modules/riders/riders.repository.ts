@@ -16,6 +16,7 @@ import type {
   RiderIssueInput,
   RiderIssueRecord,
   RiderOrderDetail,
+  RiderOnboardRepositoryInput,
   RiderProfile,
   RiderProfileUpdateInput,
   RiderSettlementDetail,
@@ -58,6 +59,51 @@ export class RidersRepository implements RidersRepositoryContract {
     `.execute(this.database.db);
 
     return result.rows[0];
+  }
+
+  async findRiderIdForUser(userId: string): Promise<string | undefined> {
+    const result = await sql<{ riderId: string }>`
+      select id::text as "riderId"
+      from public.riders
+      where user_id = ${userId}::uuid
+      order by active desc, created_at desc
+      limit 1
+    `.execute(this.database.db);
+
+    return result.rows[0]?.riderId;
+  }
+
+  async onboardRider(input: RiderOnboardRepositoryInput): Promise<RiderProfile> {
+    const inserted = await sql<{ id: string }>`
+      insert into public.riders (
+        campus_id,
+        user_id,
+        display_name,
+        phone,
+        status,
+        active
+      )
+      values (
+        ${input.campusId}::uuid,
+        ${input.userId}::uuid,
+        ${input.displayName},
+        ${input.phone},
+        'pending'::public.rider_status,
+        false
+      )
+      returning id::text as "id"
+    `.execute(this.database.db);
+
+    const riderId = inserted.rows[0]?.id;
+    if (riderId === undefined) {
+      throw new Error('Rider insert did not return a row.');
+    }
+
+    const profile = await this.findRiderProfileForActor(input.userId, riderId);
+    if (profile === undefined) {
+      throw new Error('Rider onboarding did not return a profile.');
+    }
+    return profile;
   }
 
   async updateRiderProfile(
@@ -305,6 +351,7 @@ export class RidersRepository implements RidersRepositoryContract {
         o.special_instructions as "specialInstructions",
         o.food_subtotal_kobo as "foodSubtotalKobo",
         o.delivery_fee_kobo as "deliveryFeeKobo",
+        o.service_fee_kobo as "serviceFeeKobo",
         o.discount_kobo as "discountKobo",
         o.total_kobo as "totalKobo",
         o.currency,
@@ -588,6 +635,7 @@ export class RidersRepository implements RidersRepositoryContract {
         o.special_instructions as "specialInstructions",
         o.food_subtotal_kobo as "foodSubtotalKobo",
         o.delivery_fee_kobo as "deliveryFeeKobo",
+        o.service_fee_kobo as "serviceFeeKobo",
         o.discount_kobo as "discountKobo",
         o.total_kobo as "totalKobo",
         o.currency,

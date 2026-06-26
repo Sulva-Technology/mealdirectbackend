@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Inject,
   Injectable,
@@ -10,9 +11,11 @@ import { createCursorPage, decodeCursor, encodeCursor } from '../../common/api/p
 import type { CursorPage, CursorPayload } from '../../common/api/pagination.js';
 import { ErrorCodes } from '../../common/errors/error-codes.js';
 import type { AuthenticatedActor } from '../auth/actor-context.js';
+import { SupabaseAuthService } from '../auth/supabase-auth.service.js';
 import type { OrderStatus } from '../orders/orders.types.js';
 import type {
   CreateRiderIssueDto,
+  OnboardRiderDto,
   RiderAssignmentListQueryDto,
   RiderEarningsQueryDto,
   RiderProfileUpdateDto,
@@ -30,6 +33,21 @@ import type {
   RiderSettlementSummary,
   RidersRepositoryContract
 } from './riders.types.js';
+
+export type RiderOnboardResult = {
+  rider: RiderProfile;
+  tokenRefreshRequired: boolean;
+};
+
+function conflict(message: string): ConflictException {
+  return new ConflictException({ code: ErrorCodes.CONFLICT, message });
+}
+
+function postgresErrorCode(error: unknown): string | undefined {
+  return typeof error === 'object' && error !== null
+    ? (error as { code?: string }).code
+    : undefined;
+}
 
 function forbidden(message: string): ForbiddenException {
   return new ForbiddenException({
@@ -71,8 +89,59 @@ function decodeTwoPartCursor(cursor: string, label: string, firstKey: string): s
 export class RidersService {
   constructor(
     @Inject(RidersRepository)
-    private readonly repository: RidersRepositoryContract
+    private readonly repository: RidersRepositoryContract,
+    @Inject(SupabaseAuthService)
+    private readonly auth: SupabaseAuthService
   ) {}
+
+  /**
+   * Self-service rider onboarding: provisions the rider record and writes
+   * meal_direct_role + rider_id into the caller's app_metadata. The rider starts
+   * `pending`/inactive and an admin must verify it before delivery access. The new
+   * rider_id only reaches the JWT after the client refreshes its session, hence
+   * tokenRefreshRequired.
+   */
+  async onboardRider(
+    actor: AuthenticatedActor,
+    input: OnboardRiderDto
+  ): Promise<RiderOnboardResult> {
+    if (actor.role !== 'rider') {
+      throw forbidden('Rider access is required.');
+    }
+
+    const alreadyLinked = await this.repository.findRiderIdForUser(actor.userId);
+    if (alreadyLinked !== undefined) {
+      throw conflict('This account is already linked to a rider.');
+    }
+
+    let rider: RiderProfile;
+    try {
+      rider = await this.repository.onboardRider({
+        campusId: input.campusId,
+        displayName: input.displayName.trim(),
+        phone: input.phone.trim(),
+        userId: actor.userId
+      });
+    } catch (error) {
+      const code = postgresErrorCode(error);
+      if (code === '23503') {
+        // foreign key violation — campus_id does not exist
+        throw badRequest('Campus was not found.');
+      }
+      if (code === '23505') {
+        // unique (campus_id, user_id) — already onboarded on this campus
+        throw conflict('This account is already linked to a rider.');
+      }
+      throw error;
+    }
+
+    await this.auth.setUserAppMetadata(actor.userId, {
+      meal_direct_role: 'rider',
+      rider_id: rider.id
+    });
+
+    return { rider, tokenRefreshRequired: true };
+  }
 
   async getProfile(actor: AuthenticatedActor): Promise<RiderProfile> {
     return this.resolveRiderProfile(actor, { requireActiveVerified: false });

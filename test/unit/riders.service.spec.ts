@@ -1,8 +1,14 @@
-import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  NotFoundException
+} from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { encodeCursor } from '../../src/common/api/pagination.js';
 import type { AuthenticatedActor } from '../../src/modules/auth/actor-context.js';
+import type { SupabaseAuthService } from '../../src/modules/auth/supabase-auth.service.js';
 import { RidersService } from '../../src/modules/riders/riders.service.js';
 import type {
   RiderAssignmentSummary,
@@ -84,6 +90,7 @@ const order: RiderOrderDetail = {
   customerPhone: '+2348088888888',
   deliveredAt: null,
   deliveryFeeKobo: 15000,
+  serviceFeeKobo: 0,
   deliveryInstructions: 'Call at the gate.',
   deliveryMode: 'meal_direct_rider',
   specialInstructions: null,
@@ -163,25 +170,38 @@ function createRepository(): MockRidersRepository {
     findAssignedOrderById: vi.fn().mockResolvedValue(order),
     findAssignmentById: vi.fn().mockResolvedValue(assignment),
     findAssignmentOrders: vi.fn().mockResolvedValue([order]),
+    findRiderIdForUser: vi.fn().mockResolvedValue(undefined),
     findRiderProfileForActor: vi.fn().mockResolvedValue(profile),
     findRiderSettlementById: vi.fn().mockResolvedValue(settlementDetail),
     getEarningsSummary: vi.fn().mockResolvedValue(earnings),
     listAssignments: vi.fn().mockResolvedValue([assignment]),
     listRiderSettlements: vi.fn().mockResolvedValue([settlement]),
     markAssignmentPickedUp: vi.fn().mockResolvedValue({ ...assignment, status: 'picked_up' }),
+    onboardRider: vi.fn().mockResolvedValue(profile),
     setRiderAvailability: vi.fn().mockResolvedValue({ ...profile, available: true }),
     transitionAssignedOrderStatus: vi.fn().mockResolvedValue('out_for_delivery'),
     updateRiderProfile: vi.fn().mockResolvedValue(profile)
   };
 }
 
+function createAuth() {
+  return {
+    setUserAppMetadata: vi.fn().mockResolvedValue(undefined)
+  };
+}
+
 describe('RidersService', () => {
   let repository: MockRidersRepository;
+  let auth: ReturnType<typeof createAuth>;
   let service: RidersService;
 
   beforeEach(() => {
     repository = createRepository();
-    service = new RidersService(repository as unknown as RidersRepositoryContract);
+    auth = createAuth();
+    service = new RidersService(
+      repository as unknown as RidersRepositoryContract,
+      auth as unknown as SupabaseAuthService
+    );
   });
 
   it('reads and updates an own rider profile', async () => {
@@ -326,5 +346,35 @@ describe('RidersService', () => {
         dateTo: '2026-06-01'
       })
     ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('onboards a rider and writes role + rider_id to app_metadata', async () => {
+    const input = { campusId: profile.campusId, displayName: '  Ada Rider  ', phone: ' +2348012345678 ' };
+
+    await expect(service.onboardRider(actor, input)).resolves.toEqual({
+      rider: profile,
+      tokenRefreshRequired: true
+    });
+
+    expect(repository.onboardRider).toHaveBeenCalledWith({
+      campusId: profile.campusId,
+      displayName: 'Ada Rider',
+      phone: '+2348012345678',
+      userId
+    });
+    expect(auth.setUserAppMetadata).toHaveBeenCalledWith(userId, {
+      meal_direct_role: 'rider',
+      rider_id: profile.id
+    });
+  });
+
+  it('rejects onboarding for non-riders and already-linked accounts', async () => {
+    const input = { campusId: profile.campusId, displayName: 'Ada Rider', phone: '+2348012345678' };
+
+    await expect(service.onboardRider(customer, input)).rejects.toBeInstanceOf(ForbiddenException);
+
+    vi.mocked(repository.findRiderIdForUser).mockResolvedValueOnce(riderId);
+    await expect(service.onboardRider(actor, input)).rejects.toBeInstanceOf(ConflictException);
+    expect(auth.setUserAppMetadata).not.toHaveBeenCalled();
   });
 });

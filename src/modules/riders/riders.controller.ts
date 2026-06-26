@@ -13,6 +13,9 @@ import {
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiBody,
+  ApiConflictResponse,
+  ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -30,6 +33,7 @@ import { RequireRoles } from '../auth/roles.decorator.js';
 import { RolesGuard } from '../auth/roles.guard.js';
 import {
   CreateRiderIssueDto,
+  OnboardRiderDto,
   RiderAvailabilityDto,
   RiderAssignmentDetailEnvelopeDto,
   RiderAssignmentIdParamDto,
@@ -38,6 +42,7 @@ import {
   RiderEarningsEnvelopeDto,
   RiderEarningsQueryDto,
   RiderIssueEnvelopeDto,
+  RiderOnboardEnvelopeDto,
   RiderOrderDetailEnvelopeDto,
   RiderOrderIdParamDto,
   RiderProfileEnvelopeDto,
@@ -47,6 +52,7 @@ import {
   RiderSettlementListEnvelopeDto,
   RiderSettlementListQueryDto
 } from './dto/rider.dto.js';
+import type { RiderOnboardResult } from './riders.service.js';
 import { RidersService } from './riders.service.js';
 import type {
   RiderAssignmentDetail,
@@ -68,6 +74,22 @@ import type {
 @RequireRoles('rider')
 export class RidersController {
   constructor(@Inject(RidersService) private readonly riders: RidersService) {}
+
+  @Post('onboard')
+  @ApiCreatedResponse({
+    description:
+      'Provisions the rider record for the caller. The client must refresh its session afterwards to receive the rider_id claim. The rider starts pending and requires admin verification before delivery access.',
+    type: RiderOnboardEnvelopeDto
+  })
+  @ApiBadRequestResponse({ description: 'Invalid onboarding input or unknown campus.' })
+  @ApiConflictResponse({ description: 'This account is already linked to a rider.' })
+  @ApiBody({ type: OnboardRiderDto })
+  async onboard(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Body() input: OnboardRiderDto
+  ): Promise<SuccessEnvelope<RiderOnboardResult>> {
+    return createSuccessEnvelope(await this.riders.onboardRider(actor, input));
+  }
 
   @Get('profile')
   @ApiOkResponse({ description: 'Authenticated rider profile.', type: RiderProfileEnvelopeDto })

@@ -91,6 +91,7 @@ const order: RiderOrderDetail = {
   customerPhone: '+2348088888888',
   deliveredAt: null,
   deliveryFeeKobo: 15000,
+  serviceFeeKobo: 0,
   deliveryInstructions: 'Call at the gate.',
   deliveryMode: 'meal_direct_rider',
   specialInstructions: null,

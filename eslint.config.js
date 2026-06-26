@@ -11,6 +11,7 @@ export default tseslint.config(
       'supabase/types/**',
       'eslint.config.js',
       'scripts/*.mjs',
+      'scripts/*.cjs',
       'load/**/*.js',
       'docs/api-docs/**'
     ]
@@ -42,6 +43,10 @@ export default tseslint.config(
         ...globals.node,
         ...globals.vitest
       }
+    },
+    rules: {
+      // Passing mocked method references to expect(...) is intentional in tests.
+      '@typescript-eslint/unbound-method': 'off'
     }
   },
   {

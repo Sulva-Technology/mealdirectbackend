@@ -42,6 +42,7 @@ const mockOrder: OrderDetail = {
   specialInstructions: null,
   foodSubtotalKobo: 250000,
   deliveryFeeKobo: 15000,
+  serviceFeeKobo: 0,
   discountKobo: 0,
   totalKobo: 265000,
   currency: 'NGN',

@@ -82,6 +82,7 @@ export type OrderSummary = {
   specialInstructions: string | null;
   foodSubtotalKobo: number;
   deliveryFeeKobo: number;
+  serviceFeeKobo: number;
   discountKobo: number;
   totalKobo: number;
   currency: string;
@@ -112,7 +113,8 @@ export type OrdersRepositoryContract = {
     customerId: string,
     input: CreateOrderDto,
     idempotencyKey: string,
-    requestHash: string
+    requestHash: string,
+    serviceFeeKobo: number
   ) => Promise<{ orderId: string }>;
   quoteOrder: (input: CreateOrderDto) => Promise<OrderQuoteItem[]>;
   findZoneDeliveryFeeKobo: (locationId: string) => Promise<number | null>;

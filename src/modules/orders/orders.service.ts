@@ -76,7 +76,8 @@ export class OrdersService {
       actor.userId,
       input,
       idempotencyKey,
-      hashOrderRequest(input)
+      hashOrderRequest(input),
+      this.env.get('SERVICE_FEE_KOBO')
     );
   }
 

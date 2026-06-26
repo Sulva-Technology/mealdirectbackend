@@ -29,6 +29,16 @@ export type RiderProfileUpdateInput = {
   phone?: string;
 };
 
+export type RiderOnboardInput = {
+  campusId: string;
+  displayName: string;
+  phone: string;
+};
+
+export type RiderOnboardRepositoryInput = RiderOnboardInput & {
+  userId: string;
+};
+
 export type RiderAssignmentSummary = {
   id: string;
   batchId: string;
@@ -155,6 +165,8 @@ export type RiderSettlementListFilters = {
 
 export type RidersRepositoryContract = {
   findRiderProfileForActor: (userId: string, riderId?: string) => Promise<RiderProfile | undefined>;
+  findRiderIdForUser: (userId: string) => Promise<string | undefined>;
+  onboardRider: (input: RiderOnboardRepositoryInput) => Promise<RiderProfile>;
   updateRiderProfile: (
     riderId: string,
     userId: string,
