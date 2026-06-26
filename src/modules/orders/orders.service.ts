@@ -4,6 +4,7 @@ import { ErrorCodes } from '../../common/errors/error-codes.js';
 import { EnvService } from '../../config/env.service.js';
 import { calculateOrderPricing } from '../../domain/pricing.js';
 import type { AuthenticatedActor } from '../auth/actor-context.js';
+import { PaymentsService } from '../payments/payments.service.js';
 import type { CreateOrderDto } from './dto/create-order.dto.js';
 import { hashOrderRequest, OrdersRepository } from './orders.repository.js';
 import type {
@@ -36,7 +37,8 @@ function notFound(message: string): NotFoundException {
 export class OrdersService {
   constructor(
     @Inject(OrdersRepository) private readonly repository: OrdersRepositoryContract,
-    @Inject(EnvService) private readonly env: EnvService
+    @Inject(EnvService) private readonly env: EnvService,
+    @Inject(PaymentsService) private readonly payments: PaymentsService
   ) {}
 
   async quoteOrder(actor: AuthenticatedActor, input: CreateOrderDto): Promise<OrderQuote> {
@@ -100,6 +102,9 @@ export class OrdersService {
 
   async getPaymentStatus(actor: AuthenticatedActor, orderId: string): Promise<OrderPaymentStatus> {
     customerOnly(actor);
+    // Webhook is production truth; this active verify is the fallback so polling still
+    // resolves when no public webhook reached us (local/test, or a missed delivery).
+    await this.payments.verifyPendingOrderPayment(actor.userId, orderId);
     const status = await this.repository.findPaymentStatus(actor.userId, orderId);
     if (status === undefined) {
       throw notFound('Order was not found.');

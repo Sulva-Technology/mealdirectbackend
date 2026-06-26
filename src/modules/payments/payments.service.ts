@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   Inject,
   Injectable,
+  Logger,
   NotFoundException
 } from '@nestjs/common';
 
@@ -42,12 +43,68 @@ function notFound(message: string): NotFoundException {
   });
 }
 
+function describeError(error: unknown): string {
+  return error instanceof Error ? error.message : 'unknown error';
+}
+
 @Injectable()
 export class PaymentsService {
+  private readonly logger = new Logger(PaymentsService.name);
+
   constructor(
     @Inject(PaymentsRepository) private readonly repository: PaymentsRepositoryContract,
     @Inject(PaystackClient) private readonly paystack: PaystackClientContract
   ) {}
+
+  /**
+   * Fallback for when no public webhook reaches us (local/test, or a missed webhook):
+   * actively verify a still-pending order payment with Paystack and mark it paid on success.
+   * Idempotent and best-effort — provider/mismatch failures are logged and swallowed so the
+   * polled payment-status endpoint never breaks.
+   */
+  async verifyPendingOrderPayment(customerId: string, orderId: string): Promise<void> {
+    let payment;
+    try {
+      payment = await this.repository.findCustomerInitializationPayment(customerId, orderId);
+    } catch (error) {
+      this.logger.warn(
+        `Could not load pending payment for order ${orderId}: ${describeError(error)}`
+      );
+      return;
+    }
+    if (payment === undefined) return; // no initialized/pending paystack payment — nothing to verify
+
+    try {
+      const verified = await this.paystack.verifyTransaction(payment.providerReference);
+
+      if (verified.status !== 'success') return; // abandoned/failed/ongoing — leave pending
+      if (verified.reference !== payment.providerReference) {
+        this.logger.warn(`Paystack reference mismatch for order ${orderId}`);
+        return;
+      }
+      if (verified.amountKobo !== payment.expectedAmountKobo) {
+        this.logger.warn(
+          `Paystack amount mismatch for order ${orderId}: got ${String(verified.amountKobo)}, expected ${String(payment.expectedAmountKobo)}`
+        );
+        return;
+      }
+      if (verified.currency !== payment.currency) {
+        this.logger.warn(`Paystack currency mismatch for order ${orderId}`);
+        return;
+      }
+
+      await this.repository.markPaymentSuccessfulFromProvider(
+        payment.providerReference,
+        verified.transactionId,
+        verified.amountKobo,
+        verified.providerPayload
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Paystack verification fallback failed for order ${orderId}: ${describeError(error)}`
+      );
+    }
+  }
 
   async initializePaystack(
     actor: AuthenticatedActor,

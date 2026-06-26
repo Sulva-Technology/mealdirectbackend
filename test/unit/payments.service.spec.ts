@@ -203,6 +203,58 @@ describe('PaymentsService', () => {
     );
   });
 
+  it('marks a pending order paid when Paystack verify returns a matching success', async () => {
+    await service.verifyPendingOrderPayment(customer.userId, payment.orderId);
+
+    expect(paystack.verifyTransaction).toHaveBeenCalledWith(payment.providerReference);
+    expect(repository.markPaymentSuccessfulFromProvider).toHaveBeenCalledWith(
+      payment.providerReference,
+      '4099260516',
+      payment.expectedAmountKobo,
+      { status: true }
+    );
+  });
+
+  it('does not mark paid when no pending payment exists or Paystack is not successful', async () => {
+    vi.mocked(repository.findCustomerInitializationPayment).mockResolvedValue(undefined);
+    await service.verifyPendingOrderPayment(customer.userId, payment.orderId);
+    expect(paystack.verifyTransaction).not.toHaveBeenCalled();
+    expect(repository.markPaymentSuccessfulFromProvider).not.toHaveBeenCalled();
+
+    vi.mocked(repository.findCustomerInitializationPayment).mockResolvedValue(payment);
+    vi.mocked(paystack.verifyTransaction).mockResolvedValue({
+      amountKobo: payment.expectedAmountKobo,
+      currency: 'NGN',
+      providerPayload: { status: true },
+      reference: payment.providerReference,
+      status: 'abandoned',
+      transactionId: '4099260516'
+    });
+    await service.verifyPendingOrderPayment(customer.userId, payment.orderId);
+    expect(repository.markPaymentSuccessfulFromProvider).not.toHaveBeenCalled();
+  });
+
+  it('swallows Paystack errors and amount mismatches during fallback verify', async () => {
+    vi.mocked(paystack.verifyTransaction).mockResolvedValue({
+      amountKobo: payment.expectedAmountKobo - 1,
+      currency: 'NGN',
+      providerPayload: { status: true },
+      reference: payment.providerReference,
+      status: 'success',
+      transactionId: '4099260516'
+    });
+    await expect(
+      service.verifyPendingOrderPayment(customer.userId, payment.orderId)
+    ).resolves.toBeUndefined();
+    expect(repository.markPaymentSuccessfulFromProvider).not.toHaveBeenCalled();
+
+    vi.mocked(paystack.verifyTransaction).mockRejectedValue(new Error('paystack down'));
+    await expect(
+      service.verifyPendingOrderPayment(customer.userId, payment.orderId)
+    ).resolves.toBeUndefined();
+    expect(repository.markPaymentSuccessfulFromProvider).not.toHaveBeenCalled();
+  });
+
   it('requires admin roles for reconciliation and refunds', async () => {
     await expect(service.reconcilePaystackPayment(customer, payment.id)).rejects.toBeInstanceOf(
       ForbiddenException

@@ -11,6 +11,7 @@ import { PaymentsService } from './payments.service.js';
 @Module({
   imports: [AuthModule],
   controllers: [CustomerPaymentsController, AdminPaymentsController, PaystackWebhookController],
-  providers: [PaystackClient, PaymentsRepository, PaymentsService, PaystackWebhookService]
+  providers: [PaystackClient, PaymentsRepository, PaymentsService, PaystackWebhookService],
+  exports: [PaymentsService]
 })
 export class PaymentsModule {}

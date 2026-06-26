@@ -19,7 +19,8 @@ async function bootstrap(): Promise<void> {
       message: 'Meal Direct API started',
       host: env.HOST,
       port: env.PORT,
-      apiPrefix: env.API_PREFIX
+      apiPrefix: env.API_PREFIX,
+      paystackMode: env.PAYSTACK_SECRET_KEY?.startsWith('sk_live') ? 'LIVE' : 'TEST'
     },
     'Bootstrap'
   );

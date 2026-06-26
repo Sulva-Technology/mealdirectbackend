@@ -5,6 +5,7 @@ import type { AuthenticatedActor } from '../../src/modules/auth/actor-context.js
 import type { CreateOrderDto } from '../../src/modules/orders/dto/create-order.dto.js';
 import type { EnvService } from '../../src/config/env.service.js';
 import { OrdersService } from '../../src/modules/orders/orders.service.js';
+import type { PaymentsService } from '../../src/modules/payments/payments.service.js';
 import type {
   OrderDetail,
   OrderQuoteItem,
@@ -17,6 +18,12 @@ function createEnv(overrides: { DELIVERY_FEE_KOBO?: number; SERVICE_FEE_KOBO?: n
     SERVICE_FEE_KOBO: overrides.SERVICE_FEE_KOBO ?? 0
   };
   return { get: (key: string) => values[key] } as unknown as EnvService;
+}
+
+function createPayments(): PaymentsService {
+  return {
+    verifyPendingOrderPayment: vi.fn().mockResolvedValue(undefined)
+  } as unknown as PaymentsService;
 }
 
 const customer: AuthenticatedActor = {
@@ -101,7 +108,7 @@ describe('OrdersService', () => {
 
   beforeEach(() => {
     repository = createRepository();
-    service = new OrdersService(repository, createEnv());
+    service = new OrdersService(repository, createEnv(), createPayments());
   });
 
   it('quotes order totals from available menu items', async () => {
@@ -117,7 +124,7 @@ describe('OrdersService', () => {
   });
 
   it('includes the configured service fee in the quote total', async () => {
-    service = new OrdersService(repository, createEnv({ SERVICE_FEE_KOBO: 5000 }));
+    service = new OrdersService(repository, createEnv({ SERVICE_FEE_KOBO: 5000 }), createPayments());
 
     await expect(service.quoteOrder(customer, orderInput)).resolves.toEqual({
       currency: 'NGN',
