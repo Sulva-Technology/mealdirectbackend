@@ -9,6 +9,7 @@ export type CampusRecord = {
   timezone: string;
   currency: string;
   countryCode: string;
+  maxServiceFeeKobo: number;
   active: boolean;
   createdAt: string;
   updatedAt: string;
@@ -19,6 +20,7 @@ export type CampusZoneRecord = {
   campusId: string;
   name: string;
   code: string;
+  deliveryFeeKobo: number;
   active: boolean;
   displayOrder: number;
   createdAt: string;
@@ -64,13 +66,16 @@ export type CreateCampusInput = {
   active: boolean;
 };
 
-export type UpdateCampusInput = Partial<CreateCampusInput>;
+export type UpdateCampusInput = Partial<CreateCampusInput> & {
+  maxServiceFeeKobo?: number;
+};
 
 export type CreateZoneInput = {
   name: string;
   code: string;
   active: boolean;
   displayOrder: number;
+  deliveryFeeKobo?: number;
 };
 
 export type UpdateZoneInput = Partial<CreateZoneInput>;

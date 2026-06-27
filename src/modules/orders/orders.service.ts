@@ -43,29 +43,7 @@ export class OrdersService {
 
   async quoteOrder(actor: AuthenticatedActor, input: CreateOrderDto): Promise<OrderQuote> {
     customerOnly(actor);
-    const quotedItems = await this.repository.quoteOrder(input);
-    this.assertAllItemsQuoted(input, quotedItems);
-
-    const zoneFeeKobo = await this.repository.findZoneDeliveryFeeKobo(input.locationId);
-
-    const pricing = calculateOrderPricing({
-      lines: quotedItems.map((item) => ({
-        unitPriceCents: item.unitPriceKobo,
-        quantity: item.quantity
-      })),
-      deliveryFeeCents: zoneFeeKobo ?? this.env.get('DELIVERY_FEE_KOBO'),
-      serviceFeeCents: this.env.get('SERVICE_FEE_KOBO')
-    });
-
-    return {
-      currency: 'NGN',
-      deliveryFeeKobo: pricing.deliveryFeeCents,
-      serviceFeeKobo: pricing.serviceFeeCents,
-      discountKobo: pricing.discountCents,
-      foodSubtotalKobo: pricing.subtotalCents,
-      items: quotedItems,
-      totalKobo: pricing.totalCents
-    };
+    return (await this.buildQuote(input)).quote;
   }
 
   async createOrder(
@@ -74,13 +52,72 @@ export class OrdersService {
     idempotencyKey: string
   ): Promise<{ orderId: string }> {
     customerOnly(actor);
+    const { quote, serviceFeeKobo } = await this.buildQuote(input);
+    const maxOrderTotalKobo = this.env.get('MAX_ORDER_TOTAL_KOBO');
+
+    // The quoted total already includes delivery + service fees but not promo discounts
+    // (applied inside the RPC). With no promo code the quote IS the final total, so we can
+    // reject over-cap orders before any charge. When a promo code is present, the RPC is the
+    // authoritative gate (it knows the discount) so we defer to it.
+    if (input.promotionCode === undefined && quote.totalKobo > maxOrderTotalKobo) {
+      throw new BadRequestException({
+        code: ErrorCodes.VALIDATION_FAILED,
+        message: 'Order total exceeds the maximum allowed amount.'
+      });
+    }
+
     return this.repository.createOrder(
       actor.userId,
       input,
       idempotencyKey,
       hashOrderRequest(input),
-      this.env.get('SERVICE_FEE_KOBO')
+      serviceFeeKobo,
+      maxOrderTotalKobo
     );
+  }
+
+  private async buildQuote(
+    input: CreateOrderDto
+  ): Promise<{ quote: OrderQuote; serviceFeeKobo: number }> {
+    const quotedItems = await this.repository.quoteOrder(input);
+    this.assertAllItemsQuoted(input, quotedItems);
+
+    const zoneFeeKobo = await this.repository.findZoneDeliveryFeeKobo(input.locationId);
+    const serviceFeeKobo = await this.resolveServiceFeeKobo(input.vendorId);
+
+    const pricing = calculateOrderPricing({
+      lines: quotedItems.map((item) => ({
+        unitPriceCents: item.unitPriceKobo,
+        quantity: item.quantity
+      })),
+      deliveryFeeCents: zoneFeeKobo ?? this.env.get('DELIVERY_FEE_KOBO'),
+      serviceFeeCents: serviceFeeKobo
+    });
+
+    return {
+      quote: {
+        currency: 'NGN',
+        deliveryFeeKobo: pricing.deliveryFeeCents,
+        serviceFeeKobo: pricing.serviceFeeCents,
+        discountKobo: pricing.discountCents,
+        foodSubtotalKobo: pricing.subtotalCents,
+        items: quotedItems,
+        totalKobo: pricing.totalCents
+      },
+      serviceFeeKobo
+    };
+  }
+
+  // Effective takeaway/packaging fee: the vendor's own value when set, otherwise the global
+  // default, clamped to the vendor campus ceiling as a safety net against stale overrides.
+  private async resolveServiceFeeKobo(vendorId: string): Promise<number> {
+    const globalDefault = this.env.get('SERVICE_FEE_KOBO');
+    const config = await this.repository.findVendorServiceFeeConfig(vendorId);
+    if (config === undefined) {
+      return globalDefault;
+    }
+    const base = config.serviceFeeKobo ?? globalDefault;
+    return Math.min(base, config.maxServiceFeeKobo);
   }
 
   async listCustomerOrders(

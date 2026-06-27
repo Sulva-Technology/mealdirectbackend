@@ -43,10 +43,17 @@ Three pricing concerns are currently hardcoded or unmanageable by operators:
 
 ## Design
 
+> Implementation note (delta from original design): a `campuses` admin module already exists
+> (`AdminCampusDirectoryController`, mounted under `/admin`, guarded by `campus_admin`/`super_admin`)
+> with campus + zone CRUD. The fee controls were folded into its existing endpoints rather than
+> adding new ones: zone delivery fee → `PATCH /admin/zones/:zoneId` (`updateZone`), campus ceiling →
+> `PATCH /admin/campuses/:campusId` (`updateCampus`). `deliveryFeeKobo` was also added to
+> `POST /admin/campuses/:campusId/zones` (`createZone`).
+
 ### 1. Admin-editable delivery fee (per-zone)
 
-- **Endpoint:** `PATCH /admin/campus-zones/:zoneId`, body `{ deliveryFeeKobo: number }`.
-  Inherits the `campus_admin` / `super_admin` guard.
+- **Endpoint:** `PATCH /admin/zones/:zoneId`, body `{ deliveryFeeKobo: number }` (added to the
+  existing `updateZone` flow). Inherits the `campus_admin` / `super_admin` guard.
 - **Scope check:** campus admins may only edit zones whose `campus_id` is within their admin scope
   (reuse the existing admin scope/authorization helper used by other campus-scoped admin ops).
   Super admins unrestricted.
@@ -66,9 +73,9 @@ Three pricing concerns are currently hardcoded or unmanageable by operators:
   `SERVICE_FEE_KOBO` default). Non-negative when set.
 - **New column:** `campuses.max_service_fee_kobo integer not null default 20000` (non-negative) —
   the per-campus ceiling.
-- **Admin endpoint:** `PATCH /admin/campuses/:campusId`, body `{ maxServiceFeeKobo: number }`.
-  Campus-scoped for campus admins; super admins unrestricted. Validation: integer `>= 0`,
-  `<= MAX_ORDER_TOTAL_KOBO`.
+- **Admin endpoint:** `PATCH /admin/campuses/:campusId` (existing `updateCampus`), body now accepts
+  `{ maxServiceFeeKobo: number }`. Campus-scoped for campus admins; super admins unrestricted.
+  Validation: integer `>= 0`, `<= MAX_ORDER_TOTAL_KOBO`.
 - **Vendor endpoint:** extend `PATCH /vendor/profile` (`UpdateVendorProfileDto`,
   `VendorProfileUpdateInput`, `VendorsService.updateProfile`) with optional `serviceFeeKobo`.
   Reject (`400`) if `serviceFeeKobo > campus.max_service_fee_kobo` for the vendor's campus.

@@ -114,10 +114,14 @@ export type OrdersRepositoryContract = {
     input: CreateOrderDto,
     idempotencyKey: string,
     requestHash: string,
-    serviceFeeKobo: number
+    serviceFeeKobo: number,
+    maxOrderTotalKobo: number
   ) => Promise<{ orderId: string }>;
   quoteOrder: (input: CreateOrderDto) => Promise<OrderQuoteItem[]>;
   findZoneDeliveryFeeKobo: (locationId: string) => Promise<number | null>;
+  findVendorServiceFeeConfig: (
+    vendorId: string
+  ) => Promise<{ serviceFeeKobo: number | null; maxServiceFeeKobo: number } | undefined>;
   listCustomerOrders: (customerId: string, filters: OrderListFilters) => Promise<OrderSummary[]>;
   findCustomerOrderById: (customerId: string, orderId: string) => Promise<OrderDetail | undefined>;
   findPaymentStatus: (

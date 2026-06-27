@@ -103,6 +103,7 @@ export class VendorsRepository implements VendorsRepositoryContract {
           email::text as "email",
           logo_url as "logoUrl",
           kitchen_location as "kitchenLocation",
+          service_fee_kobo as "serviceFeeKobo",
           status::text as "status",
           active,
           default_delivery_mode::text as "defaultDeliveryMode",
@@ -133,6 +134,7 @@ export class VendorsRepository implements VendorsRepositoryContract {
         email::text as "email",
         logo_url as "logoUrl",
         kitchen_location as "kitchenLocation",
+        service_fee_kobo as "serviceFeeKobo",
         status::text as "status",
         active,
         default_delivery_mode::text as "defaultDeliveryMode",
@@ -145,6 +147,17 @@ export class VendorsRepository implements VendorsRepositoryContract {
     return result.rows[0];
   }
 
+  async findCampusMaxServiceFeeKobo(vendorId: string): Promise<number | undefined> {
+    const result = await sql<{ maxServiceFeeKobo: number }>`
+      select c.max_service_fee_kobo as "maxServiceFeeKobo"
+      from public.vendors v
+      join public.campuses c on c.id = v.campus_id
+      where v.id = ${vendorId}::uuid
+    `.execute(this.database.db);
+
+    return result.rows[0]?.maxServiceFeeKobo;
+  }
+
   async updateVendorProfile(
     vendorId: string,
     input: VendorProfileUpdateInput
@@ -155,6 +168,7 @@ export class VendorsRepository implements VendorsRepositoryContract {
     const hasEmail = Object.hasOwn(input, 'email');
     const hasLogoUrl = Object.hasOwn(input, 'logoUrl');
     const hasKitchenLocation = Object.hasOwn(input, 'kitchenLocation');
+    const hasServiceFeeKobo = Object.hasOwn(input, 'serviceFeeKobo');
     const hasDefaultDeliveryMode = Object.hasOwn(input, 'defaultDeliveryMode');
 
     const result = await sql<VendorProfile>`
@@ -183,6 +197,10 @@ export class VendorsRepository implements VendorsRepositoryContract {
             when ${hasKitchenLocation} then ${input.kitchenLocation ?? null}
             else kitchen_location
           end,
+          service_fee_kobo = case
+            when ${hasServiceFeeKobo} then ${input.serviceFeeKobo ?? null}::integer
+            else service_fee_kobo
+          end,
           default_delivery_mode = case
             when ${hasDefaultDeliveryMode} then ${input.defaultDeliveryMode ?? null}::public.delivery_mode
             else default_delivery_mode
@@ -200,6 +218,7 @@ export class VendorsRepository implements VendorsRepositoryContract {
         email::text as "email",
         logo_url as "logoUrl",
         kitchen_location as "kitchenLocation",
+        service_fee_kobo as "serviceFeeKobo",
         status::text as "status",
         active,
         default_delivery_mode::text as "defaultDeliveryMode",

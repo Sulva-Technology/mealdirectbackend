@@ -13,6 +13,7 @@ import {
   MaxLength,
   Min,
   MinLength,
+  ValidateIf,
   ValidateNested
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -91,6 +92,19 @@ export class UpdateVendorProfileDto {
   @MinLength(1)
   @MaxLength(300)
   kitchenLocation?: string | null;
+
+  @ApiPropertyOptional({
+    minimum: 0,
+    nullable: true,
+    type: Number,
+    description: 'Per-vendor takeaway/packaging fee in kobo. Null clears to the global default; may not exceed the campus ceiling.'
+  })
+  @IsOptional()
+  @ValidateIf((_, value) => value !== null)
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  serviceFeeKobo?: number | null;
 
   @ApiPropertyOptional({ enum: deliveryModes, type: String })
   @IsOptional()
@@ -287,6 +301,9 @@ export class VendorProfileDto {
 
   @ApiPropertyOptional({ nullable: true, type: String })
   kitchenLocation!: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: Number })
+  serviceFeeKobo!: number | null;
 
   @ApiProperty({ enum: vendorStatuses, type: String })
   status!: string;

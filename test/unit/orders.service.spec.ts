@@ -12,10 +12,17 @@ import type {
   OrdersRepositoryContract
 } from '../../src/modules/orders/orders.types.js';
 
-function createEnv(overrides: { DELIVERY_FEE_KOBO?: number; SERVICE_FEE_KOBO?: number } = {}): EnvService {
+function createEnv(
+  overrides: {
+    DELIVERY_FEE_KOBO?: number;
+    SERVICE_FEE_KOBO?: number;
+    MAX_ORDER_TOTAL_KOBO?: number;
+  } = {}
+): EnvService {
   const values: Record<string, number> = {
     DELIVERY_FEE_KOBO: overrides.DELIVERY_FEE_KOBO ?? 15000,
-    SERVICE_FEE_KOBO: overrides.SERVICE_FEE_KOBO ?? 0
+    SERVICE_FEE_KOBO: overrides.SERVICE_FEE_KOBO ?? 0,
+    MAX_ORDER_TOTAL_KOBO: overrides.MAX_ORDER_TOTAL_KOBO ?? 100_000_000
   };
   return { get: (key: string) => values[key] } as unknown as EnvService;
 }
@@ -98,7 +105,8 @@ function createRepository(): OrdersRepositoryContract {
     }),
     listCustomerOrders: vi.fn().mockResolvedValue([orderDetail]),
     quoteOrder: vi.fn().mockResolvedValue([quoteItem]),
-    findZoneDeliveryFeeKobo: vi.fn().mockResolvedValue(null)
+    findZoneDeliveryFeeKobo: vi.fn().mockResolvedValue(null),
+    findVendorServiceFeeConfig: vi.fn().mockResolvedValue(undefined)
   };
 }
 
@@ -150,6 +158,58 @@ describe('OrdersService', () => {
       totalKobo: 525000
     });
     expect(repository.findZoneDeliveryFeeKobo).toHaveBeenCalledWith(orderInput.locationId);
+  });
+
+  it('uses the vendor service fee override, clamped to the campus ceiling', async () => {
+    // Vendor set 9000 kobo, campus ceiling 6000 → clamped to 6000.
+    vi.mocked(repository.findVendorServiceFeeConfig).mockResolvedValue({
+      serviceFeeKobo: 9000,
+      maxServiceFeeKobo: 6000
+    });
+
+    await expect(service.quoteOrder(customer, orderInput)).resolves.toMatchObject({
+      serviceFeeKobo: 6000,
+      totalKobo: 521000
+    });
+    expect(repository.findVendorServiceFeeConfig).toHaveBeenCalledWith(orderInput.vendorId);
+  });
+
+  it('falls back to the global service fee when the vendor has no override', async () => {
+    service = new OrdersService(repository, createEnv({ SERVICE_FEE_KOBO: 5000 }), createPayments());
+    vi.mocked(repository.findVendorServiceFeeConfig).mockResolvedValue({
+      serviceFeeKobo: null,
+      maxServiceFeeKobo: 20000
+    });
+
+    await expect(service.quoteOrder(customer, orderInput)).resolves.toMatchObject({
+      serviceFeeKobo: 5000
+    });
+  });
+
+  it('rejects order creation when the total exceeds the maximum', async () => {
+    // Subtotal 500000 + delivery 15000 = 515000 kobo, above the 249000 cap.
+    service = new OrdersService(
+      repository,
+      createEnv({ MAX_ORDER_TOTAL_KOBO: 249000 }),
+      createPayments()
+    );
+
+    await expect(service.createOrder(customer, orderInput, 'order-key')).rejects.toBeInstanceOf(
+      BadRequestException
+    );
+    expect(repository.createOrder).not.toHaveBeenCalled();
+  });
+
+  it('passes the resolved service fee and max total to the repository on create', async () => {
+    await service.createOrder(customer, orderInput, 'order-key');
+    expect(repository.createOrder).toHaveBeenCalledWith(
+      customer.userId,
+      orderInput,
+      'order-key',
+      expect.any(String),
+      0,
+      100_000_000
+    );
   });
 
   it('rejects quote items that are unavailable for the requested slot', async () => {

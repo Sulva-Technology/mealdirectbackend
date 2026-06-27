@@ -31,6 +31,7 @@ export class CampusDirectoryRepository implements CampusDirectoryRepositoryContr
         timezone,
         currency,
         country_code as "countryCode",
+        max_service_fee_kobo as "maxServiceFeeKobo",
         active,
         created_at::text as "createdAt",
         updated_at::text as "updatedAt"
@@ -51,6 +52,7 @@ export class CampusDirectoryRepository implements CampusDirectoryRepositoryContr
         timezone,
         currency,
         country_code as "countryCode",
+        max_service_fee_kobo as "maxServiceFeeKobo",
         active,
         created_at::text as "createdAt",
         updated_at::text as "updatedAt"
@@ -80,6 +82,7 @@ export class CampusDirectoryRepository implements CampusDirectoryRepositoryContr
         timezone,
         currency,
         country_code as "countryCode",
+        max_service_fee_kobo as "maxServiceFeeKobo",
         active,
         created_at::text as "createdAt",
         updated_at::text as "updatedAt"
@@ -101,6 +104,7 @@ export class CampusDirectoryRepository implements CampusDirectoryRepositoryContr
     const hasTimezone = Object.hasOwn(input, 'timezone');
     const hasCurrency = Object.hasOwn(input, 'currency');
     const hasCountryCode = Object.hasOwn(input, 'countryCode');
+    const hasMaxServiceFeeKobo = Object.hasOwn(input, 'maxServiceFeeKobo');
     const hasActive = Object.hasOwn(input, 'active');
 
     const result = await sql<CampusRecord>`
@@ -110,6 +114,7 @@ export class CampusDirectoryRepository implements CampusDirectoryRepositoryContr
           timezone = case when ${hasTimezone} then ${input.timezone ?? null} else timezone end,
           currency = case when ${hasCurrency} then ${input.currency ?? null} else currency end,
           country_code = case when ${hasCountryCode} then ${input.countryCode ?? null} else country_code end,
+          max_service_fee_kobo = case when ${hasMaxServiceFeeKobo} then ${input.maxServiceFeeKobo ?? null}::integer else max_service_fee_kobo end,
           active = case when ${hasActive} then ${input.active ?? null} else active end,
           updated_at = now()
       where id = ${campusId}::uuid
@@ -120,6 +125,7 @@ export class CampusDirectoryRepository implements CampusDirectoryRepositoryContr
         timezone,
         currency,
         country_code as "countryCode",
+        max_service_fee_kobo as "maxServiceFeeKobo",
         active,
         created_at::text as "createdAt",
         updated_at::text as "updatedAt"
@@ -135,6 +141,7 @@ export class CampusDirectoryRepository implements CampusDirectoryRepositoryContr
         campus_id::text as "campusId",
         name,
         code,
+        delivery_fee_kobo as "deliveryFeeKobo",
         active,
         display_order as "displayOrder",
         created_at::text as "createdAt",
@@ -152,19 +159,21 @@ export class CampusDirectoryRepository implements CampusDirectoryRepositoryContr
     input: CreateZoneInput
   ): Promise<CampusZoneRecord | undefined> {
     const result = await sql<CampusZoneRecord>`
-      insert into public.campus_zones (campus_id, name, code, active, display_order)
+      insert into public.campus_zones (campus_id, name, code, active, display_order, delivery_fee_kobo)
       values (
         ${campusId}::uuid,
         ${input.name},
         ${input.code},
         ${input.active},
-        ${input.displayOrder}
+        ${input.displayOrder},
+        coalesce(${input.deliveryFeeKobo ?? null}::integer, 15000)
       )
       returning
         id::text as "id",
         campus_id::text as "campusId",
         name,
         code,
+        delivery_fee_kobo as "deliveryFeeKobo",
         active,
         display_order as "displayOrder",
         created_at::text as "createdAt",
@@ -183,6 +192,7 @@ export class CampusDirectoryRepository implements CampusDirectoryRepositoryContr
     const hasCode = Object.hasOwn(input, 'code');
     const hasActive = Object.hasOwn(input, 'active');
     const hasDisplayOrder = Object.hasOwn(input, 'displayOrder');
+    const hasDeliveryFeeKobo = Object.hasOwn(input, 'deliveryFeeKobo');
 
     const result = await sql<CampusZoneRecord>`
       update public.campus_zones
@@ -190,6 +200,7 @@ export class CampusDirectoryRepository implements CampusDirectoryRepositoryContr
           code = case when ${hasCode} then ${input.code ?? null} else code end,
           active = case when ${hasActive} then ${input.active ?? null} else active end,
           display_order = case when ${hasDisplayOrder} then ${input.displayOrder ?? null} else display_order end,
+          delivery_fee_kobo = case when ${hasDeliveryFeeKobo} then ${input.deliveryFeeKobo ?? null}::integer else delivery_fee_kobo end,
           updated_at = now()
       where id = ${zoneId}::uuid
         and (${scopedCampusId ?? null}::uuid is null or campus_id = ${scopedCampusId ?? null}::uuid)
@@ -198,6 +209,7 @@ export class CampusDirectoryRepository implements CampusDirectoryRepositoryContr
         campus_id::text as "campusId",
         name,
         code,
+        delivery_fee_kobo as "deliveryFeeKobo",
         active,
         display_order as "displayOrder",
         created_at::text as "createdAt",

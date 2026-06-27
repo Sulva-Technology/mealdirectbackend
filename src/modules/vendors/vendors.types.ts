@@ -12,6 +12,7 @@ export type VendorProfile = {
   email: string | null;
   logoUrl: string | null;
   kitchenLocation: string | null;
+  serviceFeeKobo: number | null;
   status: VendorStatus;
   active: boolean;
   defaultDeliveryMode: DeliveryMode;
@@ -39,6 +40,7 @@ export type VendorProfileUpdateInput = {
   email?: string | null;
   logoUrl?: string | null;
   kitchenLocation?: string | null;
+  serviceFeeKobo?: number | null;
   defaultDeliveryMode?: DeliveryMode;
 };
 
@@ -159,6 +161,7 @@ export type VendorsRepositoryContract = {
   findVendorIdForUser: (userId: string) => Promise<string | undefined>;
   onboardVendor: (input: VendorOnboardRepositoryInput) => Promise<VendorProfile>;
   findVendorProfile: (vendorId: string) => Promise<VendorProfile | undefined>;
+  findCampusMaxServiceFeeKobo: (vendorId: string) => Promise<number | undefined>;
   updateVendorProfile: (
     vendorId: string,
     input: VendorProfileUpdateInput

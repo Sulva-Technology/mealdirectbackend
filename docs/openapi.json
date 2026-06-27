@@ -1732,6 +1732,34 @@
         "tags": ["vendor-batches"]
       }
     },
+    "/v1/rider/onboard": {
+      "post": {
+        "operationId": "RidersController_onboard",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/OnboardRiderDto" } }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Provisions the rider record for the caller. The client must refresh its session afterwards to receive the rider_id claim. The rider starts pending and requires admin verification before delivery access.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RiderOnboardEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid onboarding input or unknown campus." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Verified active rider access is required." },
+          "409": { "description": "This account is already linked to a rider." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["rider"]
+      }
+    },
     "/v1/rider/profile": {
       "get": {
         "operationId": "RidersController_getProfile",
@@ -3404,6 +3432,7 @@
           "timezone": { "type": "string" },
           "currency": { "type": "string" },
           "countryCode": { "type": "string" },
+          "maxServiceFeeKobo": { "type": "number" },
           "active": { "type": "boolean" },
           "createdAt": { "type": "string" },
           "updatedAt": { "type": "string" }
@@ -3415,6 +3444,7 @@
           "timezone",
           "currency",
           "countryCode",
+          "maxServiceFeeKobo",
           "active",
           "createdAt",
           "updatedAt"
@@ -3518,6 +3548,7 @@
           "campusId": { "type": "string", "format": "uuid" },
           "name": { "type": "string" },
           "code": { "type": "string" },
+          "deliveryFeeKobo": { "type": "number" },
           "active": { "type": "boolean" },
           "displayOrder": { "type": "number" },
           "createdAt": { "type": "string" },
@@ -3528,6 +3559,7 @@
           "campusId",
           "name",
           "code",
+          "deliveryFeeKobo",
           "active",
           "displayOrder",
           "createdAt",
@@ -3596,6 +3628,7 @@
           "email": { "type": "string", "nullable": true },
           "logoUrl": { "type": "string", "nullable": true },
           "kitchenLocation": { "type": "string", "nullable": true },
+          "serviceFeeKobo": { "type": "number", "nullable": true },
           "status": {
             "type": "string",
             "enum": ["approved", "deactivated", "pending", "suspended"]
@@ -3651,6 +3684,12 @@
           "email": { "type": "string", "nullable": true },
           "logoUrl": { "type": "string", "maxLength": 2048, "nullable": true },
           "kitchenLocation": { "type": "string", "maxLength": 300, "nullable": true },
+          "serviceFeeKobo": {
+            "type": "number",
+            "minimum": 0,
+            "nullable": true,
+            "description": "Per-vendor takeaway/packaging fee in kobo. Null clears to the global default; may not exceed the campus ceiling."
+          },
           "defaultDeliveryMode": {
             "type": "string",
             "enum": ["meal_direct_rider", "vendor_delivery"]
@@ -4576,6 +4615,40 @@
       "BatchDetailEnvelopeDto": {
         "type": "object",
         "properties": { "data": { "$ref": "#/components/schemas/BatchDetailDto" } },
+        "required": ["data"]
+      },
+      "OnboardRiderDto": {
+        "type": "object",
+        "properties": {
+          "campusId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Campus the rider delivers on."
+          },
+          "displayName": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 2,
+            "description": "Public display name."
+          },
+          "phone": { "type": "string", "pattern": "^[+0-9][0-9 ()-]{6,24}$" }
+        },
+        "required": ["campusId", "displayName", "phone"]
+      },
+      "RiderOnboardResultDto": {
+        "type": "object",
+        "properties": {
+          "rider": { "$ref": "#/components/schemas/RiderProfileDto" },
+          "tokenRefreshRequired": {
+            "type": "boolean",
+            "description": "The client must refresh its session to receive the rider_id claim."
+          }
+        },
+        "required": ["rider", "tokenRefreshRequired"]
+      },
+      "RiderOnboardEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/RiderOnboardResultDto" } },
         "required": ["data"]
       },
       "RiderProfileEnvelopeDto": {

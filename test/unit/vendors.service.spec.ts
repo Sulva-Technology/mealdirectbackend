@@ -42,6 +42,7 @@ const vendorProfile: VendorProfile = {
   email: 'vendor@example.com',
   logoUrl: null,
   kitchenLocation: 'Main gate',
+  serviceFeeKobo: null,
   status: 'approved',
   active: true,
   defaultDeliveryMode: 'meal_direct_rider',
@@ -72,6 +73,7 @@ function createRepository(): VendorsRepositoryContract {
     findVendorIdForUser: vi.fn().mockResolvedValue(undefined),
     onboardVendor: vi.fn().mockResolvedValue(vendorProfile),
     findVendorProfile: vi.fn().mockResolvedValue(vendorProfile),
+    findCampusMaxServiceFeeKobo: vi.fn().mockResolvedValue(20000),
     updateVendorProfile: vi.fn().mockResolvedValue(vendorProfile),
     findActivePayoutAccount: vi.fn().mockResolvedValue(undefined),
     upsertPayoutAccount: vi.fn().mockResolvedValue({
@@ -226,6 +228,33 @@ describe('VendorsService', () => {
       logoUrl: null,
       phone: '+2348012345678'
     });
+  });
+
+  it('persists a vendor service fee within the campus ceiling', async () => {
+    await service.updateProfile(actor, vendorId, { serviceFeeKobo: 15000 });
+
+    expect(repository.findCampusMaxServiceFeeKobo).toHaveBeenCalledWith(vendorId);
+    expect(repository.updateVendorProfile).toHaveBeenCalledWith(vendorId, {
+      serviceFeeKobo: 15000
+    });
+  });
+
+  it('clears the vendor service fee override when null is supplied', async () => {
+    await service.updateProfile(actor, vendorId, { serviceFeeKobo: null });
+
+    expect(repository.findCampusMaxServiceFeeKobo).not.toHaveBeenCalled();
+    expect(repository.updateVendorProfile).toHaveBeenCalledWith(vendorId, {
+      serviceFeeKobo: null
+    });
+  });
+
+  it('rejects a vendor service fee above the campus ceiling', async () => {
+    vi.mocked(repository.findCampusMaxServiceFeeKobo).mockResolvedValue(20000);
+
+    await expect(
+      service.updateProfile(actor, vendorId, { serviceFeeKobo: 25000 })
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(repository.updateVendorProfile).not.toHaveBeenCalled();
   });
 
   it('stores only a masked payout account number', async () => {

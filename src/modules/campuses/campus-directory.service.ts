@@ -1,6 +1,13 @@
-import { ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+  NotFoundException
+} from '@nestjs/common';
 
 import { ErrorCodes } from '../../common/errors/error-codes.js';
+import { EnvService } from '../../config/env.service.js';
 import type { AuthenticatedActor } from '../auth/actor-context.js';
 import { CampusDirectoryRepository } from './campus-directory.repository.js';
 import type {
@@ -33,11 +40,19 @@ function notFound(entity: string): NotFoundException {
   });
 }
 
+function badRequest(message: string): BadRequestException {
+  return new BadRequestException({
+    code: ErrorCodes.VALIDATION_FAILED,
+    message
+  });
+}
+
 @Injectable()
 export class CampusDirectoryService {
   constructor(
     @Inject(CampusDirectoryRepository)
-    private readonly repository: CampusDirectoryRepositoryContract
+    private readonly repository: CampusDirectoryRepositoryContract,
+    @Inject(EnvService) private readonly env: EnvService
   ) {}
 
   listPublicCampuses(): Promise<CampusRecord[]> {
@@ -75,6 +90,9 @@ export class CampusDirectoryService {
     input: UpdateCampusInput
   ): Promise<CampusRecord> {
     this.assertCanManageCampus(actor, campusId);
+    if (input.maxServiceFeeKobo !== undefined) {
+      this.assertWithinOrderMax('maxServiceFeeKobo', input.maxServiceFeeKobo);
+    }
     const campus = await this.repository.updateCampus(campusId, input);
     if (campus === undefined) throw notFound('Campus');
     return campus;
@@ -91,6 +109,9 @@ export class CampusDirectoryService {
     input: CreateZoneInput
   ): Promise<CampusZoneRecord> {
     this.assertCanManageCampus(actor, campusId);
+    if (input.deliveryFeeKobo !== undefined) {
+      this.assertWithinOrderMax('deliveryFeeKobo', input.deliveryFeeKobo);
+    }
     const zone = await this.repository.createZone(campusId, input);
     if (zone === undefined) throw notFound('Campus');
     return zone;
@@ -101,6 +122,9 @@ export class CampusDirectoryService {
     zoneId: string,
     input: UpdateZoneInput
   ): Promise<CampusZoneRecord> {
+    if (input.deliveryFeeKobo !== undefined) {
+      this.assertWithinOrderMax('deliveryFeeKobo', input.deliveryFeeKobo);
+    }
     const zone = await this.repository.updateZone(zoneId, input, this.scopedCampusId(actor));
     if (zone === undefined) throw notFound('Zone');
     return zone;
@@ -170,6 +194,15 @@ export class CampusDirectoryService {
     );
     if (slot === undefined) throw notFound('Delivery slot');
     return slot;
+  }
+
+  private assertWithinOrderMax(field: string, valueKobo: number): void {
+    const maxOrderTotal = this.env.get('MAX_ORDER_TOTAL_KOBO');
+    if (valueKobo > maxOrderTotal) {
+      throw badRequest(
+        `${field} may not exceed the maximum order total of ${String(maxOrderTotal)} kobo.`
+      );
+    }
   }
 
   private scopedCampusId(actor: AuthenticatedActor): string | undefined {

@@ -2,6 +2,7 @@ import { ForbiddenException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { AuthenticatedActor } from '../../src/modules/auth/actor-context.js';
+import type { EnvService } from '../../src/config/env.service.js';
 import { CampusDirectoryService } from '../../src/modules/campuses/campus-directory.service.js';
 import type {
   CampusDirectoryRepositoryContract,
@@ -38,6 +39,7 @@ const campus: CampusRecord = {
   timezone: 'Africa/Lagos',
   currency: 'NGN',
   countryCode: 'NG',
+  maxServiceFeeKobo: 20000,
   active: true,
   createdAt: '2026-06-15T08:00:00.000Z',
   updatedAt: '2026-06-15T08:00:00.000Z'
@@ -48,6 +50,7 @@ const zone: CampusZoneRecord = {
   campusId,
   active: true,
   code: 'ZONE_A',
+  deliveryFeeKobo: 15000,
   createdAt: '2026-06-15T08:00:00.000Z',
   displayOrder: 1,
   name: 'Zone A',
@@ -100,8 +103,12 @@ function createRepository(): CampusDirectoryRepositoryContract {
     updateDeliverySlot: vi.fn().mockResolvedValue(undefined),
     listAdminZones: vi.fn().mockResolvedValue([]),
     createZone: vi.fn().mockResolvedValue(zone),
-    updateZone: vi.fn().mockResolvedValue(undefined)
+    updateZone: vi.fn().mockResolvedValue(zone)
   };
+}
+
+function createEnv(maxOrderTotalKobo = 249000): EnvService {
+  return { get: () => maxOrderTotalKobo } as unknown as EnvService;
 }
 
 describe('CampusDirectoryService', () => {
@@ -110,7 +117,7 @@ describe('CampusDirectoryService', () => {
 
   beforeEach(() => {
     repository = createRepository();
-    service = new CampusDirectoryService(repository);
+    service = new CampusDirectoryService(repository, createEnv());
   });
 
   it('lists only active public campuses for unauthenticated surfaces', async () => {
@@ -147,6 +154,32 @@ describe('CampusDirectoryService', () => {
     await expect(
       service.updateCampus(campusAdmin, otherCampusId, { active: false })
     ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(repository.updateCampus).not.toHaveBeenCalled();
+  });
+
+  it('updates a zone delivery fee within the order maximum', async () => {
+    await service.updateZone(superAdmin, zone.id, { deliveryFeeKobo: 20000 });
+    expect(repository.updateZone).toHaveBeenCalledWith(zone.id, { deliveryFeeKobo: 20000 }, undefined);
+  });
+
+  it('scopes a campus admin zone fee update to their campus', async () => {
+    await service.updateZone(campusAdmin, zone.id, { deliveryFeeKobo: 20000 });
+    expect(repository.updateZone).toHaveBeenCalledWith(zone.id, { deliveryFeeKobo: 20000 }, campusId);
+  });
+
+  it('rejects a zone delivery fee above the order maximum', async () => {
+    service = new CampusDirectoryService(repository, createEnv(15000));
+    await expect(
+      service.updateZone(superAdmin, zone.id, { deliveryFeeKobo: 20000 })
+    ).rejects.toMatchObject({ status: 400 });
+    expect(repository.updateZone).not.toHaveBeenCalled();
+  });
+
+  it('rejects a campus service-fee ceiling above the order maximum', async () => {
+    service = new CampusDirectoryService(repository, createEnv(20000));
+    await expect(
+      service.updateCampus(superAdmin, campusId, { maxServiceFeeKobo: 25000 })
+    ).rejects.toMatchObject({ status: 400 });
     expect(repository.updateCampus).not.toHaveBeenCalled();
   });
 

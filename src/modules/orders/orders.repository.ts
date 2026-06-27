@@ -37,7 +37,8 @@ export class OrdersRepository implements OrdersRepositoryContract {
     input: CreateOrderDto,
     idempotencyKey: string,
     requestHash: string,
-    serviceFeeKobo: number
+    serviceFeeKobo: number,
+    maxOrderTotalKobo: number
   ): Promise<{ orderId: string }> {
     const items = input.items.map((item) => ({
       menu_item_id: item.menuItemId,
@@ -59,7 +60,8 @@ export class OrdersRepository implements OrdersRepositoryContract {
         ${requestHash},
         ${input.promotionCode ?? null},
         ${input.specialInstructions ?? null},
-        ${serviceFeeKobo}::integer
+        ${serviceFeeKobo}::integer,
+        ${maxOrderTotalKobo}::integer
       ) as order_id
     `.execute(this.database.db);
 
@@ -80,6 +82,20 @@ export class OrdersRepository implements OrdersRepositoryContract {
     `.execute(this.database.db);
 
     return result.rows[0]?.deliveryFeeKobo ?? null;
+  }
+
+  async findVendorServiceFeeConfig(
+    vendorId: string
+  ): Promise<{ serviceFeeKobo: number | null; maxServiceFeeKobo: number } | undefined> {
+    const result = await sql<{ serviceFeeKobo: number | null; maxServiceFeeKobo: number }>`
+      select v.service_fee_kobo as "serviceFeeKobo",
+             c.max_service_fee_kobo as "maxServiceFeeKobo"
+      from public.vendors v
+      join public.campuses c on c.id = v.campus_id
+      where v.id = ${vendorId}::uuid
+    `.execute(this.database.db);
+
+    return result.rows[0];
   }
 
   async quoteOrder(input: CreateOrderDto): Promise<OrderQuoteItem[]> {

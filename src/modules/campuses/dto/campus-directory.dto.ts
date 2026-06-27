@@ -128,6 +128,17 @@ export class UpdateCampusDto {
   @Matches(/^[A-Z]{2}$/)
   countryCode?: string;
 
+  @ApiPropertyOptional({
+    minimum: 0,
+    type: Number,
+    description: 'Ceiling (kobo) a vendor on this campus may set for its takeaway/packaging fee.'
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  maxServiceFeeKobo?: number;
+
   @ApiPropertyOptional({ type: Boolean })
   @IsOptional()
   @IsBoolean()
@@ -157,6 +168,17 @@ export class CreateZoneDto {
   @Min(0)
   @Max(10_000)
   displayOrder!: number;
+
+  @ApiPropertyOptional({
+    minimum: 7500,
+    type: Number,
+    description: 'Customer-facing delivery fee in kobo for this zone (defaults to ₦150). The ₦75 rider share is fixed.'
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(7500)
+  deliveryFeeKobo?: number;
 }
 
 export class UpdateZoneDto {
@@ -186,6 +208,17 @@ export class UpdateZoneDto {
   @Min(0)
   @Max(10_000)
   displayOrder?: number;
+
+  @ApiPropertyOptional({
+    minimum: 7500,
+    type: Number,
+    description: 'Customer-facing delivery fee in kobo for this zone. The ₦75 rider share is fixed.'
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(7500)
+  deliveryFeeKobo?: number;
 }
 
 export class CreateLocationDto {
@@ -365,6 +398,9 @@ export class CampusRecordDto {
   @ApiProperty({ type: String })
   countryCode!: string;
 
+  @ApiProperty({ type: Number })
+  maxServiceFeeKobo!: number;
+
   @ApiProperty({ type: Boolean })
   active!: boolean;
 
@@ -387,6 +423,9 @@ export class CampusZoneRecordDto {
 
   @ApiProperty({ type: String })
   code!: string;
+
+  @ApiProperty({ type: Number })
+  deliveryFeeKobo!: number;
 
   @ApiProperty({ type: Boolean })
   active!: boolean;

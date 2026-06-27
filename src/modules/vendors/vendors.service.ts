@@ -264,6 +264,9 @@ export class VendorsService {
     if (email !== undefined) update.email = email;
     if (logoUrl !== undefined) update.logoUrl = logoUrl;
     if (kitchenLocation !== undefined) update.kitchenLocation = kitchenLocation;
+    if (input.serviceFeeKobo !== undefined) {
+      update.serviceFeeKobo = await this.resolveServiceFeeKobo(vendorId, input.serviceFeeKobo);
+    }
     if (input.defaultDeliveryMode !== undefined) {
       update.defaultDeliveryMode = input.defaultDeliveryMode;
     }
@@ -274,6 +277,27 @@ export class VendorsService {
     }
 
     return profile;
+  }
+
+  // Validate a vendor's requested takeaway/packaging fee against the campus-set ceiling.
+  // null clears the override back to the global default.
+  private async resolveServiceFeeKobo(
+    vendorId: string,
+    requested: number | null
+  ): Promise<number | null> {
+    if (requested === null) {
+      return null;
+    }
+    const ceiling = await this.repository.findCampusMaxServiceFeeKobo(vendorId);
+    if (ceiling === undefined) {
+      throw notFound('Vendor was not found.');
+    }
+    if (requested > ceiling) {
+      throw badRequest(
+        `serviceFeeKobo may not exceed the campus maximum of ${String(ceiling)} kobo.`
+      );
+    }
+    return requested;
   }
 
   async getPayoutAccount(
