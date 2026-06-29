@@ -172,7 +172,8 @@ export class CreateZoneDto {
   @ApiPropertyOptional({
     minimum: 7500,
     type: Number,
-    description: 'Customer-facing delivery fee in kobo for this zone (defaults to ₦150). The ₦75 rider share is fixed.'
+    description:
+      'Customer-facing delivery fee in kobo for this zone (defaults to ₦150). The ₦75 rider share is fixed.'
   })
   @IsOptional()
   @Type(() => Number)

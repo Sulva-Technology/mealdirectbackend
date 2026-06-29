@@ -218,9 +218,7 @@ describe('production domain rules', () => {
       status: 'reversed'
     });
 
-    expect(
-      mapPaystackEvent({ event: 'unknown.event', data: { reference: 'r' } })
-    ).toEqual({
+    expect(mapPaystackEvent({ event: 'unknown.event', data: { reference: 'r' } })).toEqual({
       type: 'IGNORED',
       reason: 'UNMAPPED_EVENT',
       providerEvent: 'unknown.event'

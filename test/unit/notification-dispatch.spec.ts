@@ -34,7 +34,10 @@ describe('NotificationDispatchHandler', () => {
     });
 
     expect(email.deliver).toHaveBeenCalledTimes(1);
-    expect(push.deliverToUser).toHaveBeenCalledWith('u1', expect.objectContaining({ title: 'Delivered' }));
+    expect(push.deliverToUser).toHaveBeenCalledWith(
+      'u1',
+      expect.objectContaining({ title: 'Delivered' })
+    );
     expect(reads.recordDelivery).toHaveBeenCalledWith('n1', 'email', 'sent', null);
     expect(reads.recordDelivery).toHaveBeenCalledWith('n1', 'push', 'sent', null);
   });

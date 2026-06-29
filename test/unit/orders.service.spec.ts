@@ -132,7 +132,11 @@ describe('OrdersService', () => {
   });
 
   it('includes the configured service fee in the quote total', async () => {
-    service = new OrdersService(repository, createEnv({ SERVICE_FEE_KOBO: 5000 }), createPayments());
+    service = new OrdersService(
+      repository,
+      createEnv({ SERVICE_FEE_KOBO: 5000 }),
+      createPayments()
+    );
 
     await expect(service.quoteOrder(customer, orderInput)).resolves.toEqual({
       currency: 'NGN',
@@ -175,7 +179,11 @@ describe('OrdersService', () => {
   });
 
   it('falls back to the global service fee when the vendor has no override', async () => {
-    service = new OrdersService(repository, createEnv({ SERVICE_FEE_KOBO: 5000 }), createPayments());
+    service = new OrdersService(
+      repository,
+      createEnv({ SERVICE_FEE_KOBO: 5000 }),
+      createPayments()
+    );
     vi.mocked(repository.findVendorServiceFeeConfig).mockResolvedValue({
       serviceFeeKobo: null,
       maxServiceFeeKobo: 20000

@@ -34,6 +34,7 @@ This task is configuration only — no code. The pool layer already strips `sslm
 cert validation; the production `DATABASE_UNAVAILABLE` was a pooler credential/host issue.
 
 **Files:**
+
 - Modify: `docs/deployment/environment-variables.md`
 - Modify: `.env.production.example`
 
@@ -46,12 +47,13 @@ Append a section to `docs/deployment/environment-variables.md`:
 
 Use the **Session pooler** connection string from Supabase →
 Project Settings → Database → Connection string → "Session pooler":
-
 ```
+
 DATABASE_URL=postgresql://postgres.<project-ref>:<db-password>@aws-0-<region>.pooler.supabase.com:5432/postgres
 DATABASE_SSL=true
 DATABASE_SSL_REJECT_UNAUTHORIZED=false
 DATABASE_POOL_MAX=10
+
 ```
 
 Notes:
@@ -89,6 +91,7 @@ A runnable script that connects with the exact app pool config and prints saniti
 diagnostics, so connectivity can be verified in CI or a Render shell before serving traffic.
 
 **Files:**
+
 - Create: `scripts/db-preflight.ts`
 - Modify: `package.json`
 
@@ -166,6 +169,7 @@ Move the two SQL maintenance jobs into the database so they fire on a schedule w
 external trigger. (`release_expired_reservations` and `close_batches_at_cutoff` already exist.)
 
 **Files:**
+
 - Create: `supabase/migrations/<timestamp>_schedule_maintenance_cron.sql`
 - Create: `supabase/tests/database/cron_schedule_test.sql`
 
@@ -244,6 +248,7 @@ Report unhandled errors (the non-`HttpException` 5xx branch) to Sentry when a DS
 configured; no-op otherwise. Keep it injectable so it is unit-testable.
 
 **Files:**
+
 - Modify: `src/config/env.ts`
 - Create: `src/common/observability/error-reporter.ts`
 - Modify: `src/common/filters/http-exception.filter.ts`
@@ -349,7 +354,7 @@ Immediately before the existing `this.logger.error(` call in the non-`HttpExcept
 branch, add:
 
 ```ts
-    this.reporter.captureException(exception);
+this.reporter.captureException(exception);
 ```
 
 - [ ] **Step 5: Run the test to verify it passes**
@@ -418,7 +423,7 @@ function configureGlobals(app: INestApplication, reporter: ErrorReporter): void 
 In `createApp`, replace `configureGlobals(app);` with:
 
 ```ts
-  configureGlobals(app, createErrorReporter(config));
+configureGlobals(app, createErrorReporter(config));
 ```
 
 - [ ] **Step 8: Run the full unit + typecheck gate**

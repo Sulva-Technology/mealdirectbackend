@@ -107,13 +107,13 @@ All amounts are in **kobo** (₦2,500.00 = `250000`). Divide by 100 for display.
 
 ## 5. Test cards (Paystack test mode)
 
-| Field | Value |
-|-------|-------|
-| Card  | `4084 0840 8408 4081` |
-| CVV   | `408` |
-| Expiry| any future date, e.g. `12/30` |
-| PIN   | `0000` |
-| OTP   | `123456` |
+| Field  | Value                         |
+| ------ | ----------------------------- |
+| Card   | `4084 0840 8408 4081`         |
+| CVV    | `408`                         |
+| Expiry | any future date, e.g. `12/30` |
+| PIN    | `0000`                        |
+| OTP    | `123456`                      |
 
 More test cards / failure scenarios: https://paystack.com/docs/payments/test-payments
 

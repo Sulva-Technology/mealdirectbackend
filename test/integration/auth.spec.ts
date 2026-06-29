@@ -160,6 +160,39 @@ describe('Supabase JWT authentication', () => {
       expect(signInSpy).toHaveBeenCalledWith('test@example.com', 'Password123!', ['customer']);
     });
 
+    it('vendor/accept-invite creates a vendor account from an invite token', async () => {
+      const authService = app.get(SupabaseAuthService);
+      const mockResponse = {
+        accessToken: 'mock-access-token',
+        refreshToken: 'mock-refresh-token',
+        expiresIn: 3600,
+        user: { id: 'user-uuid', email: 'owner@example.com', role: 'vendor' }
+      };
+      const acceptSpy = vi.spyOn(authService, 'acceptVendorInvite').mockResolvedValue(mockResponse);
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/v1/auth/vendor/accept-invite',
+        payload: {
+          email: 'owner@example.com',
+          password: 'Password123!',
+          fullName: 'Vendor Owner',
+          redirectTo: 'http://localhost:3001/auth/callback',
+          token: 'invite-token-at-least-sixteen'
+        }
+      });
+
+      expect(response.statusCode).toBe(201);
+      expect(response.json()).toEqual(mockResponse);
+      expect(acceptSpy).toHaveBeenCalledWith({
+        email: 'owner@example.com',
+        password: 'Password123!',
+        fullName: 'Vendor Owner',
+        redirectTo: 'http://localhost:3001/auth/callback',
+        token: 'invite-token-at-least-sixteen'
+      });
+    });
+
     it('refresh returns 200 and new tokens', async () => {
       const authService = app.get(SupabaseAuthService);
       const mockResponse = {
@@ -185,9 +218,7 @@ describe('Supabase JWT authentication', () => {
 
     it('password-reset returns 200 with a non-enumerating message', async () => {
       const authService = app.get(SupabaseAuthService);
-      const resetSpy = vi
-        .spyOn(authService, 'requestPasswordReset')
-        .mockResolvedValue(undefined);
+      const resetSpy = vi.spyOn(authService, 'requestPasswordReset').mockResolvedValue(undefined);
 
       const response = await app.inject({
         method: 'POST',
@@ -212,9 +243,7 @@ describe('Supabase JWT authentication', () => {
 
     it('resend-confirmation returns 200 with a non-enumerating message', async () => {
       const authService = app.get(SupabaseAuthService);
-      const resendSpy = vi
-        .spyOn(authService, 'resendConfirmation')
-        .mockResolvedValue(undefined);
+      const resendSpy = vi.spyOn(authService, 'resendConfirmation').mockResolvedValue(undefined);
 
       const response = await app.inject({
         method: 'POST',

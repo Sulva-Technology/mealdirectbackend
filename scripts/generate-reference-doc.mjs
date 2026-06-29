@@ -25,13 +25,13 @@ function resolveSchema(schema, components) {
     return 'Object';
   }
   if (schema.oneOf) {
-    return schema.oneOf.map(s => resolveSchema(s, components)).join(' | ');
+    return schema.oneOf.map((s) => resolveSchema(s, components)).join(' | ');
   }
   if (schema.anyOf) {
-    return schema.anyOf.map(s => resolveSchema(s, components)).join(' | ');
+    return schema.anyOf.map((s) => resolveSchema(s, components)).join(' | ');
   }
   if (schema.allOf) {
-    return schema.allOf.map(s => resolveSchema(s, components)).join(' & ');
+    return schema.allOf.map((s) => resolveSchema(s, components)).join(' & ');
   }
   return schema.type || 'any';
 }
@@ -73,9 +73,9 @@ async function run() {
 
       // Parameters
       const parameters = operation.parameters || [];
-      const pathParams = parameters.filter(p => p.in === 'path');
-      const queryParams = parameters.filter(p => p.in === 'query');
-      const headerParams = parameters.filter(p => p.in === 'header');
+      const pathParams = parameters.filter((p) => p.in === 'path');
+      const queryParams = parameters.filter((p) => p.in === 'query');
+      const headerParams = parameters.filter((p) => p.in === 'header');
 
       if (pathParams.length > 0) {
         markdown += `#### Path Parameters\n\n| Parameter | Type | Required | Description |\n| :--- | :--- | :--- | :--- |\n`;

@@ -80,7 +80,8 @@ export class VendorsController {
 
   @Post('onboard')
   @ApiCreatedResponse({
-    description: 'Provisions the vendor record and links the caller as owner. The client must refresh its session afterwards to receive the vendor_id claim.',
+    description:
+      'Provisions the vendor record and links the caller as owner. The client must refresh its session afterwards to receive the vendor_id claim.',
     type: VendorOnboardEnvelopeDto
   })
   @ApiBadRequestResponse({ description: 'Invalid onboarding input or unknown campus.' })

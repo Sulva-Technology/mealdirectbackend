@@ -3,6 +3,7 @@ import { Transform, Type } from 'class-transformer';
 import { IsDatabaseUuid } from '../../../common/validation.js';
 import {
   IsBoolean,
+  IsEmail,
   IsIn,
   IsInt,
   IsOptional,
@@ -484,6 +485,19 @@ export class AdminVendorUserDto {
 
   @IsIn(['owner', 'staff'])
   role!: 'owner' | 'staff';
+}
+
+export class AdminCreateVendorInvitationDto {
+  @Transform(({ value }) => trimString(value))
+  @IsEmail()
+  email!: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(168)
+  expiresInHours?: number = 72;
 }
 
 export class AdminModerateReviewDto {

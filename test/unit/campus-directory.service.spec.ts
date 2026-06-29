@@ -159,12 +159,20 @@ describe('CampusDirectoryService', () => {
 
   it('updates a zone delivery fee within the order maximum', async () => {
     await service.updateZone(superAdmin, zone.id, { deliveryFeeKobo: 20000 });
-    expect(repository.updateZone).toHaveBeenCalledWith(zone.id, { deliveryFeeKobo: 20000 }, undefined);
+    expect(repository.updateZone).toHaveBeenCalledWith(
+      zone.id,
+      { deliveryFeeKobo: 20000 },
+      undefined
+    );
   });
 
   it('scopes a campus admin zone fee update to their campus', async () => {
     await service.updateZone(campusAdmin, zone.id, { deliveryFeeKobo: 20000 });
-    expect(repository.updateZone).toHaveBeenCalledWith(zone.id, { deliveryFeeKobo: 20000 }, campusId);
+    expect(repository.updateZone).toHaveBeenCalledWith(
+      zone.id,
+      { deliveryFeeKobo: 20000 },
+      campusId
+    );
   });
 
   it('rejects a zone delivery fee above the order maximum', async () => {

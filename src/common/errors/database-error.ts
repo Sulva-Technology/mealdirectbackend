@@ -15,15 +15,13 @@ type DatabaseErrorMapping = (message: string) => HttpException;
 // 'P0001'. Both carry an intentional, client-safe message we surface as-is.
 const sqlStateMappings: Readonly<Record<string, DatabaseErrorMapping>> = {
   // check_violation — business-rule guards and table CHECK constraints.
-  '23514': (message) =>
-    new BadRequestException({ code: ErrorCodes.VALIDATION_FAILED, message }),
+  '23514': (message) => new BadRequestException({ code: ErrorCodes.VALIDATION_FAILED, message }),
   // raise_exception — plpgsql `raise exception` without an explicit errcode.
   P0001: (message) => new BadRequestException({ code: ErrorCodes.VALIDATION_FAILED, message }),
   // unique_violation.
   '23505': (message) => new ConflictException({ code: ErrorCodes.CONFLICT, message }),
   // foreign_key_violation.
-  '23503': (message) =>
-    new BadRequestException({ code: ErrorCodes.VALIDATION_FAILED, message }),
+  '23503': (message) => new BadRequestException({ code: ErrorCodes.VALIDATION_FAILED, message }),
   // not_null_violation.
   '23502': (message) => new BadRequestException({ code: ErrorCodes.VALIDATION_FAILED, message }),
   // no_data_found — explicit `raise no_data_found` in plpgsql.

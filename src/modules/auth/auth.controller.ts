@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Headers,
-  HttpCode,
-  Inject,
-  Post,
-  UseGuards
-} from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpCode, Inject, Post, UseGuards } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -23,6 +14,7 @@ import { CurrentActor } from './current-actor.decorator.js';
 import {
   AuthMessageResponseDto,
   AuthTokensResponseDto,
+  AcceptVendorInviteDto,
   EmailRequestDto,
   LoginDto,
   RefreshDto,
@@ -40,10 +32,21 @@ export class AuthController {
   ) {}
 
   @Post('customer/signup')
-  @ApiCreatedResponse({ type: AuthTokensResponseDto, description: 'Customer registered successfully.' })
-  @ApiBadRequestResponse({ description: 'Registration failed due to invalid input or duplicate email.' })
+  @ApiCreatedResponse({
+    type: AuthTokensResponseDto,
+    description: 'Customer registered successfully.'
+  })
+  @ApiBadRequestResponse({
+    description: 'Registration failed due to invalid input or duplicate email.'
+  })
   async customerSignUp(@Body() dto: SignUpDto): Promise<AuthTokensResponseDto> {
-    return this.authService.signUp(dto.email, dto.password, 'customer', dto.fullName, dto.redirectTo ?? dto.emailRedirectTo);
+    return this.authService.signUp(
+      dto.email,
+      dto.password,
+      'customer',
+      dto.fullName,
+      dto.redirectTo ?? dto.emailRedirectTo
+    );
   }
 
   @Post('customer/login')
@@ -56,10 +59,36 @@ export class AuthController {
   }
 
   @Post('vendor/signup')
-  @ApiCreatedResponse({ type: AuthTokensResponseDto, description: 'Vendor registered successfully.' })
+  @ApiCreatedResponse({
+    type: AuthTokensResponseDto,
+    description: 'Vendor registered successfully.'
+  })
   @ApiBadRequestResponse({ description: 'Registration failed.' })
   async vendorSignUp(@Body() dto: SignUpDto): Promise<AuthTokensResponseDto> {
-    return this.authService.signUp(dto.email, dto.password, 'vendor', dto.fullName, dto.redirectTo ?? dto.emailRedirectTo);
+    return this.authService.signUp(
+      dto.email,
+      dto.password,
+      'vendor',
+      dto.fullName,
+      dto.redirectTo ?? dto.emailRedirectTo
+    );
+  }
+
+  @Post('vendor/accept-invite')
+  @ApiCreatedResponse({
+    type: AuthTokensResponseDto,
+    description: 'Vendor account created from an admin-issued invite link.'
+  })
+  @ApiBadRequestResponse({ description: 'Invitation is invalid, expired, or already used.' })
+  async acceptVendorInvite(@Body() dto: AcceptVendorInviteDto): Promise<AuthTokensResponseDto> {
+    const redirectTo = dto.redirectTo ?? dto.emailRedirectTo;
+    return this.authService.acceptVendorInvite({
+      email: dto.email,
+      password: dto.password,
+      ...(dto.fullName === undefined ? {} : { fullName: dto.fullName }),
+      ...(redirectTo === undefined ? {} : { redirectTo }),
+      token: dto.token
+    });
   }
 
   @Post('vendor/login')
@@ -72,10 +101,19 @@ export class AuthController {
   }
 
   @Post('rider/signup')
-  @ApiCreatedResponse({ type: AuthTokensResponseDto, description: 'Rider registered successfully.' })
+  @ApiCreatedResponse({
+    type: AuthTokensResponseDto,
+    description: 'Rider registered successfully.'
+  })
   @ApiBadRequestResponse({ description: 'Registration failed.' })
   async riderSignUp(@Body() dto: SignUpDto): Promise<AuthTokensResponseDto> {
-    return this.authService.signUp(dto.email, dto.password, 'rider', dto.fullName, dto.redirectTo ?? dto.emailRedirectTo);
+    return this.authService.signUp(
+      dto.email,
+      dto.password,
+      'rider',
+      dto.fullName,
+      dto.redirectTo ?? dto.emailRedirectTo
+    );
   }
 
   @Post('rider/login')

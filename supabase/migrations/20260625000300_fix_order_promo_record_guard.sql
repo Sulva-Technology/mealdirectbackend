@@ -314,4 +314,20 @@ begin
 end;
 $$;
 
+comment on function public.create_pending_order_and_reserve_inventory(
+  uuid,
+  uuid,
+  uuid,
+  uuid,
+  date,
+  uuid,
+  public.delivery_mode,
+  jsonb,
+  text,
+  integer,
+  integer,
+  integer,
+  text
+) is 'Creates a pending order, validates promotion eligibility, reserves inventory, writes payment and outbox rows, and stores the idempotent response.';
+
 commit;

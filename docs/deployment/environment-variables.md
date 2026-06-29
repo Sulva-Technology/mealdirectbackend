@@ -53,6 +53,7 @@ DATABASE_POOL_MAX=10
 ```
 
 Notes:
+
 - The username MUST include the project ref suffix (`postgres.<project-ref>`); a bare
   `postgres` username fails password auth against the pooler.
 - Do not append `?sslmode=...`; the app supplies an explicit SSL object and strips

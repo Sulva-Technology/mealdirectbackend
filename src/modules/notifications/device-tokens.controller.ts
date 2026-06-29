@@ -1,5 +1,10 @@
 import { Body, Controller, Delete, HttpCode, Inject, Param, Post, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiNoContentResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiNoContentResponse,
+  ApiTags,
+  ApiUnauthorizedResponse
+} from '@nestjs/swagger';
 
 import type { AuthenticatedActor } from '../auth/actor-context.js';
 import { CurrentActor } from '../auth/current-actor.decorator.js';
@@ -19,7 +24,9 @@ export class DeviceTokensController {
 
   @Post()
   @HttpCode(204)
-  @ApiNoContentResponse({ description: 'Registers (or refreshes) a push device token for the current user.' })
+  @ApiNoContentResponse({
+    description: 'Registers (or refreshes) a push device token for the current user.'
+  })
   async register(
     @CurrentActor() actor: AuthenticatedActor,
     @Body() dto: RegisterDeviceTokenDto

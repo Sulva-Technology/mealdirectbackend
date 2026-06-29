@@ -9,7 +9,10 @@ describe('PushChannel', () => {
     const channel = new PushChannel({ send }, { tokensForUser });
 
     await channel.deliverToUser('user-1', {
-      to: 'user-1', title: 'Out for delivery', body: 'Your rider is on the way.', linkPath: '/orders/1'
+      to: 'user-1',
+      title: 'Out for delivery',
+      body: 'Your rider is on the way.',
+      linkPath: '/orders/1'
     });
 
     expect(tokensForUser).toHaveBeenCalledWith('user-1');

@@ -19,7 +19,7 @@
 - `campus_zones` (`migration 200:57`): `id, campus_id, name, code, active, display_order` — **no
   fee column**.
 - `delivery_batches` (`migration 400:241`) is keyed by `(campus_id, vendor_id, service_date,
-  delivery_slot_id, zone_id, delivery_mode)`; `delivery_earnings_kobo = order_count * 7500`
+delivery_slot_id, zone_id, delivery_mode)`; `delivery_earnings_kobo = order_count * 7500`
   (rider earnings, hardcoded). Customer-facing fee lives in `orders.delivery_fee_kobo`, set by
   `create_pending_order_and_reserve_inventory`.
 - `delivery_assignments` (`migration 400:285`) is **one per batch** (unique `batch_id`),
@@ -49,6 +49,7 @@
 ## Task 1: Zone-based delivery fee
 
 **Files:**
+
 - Create: `supabase/migrations/<ts>_zone_delivery_fee.sql`, `supabase/tests/database/zone_delivery_fee_test.sql`
 - Modify: `src/modules/orders/orders.service.ts`, `src/modules/orders/orders.repository.ts`
 
@@ -87,6 +88,7 @@ when null). Update `test/unit/orders.service.spec.ts` to assert the quote uses t
 - [ ] **Step 4: Verify + commit**
 
 Run: `pnpm db:reset && pnpm db:test && pnpm db:lint && pnpm db:types && pnpm typecheck && pnpm vitest run test/unit/orders.service.spec.ts`
+
 ```bash
 git add supabase/migrations supabase/tests/database/zone_delivery_fee_test.sql src/modules/orders supabase/types/database.types.ts test/unit/orders.service.spec.ts
 git commit -m "feat(pricing): per-zone delivery fee for quotes and orders"
@@ -97,6 +99,7 @@ git commit -m "feat(pricing): per-zone delivery fee for quotes and orders"
 ## Task 2: Promotions engine
 
 **Files:**
+
 - Create: `supabase/migrations/<ts>_promotions.sql`, `supabase/tests/database/promotions_test.sql`
 - Create: `src/modules/promotions/{promotions.module,promotions.service,promotions.repository,promotions.controller,promotions.types}.ts`, `src/modules/promotions/dto/promotion.dto.ts`
 - Create: `test/unit/promotions.service.spec.ts`, `test/integration/promotions-api.spec.ts`
@@ -181,6 +184,7 @@ atomic). Add an integration test placing a discounted order and asserting the re
 - [ ] **Step 6: Verify + commit**
 
 Run: `pnpm db:reset && pnpm db:test && pnpm db:lint && pnpm db:types && pnpm typecheck && pnpm vitest run && pnpm openapi:generate`
+
 ```bash
 git add supabase/migrations supabase/tests/database/promotions_test.sql src/domain/promotions.ts src/modules/promotions src/modules/capability-modules.ts src/modules/orders test/unit/promotions.service.spec.ts test/integration/promotions-api.spec.ts supabase/types/database.types.ts docs/openapi.json docs/openapi.yaml
 git commit -m "feat(promotions): server-validated promo codes applied to orders"
@@ -191,6 +195,7 @@ git commit -m "feat(promotions): server-validated promo codes applied to orders"
 ## Task 3: Rider availability flag
 
 **Files:**
+
 - Create: `supabase/migrations/<ts>_rider_availability.sql`, pgTAP
 - Modify: `src/modules/riders/{riders.controller,riders.service,riders.repository}.ts`
 
@@ -218,6 +223,7 @@ integration test toggling availability and asserting persistence.
 - [ ] **Step 3: Verify + commit**
 
 Run: `pnpm db:reset && pnpm db:test && pnpm typecheck && pnpm vitest run test/integration/rider-api.spec.ts`
+
 ```bash
 git add supabase/migrations supabase/tests/database src/modules/riders supabase/types/database.types.ts test/integration/rider-api.spec.ts
 git commit -m "feat(riders): rider availability flag and toggle endpoint"
@@ -228,6 +234,7 @@ git commit -m "feat(riders): rider availability flag and toggle endpoint"
 ## Task 4: Auto rider dispatch
 
 **Files:**
+
 - Create: `supabase/migrations/<ts>_auto_dispatch.sql`, `supabase/tests/database/auto_dispatch_test.sql`
 - Create: `src/worker/handlers/auto-dispatch.handler.ts`, `test/unit/auto-dispatch.spec.ts`
 - Modify: `src/worker/worker.module.ts`
@@ -325,6 +332,7 @@ Implement `DispatchReads` against `delivery_batch_orders` (find batch) and
 - [ ] **Step 4: Verify + commit**
 
 Run: `pnpm db:reset && pnpm db:test && pnpm typecheck && pnpm vitest run test/unit/auto-dispatch.spec.ts`
+
 ```bash
 git add supabase/migrations supabase/tests/database/auto_dispatch_test.sql src/worker supabase/types/database.types.ts test/unit/auto-dispatch.spec.ts
 git commit -m "feat(dispatch): auto-assign available rider on order ready"
@@ -335,6 +343,7 @@ git commit -m "feat(dispatch): auto-assign available rider on order ready"
 ## Task 5: Reconcile the TS order-status enum with the DB
 
 **Files:**
+
 - Modify: `src/domain/order-status.ts`, `test/unit/domain-rules.spec.ts`
 
 - [ ] **Step 1: Update the test to the DB-authoritative statuses**
@@ -359,6 +368,7 @@ function exactly. Grep for removed identifiers (`ready_for_pickup`, `picked_up`,
 
 Run: `pnpm typecheck && pnpm lint && pnpm vitest run`
 Expected: PASS.
+
 ```bash
 git add src/domain/order-status.ts test/unit/domain-rules.spec.ts
 git commit -m "refactor(domain): align order-status enum with database state machine"

@@ -49,6 +49,7 @@
 ## Task 1: Paystack transfer client methods
 
 **Files:**
+
 - Modify: `src/modules/payments/paystack.client.ts`, `src/modules/payments/payments.types.ts`
 - Create: `test/unit/paystack-transfers.spec.ts`
 
@@ -58,14 +59,25 @@ In `payments.types.ts` add:
 
 ```ts
 export type PaystackRecipientInput = {
-  name: string; accountNumber: string; bankCode: string; currency: string;
+  name: string;
+  accountNumber: string;
+  bankCode: string;
+  currency: string;
 };
-export type PaystackRecipientResult = { recipientCode: string; providerPayload: Record<string, unknown> };
+export type PaystackRecipientResult = {
+  recipientCode: string;
+  providerPayload: Record<string, unknown>;
+};
 export type PaystackTransferInput = {
-  amountKobo: number; recipientCode: string; reference: string; reason?: string;
+  amountKobo: number;
+  recipientCode: string;
+  reference: string;
+  reason?: string;
 };
 export type PaystackTransferResult = {
-  transferCode: string; status: string; providerPayload: Record<string, unknown>;
+  transferCode: string;
+  status: string;
+  providerPayload: Record<string, unknown>;
 };
 ```
 
@@ -114,6 +126,7 @@ async initiateTransfer(input: PaystackTransferInput): Promise<PaystackTransferRe
 - [ ] **Step 4: Verify + commit**
 
 Run: `pnpm vitest run test/unit/paystack-transfers.spec.ts && pnpm typecheck`
+
 ```bash
 git add src/modules/payments/paystack.client.ts src/modules/payments/payments.types.ts test/unit/paystack-transfers.spec.ts
 git commit -m "feat(payments): add Paystack transfer recipient and transfer methods"
@@ -124,6 +137,7 @@ git commit -m "feat(payments): add Paystack transfer recipient and transfer meth
 ## Task 2: Payout schema + state functions
 
 **Files:**
+
 - Create: `supabase/migrations/<ts>_payout_transfers.sql`, `supabase/tests/database/payout_transfers_test.sql`
 
 - [ ] **Step 1: Migration**
@@ -189,6 +203,7 @@ settlement status `paid`.
 - [ ] **Step 2: Verify + commit**
 
 Run: `pnpm db:reset && pnpm db:test && pnpm db:lint && pnpm db:types`
+
 ```bash
 git add supabase/migrations supabase/tests/database/payout_transfers_test.sql supabase/types/database.types.ts
 git commit -m "feat(db): payout transfers table and reconciliation function"
@@ -199,6 +214,7 @@ git commit -m "feat(db): payout transfers table and reconciliation function"
 ## Task 3: Payout service behind an approval gate
 
 **Files:**
+
 - Modify: `src/config/env.ts`, `src/modules/settlements/settlements.controller.ts`, `src/modules/settlements/settlements.module.ts`
 - Create: `src/modules/settlements/payout.service.ts`, `src/modules/settlements/payout.repository.ts`, `test/unit/payout.service.spec.ts`
 
@@ -209,6 +225,7 @@ In `src/config/env.ts` `z.object`: `PAYOUTS_ENABLED: booleanFromString.default(f
 - [ ] **Step 2: Write failing service test**
 
 Create `test/unit/payout.service.spec.ts` asserting:
+
 - throws when `PAYOUTS_ENABLED` is false;
 - provisions a recipient when the payout account has no `paystack_recipient_code`, persists it,
   then initiates a transfer and records a `payout_transfers` row with the returned code;
@@ -221,6 +238,7 @@ Use a fake `PaystackClientContract` and a fake repository.
 - [ ] **Step 3: Implement `PayoutService` + `PayoutRepository`**
 
 `PayoutService.payToSettlement(actor, settlementId)`:
+
 1. assert `super_admin` (reuse role check) and `env.get('PAYOUTS_ENABLED')`;
 2. load settlement + its vendor/rider payout destination via repository;
 3. if no recipient code, `paystack.createTransferRecipient(...)` and persist it on the
@@ -238,6 +256,7 @@ in `settlements.module.ts`.
 - [ ] **Step 5: Verify + commit**
 
 Run: `pnpm typecheck && pnpm vitest run test/unit/payout.service.spec.ts && pnpm openapi:generate`
+
 ```bash
 git add src/config/env.ts src/modules/settlements docs/openapi.json docs/openapi.yaml test/unit/payout.service.spec.ts
 git commit -m "feat(settlements): gated automated payout via Paystack transfers"
@@ -248,6 +267,7 @@ git commit -m "feat(settlements): gated automated payout via Paystack transfers"
 ## Task 4: Transfer webhook reconciliation
 
 **Files:**
+
 - Modify: `src/modules/payments/paystack-webhook.service.ts`, `src/domain/payments.ts`
 - Create/extend: `test/integration/paystack-webhook.spec.ts`
 
@@ -263,7 +283,9 @@ In `paystack-webhook.service.ts` `processWithDatabase`, after recording the even
 mapped type is a transfer event call:
 
 ```ts
-await sql`select public.reconcile_payout_transfer(${reference}, ${status}, ${JSON.stringify(payload)}::jsonb)`.execute(trx);
+await sql`select public.reconcile_payout_transfer(${reference}, ${status}, ${JSON.stringify(payload)}::jsonb)`.execute(
+  trx
+);
 ```
 
 - [ ] **Step 3: Integration test**
@@ -275,6 +297,7 @@ POST a signed `transfer.success` webhook, assert the transfer + settlement becom
 - [ ] **Step 4: Verify + commit**
 
 Run: `pnpm db:reset && pnpm db:test && pnpm typecheck && pnpm vitest run test/integration/paystack-webhook.spec.ts`
+
 ```bash
 git add src/domain/payments.ts src/modules/payments/paystack-webhook.service.ts test/integration/paystack-webhook.spec.ts
 git commit -m "feat(payments): reconcile settlement payouts from transfer webhooks"
@@ -285,6 +308,7 @@ git commit -m "feat(payments): reconcile settlement payouts from transfer webhoo
 ## Task 5: Asymmetric JWKS verification
 
 **Files:**
+
 - Modify: `src/modules/auth/supabase-jwt.service.ts`, `src/config/env.ts`
 - Modify: `test/unit/rbac.spec.ts` or the auth/jwt unit test
 
@@ -310,6 +334,7 @@ In `supabase-jwt.service.ts`, when `SUPABASE_JWKS_URL` is configured use
 - [ ] **Step 4: Verify + commit**
 
 Run: `pnpm typecheck && pnpm vitest run`
+
 ```bash
 git add src/modules/auth/supabase-jwt.service.ts src/config/env.ts test
 git commit -m "feat(auth): support asymmetric JWKS verification with HS256 fallback"
@@ -320,6 +345,7 @@ git commit -m "feat(auth): support asymmetric JWKS verification with HS256 fallb
 ## Task 6: Password reset + email confirmation flows
 
 **Files:**
+
 - Modify: `src/modules/auth/auth.controller.ts`, `src/modules/auth/supabase-auth.service.ts`, `src/modules/auth/dto/auth.dto.ts`
 - Modify: `supabase/config.toml`
 - Create: extend `test/integration/auth.spec.ts`
@@ -344,6 +370,7 @@ Extend `test/integration/auth.spec.ts` asserting both endpoints return 200 for a
 - [ ] **Step 4: Verify + commit**
 
 Run: `pnpm typecheck && pnpm vitest run test/integration/auth.spec.ts && pnpm openapi:generate`
+
 ```bash
 git add src/modules/auth supabase/config.toml docs/openapi.json docs/openapi.yaml test/integration/auth.spec.ts
 git commit -m "feat(auth): password reset and resend confirmation endpoints"
@@ -354,6 +381,7 @@ git commit -m "feat(auth): password reset and resend confirmation endpoints"
 ## Task 7: Resolve empty module stubs
 
 **Files:**
+
 - Modify/Delete: `src/modules/deliveries/deliveries.module.ts`, `src/modules/locations/*`, `src/modules/slots/*`, `src/modules/audit/*`
 - Modify: `src/modules/capability-modules.ts`
 
@@ -383,6 +411,7 @@ git commit -m "chore(modules): remove empty placeholder modules"
 ## Task 8: Observability finalization + launch verification
 
 **Files:**
+
 - Modify: `docs/operations/observability.md`, `docs/go-live-checklist.md`
 
 - [ ] **Step 1: Expand Sentry context + alerts**
@@ -401,6 +430,7 @@ production smoke all PASS.
 
 Tick the remaining items in `docs/go-live-checklist.md` (payouts gate, JWKS, notifications,
 realtime, dispatch) and note `PAYOUTS_ENABLED` stays false until a controlled enablement.
+
 ```bash
 git add docs/operations/observability.md docs/go-live-checklist.md
 git commit -m "docs: finalize observability and go-live verification for production"
@@ -421,6 +451,7 @@ git commit -m "docs: finalize observability and go-live verification for product
   are used consistently across client, service, webhook, and DB function.
 
 ## Cross-phase done definition
+
 When Phases 0–3 are merged: prod DB is reachable with scheduled maintenance; the outbox worker
 delivers email + push; Realtime streams order/notification/assignment changes; pricing is
 zoned with promo codes; riders auto-dispatch; payouts run automatically behind an approval

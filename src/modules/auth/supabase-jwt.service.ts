@@ -86,7 +86,11 @@ export class SupabaseJwtService {
     }
 
     let secretKey: Uint8Array;
-    if (/^[A-Za-z0-9+/=]+$/.test(jwtSecret) && jwtSecret.length % 4 === 0 && jwtSecret.length > 32) {
+    if (
+      /^[A-Za-z0-9+/=]+$/.test(jwtSecret) &&
+      jwtSecret.length % 4 === 0 &&
+      jwtSecret.length > 32
+    ) {
       secretKey = Buffer.from(jwtSecret, 'base64');
     } else {
       secretKey = new TextEncoder().encode(jwtSecret);

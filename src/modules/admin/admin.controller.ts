@@ -36,6 +36,7 @@ import {
   AdminBatchListQueryDto,
   AdminCreateMembershipDto,
   AdminCreateVendorDto,
+  AdminCreateVendorInvitationDto,
   AdminDashboardQueryDto,
   AdminEscalationAssignDto,
   AdminEscalationQueryDto,
@@ -282,6 +283,17 @@ export class AdminController {
     @Body() input: AdminVendorUserDto
   ): Promise<SuccessEnvelope<AdminRecord>> {
     return createSuccessEnvelope(await this.admin.addVendorUser(actor, params.vendorId, input));
+  }
+
+  @Post('vendors/:vendorId/invitations')
+  async createVendorInvitation(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Param() params: AdminVendorIdParamDto,
+    @Body() input: AdminCreateVendorInvitationDto
+  ): Promise<SuccessEnvelope<AdminRecord>> {
+    return createSuccessEnvelope(
+      await this.admin.createVendorInvitation(actor, params.vendorId, input)
+    );
   }
 
   @Get('vendors/:vendorId/performance')

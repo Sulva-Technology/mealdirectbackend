@@ -221,15 +221,23 @@ export class AdminRepository {
 
   async createVendor(input: {
     campusId: string;
+    createdByAdminId?: string;
     legalName: string;
     displayName: string;
     slug: string;
   }): Promise<AdminRecord | undefined> {
     const result = await sql<AdminRecord>`
-      insert into public.vendors (campus_id, legal_name, display_name, slug)
-      values (${input.campusId}::uuid, ${input.legalName}, ${input.displayName}, ${input.slug})
+      insert into public.vendors (campus_id, legal_name, display_name, slug, created_by_admin_id)
+      values (
+        ${input.campusId}::uuid,
+        ${input.legalName},
+        ${input.displayName},
+        ${input.slug},
+        ${input.createdByAdminId ?? null}::uuid
+      )
       returning id::text as "id", campus_id::text as "campusId", legal_name as "legalName",
-        display_name as "displayName", slug, status::text as "status", active
+        display_name as "displayName", slug, status::text as "status", active,
+        created_by_admin_id::text as "createdByAdminId"
     `.execute(this.database.db);
     return result.rows[0];
   }

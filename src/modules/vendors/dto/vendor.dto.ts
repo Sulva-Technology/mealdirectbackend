@@ -35,7 +35,12 @@ export class OnboardVendorDto {
   @IsDatabaseUuid()
   campusId!: string;
 
-  @ApiProperty({ maxLength: 160, minLength: 2, type: String, description: 'Registered/legal business name.' })
+  @ApiProperty({
+    maxLength: 160,
+    minLength: 2,
+    type: String,
+    description: 'Registered/legal business name.'
+  })
   @IsString()
   @MinLength(2)
   @MaxLength(160)
@@ -97,7 +102,8 @@ export class UpdateVendorProfileDto {
     minimum: 0,
     nullable: true,
     type: Number,
-    description: 'Per-vendor takeaway/packaging fee in kobo. Null clears to the global default; may not exceed the campus ceiling.'
+    description:
+      'Per-vendor takeaway/packaging fee in kobo. Null clears to the global default; may not exceed the campus ceiling.'
   })
   @IsOptional()
   @ValidateIf((_, value) => value !== null)
@@ -332,7 +338,8 @@ export class VendorOnboardResultDto {
 
   @ApiProperty({
     type: Boolean,
-    description: 'Always true: the client must refresh its session so the new vendor_id appears in the JWT.'
+    description:
+      'Always true: the client must refresh its session so the new vendor_id appears in the JWT.'
   })
   tokenRefreshRequired!: boolean;
 }

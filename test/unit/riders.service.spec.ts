@@ -349,7 +349,11 @@ describe('RidersService', () => {
   });
 
   it('onboards a rider and writes role + rider_id to app_metadata', async () => {
-    const input = { campusId: profile.campusId, displayName: '  Ada Rider  ', phone: ' +2348012345678 ' };
+    const input = {
+      campusId: profile.campusId,
+      displayName: '  Ada Rider  ',
+      phone: ' +2348012345678 '
+    };
 
     await expect(service.onboardRider(actor, input)).resolves.toEqual({
       rider: profile,

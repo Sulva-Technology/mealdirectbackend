@@ -118,6 +118,18 @@ describe('admin API', () => {
     vi.spyOn(admin, 'transitionOrder').mockResolvedValue({ ...record, orderStatus: 'ready' });
     vi.spyOn(admin, 'assignBatch').mockResolvedValue({ id: batchId, riderId });
     vi.spyOn(admin, 'setVendorStatus').mockResolvedValue({ id: vendorId, status: 'approved' });
+    vi.spyOn(admin, 'createVendorInvitation').mockResolvedValue({
+      acceptedAt: null,
+      acceptedByUserId: null,
+      createdByAdminId: userId,
+      createdAt: '2026-06-29T09:00:00.000Z',
+      email: 'owner@example.com',
+      expiresAt: '2026-06-30T09:00:00.000Z',
+      id: '99999999-9999-4999-8999-999999999999',
+      inviteUrl: 'https://vendor.mealdirectly.com/accept-invite?token=mock-token',
+      revokedAt: null,
+      vendorId
+    });
     vi.spyOn(admin, 'setRiderStatus').mockResolvedValue({ id: riderId, status: 'verified' });
     vi.spyOn(admin, 'previewSettlement').mockResolvedValue({
       beneficiaryId: vendorId,
@@ -193,6 +205,17 @@ describe('admin API', () => {
       headers: { authorization: `Bearer ${token}` }
     });
     expect(approveVendor.statusCode).toBe(200);
+
+    const vendorInvite = await app.inject({
+      method: 'POST',
+      url: `/v1/admin/vendors/${vendorId}/invitations`,
+      headers: { authorization: `Bearer ${token}` },
+      payload: { email: 'owner@example.com', expiresInHours: 24 }
+    });
+    expect(vendorInvite.statusCode).toBe(201);
+    expect(vendorInvite.json<{ data: { inviteUrl: string } }>().data.inviteUrl).toContain(
+      '/accept-invite?token='
+    );
 
     const verifyRider = await app.inject({
       method: 'POST',

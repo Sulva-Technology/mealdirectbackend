@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { AutoDispatchHandler, type DispatchReads } from '../../src/worker/handlers/auto-dispatch.handler.js';
+import {
+  AutoDispatchHandler,
+  type DispatchReads
+} from '../../src/worker/handlers/auto-dispatch.handler.js';
 import type { OutboxEvent } from '../../src/worker/outbox.repository.js';
 
 function makeEvent(overrides: Partial<OutboxEvent> = {}): OutboxEvent {

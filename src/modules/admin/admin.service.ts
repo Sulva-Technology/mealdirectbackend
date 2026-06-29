@@ -3,11 +3,16 @@ import {
   ForbiddenException,
   Inject,
   Injectable,
-  NotFoundException
+  NotFoundException,
+  Optional
 } from '@nestjs/common';
+import { createHash, randomBytes } from 'node:crypto';
 
 import { ErrorCodes } from '../../common/errors/error-codes.js';
+import { EnvService } from '../../config/env.service.js';
 import type { AuthenticatedActor } from '../auth/actor-context.js';
+import { VendorInvitationsRepository } from '../auth/vendor-invitations.repository.js';
+import type { VendorInvitationRecord } from '../auth/vendor-invitations.repository.js';
 import { AdminRepository } from './admin.repository.js';
 import type { AdminDashboard, AdminListResult, AdminRecord, AdminSession } from './admin.types.js';
 import type {
@@ -16,6 +21,7 @@ import type {
   AdminBatchListQueryDto,
   AdminCreateMembershipDto,
   AdminCreateVendorDto,
+  AdminCreateVendorInvitationDto,
   AdminDirectoryQueryDto,
   AdminEscalationAssignDto,
   AdminEscalationQueryDto,
@@ -65,7 +71,13 @@ function today(): string {
 
 @Injectable()
 export class AdminService {
-  constructor(@Inject(AdminRepository) private readonly repository: AdminRepository) {}
+  constructor(
+    @Inject(AdminRepository) private readonly repository: AdminRepository,
+    @Optional() @Inject(EnvService) private readonly env?: EnvService,
+    @Optional()
+    @Inject(VendorInvitationsRepository)
+    private readonly invitations?: VendorInvitationsRepository
+  ) {}
 
   getSession(actor: AuthenticatedActor): AdminSession {
     this.assertAdmin(actor);
@@ -172,7 +184,16 @@ export class AdminService {
 
   async createVendor(actor: AuthenticatedActor, input: AdminCreateVendorDto): Promise<AdminRecord> {
     this.campusScope(actor, input.campusId);
-    return this.requireRecord(await this.repository.createVendor(input), 'Vendor was not created.');
+    return this.requireRecord(
+      await this.repository.createVendor({
+        campusId: input.campusId,
+        createdByAdminId: actor.userId,
+        displayName: input.displayName,
+        legalName: input.legalName,
+        slug: input.slug
+      }),
+      'Vendor was not created.'
+    );
   }
 
   async getVendor(actor: AuthenticatedActor, vendorId: string): Promise<AdminRecord> {
@@ -216,6 +237,31 @@ export class AdminService {
       await this.repository.addVendorUser(vendorId, input.userId, input.role),
       'Vendor user was not created.'
     );
+  }
+
+  async createVendorInvitation(
+    actor: AuthenticatedActor,
+    vendorId: string,
+    input: AdminCreateVendorInvitationDto
+  ): Promise<VendorInvitationRecord & { inviteUrl: string }> {
+    await this.getVendor(actor, vendorId);
+    if (this.invitations === undefined) {
+      throw badRequest('Vendor invitations are not configured.');
+    }
+
+    const token = randomBytes(32).toString('base64url');
+    const record = await this.invitations.create({
+      actorUserId: actor.userId,
+      email: input.email.trim().toLowerCase(),
+      expiresInHours: input.expiresInHours ?? 72,
+      tokenHash: hashInviteToken(token),
+      vendorId
+    });
+
+    return {
+      ...this.requireRecord(record, 'Vendor invitation was not created.'),
+      inviteUrl: this.vendorInviteUrl(token)
+    };
   }
 
   async getVendorPerformance(actor: AuthenticatedActor, vendorId: string): Promise<AdminRecord> {
@@ -504,4 +550,15 @@ export class AdminService {
     }
     return record;
   }
+
+  private vendorInviteUrl(token: string): string {
+    const baseUrl = this.env?.get('APP_URL_VENDOR') ?? 'https://vendor.mealdirectly.com';
+    const url = new URL('/accept-invite', baseUrl);
+    url.searchParams.set('token', token);
+    return url.toString();
+  }
+}
+
+function hashInviteToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
 }

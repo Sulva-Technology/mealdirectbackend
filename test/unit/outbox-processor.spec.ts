@@ -6,8 +6,13 @@ import type { OutboxEvent, OutboxRepositoryContract } from '../../src/worker/out
 
 function event(overrides: Partial<OutboxEvent> = {}): OutboxEvent {
   return {
-    id: 'evt-1', eventType: 'order.accepted', aggregateType: 'order',
-    aggregateId: 'ord-1', payload: {}, attempts: 1, ...overrides
+    id: 'evt-1',
+    eventType: 'order.accepted',
+    aggregateType: 'order',
+    aggregateId: 'ord-1',
+    payload: {},
+    attempts: 1,
+    ...overrides
   };
 }
 
@@ -53,7 +58,10 @@ describe('OutboxProcessor.drainOnce', () => {
     const fail = vi.fn().mockResolvedValue(undefined);
     const repo: OutboxRepositoryContract = { claimBatch, complete, fail };
 
-    const processor = new OutboxProcessor(repo, new HandlerRegistry(), { batchSize: 10, maxAttempts: 5 });
+    const processor = new OutboxProcessor(repo, new HandlerRegistry(), {
+      batchSize: 10,
+      maxAttempts: 5
+    });
     await processor.drainOnce('w1');
     expect(complete).toHaveBeenCalledWith('evt-1');
   });

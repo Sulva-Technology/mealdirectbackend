@@ -18,14 +18,13 @@ export type PromotionEvaluation = {
   discountKobo: number;
 };
 
-export type PromotionRejectionReason =
-  | 'inactive'
-  | 'not_started'
-  | 'expired'
-  | 'below_minimum';
+export type PromotionRejectionReason = 'inactive' | 'not_started' | 'expired' | 'below_minimum';
 
 export class PromotionValidationError extends Error {
-  constructor(public readonly reason: PromotionRejectionReason, message: string) {
+  constructor(
+    public readonly reason: PromotionRejectionReason,
+    message: string
+  ) {
     super(message);
     this.name = 'PromotionValidationError';
   }

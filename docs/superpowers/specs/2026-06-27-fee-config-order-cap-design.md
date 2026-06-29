@@ -32,14 +32,14 @@ Three pricing concerns are currently hardcoded or unmanageable by operators:
 
 ## Decisions (from brainstorming)
 
-| Question | Decision |
-|---|---|
+| Question           | Decision                                                                 |
+| ------------------ | ------------------------------------------------------------------------ |
 | Delivery-fee split | Keep 75/75. Rider always ₦75; only the total fee becomes admin-editable. |
-| Delivery-fee scope | Per-zone (existing model). |
-| Takeaway fee | Per-vendor value, bounded by an admin-set ceiling. |
-| Ceiling location | Per-campus column `campuses.max_service_fee_kobo`, admin-editable. |
-| Max purchase basis | Order **total** (food + delivery + takeaway − discount). |
-| Cap behavior | Hard reject at create (service layer + RPC). Quote still computes. |
+| Delivery-fee scope | Per-zone (existing model).                                               |
+| Takeaway fee       | Per-vendor value, bounded by an admin-set ceiling.                       |
+| Ceiling location   | Per-campus column `campuses.max_service_fee_kobo`, admin-editable.       |
+| Max purchase basis | Order **total** (food + delivery + takeaway − discount).                 |
+| Cap behavior       | Hard reject at create (service layer + RPC). Quote still computes.       |
 
 ## Design
 

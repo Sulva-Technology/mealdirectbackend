@@ -17,9 +17,9 @@
 ## Background facts (verified in code)
 
 - `public.outbox_events` columns: `id, event_type, aggregate_type, aggregate_id, payload,
-  available_at, attempts, locked_at, locked_by, processed_at, last_error, created_at`
+available_at, attempts, locked_at, locked_by, processed_at, last_error, created_at`
   (`migration 400:432`). Partial index `outbox_events_available_idx (available_at, attempts)
-  where processed_at is null and locked_at is null`.
+where processed_at is null and locked_at is null`.
 - An atomic claim already exists in `JobsRepository.claimAvailableOutboxEvents` (uses
   `for update skip locked`) — the worker repository mirrors it and adds completion/failure.
 - The trigger `public.create_notification_for_outbox_event()` (`migration 600:83`) already
@@ -29,8 +29,8 @@
   per-topic flags; `notification_topic_enabled(prefs, event_type)` maps `order.*`,
   `payment.*`, `delivery.*`, `order.escalation_*`, `settlement.*` to topics.
 - DB order statuses (authoritative): `pending_payment, paid, accepted, preparing, ready,
-  out_for_delivery, delivered, confirmed, administratively_completed, cancelled, expired,
-  refunded` (`transition_order_status`, `migration 400:887`).
+out_for_delivery, delivered, confirmed, administratively_completed, cancelled, expired,
+refunded` (`transition_order_status`, `migration 400:887`).
 - Order totals are computed in `create_pending_order_and_reserve_inventory`; `orders` has
   `food_subtotal_kobo, delivery_fee_kobo, discount_kobo, total_kobo`.
 
@@ -67,6 +67,7 @@
 Give the worker atomic claim, completion, and failure-with-backoff + dead-lettering.
 
 **Files:**
+
 - Create: `supabase/migrations/<ts>_outbox_worker_lifecycle.sql`
 - Create: `supabase/tests/database/outbox_worker_lifecycle_test.sql`
 
@@ -193,6 +194,7 @@ Expected: the 4 new assertions PASS; lint clean.
 - [ ] **Step 4: Regenerate DB types + commit**
 
 Run: `pnpm db:types`
+
 ```bash
 git add supabase/migrations supabase/tests/database/outbox_worker_lifecycle_test.sql supabase/types/database.types.ts
 git commit -m "feat(db): add outbox worker claim/complete/fail lifecycle"
@@ -205,6 +207,7 @@ git commit -m "feat(db): add outbox worker claim/complete/fail lifecycle"
 Make every meaningful state change emit an outbox event and a matching in-app notification.
 
 **Files:**
+
 - Create: `supabase/migrations/<ts>_emit_order_lifecycle_events.sql`
 - Create: `supabase/tests/database/order_lifecycle_events_test.sql`
 
@@ -285,6 +288,7 @@ read it first to match fixture style.)
 
 Run: `pnpm db:reset && pnpm db:test && pnpm db:lint && pnpm db:types`
 Expected: new assertions PASS.
+
 ```bash
 git add supabase/migrations supabase/tests/database/order_lifecycle_events_test.sql supabase/types/database.types.ts
 git commit -m "feat(db): emit outbox events for order lifecycle transitions"
@@ -295,6 +299,7 @@ git commit -m "feat(db): emit outbox events for order lifecycle transitions"
 ## Task 3: Worker outbox repository + processor + handler registry
 
 **Files:**
+
 - Create: `src/worker/outbox.repository.ts`, `src/worker/handler-registry.ts`, `src/worker/outbox-processor.ts`
 - Create: `test/unit/outbox-processor.spec.ts`
 - Modify: `src/config/env.ts`
@@ -322,8 +327,13 @@ import type { OutboxEvent, OutboxRepositoryContract } from '../../src/worker/out
 
 function event(overrides: Partial<OutboxEvent> = {}): OutboxEvent {
   return {
-    id: 'evt-1', eventType: 'order.accepted', aggregateType: 'order',
-    aggregateId: 'ord-1', payload: {}, attempts: 1, ...overrides
+    id: 'evt-1',
+    eventType: 'order.accepted',
+    aggregateType: 'order',
+    aggregateId: 'ord-1',
+    payload: {},
+    attempts: 1,
+    ...overrides
   };
 }
 
@@ -369,7 +379,10 @@ describe('OutboxProcessor.drainOnce', () => {
       complete: vi.fn().mockResolvedValue(undefined),
       fail: vi.fn().mockResolvedValue(undefined)
     };
-    const processor = new OutboxProcessor(repo, new HandlerRegistry(), { batchSize: 10, maxAttempts: 5 });
+    const processor = new OutboxProcessor(repo, new HandlerRegistry(), {
+      batchSize: 10,
+      maxAttempts: 5
+    });
     await processor.drainOnce('w1');
     expect(repo.complete).toHaveBeenCalledWith('evt-1');
   });
@@ -506,6 +519,7 @@ git commit -m "feat(worker): add outbox processor, registry, and repository"
 ## Task 4: Email channel (Resend)
 
 **Files:**
+
 - Create: `src/notifications/channels/notification-channel.ts`, `src/notifications/channels/email.channel.ts`
 - Create: `test/unit/email-channel.spec.ts`
 - Modify: `src/config/env.ts`
@@ -522,10 +536,13 @@ In `src/config/env.ts` `z.object`, add:
 And in `superRefine`, require the key outside dev/test:
 
 ```ts
-    if ((env.NODE_ENV === 'production' || env.NODE_ENV === 'staging') && !env.RESEND_API_KEY) {
-      context.addIssue({ code: 'custom', path: ['RESEND_API_KEY'],
-        message: 'RESEND_API_KEY must be configured outside development and test' });
-    }
+if ((env.NODE_ENV === 'production' || env.NODE_ENV === 'staging') && !env.RESEND_API_KEY) {
+  context.addIssue({
+    code: 'custom',
+    path: ['RESEND_API_KEY'],
+    message: 'RESEND_API_KEY must be configured outside development and test'
+  });
+}
 ```
 
 - [ ] **Step 2: Write the failing test**
@@ -543,7 +560,9 @@ describe('EmailChannel', () => {
     const channel = new EmailChannel({ send }, 'Meal Direct <no-reply@mealdirect.com>');
 
     await channel.deliver({
-      to: 'user@example.com', title: 'Delivered', body: 'Your order was delivered.',
+      to: 'user@example.com',
+      title: 'Delivered',
+      body: 'Your order was delivered.',
       linkPath: '/orders/1'
     });
 
@@ -586,10 +605,17 @@ export interface EmailTransport {
 Create `src/notifications/channels/email.channel.ts`:
 
 ```ts
-import type { ChannelMessage, EmailTransport, NotificationChannel } from './notification-channel.js';
+import type {
+  ChannelMessage,
+  EmailTransport,
+  NotificationChannel
+} from './notification-channel.js';
 
 export class EmailChannel implements NotificationChannel {
-  constructor(private readonly transport: EmailTransport, private readonly from: string) {}
+  constructor(
+    private readonly transport: EmailTransport,
+    private readonly from: string
+  ) {}
 
   async deliver(message: ChannelMessage): Promise<void> {
     await this.transport.send({
@@ -623,6 +649,7 @@ git commit -m "feat(notifications): add email channel (Resend transport)"
 ## Task 5: Push channel (FCM) + device token registration
 
 **Files:**
+
 - Create: `supabase/migrations/<ts>_device_tokens.sql`, `supabase/tests/database/device_tokens_test.sql`
 - Create: `src/notifications/channels/push.channel.ts`
 - Create: `src/modules/notifications/device-tokens.repository.ts`, `src/modules/notifications/device-tokens.controller.ts`
@@ -693,7 +720,10 @@ describe('PushChannel', () => {
     const channel = new PushChannel(sender, tokens);
 
     await channel.deliverToUser('user-1', {
-      to: 'user-1', title: 'Out for delivery', body: 'Your rider is on the way.', linkPath: '/orders/1'
+      to: 'user-1',
+      title: 'Out for delivery',
+      body: 'Your rider is on the way.',
+      linkPath: '/orders/1'
     });
 
     expect(tokens.tokensForUser).toHaveBeenCalledWith('user-1');
@@ -730,8 +760,9 @@ export class DeviceTokensRepository {
   }
 
   async remove(userId: string, token: string): Promise<void> {
-    await sql`delete from public.device_tokens where user_id = ${userId}::uuid and token = ${token}`
-      .execute(this.database.db);
+    await sql`delete from public.device_tokens where user_id = ${userId}::uuid and token = ${token}`.execute(
+      this.database.db
+    );
   }
 
   async tokensForUser(userId: string): Promise<string[]> {
@@ -749,7 +780,12 @@ Create `src/notifications/channels/push.channel.ts`:
 import type { ChannelMessage } from './notification-channel.js';
 
 export interface PushSender {
-  send(input: { token: string; title: string; body: string; data: Record<string, string> }): Promise<void>;
+  send(input: {
+    token: string;
+    title: string;
+    body: string;
+    data: Record<string, string>;
+  }): Promise<void>;
 }
 
 export interface TokenLookup {
@@ -757,7 +793,10 @@ export interface TokenLookup {
 }
 
 export class PushChannel {
-  constructor(private readonly sender: PushSender, private readonly tokens: TokenLookup) {}
+  constructor(
+    private readonly sender: PushSender,
+    private readonly tokens: TokenLookup
+  ) {}
 
   async deliverToUser(userId: string, message: ChannelMessage): Promise<void> {
     const tokens = await this.tokens.tokensForUser(userId);
@@ -811,17 +850,25 @@ import { RegisterDeviceTokenDto } from './dto/device-token.dto.js';
 @Controller('me/device-tokens')
 @UseGuards(JwtAuthGuard)
 export class DeviceTokensController {
-  constructor(@Inject(DeviceTokensRepository) private readonly repository: DeviceTokensRepository) {}
+  constructor(
+    @Inject(DeviceTokensRepository) private readonly repository: DeviceTokensRepository
+  ) {}
 
   @Post()
   @HttpCode(204)
-  async register(@CurrentActor() actor: AuthenticatedActor, @Body() dto: RegisterDeviceTokenDto): Promise<void> {
+  async register(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Body() dto: RegisterDeviceTokenDto
+  ): Promise<void> {
     await this.repository.register(actor.userId, dto.token, dto.platform);
   }
 
   @Delete(':token')
   @HttpCode(204)
-  async remove(@CurrentActor() actor: AuthenticatedActor, @Param('token') token: string): Promise<void> {
+  async remove(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Param('token') token: string
+  ): Promise<void> {
     await this.repository.remove(actor.userId, token);
   }
 }
@@ -836,6 +883,7 @@ an unauthenticated call returns 401.
 
 Run: `pnpm db:reset && pnpm db:test && pnpm typecheck && pnpm vitest run test/unit/push-channel.spec.ts test/integration/device-tokens-api.spec.ts`
 Expected: PASS.
+
 ```bash
 git add supabase/migrations supabase/tests/database/device_tokens_test.sql \
   src/notifications/channels/push.channel.ts src/modules/notifications \
@@ -852,6 +900,7 @@ Wire the worker so each order-related outbox event fans out to email + push for 
 enabled those channels, recording each delivery once.
 
 **Files:**
+
 - Create: `supabase/migrations/<ts>_notification_deliveries.sql`, pgTAP test
 - Create: `src/worker/handlers/notification-dispatch.handler.ts`, `test/unit/notification-dispatch.spec.ts`
 - Create: `src/worker/worker.module.ts`
@@ -889,44 +938,83 @@ import { describe, expect, it, vi } from 'vitest';
 import { NotificationDispatchHandler } from '../../src/worker/handlers/notification-dispatch.handler.js';
 
 const recipient = {
-  userId: 'u1', email: 'u1@example.com', emailEnabled: true, pushEnabled: true,
-  title: 'Delivered', body: 'Your order was delivered.', linkPath: '/orders/1', notificationId: 'n1'
+  userId: 'u1',
+  email: 'u1@example.com',
+  emailEnabled: true,
+  pushEnabled: true,
+  title: 'Delivered',
+  body: 'Your order was delivered.',
+  linkPath: '/orders/1',
+  notificationId: 'n1'
 };
 
 describe('NotificationDispatchHandler', () => {
   it('delivers email + push and records both when enabled and not already sent', async () => {
-    const reads = { findRecipientForEvent: vi.fn().mockResolvedValue(recipient),
-      alreadyDelivered: vi.fn().mockResolvedValue(false), recordDelivery: vi.fn().mockResolvedValue(undefined) };
+    const reads = {
+      findRecipientForEvent: vi.fn().mockResolvedValue(recipient),
+      alreadyDelivered: vi.fn().mockResolvedValue(false),
+      recordDelivery: vi.fn().mockResolvedValue(undefined)
+    };
     const email = { deliver: vi.fn().mockResolvedValue(undefined) };
     const push = { deliverToUser: vi.fn().mockResolvedValue(undefined) };
     const handler = new NotificationDispatchHandler(reads, email, push);
 
-    await handler.handle({ id: 'e1', eventType: 'order.delivered', aggregateType: 'order', aggregateId: 'o1', payload: {}, attempts: 1 });
+    await handler.handle({
+      id: 'e1',
+      eventType: 'order.delivered',
+      aggregateType: 'order',
+      aggregateId: 'o1',
+      payload: {},
+      attempts: 1
+    });
 
     expect(email.deliver).toHaveBeenCalledTimes(1);
-    expect(push.deliverToUser).toHaveBeenCalledWith('u1', expect.objectContaining({ title: 'Delivered' }));
+    expect(push.deliverToUser).toHaveBeenCalledWith(
+      'u1',
+      expect.objectContaining({ title: 'Delivered' })
+    );
     expect(reads.recordDelivery).toHaveBeenCalledWith('n1', 'email', 'sent', null);
     expect(reads.recordDelivery).toHaveBeenCalledWith('n1', 'push', 'sent', null);
   });
 
   it('skips channels the user disabled', async () => {
-    const reads = { findRecipientForEvent: vi.fn().mockResolvedValue({ ...recipient, pushEnabled: false }),
-      alreadyDelivered: vi.fn().mockResolvedValue(false), recordDelivery: vi.fn().mockResolvedValue(undefined) };
+    const reads = {
+      findRecipientForEvent: vi.fn().mockResolvedValue({ ...recipient, pushEnabled: false }),
+      alreadyDelivered: vi.fn().mockResolvedValue(false),
+      recordDelivery: vi.fn().mockResolvedValue(undefined)
+    };
     const email = { deliver: vi.fn().mockResolvedValue(undefined) };
     const push = { deliverToUser: vi.fn().mockResolvedValue(undefined) };
     const handler = new NotificationDispatchHandler(reads, email, push);
 
-    await handler.handle({ id: 'e1', eventType: 'order.delivered', aggregateType: 'order', aggregateId: 'o1', payload: {}, attempts: 1 });
+    await handler.handle({
+      id: 'e1',
+      eventType: 'order.delivered',
+      aggregateType: 'order',
+      aggregateId: 'o1',
+      payload: {},
+      attempts: 1
+    });
     expect(push.deliverToUser).not.toHaveBeenCalled();
   });
 
   it('no-ops when there is no materialized notification recipient', async () => {
-    const reads = { findRecipientForEvent: vi.fn().mockResolvedValue(undefined),
-      alreadyDelivered: vi.fn(), recordDelivery: vi.fn() };
+    const reads = {
+      findRecipientForEvent: vi.fn().mockResolvedValue(undefined),
+      alreadyDelivered: vi.fn(),
+      recordDelivery: vi.fn()
+    };
     const email = { deliver: vi.fn() };
     const push = { deliverToUser: vi.fn() };
     const handler = new NotificationDispatchHandler(reads, email, push);
-    await handler.handle({ id: 'e1', eventType: 'order.delivered', aggregateType: 'order', aggregateId: 'o1', payload: {}, attempts: 1 });
+    await handler.handle({
+      id: 'e1',
+      eventType: 'order.delivered',
+      aggregateType: 'order',
+      aggregateId: 'o1',
+      payload: {},
+      attempts: 1
+    });
     expect(email.deliver).not.toHaveBeenCalled();
   });
 });
@@ -961,7 +1049,10 @@ export interface NotificationReads {
   findRecipientForEvent(outboxEventId: string): Promise<NotificationRecipient | undefined>;
   alreadyDelivered(notificationId: string, channel: 'email' | 'push'): Promise<boolean>;
   recordDelivery(
-    notificationId: string, channel: 'email' | 'push', status: 'sent' | 'failed', detail: string | null
+    notificationId: string,
+    channel: 'email' | 'push',
+    status: 'sent' | 'failed',
+    detail: string | null
   ): Promise<void>;
 }
 
@@ -983,14 +1074,19 @@ export class NotificationDispatchHandler {
       linkPath: recipient.linkPath
     };
 
-    if (recipient.emailEnabled && recipient.email !== null
-      && !(await this.reads.alreadyDelivered(recipient.notificationId, 'email'))) {
+    if (
+      recipient.emailEnabled &&
+      recipient.email !== null &&
+      !(await this.reads.alreadyDelivered(recipient.notificationId, 'email'))
+    ) {
       await this.email.deliver(message);
       await this.reads.recordDelivery(recipient.notificationId, 'email', 'sent', null);
     }
 
-    if (recipient.pushEnabled
-      && !(await this.reads.alreadyDelivered(recipient.notificationId, 'push'))) {
+    if (
+      recipient.pushEnabled &&
+      !(await this.reads.alreadyDelivered(recipient.notificationId, 'push'))
+    ) {
       await this.push.deliverToUser(recipient.userId, message);
       await this.reads.recordDelivery(recipient.notificationId, 'push', 'sent', null);
     }
@@ -1007,6 +1103,7 @@ Expected: PASS (3 tests).
 
 Create a `NotificationReads` implementation (in
 `src/worker/handlers/notification-reads.repository.ts`) that:
+
 - `findRecipientForEvent`: joins `notifications n` (by `source_outbox_event_id`) →
   `notification_preferences p` (by `recipient_user_id`) → `profiles` for email, returning
   `userId, email, emailEnabled, pushEnabled, title, body, linkPath, notificationId`.
@@ -1022,33 +1119,44 @@ from env, falling back to a no-op transport when unconfigured), the dispatch han
 Replace `src/worker.ts` bootstrap body (keep env loading + shutdown handlers) with:
 
 ```ts
-  const app = await NestFactory.createApplicationContext(WorkerModule, { bufferLogs: true });
-  const logger = app.get(JsonLogger);
-  app.useLogger(logger);
+const app = await NestFactory.createApplicationContext(WorkerModule, { bufferLogs: true });
+const logger = app.get(JsonLogger);
+app.useLogger(logger);
 
-  const processor = app.get(OutboxProcessor);
-  const env = app.get(EnvService);
-  const workerId = `worker:${process.pid}`;
-  let running = true;
+const processor = app.get(OutboxProcessor);
+const env = app.get(EnvService);
+const workerId = `worker:${process.pid}`;
+let running = true;
 
-  const tick = async (): Promise<void> => {
-    while (running) {
-      try {
-        const drained = await processor.drainOnce(workerId);
-        if (drained === 0) {
-          await new Promise((resolve) => setTimeout(resolve, env.get('WORKER_POLL_INTERVAL_MS')));
-        }
-      } catch (error) {
-        logger.error({ message: 'Worker tick failed', error: error instanceof Error ? error.message : 'unknown' }, undefined, 'Worker');
+const tick = async (): Promise<void> => {
+  while (running) {
+    try {
+      const drained = await processor.drainOnce(workerId);
+      if (drained === 0) {
         await new Promise((resolve) => setTimeout(resolve, env.get('WORKER_POLL_INTERVAL_MS')));
       }
+    } catch (error) {
+      logger.error(
+        {
+          message: 'Worker tick failed',
+          error: error instanceof Error ? error.message : 'unknown'
+        },
+        undefined,
+        'Worker'
+      );
+      await new Promise((resolve) => setTimeout(resolve, env.get('WORKER_POLL_INTERVAL_MS')));
     }
-  };
+  }
+};
 
-  const shutdown = async (): Promise<void> => { running = false; await app.close(); process.exit(0); };
-  process.once('SIGINT', () => void shutdown());
-  process.once('SIGTERM', () => void shutdown());
-  void tick();
+const shutdown = async (): Promise<void> => {
+  running = false;
+  await app.close();
+  process.exit(0);
+};
+process.once('SIGINT', () => void shutdown());
+process.once('SIGTERM', () => void shutdown());
+void tick();
 ```
 
 (Provide `OutboxProcessor` from the module via a factory using `WORKER_BATCH_SIZE` /
@@ -1065,6 +1173,7 @@ exists. (Use the existing integration DB harness.)
 
 Run: `pnpm db:reset && pnpm db:test && pnpm typecheck && pnpm vitest run test/unit test/integration/worker-outbox.spec.ts`
 Expected: PASS.
+
 ```bash
 git add supabase/migrations supabase/tests/database src/worker test/unit/notification-dispatch.spec.ts \
   test/integration/worker-outbox.spec.ts supabase/types/database.types.ts
@@ -1076,6 +1185,7 @@ git commit -m "feat(worker): dispatch outbox events to email + push with deliver
 ## Task 7: Enable Supabase Realtime
 
 **Files:**
+
 - Create: `supabase/migrations/<ts>_enable_realtime.sql`, pgTAP test
 - Modify: `docs/api-reference.md`
 
@@ -1120,6 +1230,7 @@ shapes match the REST list payloads.
 
 Run: `pnpm db:reset && pnpm db:test && pnpm db:lint`
 Expected: 3 assertions PASS.
+
 ```bash
 git add supabase/migrations supabase/tests/database/realtime_publication_test.sql docs/api-reference.md
 git commit -m "feat(db): enable Supabase Realtime for orders, notifications, assignments"
@@ -1134,6 +1245,7 @@ quote must use the same delivery + service fee source so the displayed quote mat
 created order. Route the quote through `calculateOrderPricing`.
 
 **Files:**
+
 - Modify: `src/config/env.ts`, `src/modules/orders/orders.service.ts`
 - Modify: `test/unit/orders.service.spec.ts`
 
@@ -1179,6 +1291,7 @@ Expected: PASS.
 
 Run: `pnpm typecheck && pnpm lint && pnpm vitest run && pnpm openapi:generate`
 Expected: PASS; OpenAPI updated for the new `serviceFeeKobo` field.
+
 ```bash
 git add src/config/env.ts src/modules/orders/orders.service.ts src/modules/orders/orders.types.ts \
   test/unit/orders.service.spec.ts docs/openapi.json docs/openapi.yaml
@@ -1202,6 +1315,7 @@ git commit -m "feat(orders): compute quote via domain pricing calculator"
   consistently across processor, handlers, and tests.
 
 ## Known follow-through into later phases
+
 - The DB `order_status` enum vs TS `order-status.ts` mismatch (`ready_for_pickup`/`picked_up`/
   `completed`/`escalated` vs `ready`/`out_for_delivery`/`administratively_completed`/`expired`)
   should be reconciled in Phase 2 when dispatch touches these transitions. Phase 1 emits events

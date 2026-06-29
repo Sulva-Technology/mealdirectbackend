@@ -27,9 +27,9 @@ import type {
   VendorsRepositoryContract
 } from './vendors.types.js';
 
-// Self-service vendors are auto-approved for now. Flip to false (admin approval)
-// when the review workflow is introduced — see auth onboarding design.
-const VENDOR_AUTO_APPROVE = true;
+// Self-service vendors can request onboarding, but only an admin approval can
+// make them active. Admin-created invite links are the trusted production path.
+const VENDOR_AUTO_APPROVE = false;
 
 export type VendorOnboardResult = {
   vendor: VendorProfile;
@@ -55,7 +55,10 @@ function slugify(value: string): string {
 }
 
 function randomSlugSuffix(): string {
-  return Math.random().toString(36).slice(2, 6).replace(/[^a-z0-9]/g, '0');
+  return Math.random()
+    .toString(36)
+    .slice(2, 6)
+    .replace(/[^a-z0-9]/g, '0');
 }
 
 function forbidden(message: string): ForbiddenException {

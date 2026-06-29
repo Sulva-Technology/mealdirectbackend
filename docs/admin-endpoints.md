@@ -30,11 +30,11 @@
 Every admin route requires a valid Supabase JWT in the `Authorization: Bearer <token>` header.
 Guards: `JwtAuthGuard` + `RolesGuard`. Controller-level role gate: `@RequireRoles('campus_admin', 'super_admin')`.
 
-| Field | Type | Required | Constraints / Notes |
-|---|---|---|---|
-| Role scope | n/a | yes | `campus_admin` → scoped to own `campusId`; `super_admin` → global, may pass any `campusId`. |
-| 401 Unauthorized | n/a | n/a | Missing, invalid, or expired Supabase JWT. |
-| 403 Forbidden | n/a | n/a | Admin role required; `campus_admin` requesting another campus; super-admin-only routes. |
+| Field            | Type | Required | Constraints / Notes                                                                         |
+| ---------------- | ---- | -------- | ------------------------------------------------------------------------------------------- |
+| Role scope       | n/a  | yes      | `campus_admin` → scoped to own `campusId`; `super_admin` → global, may pass any `campusId`. |
+| 401 Unauthorized | n/a  | n/a      | Missing, invalid, or expired Supabase JWT.                                                  |
+| 403 Forbidden    | n/a  | n/a      | Admin role required; `campus_admin` requesting another campus; super-admin-only routes.     |
 
 > Super-admin-only routes: user suspend/activate, all `/admin-memberships` routes.
 
@@ -42,53 +42,53 @@ Guards: `JwtAuthGuard` + `RolesGuard`. Controller-level role gate: `@RequireRole
 
 Single-object responses are wrapped in a success envelope:
 
-| Field | Type | Description |
-|---|---|---|
-| `data` | object | The resource record (shape varies per endpoint). |
-| `meta` | object (optional) | Present only when extra metadata is attached. |
+| Field  | Type              | Description                                      |
+| ------ | ----------------- | ------------------------------------------------ |
+| `data` | object            | The resource record (shape varies per endpoint). |
+| `meta` | object (optional) | Present only when extra metadata is attached.    |
 
 List responses are wrapped in a list envelope:
 
-| Field | Type | Description |
-|---|---|---|
-| `data` | array\<object> | Array of resource records. |
-| `pagination` | object | Cursor pagination metadata (see 1.3). |
-| `meta` | object (optional) | Present only when extra metadata is attached. |
+| Field        | Type              | Description                                   |
+| ------------ | ----------------- | --------------------------------------------- |
+| `data`       | array\<object>    | Array of resource records.                    |
+| `pagination` | object            | Cursor pagination metadata (see 1.3).         |
+| `meta`       | object (optional) | Present only when extra metadata is attached. |
 
 ### 1.3 Pagination metadata
 
 `pagination` object on every list envelope:
 
-| Field | Type | Description |
-|---|---|---|
-| `hasMore` | boolean | True when more rows exist beyond this page. |
-| `limit` | number | Page size actually applied (default 20, max 100). |
+| Field        | Type              | Description                                                                                                                              |
+| ------------ | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `hasMore`    | boolean           | True when more rows exist beyond this page.                                                                                              |
+| `limit`      | number            | Page size actually applied (default 20, max 100).                                                                                        |
 | `nextCursor` | string (optional) | Opaque base64url cursor; omitted when `hasMore` is false. Note: cursor not emitted by current admin list queries (offset-style limit+1). |
 
 ### 1.4 Cursor query params (shared by paginated lists)
 
-| Field | Type | Required | Constraints / Notes |
-|---|---|---|---|
-| `cursor` | string | no | Opaque pagination cursor. |
-| `limit` | number | no | Integer 1–100. Default 20. |
+| Field    | Type   | Required | Constraints / Notes        |
+| -------- | ------ | -------- | -------------------------- |
+| `cursor` | string | no       | Opaque pagination cursor.  |
+| `limit`  | number | no       | Integer 1–100. Default 20. |
 
 ### 1.5 Common value formats
 
-| Field | Type | Description |
-|---|---|---|
-| `date` | string | ISO calendar date, pattern `^\d{4}-\d{2}-\d{2}$` (e.g. 2026-06-23). |
-| `uuid` | string | Database UUID. |
-| `*Kobo` | number (integer) | Money amount in kobo (1/100 NGN). |
-| timestamps | string | ISO-8601 datetime text (`createdAt`, `updatedAt`, etc.). |
+| Field      | Type             | Description                                                         |
+| ---------- | ---------------- | ------------------------------------------------------------------- |
+| `date`     | string           | ISO calendar date, pattern `^\d{4}-\d{2}-\d{2}$` (e.g. 2026-06-23). |
+| `uuid`     | string           | Database UUID.                                                      |
+| `*Kobo`    | number (integer) | Money amount in kobo (1/100 NGN).                                   |
+| timestamps | string           | ISO-8601 datetime text (`createdAt`, `updatedAt`, etc.).            |
 
 ### 1.6 Error response shape
 
 Errors return non-2xx with a JSON body:
 
-| Field | Type | Description |
-|---|---|---|
-| `code` | string | e.g. `FORBIDDEN`, `VALIDATION_FAILED`, `NOT_FOUND`. |
-| `message` | string | Human-readable detail. |
+| Field     | Type   | Description                                         |
+| --------- | ------ | --------------------------------------------------- |
+| `code`    | string | e.g. `FORBIDDEN`, `VALIDATION_FAILED`, `NOT_FOUND`. |
+| `message` | string | Human-readable detail.                              |
 
 ---
 
@@ -100,13 +100,13 @@ Authenticated admin session and scope. **Access:** campus_admin, super_admin
 
 **Response** — 200 OK, success envelope `{ data }`
 
-| Field | Type | Description |
-|---|---|---|
-| `userId` | string | Authenticated admin user id. |
-| `role` | string | `campus_admin` or `super_admin`. |
-| `campusId` | string \| null | Campus scope (null for global super admin). |
-| `email` | string (optional) | Present when known from the token. |
-| `scopes` | array\<string> | `['admin:global']` for super_admin; `['admin:campus:<id>']` for campus_admin. |
+| Field      | Type              | Description                                                                   |
+| ---------- | ----------------- | ----------------------------------------------------------------------------- |
+| `userId`   | string            | Authenticated admin user id.                                                  |
+| `role`     | string            | `campus_admin` or `super_admin`.                                              |
+| `campusId` | string \| null    | Campus scope (null for global super admin).                                   |
+| `email`    | string (optional) | Present when known from the token.                                            |
+| `scopes`   | array\<string>    | `['admin:global']` for super_admin; `['admin:campus:<id>']` for campus_admin. |
 
 ### `GET /v1/admin/dashboard`
 
@@ -114,23 +114,23 @@ Admin operational dashboard for a service date. **Access:** campus_admin, super_
 
 **Query parameters**
 
-| Field | Type | Required | Constraints / Notes |
-|---|---|---|---|
-| `campusId` | uuid | no | Filter by campus. `campus_admin` restricted to own campus. |
-| `date` | string | no | Service date (YYYY-MM-DD). Defaults to today. |
+| Field      | Type   | Required | Constraints / Notes                                        |
+| ---------- | ------ | -------- | ---------------------------------------------------------- |
+| `campusId` | uuid   | no       | Filter by campus. `campus_admin` restricted to own campus. |
+| `date`     | string | no       | Service date (YYYY-MM-DD). Defaults to today.              |
 
 **Response** — 200 OK, success envelope `{ data }`
 
-| Field | Type | Description |
-|---|---|---|
-| `date` | string | Service date used. |
-| `campusId` | string \| null | Campus scope applied. |
-| `orders` | object | `{ total: number, paid: number }`. |
-| `batches` | object | `{ total: number, open: number }`. |
-| `payments` | object | `{ total: number, failed: number }`. |
-| `escalations` | object | `{ open: number }`. |
-| `settlements` | object | `{ payableKobo: number }` (draft + approved). |
-| `alerts` | array\<object> | Currently always empty `[]`. |
+| Field         | Type           | Description                                   |
+| ------------- | -------------- | --------------------------------------------- |
+| `date`        | string         | Service date used.                            |
+| `campusId`    | string \| null | Campus scope applied.                         |
+| `orders`      | object         | `{ total: number, paid: number }`.            |
+| `batches`     | object         | `{ total: number, open: number }`.            |
+| `payments`    | object         | `{ total: number, failed: number }`.          |
+| `escalations` | object         | `{ open: number }`.                           |
+| `settlements` | object         | `{ payableKobo: number }` (draft + approved). |
+| `alerts`      | array\<object> | Currently always empty `[]`.                  |
 
 ---
 
@@ -146,16 +146,16 @@ List orders (filtered, paginated).
 
 **Query parameters**
 
-| Field | Type | Required | Constraints / Notes |
-|---|---|---|---|
-| `cursor` | string | no | Pagination cursor. |
-| `limit` | number | no | Integer 1–100, default 20. |
-| `campusId` | uuid | no | Filter by campus. |
-| `status` | string | no | One of: accepted, administratively_completed, cancelled, confirmed, delivered, expired, out_for_delivery, paid, pending_payment, preparing, ready, refunded. |
-| `vendorId` | uuid | no | Filter by vendor. |
-| `slotId` | uuid | no | Filter by delivery slot. |
-| `date` | string | no | Service date (YYYY-MM-DD). |
-| `search` | string | no | Max 120 chars; matches `orderNumber` (ilike). |
+| Field      | Type   | Required | Constraints / Notes                                                                                                                                          |
+| ---------- | ------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `cursor`   | string | no       | Pagination cursor.                                                                                                                                           |
+| `limit`    | number | no       | Integer 1–100, default 20.                                                                                                                                   |
+| `campusId` | uuid   | no       | Filter by campus.                                                                                                                                            |
+| `status`   | string | no       | One of: accepted, administratively_completed, cancelled, confirmed, delivered, expired, out_for_delivery, paid, pending_payment, preparing, ready, refunded. |
+| `vendorId` | uuid   | no       | Filter by vendor.                                                                                                                                            |
+| `slotId`   | uuid   | no       | Filter by delivery slot.                                                                                                                                     |
+| `date`     | string | no       | Service date (YYYY-MM-DD).                                                                                                                                   |
+| `search`   | string | no       | Max 120 chars; matches `orderNumber` (ilike).                                                                                                                |
 
 **Response** — 200 OK, list envelope `{ data[], pagination }` (order list fields).
 
@@ -177,9 +177,9 @@ Cancel an order (admin).
 
 **Request body (application/json)**
 
-| Field | Type | Required | Constraints / Notes |
-|---|---|---|---|
-| `reason` | string | no | Max 500 chars. Defaults to "Cancelled by admin." Drives a status transition to cancelled. |
+| Field    | Type   | Required | Constraints / Notes                                                                       |
+| -------- | ------ | -------- | ----------------------------------------------------------------------------------------- |
+| `reason` | string | no       | Max 500 chars. Defaults to "Cancelled by admin." Drives a status transition to cancelled. |
 
 **Response** — 200 OK, success envelope `{ data }` (order record).
 
@@ -191,10 +191,10 @@ Transition order status.
 
 **Request body (application/json)**
 
-| Field | Type | Required | Constraints / Notes |
-|---|---|---|---|
-| `status` | string | yes | Target order status (same enum as list `status` filter). |
-| `reason` | string | no | Max 500 chars. |
+| Field    | Type   | Required | Constraints / Notes                                      |
+| -------- | ------ | -------- | -------------------------------------------------------- |
+| `status` | string | yes      | Target order status (same enum as list `status` filter). |
+| `reason` | string | no       | Max 500 chars.                                           |
 
 **Response** — 200 OK, success envelope `{ data }` (order record).
 
@@ -216,15 +216,15 @@ List delivery batches.
 
 **Query parameters**
 
-| Field | Type | Required | Constraints / Notes |
-|---|---|---|---|
-| `cursor` | string | no | Pagination cursor. |
-| `limit` | number | no | Integer 1–100, default 20. |
-| `campusId` | uuid | no | Filter by campus. |
-| `date` | string | no | Service date (YYYY-MM-DD). |
-| `status` | string | no | open, closed, assigned, in_progress, completed, cancelled. |
-| `vendorId` | uuid | no | Filter by vendor. |
-| `zoneId` | uuid | no | Filter by zone. |
+| Field      | Type   | Required | Constraints / Notes                                        |
+| ---------- | ------ | -------- | ---------------------------------------------------------- |
+| `cursor`   | string | no       | Pagination cursor.                                         |
+| `limit`    | number | no       | Integer 1–100, default 20.                                 |
+| `campusId` | uuid   | no       | Filter by campus.                                          |
+| `date`     | string | no       | Service date (YYYY-MM-DD).                                 |
+| `status`   | string | no       | open, closed, assigned, in_progress, completed, cancelled. |
+| `vendorId` | uuid   | no       | Filter by vendor.                                          |
+| `zoneId`   | uuid   | no       | Filter by zone.                                            |
 
 **Response** — 200 OK, list envelope `{ data[], pagination }` (batch list fields).
 
@@ -286,13 +286,13 @@ List vendors.
 
 **Query parameters**
 
-| Field | Type | Required | Constraints / Notes |
-|---|---|---|---|
-| `cursor` | string | no | Pagination cursor. |
-| `limit` | number | no | Integer 1–100, default 20. |
-| `campusId` | uuid | no | Filter by campus. |
-| `search` | string | no | Max 120 chars; matches `displayName` or `legalName`. |
-| `status` | string | no | approved, deactivated, pending, suspended. |
+| Field      | Type   | Required | Constraints / Notes                                  |
+| ---------- | ------ | -------- | ---------------------------------------------------- |
+| `cursor`   | string | no       | Pagination cursor.                                   |
+| `limit`    | number | no       | Integer 1–100, default 20.                           |
+| `campusId` | uuid   | no       | Filter by campus.                                    |
+| `search`   | string | no       | Max 120 chars; matches `displayName` or `legalName`. |
+| `status`   | string | no       | approved, deactivated, pending, suspended.           |
 
 **Response** — 200 OK, list envelope `{ data[], pagination }` (vendor list fields).
 
@@ -302,24 +302,24 @@ Create a vendor.
 
 **Request body (application/json)**
 
-| Field | Type | Required | Constraints / Notes |
-|---|---|---|---|
-| `campusId` | uuid | yes | Owning campus. |
-| `legalName` | string | yes | 2–160 chars. |
-| `displayName` | string | yes | 2–120 chars. |
-| `slug` | string | yes | Lowercase slug, pattern `^[a-z0-9]+(?:-[a-z0-9]+)*$`. |
+| Field         | Type   | Required | Constraints / Notes                                   |
+| ------------- | ------ | -------- | ----------------------------------------------------- |
+| `campusId`    | uuid   | yes      | Owning campus.                                        |
+| `legalName`   | string | yes      | 2–160 chars.                                          |
+| `displayName` | string | yes      | 2–120 chars.                                          |
+| `slug`        | string | yes      | Lowercase slug, pattern `^[a-z0-9]+(?:-[a-z0-9]+)*$`. |
 
 **Response** — 201 Created, success envelope `{ data }`
 
-| Field | Type | Description |
-|---|---|---|
-| `id` | string | New vendor id. |
-| `campusId` | string | Campus id. |
-| `legalName` | string | Legal name. |
-| `displayName` | string | Display name. |
-| `slug` | string | Slug. |
-| `status` | string | Initial status. |
-| `active` | boolean | Active flag. |
+| Field         | Type    | Description     |
+| ------------- | ------- | --------------- |
+| `id`          | string  | New vendor id.  |
+| `campusId`    | string  | Campus id.      |
+| `legalName`   | string  | Legal name.     |
+| `displayName` | string  | Display name.   |
+| `slug`        | string  | Slug.           |
+| `status`      | string  | Initial status. |
+| `active`      | boolean | Active flag.    |
 
 ### `GET /v1/admin/vendors/:vendorId`
 
@@ -333,12 +333,12 @@ Update vendor fields. **Path:** `vendorId` (uuid, yes).
 
 **Request body (application/json)**
 
-| Field | Type | Required | Constraints / Notes |
-|---|---|---|---|
-| `displayName` | string | no | Max 120 chars. |
-| `description` | string | no | Max 1000 chars. |
-| `phone` | string | no | Phone. |
-| `active` | boolean | no | Active flag. |
+| Field         | Type    | Required | Constraints / Notes |
+| ------------- | ------- | -------- | ------------------- |
+| `displayName` | string  | no       | Max 120 chars.      |
+| `description` | string  | no       | Max 1000 chars.     |
+| `phone`       | string  | no       | Phone.              |
+| `active`      | boolean | no       | Active flag.        |
 
 **Response** — 200 OK, success envelope `{ data }` (vendor record).
 
@@ -366,20 +366,20 @@ Add or upsert a vendor user. **Path:** `vendorId` (uuid, yes).
 
 **Request body (application/json)**
 
-| Field | Type | Required | Constraints / Notes |
-|---|---|---|---|
-| `userId` | uuid | yes | User to attach. |
-| `role` | string | yes | `owner` or `staff`. |
+| Field    | Type   | Required | Constraints / Notes |
+| -------- | ------ | -------- | ------------------- |
+| `userId` | uuid   | yes      | User to attach.     |
+| `role`   | string | yes      | `owner` or `staff`. |
 
 **Response** — 201 Created, success envelope `{ data }`
 
-| Field | Type | Description |
-|---|---|---|
-| `id` | string | Vendor-user id. |
-| `vendorId` | string | Vendor id. |
-| `userId` | string | User id. |
-| `role` | string | owner or staff. |
-| `active` | boolean | Active flag. |
+| Field      | Type    | Description     |
+| ---------- | ------- | --------------- |
+| `id`       | string  | Vendor-user id. |
+| `vendorId` | string  | Vendor id.      |
+| `userId`   | string  | User id.        |
+| `role`     | string  | owner or staff. |
+| `active`   | boolean | Active flag.    |
 
 ### `GET /v1/admin/vendors/:vendorId/performance`
 
@@ -387,11 +387,11 @@ Vendor performance summary. **Path:** `vendorId` (uuid, yes).
 
 **Response** — 200 OK, success envelope `{ data }`
 
-| Field | Type | Description |
-|---|---|---|
-| `orderCount` | number | Total orders. |
-| `grossSalesKobo` | number | Gross sales in kobo. |
-| `reviewCount` | number | Number of reviews. |
+| Field                 | Type           | Description            |
+| --------------------- | -------------- | ---------------------- |
+| `orderCount`          | number         | Total orders.          |
+| `grossSalesKobo`      | number         | Gross sales in kobo.   |
+| `reviewCount`         | number         | Number of reviews.     |
 | `averageVendorRating` | number \| null | Average vendor rating. |
 
 > Returns `{}` if the vendor has no aggregate row.
@@ -410,13 +410,13 @@ List riders.
 
 **Query parameters**
 
-| Field | Type | Required | Constraints / Notes |
-|---|---|---|---|
-| `cursor` | string | no | Pagination cursor. |
-| `limit` | number | no | Integer 1–100, default 20. |
-| `campusId` | uuid | no | Filter by campus. |
-| `search` | string | no | Max 120 chars; matches `displayName`. |
-| `status` | string | no | deactivated, pending, suspended, verified. |
+| Field      | Type   | Required | Constraints / Notes                        |
+| ---------- | ------ | -------- | ------------------------------------------ |
+| `cursor`   | string | no       | Pagination cursor.                         |
+| `limit`    | number | no       | Integer 1–100, default 20.                 |
+| `campusId` | uuid   | no       | Filter by campus.                          |
+| `search`   | string | no       | Max 120 chars; matches `displayName`.      |
+| `status`   | string | no       | deactivated, pending, suspended, verified. |
 
 **Response** — 200 OK, list envelope `{ data[], pagination }` (rider list fields).
 
@@ -432,22 +432,22 @@ List a rider's delivery assignments (max 100). **Path:** `riderId` (uuid, yes).
 
 **Response** — 200 OK, list envelope `{ data[], pagination }` (hasMore=false, limit=count)
 
-| Field | Type | Description |
-|---|---|---|
-| `id` | string | Assignment id. |
-| `batchId` | string | Batch id. |
-| `riderId` | string | Rider id. |
-| `status` | string | Assignment status. |
-| `assignedAt` | string \| null | Assigned timestamp. |
-| `acceptedAt` | string \| null | Accepted timestamp. |
-| `pickedUpAt` | string \| null | Picked-up timestamp. |
-| `completedAt` | string \| null | Completed timestamp. |
-| `campusId` | string | Campus id. |
-| `vendorId` | string | Vendor id. |
-| `vendorDisplayName` | string | Vendor display name. |
-| `serviceDate` | string | Service date. |
-| `batchNumber` | string | Batch number. |
-| `orderCount` | number | Orders in batch. |
+| Field               | Type           | Description          |
+| ------------------- | -------------- | -------------------- |
+| `id`                | string         | Assignment id.       |
+| `batchId`           | string         | Batch id.            |
+| `riderId`           | string         | Rider id.            |
+| `status`            | string         | Assignment status.   |
+| `assignedAt`        | string \| null | Assigned timestamp.  |
+| `acceptedAt`        | string \| null | Accepted timestamp.  |
+| `pickedUpAt`        | string \| null | Picked-up timestamp. |
+| `completedAt`       | string \| null | Completed timestamp. |
+| `campusId`          | string         | Campus id.           |
+| `vendorId`          | string         | Vendor id.           |
+| `vendorDisplayName` | string         | Vendor display name. |
+| `serviceDate`       | string         | Service date.        |
+| `batchNumber`       | string         | Batch number.        |
+| `orderCount`        | number         | Orders in batch.     |
 
 ### `GET /v1/admin/riders/:riderId/settlements`
 
@@ -455,19 +455,19 @@ List a rider's settlements (max 100). **Path:** `riderId` (uuid, yes).
 
 **Response** — 200 OK, list envelope `{ data[], pagination }` (hasMore=false)
 
-| Field | Type | Description |
-|---|---|---|
-| `id` | string | Settlement id. |
-| `campusId` | string | Campus id. |
-| `riderId` | string | Rider id. |
-| `settlementDate` | string | Settlement date. |
-| `status` | string | draft, approved, paid, cancelled. |
-| `deliveryEarningsKobo` | number | Delivery earnings in kobo. |
-| `adjustmentsKobo` | number | Adjustments in kobo. |
-| `payableKobo` | number | Payable in kobo. |
-| `paidAt` | string \| null | Paid timestamp. |
-| `externalReference` | string \| null | External payment reference. |
-| `createdAt` | string | Created timestamp. |
+| Field                  | Type           | Description                       |
+| ---------------------- | -------------- | --------------------------------- |
+| `id`                   | string         | Settlement id.                    |
+| `campusId`             | string         | Campus id.                        |
+| `riderId`              | string         | Rider id.                         |
+| `settlementDate`       | string         | Settlement date.                  |
+| `status`               | string         | draft, approved, paid, cancelled. |
+| `deliveryEarningsKobo` | number         | Delivery earnings in kobo.        |
+| `adjustmentsKobo`      | number         | Adjustments in kobo.              |
+| `payableKobo`          | number         | Payable in kobo.                  |
+| `paidAt`               | string \| null | Paid timestamp.                   |
+| `externalReference`    | string \| null | External payment reference.       |
+| `createdAt`            | string         | Created timestamp.                |
 
 ### `POST /v1/admin/riders/:riderId/verify`
 
@@ -497,28 +497,28 @@ List menu item inventory (max 100).
 
 **Query parameters**
 
-| Field | Type | Required | Constraints / Notes |
-|---|---|---|---|
-| `campusId` | uuid | no | Filter by campus. |
-| `date` | string | no | Service date (YYYY-MM-DD). |
-| `slotId` | uuid | no | Filter by delivery slot. |
-| `vendorId` | uuid | no | Filter by vendor. |
-| `state` | string | no | available (remaining>5), low (1–5), sold_out (<=0). |
+| Field      | Type   | Required | Constraints / Notes                                 |
+| ---------- | ------ | -------- | --------------------------------------------------- |
+| `campusId` | uuid   | no       | Filter by campus.                                   |
+| `date`     | string | no       | Service date (YYYY-MM-DD).                          |
+| `slotId`   | uuid   | no       | Filter by delivery slot.                            |
+| `vendorId` | uuid   | no       | Filter by vendor.                                   |
+| `state`    | string | no       | available (remaining>5), low (1–5), sold_out (<=0). |
 
 **Response** — 200 OK, list envelope `{ data[], pagination }` (hasMore=false)
 
-| Field | Type | Description |
-|---|---|---|
-| `id` | string | Inventory row id. |
-| `vendorId` | string | Vendor id. |
-| `campusId` | string | Campus id. |
-| `menuItemName` | string | Menu item name. |
-| `serviceDate` | string | Service date. |
-| `deliverySlotId` | string | Delivery slot id. |
-| `quantityTotal` | number | Total quantity. |
-| `quantityReserved` | number | Reserved quantity. |
-| `quantitySold` | number | Sold quantity. |
-| `quantityAdjusted` | number | Adjusted quantity. |
+| Field               | Type   | Description                         |
+| ------------------- | ------ | ----------------------------------- |
+| `id`                | string | Inventory row id.                   |
+| `vendorId`          | string | Vendor id.                          |
+| `campusId`          | string | Campus id.                          |
+| `menuItemName`      | string | Menu item name.                     |
+| `serviceDate`       | string | Service date.                       |
+| `deliverySlotId`    | string | Delivery slot id.                   |
+| `quantityTotal`     | number | Total quantity.                     |
+| `quantityReserved`  | number | Reserved quantity.                  |
+| `quantitySold`      | number | Sold quantity.                      |
+| `quantityAdjusted`  | number | Adjusted quantity.                  |
 | `remainingQuantity` | number | total + adjusted - reserved - sold. |
 
 ### `POST /v1/admin/inventory/:inventoryId/adjustments`
@@ -527,15 +527,15 @@ Record an inventory adjustment. **Path:** `inventoryId` (uuid, yes).
 
 **Request body (application/json)**
 
-| Field | Type | Required | Constraints / Notes |
-|---|---|---|---|
-| `delta` | number (integer) | yes | Signed adjustment amount. |
-| `reason` | string | yes | 3–200 chars. |
+| Field    | Type             | Required | Constraints / Notes       |
+| -------- | ---------------- | -------- | ------------------------- |
+| `delta`  | number (integer) | yes      | Signed adjustment amount. |
+| `reason` | string           | yes      | 3–200 chars.              |
 
 **Response** — 201 Created, success envelope `{ data }`
 
-| Field | Type | Description |
-|---|---|---|
+| Field          | Type   | Description                                            |
+| -------------- | ------ | ------------------------------------------------------ |
 | `adjustmentId` | string | Created adjustment id (`record_inventory_adjustment`). |
 
 ---
@@ -554,14 +554,14 @@ List escalations.
 
 **Query parameters**
 
-| Field | Type | Required | Constraints / Notes |
-|---|---|---|---|
-| `cursor` | string | no | Pagination cursor. |
-| `limit` | number | no | Integer 1–100, default 20. |
-| `campusId` | uuid | no | Filter by campus. |
-| `status` | string | no | open, investigating, resolved, rejected. |
-| `category` | string | no | Filter by category. |
-| `assignee` | string | no | Filter by assignee (accepted; see note). |
+| Field      | Type   | Required | Constraints / Notes                      |
+| ---------- | ------ | -------- | ---------------------------------------- |
+| `cursor`   | string | no       | Pagination cursor.                       |
+| `limit`    | number | no       | Integer 1–100, default 20.               |
+| `campusId` | uuid   | no       | Filter by campus.                        |
+| `status`   | string | no       | open, investigating, resolved, rejected. |
+| `category` | string | no       | Filter by category.                      |
+| `assignee` | string | no       | Filter by assignee (accepted; see note). |
 
 **Response** — 200 OK, list envelope `{ data[], pagination }` (escalation list fields).
 
@@ -617,14 +617,14 @@ List settlements.
 
 **Query parameters**
 
-| Field | Type | Required | Constraints / Notes |
-|---|---|---|---|
-| `cursor` | string | no | Pagination cursor. |
-| `limit` | number | no | Integer 1–100, default 20. |
-| `campusId` | uuid | no | Filter by campus. |
-| `date` | string | no | Settlement date (YYYY-MM-DD). |
-| `status` | string | no | approved, cancelled, draft, paid. |
-| `beneficiaryType` | string | no | rider or vendor. |
+| Field             | Type   | Required | Constraints / Notes               |
+| ----------------- | ------ | -------- | --------------------------------- |
+| `cursor`          | string | no       | Pagination cursor.                |
+| `limit`           | number | no       | Integer 1–100, default 20.        |
+| `campusId`        | uuid   | no       | Filter by campus.                 |
+| `date`            | string | no       | Settlement date (YYYY-MM-DD).     |
+| `status`          | string | no       | approved, cancelled, draft, paid. |
+| `beneficiaryType` | string | no       | rider or vendor.                  |
 
 **Response** — 200 OK, list envelope `{ data[], pagination }` (settlement list fields).
 
@@ -634,23 +634,23 @@ Preview a settlement (no write).
 
 **Request body (application/json)**
 
-| Field | Type | Required | Constraints / Notes |
-|---|---|---|---|
-| `beneficiaryType` | string | yes | rider or vendor. |
-| `beneficiaryId` | uuid | yes | Vendor or rider id. |
-| `settlementDate` | string | yes | Date (YYYY-MM-DD). |
+| Field             | Type   | Required | Constraints / Notes |
+| ----------------- | ------ | -------- | ------------------- |
+| `beneficiaryType` | string | yes      | rider or vendor.    |
+| `beneficiaryId`   | uuid   | yes      | Vendor or rider id. |
+| `settlementDate`  | string | yes      | Date (YYYY-MM-DD).  |
 
 **Response** — 200 OK, success envelope `{ data }`
 
-| Field | Type | Description |
-|---|---|---|
-| `beneficiaryType` | string | Echoed type. |
-| `beneficiaryId` | string | Echoed id. |
-| `settlementDate` | string | Echoed date. |
-| `grossFoodAmountKobo` | number | Vendor only: gross food amount. |
-| `deliveryEarningsKobo` | number | Delivery earnings in kobo. |
-| `refundsKobo` | number | Vendor only: refunds in kobo. |
-| `estimatedPayableKobo` | number | Estimated payable in kobo. |
+| Field                  | Type   | Description                     |
+| ---------------------- | ------ | ------------------------------- |
+| `beneficiaryType`      | string | Echoed type.                    |
+| `beneficiaryId`        | string | Echoed id.                      |
+| `settlementDate`       | string | Echoed date.                    |
+| `grossFoodAmountKobo`  | number | Vendor only: gross food amount. |
+| `deliveryEarningsKobo` | number | Delivery earnings in kobo.      |
+| `refundsKobo`          | number | Vendor only: refunds in kobo.   |
+| `estimatedPayableKobo` | number | Estimated payable in kobo.      |
 
 > Rider preview returns `beneficiaryType`/`Id`/`Date`, `deliveryEarningsKobo`, `estimatedPayableKobo`. Returns `{}` if no aggregate row.
 
@@ -660,16 +660,16 @@ Generate (persist) a settlement.
 
 **Request body (application/json)**
 
-| Field | Type | Required | Constraints / Notes |
-|---|---|---|---|
-| `beneficiaryType` | string | yes | rider or vendor. |
-| `beneficiaryId` | uuid | yes | Vendor or rider id. |
-| `settlementDate` | string | yes | Date (YYYY-MM-DD). |
+| Field             | Type   | Required | Constraints / Notes |
+| ----------------- | ------ | -------- | ------------------- |
+| `beneficiaryType` | string | yes      | rider or vendor.    |
+| `beneficiaryId`   | uuid   | yes      | Vendor or rider id. |
+| `settlementDate`  | string | yes      | Date (YYYY-MM-DD).  |
 
 **Response** — 201 Created, success envelope `{ data }`
 
-| Field | Type | Description |
-|---|---|---|
+| Field          | Type   | Description                                           |
+| -------------- | ------ | ----------------------------------------------------- |
 | `settlementId` | string | Created settlement id (`produce_*_daily_settlement`). |
 
 ### `GET /v1/admin/settlements/:id`
@@ -698,10 +698,10 @@ Add a settlement adjustment line. **Path:** `id` (uuid, yes).
 
 **Request body (application/json)**
 
-| Field | Type | Required | Constraints / Notes |
-|---|---|---|---|
-| `amountKobo` | number (integer) | yes | Signed adjustment amount in kobo. |
-| `description` | string | yes | 3–200 chars. |
+| Field         | Type             | Required | Constraints / Notes               |
+| ------------- | ---------------- | -------- | --------------------------------- |
+| `amountKobo`  | number (integer) | yes      | Signed adjustment amount in kobo. |
+| `description` | string           | yes      | 3–200 chars.                      |
 
 **Response** — 201 Created, success envelope `{ data }` (settlement record).
 
@@ -715,29 +715,29 @@ List reviews.
 
 **Query parameters**
 
-| Field | Type | Required | Constraints / Notes |
-|---|---|---|---|
-| `cursor` | string | no | Pagination cursor. |
-| `limit` | number | no | Integer 1–100, default 20. |
-| `campusId` | uuid | no | Filter by campus. |
-| `status` | string | no | approved, pending, rejected. |
-| `rating` | number | no | Integer 1–5; matches food/vendor/delivery rating. |
-| `vendorId` | uuid | no | Filter by vendor. |
+| Field      | Type   | Required | Constraints / Notes                               |
+| ---------- | ------ | -------- | ------------------------------------------------- |
+| `cursor`   | string | no       | Pagination cursor.                                |
+| `limit`    | number | no       | Integer 1–100, default 20.                        |
+| `campusId` | uuid   | no       | Filter by campus.                                 |
+| `status`   | string | no       | approved, pending, rejected.                      |
+| `rating`   | number | no       | Integer 1–5; matches food/vendor/delivery rating. |
+| `vendorId` | uuid   | no       | Filter by vendor.                                 |
 
 **Response** — 200 OK, list envelope `{ data[], pagination }`
 
-| Field | Type | Description |
-|---|---|---|
-| `id` | string | Review id. |
-| `orderId` | string | Order id. |
-| `campusId` | string | Campus id. |
-| `vendorId` | string | Vendor id. |
-| `foodRating` | number \| null | Food rating. |
-| `vendorRating` | number \| null | Vendor rating. |
-| `deliveryRating` | number \| null | Delivery rating. |
-| `comment` | string \| null | Comment. |
-| `moderationStatus` | string | approved, pending, rejected. |
-| `createdAt` | string | Created timestamp. |
+| Field              | Type           | Description                  |
+| ------------------ | -------------- | ---------------------------- |
+| `id`               | string         | Review id.                   |
+| `orderId`          | string         | Order id.                    |
+| `campusId`         | string         | Campus id.                   |
+| `vendorId`         | string         | Vendor id.                   |
+| `foodRating`       | number \| null | Food rating.                 |
+| `vendorRating`     | number \| null | Vendor rating.               |
+| `deliveryRating`   | number \| null | Delivery rating.             |
+| `comment`          | string \| null | Comment.                     |
+| `moderationStatus` | string         | approved, pending, rejected. |
+| `createdAt`        | string         | Created timestamp.           |
 
 ### `POST /v1/admin/reviews/:reviewId/moderate`
 
@@ -747,9 +747,9 @@ Moderate a review. **Path:** `reviewId` (uuid, yes).
 
 **Response** — 201 Created, success envelope `{ data }`
 
-| Field | Type | Description |
-|---|---|---|
-| `id` | string | Review id. |
+| Field              | Type   | Description            |
+| ------------------ | ------ | ---------------------- |
+| `id`               | string | Review id.             |
 | `moderationStatus` | string | New moderation status. |
 
 ---
@@ -766,13 +766,13 @@ List users.
 
 **Query parameters**
 
-| Field | Type | Required | Constraints / Notes |
-|---|---|---|---|
-| `cursor` | string | no | Pagination cursor. |
-| `limit` | number | no | Integer 1–100, default 20. |
-| `campusId` | uuid | no | Filter by campus. |
-| `search` | string | no | Max 120 chars; matches `email` or `displayName`. |
-| `status` | string | no | active, suspended, deactivated. |
+| Field      | Type   | Required | Constraints / Notes                              |
+| ---------- | ------ | -------- | ------------------------------------------------ |
+| `cursor`   | string | no       | Pagination cursor.                               |
+| `limit`    | number | no       | Integer 1–100, default 20.                       |
+| `campusId` | uuid   | no       | Filter by campus.                                |
+| `search`   | string | no       | Max 120 chars; matches `email` or `displayName`. |
+| `status`   | string | no       | active, suspended, deactivated.                  |
 
 **Response** — 200 OK, list envelope `{ data[], pagination }` (user fields).
 
@@ -808,15 +808,15 @@ List all admin memberships. **Access: super_admin only.**
 
 **Response** — 200 OK, list envelope `{ data[], pagination }` (hasMore=false)
 
-| Field | Type | Description |
-|---|---|---|
-| `id` | string | Membership id. |
-| `userId` | string | User id. |
-| `campusId` | string \| null | Campus id (null for super_admin). |
-| `role` | string | campus_admin or super_admin. |
-| `active` | boolean | Active flag. |
-| `grantedAt` | string | Granted timestamp. |
-| `revokedAt` | string \| null | Revoked timestamp. |
+| Field       | Type           | Description                       |
+| ----------- | -------------- | --------------------------------- |
+| `id`        | string         | Membership id.                    |
+| `userId`    | string         | User id.                          |
+| `campusId`  | string \| null | Campus id (null for super_admin). |
+| `role`      | string         | campus_admin or super_admin.      |
+| `active`    | boolean        | Active flag.                      |
+| `grantedAt` | string         | Granted timestamp.                |
+| `revokedAt` | string \| null | Revoked timestamp.                |
 
 ### `POST /v1/admin/admin-memberships`
 
@@ -824,11 +824,11 @@ Create an admin membership. **Access: super_admin only.**
 
 **Request body (application/json)**
 
-| Field | Type | Required | Constraints / Notes |
-|---|---|---|---|
-| `userId` | uuid | yes | User to grant. |
-| `role` | string | yes | campus_admin or super_admin. |
-| `campusId` | uuid | no | Required when role = campus_admin (else 400 VALIDATION_FAILED). |
+| Field      | Type   | Required | Constraints / Notes                                             |
+| ---------- | ------ | -------- | --------------------------------------------------------------- |
+| `userId`   | uuid   | yes      | User to grant.                                                  |
+| `role`     | string | yes      | campus_admin or super_admin.                                    |
+| `campusId` | uuid   | no       | Required when role = campus_admin (else 400 VALIDATION_FAILED). |
 
 **Response** — 201 Created, success envelope `{ data }` (membership fields).
 
@@ -854,19 +854,19 @@ Aggregate order analytics.
 
 **Query parameters**
 
-| Field | Type | Required | Constraints / Notes |
-|---|---|---|---|
-| `campusId` | uuid | no | Filter by campus. |
-| `dateFrom` | string | no | Start service date (YYYY-MM-DD). |
-| `dateTo` | string | no | End service date (YYYY-MM-DD). |
-| `granularity` | string | no | day, week, month (accepted; not applied in current query). |
+| Field         | Type   | Required | Constraints / Notes                                        |
+| ------------- | ------ | -------- | ---------------------------------------------------------- |
+| `campusId`    | uuid   | no       | Filter by campus.                                          |
+| `dateFrom`    | string | no       | Start service date (YYYY-MM-DD).                           |
+| `dateTo`      | string | no       | End service date (YYYY-MM-DD).                             |
+| `granularity` | string | no       | day, week, month (accepted; not applied in current query). |
 
 **Response** — 200 OK, success envelope `{ data }`
 
-| Field | Type | Description |
-|---|---|---|
-| `orderCount` | number | Order count in range. |
-| `grossSalesKobo` | number | Gross sales in kobo. |
+| Field               | Type   | Description                   |
+| ------------------- | ------ | ----------------------------- |
+| `orderCount`        | number | Order count in range.         |
+| `grossSalesKobo`    | number | Gross sales in kobo.          |
 | `activeVendorCount` | number | Distinct vendors with orders. |
 
 > Returns `{}` if no rows.
@@ -877,26 +877,26 @@ List audit logs.
 
 **Query parameters**
 
-| Field | Type | Required | Constraints / Notes |
-|---|---|---|---|
-| `cursor` | string | no | Pagination cursor. |
-| `limit` | number | no | Integer 1–100, default 20. |
-| `campusId` | uuid | no | Filter by campus. |
-| `actorId` | uuid | no | Filter by acting user. |
-| `action` | string | no | Filter by action. |
-| `entityType` | string | no | Filter by entity type. |
-| `entityId` | uuid | no | Filter by entity id. |
-| `requestId` | string | no | Filter by request id. |
+| Field        | Type   | Required | Constraints / Notes        |
+| ------------ | ------ | -------- | -------------------------- |
+| `cursor`     | string | no       | Pagination cursor.         |
+| `limit`      | number | no       | Integer 1–100, default 20. |
+| `campusId`   | uuid   | no       | Filter by campus.          |
+| `actorId`    | uuid   | no       | Filter by acting user.     |
+| `action`     | string | no       | Filter by action.          |
+| `entityType` | string | no       | Filter by entity type.     |
+| `entityId`   | uuid   | no       | Filter by entity id.       |
+| `requestId`  | string | no       | Filter by request id.      |
 
 **Response** — 200 OK, list envelope `{ data[], pagination }`
 
-| Field | Type | Description |
-|---|---|---|
-| `id` | string | Audit log id. |
-| `actorUserId` | string \| null | Acting user id. |
-| `campusId` | string \| null | Campus id. |
-| `action` | string | Action name. |
-| `entityType` | string | Entity type. |
-| `entityId` | string \| null | Entity id. |
-| `requestId` | string \| null | Request id. |
-| `createdAt` | string | Created timestamp. |
+| Field         | Type           | Description        |
+| ------------- | -------------- | ------------------ |
+| `id`          | string         | Audit log id.      |
+| `actorUserId` | string \| null | Acting user id.    |
+| `campusId`    | string \| null | Campus id.         |
+| `action`      | string         | Action name.       |
+| `entityType`  | string         | Entity type.       |
+| `entityId`    | string \| null | Entity id.         |
+| `requestId`   | string \| null | Request id.        |
+| `createdAt`   | string         | Created timestamp. |

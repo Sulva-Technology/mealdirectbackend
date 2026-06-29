@@ -36,7 +36,9 @@ export type PromotionValidationResult = {
 };
 
 export type PromotionsRepositoryContract = {
-  findActiveByCode: (code: string) => Promise<(Promotion & { perUserLimit: number; totalUsageLimit: number | null }) | undefined>;
+  findActiveByCode: (
+    code: string
+  ) => Promise<(Promotion & { perUserLimit: number; totalUsageLimit: number | null }) | undefined>;
   countUserRedemptions: (promotionId: string, userId: string) => Promise<number>;
   countTotalRedemptions: (promotionId: string) => Promise<number>;
   createPromotion: (input: CreatePromotionInput) => Promise<PromotionRecord>;

@@ -150,7 +150,7 @@ describe('VendorsService', () => {
           displayName: 'Ada Kitchen',
           slug: 'ada-kitchen',
           userId,
-          autoApprove: true
+          autoApprove: false
         })
       );
       expect(auth.setUserAppMetadata).toHaveBeenCalledWith(userId, {

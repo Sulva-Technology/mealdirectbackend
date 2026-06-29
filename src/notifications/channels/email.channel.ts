@@ -1,7 +1,14 @@
-import type { ChannelMessage, EmailTransport, NotificationChannel } from './notification-channel.js';
+import type {
+  ChannelMessage,
+  EmailTransport,
+  NotificationChannel
+} from './notification-channel.js';
 
 export class EmailChannel implements NotificationChannel {
-  constructor(private readonly transport: EmailTransport, private readonly from: string) {}
+  constructor(
+    private readonly transport: EmailTransport,
+    private readonly from: string
+  ) {}
 
   async deliver(message: ChannelMessage): Promise<void> {
     await this.transport.send({

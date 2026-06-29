@@ -8,7 +8,7 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: The API process is running.
+- **Status 200**: The API process is running.
 
 ---
 
@@ -16,8 +16,8 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: The API is ready to serve traffic.
-* **Status 503**: A required dependency is unavailable.
+- **Status 200**: The API is ready to serve traffic.
+- **Status 503**: A required dependency is unavailable.
 
 ---
 
@@ -27,8 +27,8 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Internal operational status for authorized administrators.
-* **Status 401**: Operations token missing or invalid.
+- **Status 200**: Internal operational status for authorized administrators.
+- **Status 401**: Operations token missing or invalid.
 
 ---
 
@@ -38,9 +38,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 201**: Customer registered successfully.
+- **Status 201**: Customer registered successfully.
   ```json
-{
+  {
     "accessToken": "string",
     "refreshToken": "string",
     "expiresIn": "number",
@@ -48,7 +48,7 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     "message": "string"
   }
   ```
-* **Status 400**: Registration failed due to invalid input or duplicate email.
+- **Status 400**: Registration failed due to invalid input or duplicate email.
 
 ---
 
@@ -56,9 +56,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Customer logged in successfully.
+- **Status 200**: Customer logged in successfully.
   ```json
-{
+  {
     "accessToken": "string",
     "refreshToken": "string",
     "expiresIn": "number",
@@ -66,8 +66,8 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     "message": "string"
   }
   ```
-* **Status 401**: Invalid credentials.
-* **Status 403**: Incorrect role.
+- **Status 401**: Invalid credentials.
+- **Status 403**: Incorrect role.
 
 ---
 
@@ -75,9 +75,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 201**: Vendor registered successfully.
+- **Status 201**: Vendor registered successfully.
   ```json
-{
+  {
     "accessToken": "string",
     "refreshToken": "string",
     "expiresIn": "number",
@@ -85,7 +85,7 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     "message": "string"
   }
   ```
-* **Status 400**: Registration failed.
+- **Status 400**: Registration failed.
 
 ---
 
@@ -93,9 +93,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Vendor logged in successfully.
+- **Status 200**: Vendor logged in successfully.
   ```json
-{
+  {
     "accessToken": "string",
     "refreshToken": "string",
     "expiresIn": "number",
@@ -103,8 +103,8 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     "message": "string"
   }
   ```
-* **Status 401**: Invalid credentials.
-* **Status 403**: Incorrect role.
+- **Status 401**: Invalid credentials.
+- **Status 403**: Incorrect role.
 
 ---
 
@@ -112,9 +112,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 201**: Rider registered successfully.
+- **Status 201**: Rider registered successfully.
   ```json
-{
+  {
     "accessToken": "string",
     "refreshToken": "string",
     "expiresIn": "number",
@@ -122,7 +122,7 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     "message": "string"
   }
   ```
-* **Status 400**: Registration failed.
+- **Status 400**: Registration failed.
 
 ---
 
@@ -130,9 +130,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Rider logged in successfully.
+- **Status 200**: Rider logged in successfully.
   ```json
-{
+  {
     "accessToken": "string",
     "refreshToken": "string",
     "expiresIn": "number",
@@ -140,8 +140,8 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     "message": "string"
   }
   ```
-* **Status 401**: Invalid credentials.
-* **Status 403**: Incorrect role.
+- **Status 401**: Invalid credentials.
+- **Status 403**: Incorrect role.
 
 ---
 
@@ -149,9 +149,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Admin logged in successfully.
+- **Status 200**: Admin logged in successfully.
   ```json
-{
+  {
     "accessToken": "string",
     "refreshToken": "string",
     "expiresIn": "number",
@@ -159,8 +159,8 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     "message": "string"
   }
   ```
-* **Status 401**: Invalid credentials.
-* **Status 403**: Incorrect role.
+- **Status 401**: Invalid credentials.
+- **Status 403**: Incorrect role.
 
 ---
 
@@ -168,9 +168,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Session refreshed successfully.
+- **Status 200**: Session refreshed successfully.
   ```json
-{
+  {
     "accessToken": "string",
     "refreshToken": "string",
     "expiresIn": "number",
@@ -178,7 +178,7 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     "message": "string"
   }
   ```
-* **Status 401**: Invalid refresh token.
+- **Status 401**: Invalid refresh token.
 
 ---
 
@@ -186,8 +186,8 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Logged out successfully.
-* **Status 401**: Invalid or missing bearer token.
+- **Status 200**: Logged out successfully.
+- **Status 401**: Invalid or missing bearer token.
 
 ---
 
@@ -195,8 +195,8 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: The authenticated Meal Direct actor context.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 200**: The authenticated Meal Direct actor context.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
 
 ---
 
@@ -206,9 +206,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Current role-aware Meal Direct session.
+- **Status 200**: Current role-aware Meal Direct session.
   ```json
-{
+  {
     "data": {
       "actor": {
         "userId": "string",
@@ -241,7 +241,7 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
 
 ---
 
@@ -249,9 +249,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Updated safe profile fields.
+- **Status 200**: Updated safe profile fields.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "email": "string",
@@ -269,8 +269,8 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 400**: Invalid profile input.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 400**: Invalid profile input.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
 
 ---
 
@@ -278,13 +278,13 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Active campus memberships for the current user.
+- **Status 200**: Active campus memberships for the current user.
   ```json
-{
+  {
     "data": "Array<[object Object]>"
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
 
 ---
 
@@ -292,9 +292,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Profile after onboarding completion.
+- **Status 200**: Profile after onboarding completion.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "email": "string",
@@ -312,9 +312,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 400**: Invalid onboarding input.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: User does not belong to the selected campus.
+- **Status 400**: Invalid onboarding input.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: User does not belong to the selected campus.
 
 ---
 
@@ -322,9 +322,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Profile after default location update.
+- **Status 200**: Profile after default location update.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "email": "string",
@@ -342,9 +342,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 400**: Invalid default location input.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: User does not belong to the selected campus.
+- **Status 400**: Invalid default location input.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: User does not belong to the selected campus.
 
 ---
 
@@ -354,9 +354,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Active campuses available to public clients.
+- **Status 200**: Active campuses available to public clients.
   ```json
-{
+  {
     "data": "Array<[object Object]>"
   }
   ```
@@ -367,13 +367,13 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Active preset delivery locations for a campus.
+- **Status 200**: Active preset delivery locations for a campus.
   ```json
-{
+  {
     "data": "Array<[object Object]>"
   }
   ```
-* **Status 400**: Invalid campus ID.
+- **Status 400**: Invalid campus ID.
 
 ---
 
@@ -381,13 +381,13 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Active delivery slots for a campus, optionally with date cutoffs.
+- **Status 200**: Active delivery slots for a campus, optionally with date cutoffs.
   ```json
-{
+  {
     "data": "Array<[object Object]>"
   }
   ```
-* **Status 400**: Invalid campus ID or date filter.
+- **Status 400**: Invalid campus ID or date filter.
 
 ---
 
@@ -397,14 +397,14 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Admin-visible campuses.
+- **Status 200**: Admin-visible campuses.
   ```json
-{
+  {
     "data": "Array<[object Object]>"
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -412,9 +412,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Created campus.
+- **Status 200**: Created campus.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "name": "string",
@@ -428,9 +428,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 400**: Invalid campus input.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 400**: Invalid campus input.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -438,9 +438,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Updated campus.
+- **Status 200**: Updated campus.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "name": "string",
@@ -454,9 +454,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 400**: Invalid campus input.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 400**: Invalid campus input.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -464,14 +464,14 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Campus zones for admins.
+- **Status 200**: Campus zones for admins.
   ```json
-{
+  {
     "data": "Array<[object Object]>"
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -479,9 +479,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Created campus zone.
+- **Status 200**: Created campus zone.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "campusId": "string",
@@ -494,8 +494,8 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -503,9 +503,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Updated campus zone.
+- **Status 200**: Updated campus zone.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "campusId": "string",
@@ -518,8 +518,8 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -527,14 +527,14 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Campus locations for admins.
+- **Status 200**: Campus locations for admins.
   ```json
-{
+  {
     "data": "Array<[object Object]>"
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -542,9 +542,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Created campus location.
+- **Status 200**: Created campus location.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "campusId": "string",
@@ -562,8 +562,8 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -571,9 +571,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Updated campus location.
+- **Status 200**: Updated campus location.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "campusId": "string",
@@ -591,8 +591,8 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -600,14 +600,14 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Campus delivery slots for admins.
+- **Status 200**: Campus delivery slots for admins.
   ```json
-{
+  {
     "data": "Array<[object Object]>"
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -615,9 +615,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Created campus delivery slot.
+- **Status 200**: Created campus delivery slot.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "campusId": "string",
@@ -633,8 +633,8 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -642,9 +642,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Updated campus delivery slot.
+- **Status 200**: Updated campus delivery slot.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "campusId": "string",
@@ -660,8 +660,8 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -671,9 +671,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Current vendor profile and approval state.
+- **Status 200**: Current vendor profile and approval state.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "campusId": "string",
@@ -693,8 +693,8 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Vendor role and vendor membership are required.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Vendor role and vendor membership are required.
 
 ---
 
@@ -716,9 +716,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Updated safe vendor profile fields.
+- **Status 200**: Updated safe vendor profile fields.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "campusId": "string",
@@ -738,9 +738,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 400**: Invalid vendor profile input.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Vendor role and vendor membership are required.
+- **Status 400**: Invalid vendor profile input.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Vendor role and vendor membership are required.
 
 ---
 
@@ -748,14 +748,14 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Current masked payout account snapshot, if configured.
+- **Status 200**: Current masked payout account snapshot, if configured.
   ```json
-{
+  {
     "data": "Object"
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Vendor role and vendor membership are required.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Vendor role and vendor membership are required.
 
 ---
 
@@ -775,15 +775,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Replaces the active payout account with a masked snapshot.
+- **Status 200**: Replaces the active payout account with a masked snapshot.
   ```json
-{
+  {
     "data": "Object"
   }
   ```
-* **Status 400**: Invalid payout account input.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Vendor role and vendor membership are required.
+- **Status 400**: Invalid payout account input.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Vendor role and vendor membership are required.
 
 ---
 
@@ -791,17 +791,17 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Vendor menu categories and active unit types.
+- **Status 200**: Vendor menu categories and active unit types.
   ```json
-{
+  {
     "data": {
       "categories": "Array<[object Object]>",
       "unitTypes": "Array<[object Object]>"
     }
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Vendor role and vendor membership are required.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Vendor role and vendor membership are required.
 
 ---
 
@@ -809,14 +809,14 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Vendor-owned menu items including inactive historical items.
+- **Status 200**: Vendor-owned menu items including inactive historical items.
   ```json
-{
+  {
     "data": "Array<[object Object]>"
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Vendor role and vendor membership are required.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Vendor role and vendor membership are required.
 
 ---
 
@@ -838,9 +838,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 201**: Created vendor-owned menu item.
+- **Status 201**: Created vendor-owned menu item.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "vendorId": "string",
@@ -859,9 +859,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 400**: Invalid menu item input.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Vendor role and vendor membership are required.
+- **Status 400**: Invalid menu item input.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Vendor role and vendor membership are required.
 
 ---
 
@@ -869,15 +869,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `itemId` | `string` | Yes |  |
+| Parameter | Type     | Required | Description |
+| :-------- | :------- | :------- | :---------- |
+| `itemId`  | `string` | Yes      |             |
 
 #### Responses
 
-* **Status 200**: Vendor-owned menu item detail.
+- **Status 200**: Vendor-owned menu item detail.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "vendorId": "string",
@@ -896,9 +896,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Vendor role and vendor membership are required.
-* **Status 404**: Menu item was not found for this vendor.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Vendor role and vendor membership are required.
+- **Status 404**: Menu item was not found for this vendor.
 
 ---
 
@@ -906,9 +906,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `itemId` | `string` | Yes |  |
+| Parameter | Type     | Required | Description |
+| :-------- | :------- | :------- | :---------- |
+| `itemId`  | `string` | Yes      |             |
 
 #### Request Body Shape
 
@@ -926,9 +926,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Updated vendor-owned menu item safe fields.
+- **Status 200**: Updated vendor-owned menu item safe fields.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "vendorId": "string",
@@ -947,10 +947,10 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 400**: Invalid menu item input.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Vendor role and vendor membership are required.
-* **Status 404**: Menu item was not found for this vendor.
+- **Status 400**: Invalid menu item input.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Vendor role and vendor membership are required.
+- **Status 404**: Menu item was not found for this vendor.
 
 ---
 
@@ -958,15 +958,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `itemId` | `string` | Yes |  |
+| Parameter | Type     | Required | Description |
+| :-------- | :------- | :------- | :---------- |
+| `itemId`  | `string` | Yes      |             |
 
 #### Responses
 
-* **Status 200**: Activated a vendor-owned menu item.
+- **Status 200**: Activated a vendor-owned menu item.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "vendorId": "string",
@@ -985,8 +985,8 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Vendor role and vendor membership are required.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Vendor role and vendor membership are required.
 
 ---
 
@@ -994,15 +994,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `itemId` | `string` | Yes |  |
+| Parameter | Type     | Required | Description |
+| :-------- | :------- | :------- | :---------- |
+| `itemId`  | `string` | Yes      |             |
 
 #### Responses
 
-* **Status 200**: Deactivated a vendor-owned menu item without deleting history.
+- **Status 200**: Deactivated a vendor-owned menu item without deleting history.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "vendorId": "string",
@@ -1021,8 +1021,8 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Vendor role and vendor membership are required.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Vendor role and vendor membership are required.
 
 ---
 
@@ -1030,20 +1030,20 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `itemId` | `string` | Yes |  |
+| Parameter | Type     | Required | Description |
+| :-------- | :------- | :------- | :---------- |
+| `itemId`  | `string` | Yes      |             |
 
 #### Responses
 
-* **Status 200**: Current slot availability for a vendor-owned menu item.
+- **Status 200**: Current slot availability for a vendor-owned menu item.
   ```json
-{
+  {
     "data": "Array<[object Object]>"
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Vendor role and vendor membership are required.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Vendor role and vendor membership are required.
 
 ---
 
@@ -1051,9 +1051,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `itemId` | `string` | Yes |  |
+| Parameter | Type     | Required | Description |
+| :-------- | :------- | :------- | :---------- |
+| `itemId`  | `string` | Yes      |             |
 
 #### Request Body Shape
 
@@ -1065,15 +1065,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Replaced slot availability for a vendor-owned menu item.
+- **Status 200**: Replaced slot availability for a vendor-owned menu item.
   ```json
-{
+  {
     "data": "Array<[object Object]>"
   }
   ```
-* **Status 400**: Invalid menu item schedule input.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Vendor role and vendor membership are required.
+- **Status 400**: Invalid menu item schedule input.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Vendor role and vendor membership are required.
 
 ---
 
@@ -1081,14 +1081,14 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Vendor operating availability by delivery slot and day of week.
+- **Status 200**: Vendor operating availability by delivery slot and day of week.
   ```json
-{
+  {
     "data": "Array<[object Object]>"
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Vendor role and vendor membership are required.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Vendor role and vendor membership are required.
 
 ---
 
@@ -1104,15 +1104,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Replaced vendor operating availability by slot and day.
+- **Status 200**: Replaced vendor operating availability by slot and day.
   ```json
-{
+  {
     "data": "Array<[object Object]>"
   }
   ```
-* **Status 400**: Invalid vendor availability input.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Vendor role and vendor membership are required.
+- **Status 400**: Invalid vendor availability input.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Vendor role and vendor membership are required.
 
 ---
 
@@ -1122,15 +1122,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: List of orders placed with the authenticated vendor.
+- **Status 200**: List of orders placed with the authenticated vendor.
   ```json
-{
+  {
     "data": "Array<[object Object]>"
   }
   ```
-* **Status 400**: Invalid query filters.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Vendor role and vendor membership are required.
+- **Status 400**: Invalid query filters.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Vendor role and vendor membership are required.
 
 ---
 
@@ -1138,15 +1138,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `orderId` | `string` | Yes |  |
+| Parameter | Type     | Required | Description |
+| :-------- | :------- | :------- | :---------- |
+| `orderId` | `string` | Yes      |             |
 
 #### Responses
 
-* **Status 200**: Detailed summary of a single vendor order, including items.
+- **Status 200**: Detailed summary of a single vendor order, including items.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "orderNumber": "string",
@@ -1176,9 +1176,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Vendor role and vendor membership are required.
-* **Status 404**: Order not found for this vendor.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Vendor role and vendor membership are required.
+- **Status 404**: Order not found for this vendor.
 
 ---
 
@@ -1186,15 +1186,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `orderId` | `string` | Yes |  |
+| Parameter | Type     | Required | Description |
+| :-------- | :------- | :------- | :---------- |
+| `orderId` | `string` | Yes      |             |
 
 #### Responses
 
-* **Status 200**: Order accepted by the vendor.
+- **Status 200**: Order accepted by the vendor.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "orderNumber": "string",
@@ -1224,10 +1224,10 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 400**: Invalid order transition.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Vendor role and vendor membership are required.
-* **Status 404**: Order not found for this vendor.
+- **Status 400**: Invalid order transition.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Vendor role and vendor membership are required.
+- **Status 404**: Order not found for this vendor.
 
 ---
 
@@ -1235,15 +1235,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `orderId` | `string` | Yes |  |
+| Parameter | Type     | Required | Description |
+| :-------- | :------- | :------- | :---------- |
+| `orderId` | `string` | Yes      |             |
 
 #### Responses
 
-* **Status 200**: Order preparation started by the vendor.
+- **Status 200**: Order preparation started by the vendor.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "orderNumber": "string",
@@ -1273,10 +1273,10 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 400**: Invalid order transition.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Vendor role and vendor membership are required.
-* **Status 404**: Order not found for this vendor.
+- **Status 400**: Invalid order transition.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Vendor role and vendor membership are required.
+- **Status 404**: Order not found for this vendor.
 
 ---
 
@@ -1284,15 +1284,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `orderId` | `string` | Yes |  |
+| Parameter | Type     | Required | Description |
+| :-------- | :------- | :------- | :---------- |
+| `orderId` | `string` | Yes      |             |
 
 #### Responses
 
-* **Status 200**: Order preparation started by the vendor.
+- **Status 200**: Order preparation started by the vendor.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "orderNumber": "string",
@@ -1322,10 +1322,10 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 400**: Invalid order transition.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Vendor role and vendor membership are required.
-* **Status 404**: Order not found for this vendor.
+- **Status 400**: Invalid order transition.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Vendor role and vendor membership are required.
+- **Status 404**: Order not found for this vendor.
 
 ---
 
@@ -1333,15 +1333,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `orderId` | `string` | Yes |  |
+| Parameter | Type     | Required | Description |
+| :-------- | :------- | :------- | :---------- |
+| `orderId` | `string` | Yes      |             |
 
 #### Responses
 
-* **Status 200**: Order marked ready for pickup by the vendor.
+- **Status 200**: Order marked ready for pickup by the vendor.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "orderNumber": "string",
@@ -1371,10 +1371,10 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 400**: Invalid order transition.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Vendor role and vendor membership are required.
-* **Status 404**: Order not found for this vendor.
+- **Status 400**: Invalid order transition.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Vendor role and vendor membership are required.
+- **Status 404**: Order not found for this vendor.
 
 ---
 
@@ -1384,13 +1384,13 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Approved active vendors available for the selected campus/date/slot.
+- **Status 200**: Approved active vendors available for the selected campus/date/slot.
   ```json
-{
+  {
     "data": "Array<[object Object]>"
   }
   ```
-* **Status 400**: Invalid catalog filters.
+- **Status 400**: Invalid catalog filters.
 
 ---
 
@@ -1398,9 +1398,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Approved active vendor detail.
+- **Status 200**: Approved active vendor detail.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "campusId": "string",
@@ -1413,8 +1413,8 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 400**: Invalid vendor ID.
-* **Status 404**: Vendor not found or unavailable.
+- **Status 400**: Invalid vendor ID.
+- **Status 404**: Vendor not found or unavailable.
 
 ---
 
@@ -1422,13 +1422,13 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Approved active menu items for the vendor.
+- **Status 200**: Approved active menu items for the vendor.
   ```json
-{
+  {
     "data": "Array<[object Object]>"
   }
   ```
-* **Status 400**: Invalid vendor ID or menu filters.
+- **Status 400**: Invalid vendor ID or menu filters.
 
 ---
 
@@ -1438,15 +1438,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Vendor-owned dated inventory for a service date and optional delivery slot.
+- **Status 200**: Vendor-owned dated inventory for a service date and optional delivery slot.
   ```json
-{
+  {
     "data": "Array<[object Object]>"
   }
   ```
-* **Status 400**: Invalid inventory filters.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Vendor role and vendor membership are required.
+- **Status 400**: Invalid inventory filters.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Vendor role and vendor membership are required.
 
 ---
 
@@ -1454,9 +1454,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `inventoryId` | `string` | Yes |  |
+| Parameter     | Type     | Required | Description |
+| :------------ | :------- | :------- | :---------- |
+| `inventoryId` | `string` | Yes      |             |
 
 #### Request Body Shape
 
@@ -1469,9 +1469,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Updates the editable starting quantity for a vendor-owned inventory row.
+- **Status 200**: Updates the editable starting quantity for a vendor-owned inventory row.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "vendorId": "string",
@@ -1497,10 +1497,10 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 400**: Invalid inventory quantity or stale state.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Vendor role and vendor membership are required.
-* **Status 404**: Inventory row was not found for this vendor.
+- **Status 400**: Invalid inventory quantity or stale state.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Vendor role and vendor membership are required.
+- **Status 404**: Inventory row was not found for this vendor.
 
 ---
 
@@ -1508,9 +1508,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `inventoryId` | `string` | Yes |  |
+| Parameter     | Type     | Required | Description |
+| :------------ | :------- | :------- | :---------- |
+| `inventoryId` | `string` | Yes      |             |
 
 #### Request Body Shape
 
@@ -1524,9 +1524,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 201**: Records an append-only vendor inventory adjustment.
+- **Status 201**: Records an append-only vendor inventory adjustment.
   ```json
-{
+  {
     "data": {
       "adjustment": {
         "id": "string",
@@ -1563,10 +1563,10 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 400**: Invalid inventory adjustment.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Vendor role and vendor membership are required.
-* **Status 404**: Inventory row was not found for this vendor.
+- **Status 400**: Invalid inventory adjustment.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Vendor role and vendor membership are required.
+- **Status 404**: Inventory row was not found for this vendor.
 
 ---
 
@@ -1576,9 +1576,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Order quote using current menu and slot availability.
+- **Status 200**: Order quote using current menu and slot availability.
   ```json
-{
+  {
     "data": {
       "currency": "string",
       "foodSubtotalKobo": "number",
@@ -1596,9 +1596,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Customer order history.
+- **Status 200**: Customer order history.
   ```json
-{
+  {
     "data": "Array<[object Object]>"
   }
   ```
@@ -1609,7 +1609,7 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 201**: Order was created idempotently and inventory was reserved.
+- **Status 201**: Order was created idempotently and inventory was reserved.
 
 ---
 
@@ -1617,9 +1617,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Customer-visible payment status for an order.
+- **Status 200**: Customer-visible payment status for an order.
   ```json
-{
+  {
     "data": {
       "orderId": "string",
       "orderStatus": "string",
@@ -1634,9 +1634,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Customer delivery confirmation.
+- **Status 200**: Customer delivery confirmation.
   ```json
-{
+  {
     "data": {
       "confirmationId": "string"
     }
@@ -1649,9 +1649,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Customer-owned order detail.
+- **Status 200**: Customer-owned order detail.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "orderNumber": "string",
@@ -1690,15 +1690,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `orderId` | `string` | Yes |  |
+| Parameter | Type     | Required | Description |
+| :-------- | :------- | :------- | :---------- |
+| `orderId` | `string` | Yes      |             |
 
 #### Responses
 
-* **Status 200**: Paystack checkout initialization for a customer-owned pending order.
+- **Status 200**: Paystack checkout initialization for a customer-owned pending order.
   ```json
-{
+  {
     "data": {
       "paymentId": "string",
       "authorizationUrl": "string",
@@ -1707,8 +1707,8 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 400**: Invalid order or payment state.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 400**: Invalid order or payment state.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
 
 ---
 
@@ -1716,8 +1716,8 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 202**: Paystack webhook was verified and accepted idempotently.
-* **Status 401**: Missing or invalid Paystack signature.
+- **Status 202**: Paystack webhook was verified and accepted idempotently.
+- **Status 401**: Missing or invalid Paystack signature.
 
 ---
 
@@ -1727,14 +1727,14 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Admin-visible payment records scoped by campus for campus admins.
+- **Status 200**: Admin-visible payment records scoped by campus for campus admins.
   ```json
-{
+  {
     "data": "Array<[object Object]>"
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -1742,15 +1742,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `paymentId` | `string` | Yes |  |
+| Parameter   | Type     | Required | Description |
+| :---------- | :------- | :------- | :---------- |
+| `paymentId` | `string` | Yes      |             |
 
 #### Responses
 
-* **Status 200**: Admin-visible payment detail scoped by campus for campus admins.
+- **Status 200**: Admin-visible payment detail scoped by campus for campus admins.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "orderId": "string",
@@ -1772,8 +1772,8 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -1781,15 +1781,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `paymentId` | `string` | Yes |  |
+| Parameter   | Type     | Required | Description |
+| :---------- | :------- | :------- | :---------- |
+| `paymentId` | `string` | Yes      |             |
 
 #### Responses
 
-* **Status 200**: Verifies a Paystack transaction and marks the local payment successful.
+- **Status 200**: Verifies a Paystack transaction and marks the local payment successful.
   ```json
-{
+  {
     "data": {
       "paymentId": "string",
       "orderId": "string",
@@ -1798,8 +1798,8 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -1807,15 +1807,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `paymentId` | `string` | Yes |  |
+| Parameter   | Type     | Required | Description |
+| :---------- | :------- | :------- | :---------- |
+| `paymentId` | `string` | Yes      |             |
 
 #### Responses
 
-* **Status 201**: Creates a bounded Paystack refund for a successful payment.
+- **Status 201**: Creates a bounded Paystack refund for a successful payment.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "paymentId": "string",
@@ -1831,8 +1831,8 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -1842,15 +1842,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: List of delivery batches associated with the authenticated vendor.
+- **Status 200**: List of delivery batches associated with the authenticated vendor.
   ```json
-{
+  {
     "data": "Array<[object Object]>"
   }
   ```
-* **Status 400**: Invalid query filters.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Vendor role and vendor membership are required.
+- **Status 400**: Invalid query filters.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Vendor role and vendor membership are required.
 
 ---
 
@@ -1858,15 +1858,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `batchId` | `string` | Yes |  |
+| Parameter | Type     | Required | Description |
+| :-------- | :------- | :------- | :---------- |
+| `batchId` | `string` | Yes      |             |
 
 #### Responses
 
-* **Status 200**: Detailed summary of a single vendor batch, including its orders.
+- **Status 200**: Detailed summary of a single vendor batch, including its orders.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "campusId": "string",
@@ -1887,9 +1887,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Vendor role and vendor membership are required.
-* **Status 404**: Batch not found for this vendor.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Vendor role and vendor membership are required.
+- **Status 404**: Batch not found for this vendor.
 
 ---
 
@@ -1897,15 +1897,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `batchId` | `string` | Yes |  |
+| Parameter | Type     | Required | Description |
+| :-------- | :------- | :------- | :---------- |
+| `batchId` | `string` | Yes      |             |
 
 #### Responses
 
-* **Status 200**: Batch ready for pickup, assignments updated to picked_up.
+- **Status 200**: Batch ready for pickup, assignments updated to picked_up.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "campusId": "string",
@@ -1926,10 +1926,10 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 400**: Invalid batch transition.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Vendor role and vendor membership are required.
-* **Status 404**: Batch not found for this vendor.
+- **Status 400**: Invalid batch transition.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Vendor role and vendor membership are required.
+- **Status 404**: Batch not found for this vendor.
 
 ---
 
@@ -1937,15 +1937,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `batchId` | `string` | Yes |  |
+| Parameter | Type     | Required | Description |
+| :-------- | :------- | :------- | :---------- |
+| `batchId` | `string` | Yes      |             |
 
 #### Responses
 
-* **Status 200**: Batch ready for pickup, assignments updated to picked_up.
+- **Status 200**: Batch ready for pickup, assignments updated to picked_up.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "campusId": "string",
@@ -1966,10 +1966,10 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 400**: Invalid batch transition.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Vendor role and vendor membership are required.
-* **Status 404**: Batch not found for this vendor.
+- **Status 400**: Invalid batch transition.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Vendor role and vendor membership are required.
+- **Status 404**: Batch not found for this vendor.
 
 ---
 
@@ -1979,9 +1979,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Authenticated rider profile.
+- **Status 200**: Authenticated rider profile.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "campusId": "string",
@@ -1992,9 +1992,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Verified active rider access is required.
-* **Status 404**: Rider profile not found.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Verified active rider access is required.
+- **Status 404**: Rider profile not found.
 
 ---
 
@@ -2002,9 +2002,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Updated rider profile.
+- **Status 200**: Updated rider profile.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "campusId": "string",
@@ -2015,9 +2015,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 400**: Invalid profile input.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Verified active rider access is required.
+- **Status 400**: Invalid profile input.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Verified active rider access is required.
 
 ---
 
@@ -2025,15 +2025,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Cursor-paginated assignments for the authenticated rider.
+- **Status 200**: Cursor-paginated assignments for the authenticated rider.
   ```json
-{
+  {
     "data": "Array<[object Object]>"
   }
   ```
-* **Status 400**: Invalid filters or cursor.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Verified active rider access is required.
+- **Status 400**: Invalid filters or cursor.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Verified active rider access is required.
 
 ---
 
@@ -2041,15 +2041,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `assignmentId` | `string` | Yes |  |
+| Parameter      | Type     | Required | Description |
+| :------------- | :------- | :------- | :---------- |
+| `assignmentId` | `string` | Yes      |             |
 
 #### Responses
 
-* **Status 200**: Assignment detail with order manifest.
+- **Status 200**: Assignment detail with order manifest.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "batchId": "string",
@@ -2075,9 +2075,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Verified active rider access is required.
-* **Status 404**: Assignment not found for this rider.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Verified active rider access is required.
+- **Status 404**: Assignment not found for this rider.
 
 ---
 
@@ -2085,15 +2085,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `assignmentId` | `string` | Yes |  |
+| Parameter      | Type     | Required | Description |
+| :------------- | :------- | :------- | :---------- |
+| `assignmentId` | `string` | Yes      |             |
 
 #### Responses
 
-* **Status 200**: Assignment accepted.
+- **Status 200**: Assignment accepted.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "batchId": "string",
@@ -2119,8 +2119,8 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Verified active rider access is required.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Verified active rider access is required.
 
 ---
 
@@ -2128,15 +2128,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `assignmentId` | `string` | Yes |  |
+| Parameter      | Type     | Required | Description |
+| :------------- | :------- | :------- | :---------- |
+| `assignmentId` | `string` | Yes      |             |
 
 #### Responses
 
-* **Status 200**: Assignment marked picked up.
+- **Status 200**: Assignment marked picked up.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "batchId": "string",
@@ -2162,8 +2162,8 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Verified active rider access is required.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Verified active rider access is required.
 
 ---
 
@@ -2171,15 +2171,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `orderId` | `string` | Yes |  |
+| Parameter | Type     | Required | Description |
+| :-------- | :------- | :------- | :---------- |
+| `orderId` | `string` | Yes      |             |
 
 #### Responses
 
-* **Status 200**: Delivery order detail for an assigned rider.
+- **Status 200**: Delivery order detail for an assigned rider.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "orderNumber": "string",
@@ -2216,9 +2216,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Verified active rider access is required.
-* **Status 404**: Order not found for this rider.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Verified active rider access is required.
+- **Status 404**: Order not found for this rider.
 
 ---
 
@@ -2226,15 +2226,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `orderId` | `string` | Yes |  |
+| Parameter | Type     | Required | Description |
+| :-------- | :------- | :------- | :---------- |
+| `orderId` | `string` | Yes      |             |
 
 #### Responses
 
-* **Status 200**: Order marked out for delivery.
+- **Status 200**: Order marked out for delivery.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "orderNumber": "string",
@@ -2271,8 +2271,8 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Verified active rider access is required.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Verified active rider access is required.
 
 ---
 
@@ -2280,15 +2280,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `orderId` | `string` | Yes |  |
+| Parameter | Type     | Required | Description |
+| :-------- | :------- | :------- | :---------- |
+| `orderId` | `string` | Yes      |             |
 
 #### Responses
 
-* **Status 200**: Order marked delivered.
+- **Status 200**: Order marked delivered.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "orderNumber": "string",
@@ -2325,8 +2325,8 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Verified active rider access is required.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Verified active rider access is required.
 
 ---
 
@@ -2334,15 +2334,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `orderId` | `string` | Yes |  |
+| Parameter | Type     | Required | Description |
+| :-------- | :------- | :------- | :---------- |
+| `orderId` | `string` | Yes      |             |
 
 #### Responses
 
-* **Status 200**: Delivery issue recorded.
+- **Status 200**: Delivery issue recorded.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "orderId": "string",
@@ -2353,9 +2353,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 400**: Invalid issue payload.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Verified active rider access is required.
+- **Status 400**: Invalid issue payload.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Verified active rider access is required.
 
 ---
 
@@ -2363,9 +2363,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Rider earnings grouped by assignment batch.
+- **Status 200**: Rider earnings grouped by assignment batch.
   ```json
-{
+  {
     "data": {
       "riderId": "string",
       "dateFrom": "string",
@@ -2381,9 +2381,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 400**: Invalid earnings date range.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Verified active rider access is required.
+- **Status 400**: Invalid earnings date range.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Verified active rider access is required.
 
 ---
 
@@ -2391,15 +2391,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Cursor-paginated rider settlement list.
+- **Status 200**: Cursor-paginated rider settlement list.
   ```json
-{
+  {
     "data": "Array<[object Object]>"
   }
   ```
-* **Status 400**: Invalid settlement filters or cursor.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Verified active rider access is required.
+- **Status 400**: Invalid settlement filters or cursor.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Verified active rider access is required.
 
 ---
 
@@ -2407,15 +2407,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `id` | `string` | Yes |  |
+| Parameter | Type     | Required | Description |
+| :-------- | :------- | :------- | :---------- |
+| `id`      | `string` | Yes      |             |
 
 #### Responses
 
-* **Status 200**: Rider settlement detail with settlement lines.
+- **Status 200**: Rider settlement detail with settlement lines.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "campusId": "string",
@@ -2434,9 +2434,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Verified active rider access is required.
-* **Status 404**: Settlement not found for this rider.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Verified active rider access is required.
+- **Status 404**: Settlement not found for this rider.
 
 ---
 
@@ -2446,7 +2446,7 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 201**: Vendor daily settlement was generated idempotently.
+- **Status 201**: Vendor daily settlement was generated idempotently.
 
 ---
 
@@ -2454,7 +2454,7 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 201**: Rider daily settlement was generated idempotently.
+- **Status 201**: Rider daily settlement was generated idempotently.
 
 ---
 
@@ -2464,15 +2464,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Cursor-paginated settlements for the authenticated vendor.
+- **Status 200**: Cursor-paginated settlements for the authenticated vendor.
   ```json
-{
+  {
     "data": "Array<[object Object]>"
   }
   ```
-* **Status 400**: Invalid filters or cursor.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Vendor role and vendor membership are required.
+- **Status 400**: Invalid filters or cursor.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Vendor role and vendor membership are required.
 
 ---
 
@@ -2480,15 +2480,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `id` | `string` | Yes |  |
+| Parameter | Type     | Required | Description |
+| :-------- | :------- | :------- | :---------- |
+| `id`      | `string` | Yes      |             |
 
 #### Responses
 
-* **Status 200**: Settlement detail with immutable settlement lines.
+- **Status 200**: Settlement detail with immutable settlement lines.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "campusId": "string",
@@ -2510,9 +2510,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Vendor role and vendor membership are required.
-* **Status 404**: Settlement not found for this vendor.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Vendor role and vendor membership are required.
+- **Status 404**: Settlement not found for this vendor.
 
 ---
 
@@ -2522,15 +2522,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `orderId` | `string` | Yes |  |
+| Parameter | Type     | Required | Description |
+| :-------- | :------- | :------- | :---------- |
+| `orderId` | `string` | Yes      |             |
 
 #### Responses
 
-* **Status 201**: Created or existing customer review for an owned confirmed order.
+- **Status 201**: Created or existing customer review for an owned confirmed order.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "orderId": "string",
@@ -2548,8 +2548,8 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 400**: Invalid review input or ineligible order.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 400**: Invalid review input or ineligible order.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
 
 ---
 
@@ -2559,14 +2559,14 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Cursor-paginated customer reviews for the authenticated vendor.
+- **Status 200**: Cursor-paginated customer reviews for the authenticated vendor.
   ```json
-{
+  {
     "data": "Array<[object Object]>"
   }
   ```
-* **Status 400**: Invalid review filters or cursor.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 400**: Invalid review filters or cursor.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
 
 ---
 
@@ -2576,19 +2576,19 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `orderId` | `string` | Yes |  |
+| Parameter | Type     | Required | Description |
+| :-------- | :------- | :------- | :---------- |
+| `orderId` | `string` | Yes      |             |
 
 #### Responses
 
-* **Status 200**: Customer-visible escalations for an owned order.
+- **Status 200**: Customer-visible escalations for an owned order.
   ```json
-{
+  {
     "data": "Array<[object Object]>"
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
 
 ---
 
@@ -2596,15 +2596,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `orderId` | `string` | Yes |  |
+| Parameter | Type     | Required | Description |
+| :-------- | :------- | :------- | :---------- |
+| `orderId` | `string` | Yes      |             |
 
 #### Responses
 
-* **Status 201**: Opened or existing customer escalation for an owned eligible order.
+- **Status 201**: Opened or existing customer escalation for an owned eligible order.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "orderId": "string",
@@ -2622,8 +2622,8 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 400**: Invalid escalation input or ineligible order.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 400**: Invalid escalation input or ineligible order.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
 
 ---
 
@@ -2633,9 +2633,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Authenticated admin session and scope.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**: Authenticated admin session and scope.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2643,9 +2643,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Admin operational dashboard for a service date.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**: Admin operational dashboard for a service date.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2653,9 +2653,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2663,15 +2663,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `orderId` | `string` | Yes |  |
+| Parameter | Type     | Required | Description |
+| :-------- | :------- | :------- | :---------- |
+| `orderId` | `string` | Yes      |             |
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2679,9 +2679,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2689,9 +2689,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2699,9 +2699,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2709,9 +2709,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2719,9 +2719,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2729,9 +2729,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2739,9 +2739,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2749,9 +2749,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2759,9 +2759,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2769,9 +2769,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2779,9 +2779,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 201**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 201**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2789,9 +2789,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2799,9 +2799,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2809,9 +2809,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2819,9 +2819,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2829,9 +2829,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2839,9 +2839,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 201**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 201**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2849,9 +2849,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2859,9 +2859,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2869,9 +2869,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2879,9 +2879,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2889,9 +2889,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2899,9 +2899,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2909,9 +2909,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2919,9 +2919,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2929,9 +2929,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2939,9 +2939,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 201**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 201**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2949,9 +2949,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2959,9 +2959,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2969,9 +2969,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2979,9 +2979,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2989,9 +2989,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -2999,9 +2999,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 201**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 201**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -3009,9 +3009,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -3019,9 +3019,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -3029,9 +3029,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -3039,9 +3039,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -3049,9 +3049,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -3059,9 +3059,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -3069,9 +3069,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 201**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 201**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -3079,9 +3079,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -3089,9 +3089,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -3099,9 +3099,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -3109,9 +3109,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -3119,9 +3119,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -3129,9 +3129,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -3139,9 +3139,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -3149,9 +3149,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 201**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 201**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -3159,9 +3159,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -3169,9 +3169,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -3179,9 +3179,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -3189,9 +3189,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: 
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**:
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -3201,13 +3201,13 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Current user notification feed.
+- **Status 200**: Current user notification feed.
   ```json
-{
+  {
     "data": "Array<[object Object]>"
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
 
 ---
 
@@ -3215,15 +3215,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Marks all current user notifications as read.
+- **Status 200**: Marks all current user notifications as read.
   ```json
-{
+  {
     "data": {
       "updatedCount": "number"
     }
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
 
 ---
 
@@ -3231,15 +3231,15 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Path Parameters
 
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `notificationId` | `string` | Yes |  |
+| Parameter        | Type     | Required | Description |
+| :--------------- | :------- | :------- | :---------- |
+| `notificationId` | `string` | Yes      |             |
 
 #### Responses
 
-* **Status 200**: Marks one current user notification as read.
+- **Status 200**: Marks one current user notification as read.
   ```json
-{
+  {
     "data": {
       "id": "string",
       "recipientUserId": "string",
@@ -3255,7 +3255,7 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
 
 ---
 
@@ -3263,9 +3263,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Current user notification preferences.
+- **Status 200**: Current user notification preferences.
   ```json
-{
+  {
     "data": {
       "userId": "string",
       "inAppEnabled": "boolean",
@@ -3280,7 +3280,7 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
 
 ---
 
@@ -3288,9 +3288,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Updated current user notification preferences.
+- **Status 200**: Updated current user notification preferences.
   ```json
-{
+  {
     "data": {
       "userId": "string",
       "inAppEnabled": "boolean",
@@ -3305,7 +3305,7 @@ This document provides the exact shapes of queries, request bodies, parameters, 
     }
   }
   ```
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
 
 ---
 
@@ -3315,9 +3315,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Worker and outbox operational summary.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**: Worker and outbox operational summary.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -3325,9 +3325,9 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Outbox event list for admin operations.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**: Outbox event list for admin operations.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
 
@@ -3335,12 +3335,11 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 #### Responses
 
-* **Status 200**: Claims currently available outbox events for a worker.
-* **Status 401**: Missing, invalid, or expired Supabase JWT.
-* **Status 403**: Admin role is required.
+- **Status 200**: Claims currently available outbox events for a worker.
+- **Status 401**: Missing, invalid, or expired Supabase JWT.
+- **Status 403**: Admin role is required.
 
 ---
-
 
 ## Realtime
 
@@ -3351,11 +3350,11 @@ permitted to read.
 
 Subscribed tables and recommended filters:
 
-* `public.orders` — filter `customer_id=eq.<uid>`. Customers receive status transitions for
+- `public.orders` — filter `customer_id=eq.<uid>`. Customers receive status transitions for
   their own orders. Row shape matches the `GET /v1/orders/{orderId}` payload.
-* `public.notifications` — filter `recipient_user_id=eq.<uid>`. New in-app notifications are
+- `public.notifications` — filter `recipient_user_id=eq.<uid>`. New in-app notifications are
   materialized from outbox events; row shape matches the `GET /v1/notifications` list items.
-* `public.delivery_assignments` — riders subscribe to their assignments; access is constrained
+- `public.delivery_assignments` — riders subscribe to their assignments; access is constrained
   by the existing RLS policies on the table.
 
 Example subscription:

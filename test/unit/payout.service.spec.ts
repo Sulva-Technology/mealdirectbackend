@@ -98,7 +98,11 @@ describe('PayoutService', () => {
     expect(paystack.createTransferRecipient).toHaveBeenCalledTimes(1);
     expect(repository.saveRecipientCode).toHaveBeenCalledWith(expect.anything(), 'RCP_new');
     expect(paystack.initiateTransfer).toHaveBeenCalledWith(
-      expect.objectContaining({ recipientCode: 'RCP_new', amountKobo: 60000, reference: settlementId })
+      expect.objectContaining({
+        recipientCode: 'RCP_new',
+        amountKobo: 60000,
+        reference: settlementId
+      })
     );
     expect(repository.recordTransfer).toHaveBeenCalledTimes(1);
     expect(result).toEqual(transferRecord);

@@ -7,17 +7,29 @@ function trimString(value: unknown): unknown {
 }
 
 export class SignUpDto {
-  @ApiProperty({ type: String, example: 'user@example.com', description: 'The email address of the user.' })
+  @ApiProperty({
+    type: String,
+    example: 'user@example.com',
+    description: 'The email address of the user.'
+  })
   @Transform(({ value }) => trimString(value))
   @IsEmail()
   email!: string;
 
-  @ApiProperty({ type: String, example: 'Password123!', description: 'The password (minimum 6 characters).' })
+  @ApiProperty({
+    type: String,
+    example: 'Password123!',
+    description: 'The password (minimum 6 characters).'
+  })
   @IsString()
   @MinLength(6)
   password!: string;
 
-  @ApiPropertyOptional({ type: String, example: 'Jane Doe', description: "The user's full name, stored in profile metadata." })
+  @ApiPropertyOptional({
+    type: String,
+    example: 'Jane Doe',
+    description: "The user's full name, stored in profile metadata."
+  })
   @Transform(({ value }) => trimString(value))
   @IsOptional()
   @IsString()
@@ -47,7 +59,11 @@ export class SignUpDto {
 }
 
 export class LoginDto {
-  @ApiProperty({ type: String, example: 'user@example.com', description: 'The email address of the user.' })
+  @ApiProperty({
+    type: String,
+    example: 'user@example.com',
+    description: 'The email address of the user.'
+  })
   @Transform(({ value }) => trimString(value))
   @IsEmail()
   email!: string;
@@ -66,10 +82,25 @@ export class RefreshDto {
 }
 
 export class EmailRequestDto {
-  @ApiProperty({ type: String, example: 'user@example.com', description: 'The email address of the user.' })
+  @ApiProperty({
+    type: String,
+    example: 'user@example.com',
+    description: 'The email address of the user.'
+  })
   @Transform(({ value }) => trimString(value))
   @IsEmail()
   email!: string;
+}
+
+export class AcceptVendorInviteDto extends SignUpDto {
+  @ApiProperty({
+    type: String,
+    description: 'One-time vendor invitation token from the admin-generated link.'
+  })
+  @Transform(({ value }) => trimString(value))
+  @IsString()
+  @MinLength(16)
+  token!: string;
 }
 
 export class AuthMessageResponseDto {
@@ -81,7 +112,11 @@ export class AuthUserDto {
   @ApiProperty({ type: String, format: 'uuid', description: 'The unique identifier of the user.' })
   id!: string;
 
-  @ApiProperty({ type: String, example: 'user@example.com', description: 'The email address of the user.' })
+  @ApiProperty({
+    type: String,
+    example: 'user@example.com',
+    description: 'The email address of the user.'
+  })
   email!: string;
 
   @ApiProperty({ type: String, description: 'The role assigned to the user.' })
@@ -101,6 +136,10 @@ export class AuthTokensResponseDto {
   @ApiProperty({ type: () => AuthUserDto, description: 'The user details.' })
   user!: AuthUserDto;
 
-  @ApiPropertyOptional({ type: String, example: 'Verification email sent.', description: 'Optional message detailing signup status.' })
+  @ApiPropertyOptional({
+    type: String,
+    example: 'Verification email sent.',
+    description: 'Optional message detailing signup status.'
+  })
   message?: string;
 }

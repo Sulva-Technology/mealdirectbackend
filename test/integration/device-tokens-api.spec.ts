@@ -1,8 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SignJWT } from 'jose';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 
 import { createApp } from '../../src/app.factory.js';
+import { DeviceTokensRepository } from '../../src/modules/notifications/device-tokens.repository.js';
 
 const secret = new TextEncoder().encode('test-jwt-secret-at-least-32-characters-long');
 
@@ -37,7 +38,11 @@ describe('device tokens API', () => {
 
   it('requires a JWT for device token registration and removal', async () => {
     const endpoints = [
-      { method: 'POST' as const, url: '/v1/me/device-tokens', payload: { token: 'abc', platform: 'web' } },
+      {
+        method: 'POST' as const,
+        url: '/v1/me/device-tokens',
+        payload: { token: 'abc', platform: 'web' }
+      },
       { method: 'DELETE' as const, url: '/v1/me/device-tokens/abc' }
     ];
 
@@ -77,6 +82,9 @@ describe('device tokens API', () => {
 
   it('registers and removes a device token for the authenticated user', async () => {
     const token = await signCustomerToken();
+    const repository = app.get(DeviceTokensRepository);
+    const registerSpy = vi.spyOn(repository, 'register').mockResolvedValue(undefined);
+    const removeSpy = vi.spyOn(repository, 'remove').mockResolvedValue(undefined);
 
     const registered = await app.inject({
       method: 'POST',
@@ -90,6 +98,11 @@ describe('device tokens API', () => {
       }
     });
     expect(registered.statusCode).toBe(204);
+    expect(registerSpy).toHaveBeenCalledWith(
+      '22222222-2222-4222-8222-222222222222',
+      'integration-test-device-token',
+      'android'
+    );
 
     const removed = await app.inject({
       method: 'DELETE',
@@ -99,5 +112,9 @@ describe('device tokens API', () => {
       }
     });
     expect(removed.statusCode).toBe(204);
+    expect(removeSpy).toHaveBeenCalledWith(
+      '22222222-2222-4222-8222-222222222222',
+      'integration-test-device-token'
+    );
   });
 });

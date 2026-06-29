@@ -37,17 +37,17 @@ automation/pricing features**.
 
 ## Decisions
 
-| Decision | Choice |
-|----------|--------|
-| Target bar | Full production-grade |
-| Notification channels | In-app (existing) + **Email** + **Push** (no SMS this round) |
-| Payouts | **Manual now, automated in Phase 3** |
-| Realtime | **Supabase Realtime** |
-| Email provider | **Resend** |
-| Push provider | **FCM** (mobile + web) |
-| Error tracking / alerting | **Sentry** + uptime alerting on `/health/ready` |
-| Scheduler | **pg_cron** (in-database) |
-| First deliverable | **Phase 0: fix prod DB `/health/ready`** |
+| Decision                  | Choice                                                       |
+| ------------------------- | ------------------------------------------------------------ |
+| Target bar                | Full production-grade                                        |
+| Notification channels     | In-app (existing) + **Email** + **Push** (no SMS this round) |
+| Payouts                   | **Manual now, automated in Phase 3**                         |
+| Realtime                  | **Supabase Realtime**                                        |
+| Email provider            | **Resend**                                                   |
+| Push provider             | **FCM** (mobile + web)                                       |
+| Error tracking / alerting | **Sentry** + uptime alerting on `/health/ready`              |
+| Scheduler                 | **pg_cron** (in-database)                                    |
+| First deliverable         | **Phase 0: fix prod DB `/health/ready`**                     |
 
 ## Approach
 
@@ -56,12 +56,12 @@ dispatch, and payouts all depend on it). Each phase is independently shippable a
 testable. All new units are built test-first (TDD), following existing
 unit/integration/pgTAP patterns.
 
-| Phase | Theme | Exit gate |
-|-------|-------|-----------|
-| 0 | Prod connectivity + launch gates | `/health/ready` green in prod; `db:ci` + hosted E2E + production smoke pass |
-| 1 | Async core: outbox worker → email + push + Realtime; pricing engine wired | A real customer order produces real notifications + live status tracking |
-| 2 | Automation: dynamic/zoned pricing + promos, auto rider dispatch | Hands-off day-to-day operations |
-| 3 | Money + hardening: automated Paystack payouts, observability/alerting | Automated settlements behind approval gate; on-call ready |
+| Phase | Theme                                                                     | Exit gate                                                                   |
+| ----- | ------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| 0     | Prod connectivity + launch gates                                          | `/health/ready` green in prod; `db:ci` + hosted E2E + production smoke pass |
+| 1     | Async core: outbox worker → email + push + Realtime; pricing engine wired | A real customer order produces real notifications + live status tracking    |
+| 2     | Automation: dynamic/zoned pricing + promos, auto rider dispatch           | Hands-off day-to-day operations                                             |
+| 3     | Money + hardening: automated Paystack payouts, observability/alerting     | Automated settlements behind approval gate; on-call ready                   |
 
 ---
 
@@ -87,6 +87,7 @@ verification harness has actually been run end-to-end.
 ## Phase 1 — Async core (the keystone)
 
 ### 1.1 Outbox worker
+
 - DB function `claim_outbox_batch(p_worker_id text, p_limit int)` leasing rows with
   `for update skip locked`, setting `locked_at`/`locked_by`, ordered by
   `available_at` (uses `outbox_events_available_idx`).
@@ -99,6 +100,7 @@ verification harness has actually been run end-to-end.
   dispatch + realtime publish (if any server-side publish is needed beyond DB CDC).
 
 ### 1.2 Event taxonomy expansion (DB migrations)
+
 Add `insert into public.outbox_events` to the status-transition / assignment /
 settlement DB functions so the system emits:
 `order.accepted`, `order.preparing`, `order.ready_for_pickup`,
@@ -107,6 +109,7 @@ settlement DB functions so the system emits:
 Forward-only migrations; pgTAP asserts each transition emits its event with payload.
 
 ### 1.3 Notifications: email + push
+
 - `NotificationChannel` interface; `EmailChannel` (Resend) + `PushChannel` (FCM).
 - Env additions: `RESEND_API_KEY`, `EMAIL_FROM`, `FCM_*` credentials
   (optional in dev/test, required in staging/prod via `superRefine`).
@@ -120,6 +123,7 @@ Forward-only migrations; pgTAP asserts each transition emits its event with payl
   and retry/audit.
 
 ### 1.4 Supabase Realtime
+
 - Migration adds `orders`, `notifications`, `delivery_assignments` to the
   `supabase_realtime` publication.
 - Verify existing RLS restricts realtime rows per role over authenticated channels.
@@ -127,6 +131,7 @@ Forward-only migrations; pgTAP asserts each transition emits its event with payl
   (`docs/api-reference.md` or new doc): channels, row shapes, auth.
 
 ### 1.5 Pricing engine wired
+
 - Route order quote + create math through `calculateOrderPricing`.
 - Move flat delivery fee + a new service fee into `EnvService` config (still flat in
   Phase 1; dynamic in Phase 2). No behavior change to totals beyond adding service
@@ -141,12 +146,14 @@ worker drains the outbox with retries and dead-lettering, all under test.
 ## Phase 2 — Automation
 
 ### 2.1 Dynamic / zoned pricing + promos
+
 - `delivery_fee_kobo` per `campus_zone` (column or small table); quote/create read it.
 - New `promotions` module: `promotions` table (code, type, value, min-order,
   starts/ends, usage cap, per-user cap), server-side validation, applied at quote +
   create, recorded on the order. Admin CRUD for promo codes.
 
 ### 2.2 Auto rider dispatch
+
 - Rider availability/online flag (column + endpoint).
 - Triggered by `order.ready_for_pickup` / batch-closed event in the worker (or a
   short pg_cron `dispatch-sweep`): greedy assignment by zone → current load →
@@ -161,6 +168,7 @@ to an eligible rider without admin action; manual override still works.
 ## Phase 3 — Money & hardening
 
 ### 3.1 Automated Paystack payouts
+
 - Extend `PaystackClient`: `createTransferRecipient`, `initiateTransfer`.
 - Store recipient codes on `vendor_payout_accounts` / `riders`.
 - New `transfer.success/failed/reversed` webhook handling reconciling settlement
@@ -168,12 +176,14 @@ to an eligible rider without admin action; manual override still works.
 - Feature-flagged off until explicitly enabled.
 
 ### 3.2 Auth completion + cleanup
+
 - Password reset + email confirmation endpoints (Supabase-backed).
 - Migrate JWT verification from shared HS256 secret to **JWKS/asymmetric**.
 - Resolve empty stubs: fold delivery read-models into `DeliveriesModule`; delete
   `locations`/`slots`/`audit` modules if their data is fully served elsewhere.
 
 ### 3.3 Observability + launch gates
+
 - Expand Sentry coverage, structured error context, alerting runbooks.
 - Final `pnpm readiness:launch` against staging then production promotion.
 

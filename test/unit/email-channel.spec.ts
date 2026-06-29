@@ -8,7 +8,9 @@ describe('EmailChannel', () => {
     const channel = new EmailChannel({ send }, 'Meal Direct <no-reply@mealdirectly.com>');
 
     await channel.deliver({
-      to: 'user@example.com', title: 'Delivered', body: 'Your order was delivered.',
+      to: 'user@example.com',
+      title: 'Delivered',
+      body: 'Your order was delivered.',
       linkPath: '/orders/1'
     });
 

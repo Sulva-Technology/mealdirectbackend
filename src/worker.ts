@@ -39,7 +39,10 @@ async function bootstrapWorker(): Promise<void> {
         }
       } catch (error) {
         logger.error(
-          { message: 'Worker tick failed', error: error instanceof Error ? error.message : 'unknown' },
+          {
+            message: 'Worker tick failed',
+            error: error instanceof Error ? error.message : 'unknown'
+          },
           undefined,
           'Worker'
         );

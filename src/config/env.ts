@@ -127,7 +127,8 @@ const envSchema = z
       context.addIssue({
         code: 'custom',
         path: ['SUPABASE_JWT_SECRET'],
-        message: 'SUPABASE_JWT_SECRET or SUPABASE_JWKS_URL must be configured outside development and test'
+        message:
+          'SUPABASE_JWT_SECRET or SUPABASE_JWKS_URL must be configured outside development and test'
       });
     }
     if (
@@ -137,7 +138,8 @@ const envSchema = z
       context.addIssue({
         code: 'custom',
         path: ['SUPABASE_SERVICE_ROLE_KEY'],
-        message: 'SUPABASE_SERVICE_ROLE_KEY must be configured outside development and test (required to set app_metadata)'
+        message:
+          'SUPABASE_SERVICE_ROLE_KEY must be configured outside development and test (required to set app_metadata)'
       });
     }
     if (

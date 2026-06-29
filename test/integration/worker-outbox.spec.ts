@@ -47,9 +47,7 @@ describe.skipIf(connectionString === undefined)('worker outbox drain', () => {
 
   it('drains an order.delivered event and records an email delivery', async () => {
     // Pick a customer profile with notifications enabled for the email channel.
-    const recipient = await pool.query<{ id: string }>(
-      'select id from public.profiles limit 1'
-    );
+    const recipient = await pool.query<{ id: string }>('select id from public.profiles limit 1');
     const recipientId = recipient.rows[0]?.id;
     expect(recipientId).toBeDefined();
 

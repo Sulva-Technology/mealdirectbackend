@@ -4,9 +4,11 @@ import {
   Inject,
   Injectable,
   Logger,
+  Optional,
   UnauthorizedException
 } from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
+import { createHash } from 'node:crypto';
 
 type MealDirectUserMetadata = {
   meal_direct_role?: unknown;
@@ -16,12 +18,18 @@ type MealDirectUserMetadata = {
 import { ErrorCodes } from '../../common/errors/error-codes.js';
 import { EnvService } from '../../config/env.service.js';
 import type { AuthTokensResponseDto } from './dto/auth.dto.js';
+import { VendorInvitationsRepository } from './vendor-invitations.repository.js';
 
 @Injectable()
 export class SupabaseAuthService {
   private readonly logger = new Logger(SupabaseAuthService.name);
 
-  constructor(@Inject(EnvService) private readonly env: EnvService) {}
+  constructor(
+    @Inject(EnvService) private readonly env: EnvService,
+    @Optional()
+    @Inject(VendorInvitationsRepository)
+    private readonly invitations?: VendorInvitationsRepository
+  ) {}
 
   private getAdminClient() {
     const serviceRoleKey = this.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -47,7 +55,8 @@ export class SupabaseAuthService {
     if (admin === undefined) {
       throw new BadRequestException({
         code: ErrorCodes.AUTH_FAILED,
-        message: 'Server is not configured to update user roles (SUPABASE_SERVICE_ROLE_KEY missing).'
+        message:
+          'Server is not configured to update user roles (SUPABASE_SERVICE_ROLE_KEY missing).'
       });
     }
 
@@ -162,7 +171,8 @@ export class SupabaseAuthService {
 
     const appMetadata = (user.app_metadata ?? {}) as MealDirectUserMetadata;
     const userMetadata = (user.user_metadata ?? {}) as MealDirectUserMetadata;
-    const rawRole = appMetadata.meal_direct_role ?? appMetadata.role ?? userMetadata.meal_direct_role;
+    const rawRole =
+      appMetadata.meal_direct_role ?? appMetadata.role ?? userMetadata.meal_direct_role;
     const resolvedRole = typeof rawRole === 'string' ? rawRole : role;
 
     const response: AuthTokensResponseDto = {
@@ -170,6 +180,93 @@ export class SupabaseAuthService {
         id: user.id,
         email: user.email ?? '',
         role: resolvedRole
+      }
+    };
+
+    if (data.session) {
+      response.accessToken = data.session.access_token;
+      response.refreshToken = data.session.refresh_token;
+      response.expiresIn = data.session.expires_in;
+    } else {
+      response.message = 'Registration successful. Please check your email for verification.';
+    }
+
+    return response;
+  }
+
+  async acceptVendorInvite(input: {
+    email: string;
+    password: string;
+    fullName?: string;
+    redirectTo?: string;
+    token: string;
+  }): Promise<AuthTokensResponseDto> {
+    if (this.invitations === undefined) {
+      throw new BadRequestException({
+        code: ErrorCodes.AUTH_FAILED,
+        message: 'Vendor invitations are not configured.'
+      });
+    }
+
+    const email = input.email.trim().toLowerCase();
+    const tokenHash = hashInviteToken(input.token);
+    const invite = await this.invitations.findOpenByToken({ email, tokenHash });
+    if (invite === undefined) {
+      throw new BadRequestException({
+        code: ErrorCodes.AUTH_FAILED,
+        message: 'Vendor invitation is invalid or expired.'
+      });
+    }
+
+    const { data, error } = await this.getClient().auth.signUp({
+      email,
+      password: input.password,
+      options: {
+        emailRedirectTo: input.redirectTo ?? this.authRedirectUrl('vendor'),
+        data: {
+          meal_direct_role: 'vendor',
+          ...(input.fullName ? { full_name: input.fullName } : {})
+        }
+      }
+    });
+
+    if (error) {
+      throw new BadRequestException({
+        code: ErrorCodes.AUTH_FAILED,
+        message: error.message
+      });
+    }
+
+    const user = data.user;
+    if (!user) {
+      throw new BadRequestException({
+        code: ErrorCodes.AUTH_FAILED,
+        message: 'Failed to create user.'
+      });
+    }
+
+    const accepted = await this.invitations.accept({
+      email,
+      tokenHash,
+      userId: user.id
+    });
+    if (accepted === undefined) {
+      throw new BadRequestException({
+        code: ErrorCodes.AUTH_FAILED,
+        message: 'Vendor invitation is invalid or expired.'
+      });
+    }
+
+    await this.setUserAppMetadata(user.id, {
+      meal_direct_role: 'vendor',
+      vendor_id: accepted.vendorId
+    });
+
+    const response: AuthTokensResponseDto = {
+      user: {
+        id: user.id,
+        email: user.email ?? email,
+        role: 'vendor'
       }
     };
 
@@ -210,7 +307,8 @@ export class SupabaseAuthService {
 
     const appMetadata = (data.user.app_metadata ?? {}) as MealDirectUserMetadata;
     const userMetadata = (data.user.user_metadata ?? {}) as MealDirectUserMetadata;
-    const rawRole = appMetadata.meal_direct_role ?? appMetadata.role ?? userMetadata.meal_direct_role;
+    const rawRole =
+      appMetadata.meal_direct_role ?? appMetadata.role ?? userMetadata.meal_direct_role;
     const role = typeof rawRole === 'string' ? rawRole : 'customer';
 
     if (!allowedRoles.includes(role)) {
@@ -254,7 +352,8 @@ export class SupabaseAuthService {
     const user = data.user ?? data.session.user;
     const appMetadata = (user.app_metadata ?? {}) as MealDirectUserMetadata;
     const userMetadata = (user.user_metadata ?? {}) as MealDirectUserMetadata;
-    const rawRole = appMetadata.meal_direct_role ?? appMetadata.role ?? userMetadata.meal_direct_role;
+    const rawRole =
+      appMetadata.meal_direct_role ?? appMetadata.role ?? userMetadata.meal_direct_role;
     const role = typeof rawRole === 'string' ? rawRole : 'customer';
 
     return {
@@ -303,4 +402,8 @@ export class SupabaseAuthService {
       });
     }
   }
+}
+
+function hashInviteToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
 }

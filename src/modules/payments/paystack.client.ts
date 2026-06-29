@@ -144,9 +144,7 @@ export class PaystackClient implements PaystackClientContract {
     };
   }
 
-  async createTransferRecipient(
-    input: PaystackRecipientInput
-  ): Promise<PaystackRecipientResult> {
+  async createTransferRecipient(input: PaystackRecipientInput): Promise<PaystackRecipientResult> {
     const envelope = await this.request('/transferrecipient', {
       method: 'POST',
       body: JSON.stringify({
