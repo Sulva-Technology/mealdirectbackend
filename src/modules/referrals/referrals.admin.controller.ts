@@ -35,9 +35,9 @@ export class ReferralsAdminController {
   ): Promise<SuccessEnvelope<ReferralAnalytics>> {
     return createSuccessEnvelope(
       await this.referrals.getAnalytics({
-        campusId: query.campusId,
-        from: query.from,
-        to: query.to,
+        ...(query.campusId === undefined ? {} : { campusId: query.campusId }),
+        ...(query.from === undefined ? {} : { from: query.from }),
+        ...(query.to === undefined ? {} : { to: query.to }),
         limit: query.limit ?? 50
       })
     );
