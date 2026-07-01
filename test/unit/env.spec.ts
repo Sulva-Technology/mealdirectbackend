@@ -73,4 +73,20 @@ describe('environment validation', () => {
 
     expect(() => parseEnvironment(invalidEnv)).toThrow(/PAYSTACK_BASE_URL/);
   });
+
+  it('requires Firebase Cloud Messaging credentials in staging and production', () => {
+    const invalidEnv = {
+      ...validEnv,
+      NODE_ENV: 'staging',
+      DATABASE_SSL: 'true',
+      INTERNAL_OPERATIONS_TOKEN: 'staging-operations-token',
+      SUPABASE_JWT_SECRET: 'staging-jwt-secret',
+      SUPABASE_SERVICE_ROLE_KEY: 'staging-service-role-key',
+      RESEND_API_KEY: 'staging-resend-key'
+    };
+
+    expect(() => parseEnvironment(invalidEnv)).toThrow(/FCM_PROJECT_ID/);
+    expect(() => parseEnvironment(invalidEnv)).toThrow(/FCM_CLIENT_EMAIL/);
+    expect(() => parseEnvironment(invalidEnv)).toThrow(/FCM_PRIVATE_KEY/);
+  });
 });

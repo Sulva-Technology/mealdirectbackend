@@ -13,10 +13,15 @@ import { SupabaseAuthService } from '../auth/supabase-auth.service.js';
 import { VendorsRepository } from './vendors.repository.js';
 import type {
   AvailabilityUpdateInput,
+  CreateMenuCategoryInput,
+  CreateUnitTypeInput,
+  MenuCategoryRecord,
   MenuItemAvailabilityEntry,
   MenuItemRecord,
   MenuItemScheduleUpdateInput,
   MenuMetadata,
+  UnitTypeRecord,
+  UpdateUnitTypeInput,
   UpsertMenuItemInput,
   VendorAvailabilityEntry,
   VendorOnboardInput,
@@ -26,6 +31,8 @@ import type {
   VendorProfileUpdateInput,
   VendorsRepositoryContract
 } from './vendors.types.js';
+
+const UNIT_TYPE_CODE_PATTERN = /^[a-z0-9_]+$/;
 
 // Self-service vendors can request onboarding, but only an admin approval can
 // make them active. Admin-created invite links are the trusted production path.
@@ -337,6 +344,78 @@ export class VendorsService {
     ]);
 
     return { categories, unitTypes };
+  }
+
+  async createMenuCategory(
+    actor: AuthenticatedActor,
+    vendorId: string,
+    input: CreateMenuCategoryInput
+  ): Promise<MenuCategoryRecord> {
+    await this.assertActorCanUseVendor(actor, vendorId);
+
+    const name = input.name.trim();
+    const slug = slugify(name);
+    if (slug.length === 0) {
+      throw badRequest('Category name must contain at least one letter or digit.');
+    }
+
+    try {
+      return await this.repository.upsertMenuCategory(vendorId, {
+        name,
+        slug,
+        active: true,
+        ...(input.displayOrder === undefined ? {} : { displayOrder: input.displayOrder })
+      });
+    } catch (error) {
+      if (postgresErrorCode(error) === '23505') {
+        throw badRequest('Category already exists.');
+      }
+      throw error;
+    }
+  }
+
+  // Unit types are a global, admin-managed catalogue shared across all vendors;
+  // the admin role guard on the controller is the only authorization gate.
+  async adminListUnitTypes(): Promise<UnitTypeRecord[]> {
+    return this.repository.listAllUnitTypes();
+  }
+
+  async adminCreateUnitType(input: CreateUnitTypeInput): Promise<UnitTypeRecord> {
+    const code = input.code.trim().toLowerCase();
+    if (!UNIT_TYPE_CODE_PATTERN.test(code)) {
+      throw badRequest('Unit type code must match ^[a-z0-9_]+$.');
+    }
+
+    try {
+      return await this.repository.createUnitType({
+        code,
+        displayName: input.displayName.trim(),
+        countsTowardSpoonLimit: input.countsTowardSpoonLimit ?? false
+      });
+    } catch (error) {
+      if (postgresErrorCode(error) === '23505') {
+        throw badRequest('Unit type code already exists.');
+      }
+      throw error;
+    }
+  }
+
+  async adminUpdateUnitType(
+    id: string,
+    input: UpdateUnitTypeInput
+  ): Promise<UnitTypeRecord> {
+    const update: UpdateUnitTypeInput = {};
+    if (input.displayName !== undefined) update.displayName = input.displayName.trim();
+    if (input.countsTowardSpoonLimit !== undefined) {
+      update.countsTowardSpoonLimit = input.countsTowardSpoonLimit;
+    }
+    if (input.active !== undefined) update.active = input.active;
+
+    const unitType = await this.repository.updateUnitType(id, update);
+    if (unitType === undefined) {
+      throw notFound('Unit type was not found.');
+    }
+    return unitType;
   }
 
   async listMenuItems(actor: AuthenticatedActor, vendorId: string): Promise<MenuItemRecord[]> {

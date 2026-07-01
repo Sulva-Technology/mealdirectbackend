@@ -87,6 +87,24 @@
         "tags": ["auth"]
       }
     },
+    "/v1/auth/vendor/accept-invite": {
+      "post": {
+        "operationId": "AuthController_acceptVendorInvite",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Vendor account created from an admin-issued invite link.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthTokensResponseDto" }
+              }
+            }
+          },
+          "400": { "description": "Invitation is invalid, expired, or already used." }
+        },
+        "tags": ["auth"]
+      }
+    },
     "/v1/auth/vendor/login": {
       "post": {
         "operationId": "AuthController_vendorLogin",
@@ -336,6 +354,51 @@
         },
         "security": [{ "supabaseAuth": [] }],
         "tags": ["me"]
+      }
+    },
+    "/v1/referrals/me": {
+      "get": {
+        "operationId": "ReferralsController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The current user referral code and how many users they referred."
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["referrals"]
+      }
+    },
+    "/v1/referrals/redeem": {
+      "post": {
+        "operationId": "ReferralsController_redeem",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Binds the current user to the referrer behind the code." },
+          "400": { "description": "Invalid, unknown, or self-owned referral code." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "409": {
+            "description": "A code was already redeemed, or onboarding is already complete."
+          }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["referrals"]
+      }
+    },
+    "/v1/admin/referrals/analytics": {
+      "get": {
+        "operationId": "ReferralsAdminController_analytics",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Per-referrer breakdown of how much their referred users have spent (paid orders)."
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Super admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
       }
     },
     "/v1/campuses": {
@@ -751,6 +814,35 @@
               }
             }
           },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Vendor role and vendor membership are required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor"]
+      }
+    },
+    "/v1/vendor/menu-categories": {
+      "post": {
+        "operationId": "VendorsController_createMenuCategory",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateMenuCategoryDto" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created (or updated on slug conflict) vendor-owned menu category.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MenuCategoryEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid menu category input." },
           "401": { "description": "Missing, invalid, or expired Supabase JWT." },
           "403": { "description": "Vendor role and vendor membership are required." }
         },
@@ -1189,6 +1281,86 @@
         },
         "security": [{ "supabaseAuth": [] }],
         "tags": ["vendor-orders"]
+      }
+    },
+    "/v1/admin/unit-types": {
+      "get": {
+        "operationId": "AdminUnitTypesController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "All unit types including inactive ones.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UnitTypeListEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      },
+      "post": {
+        "operationId": "AdminUnitTypesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/CreateUnitTypeDto" } }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created unit type.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UnitTypeEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid unit type input or duplicate code." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/unit-types/{id}": {
+      "patch": {
+        "operationId": "AdminUnitTypesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/UpdateUnitTypeDto" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated unit type (code is immutable).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UnitTypeEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid unit type input." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." },
+          "404": { "description": "Unit type was not found." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
       }
     },
     "/v1/catalog/vendors": {
@@ -2560,6 +2732,19 @@
         "tags": ["admin"]
       }
     },
+    "/v1/admin/vendors/{vendorId}/invitations": {
+      "post": {
+        "operationId": "AdminController_createVendorInvitation",
+        "parameters": [],
+        "responses": {
+          "201": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
     "/v1/admin/vendors/{vendorId}/performance": {
       "get": {
         "operationId": "AdminController_getVendorPerformance",
@@ -3117,9 +3302,31 @@
       "post": {
         "operationId": "DeviceTokensController_register",
         "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RegisterDeviceTokenDto" }
+            }
+          }
+        },
         "responses": {
           "204": {
             "description": "Registers (or refreshes) a push device token for the current user."
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["notifications"]
+      }
+    },
+    "/v1/me/device-tokens/test": {
+      "post": {
+        "operationId": "DeviceTokensController_test",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Sends a test push notification to all active tokens for the current user."
           },
           "401": { "description": "Missing, invalid, or expired Supabase JWT." }
         },
@@ -3797,6 +4004,19 @@
         "properties": { "data": { "$ref": "#/components/schemas/MenuMetadataDto" } },
         "required": ["data"]
       },
+      "CreateMenuCategoryDto": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "maxLength": 120, "minLength": 1 },
+          "displayOrder": { "type": "number", "minimum": 0 }
+        },
+        "required": ["name"]
+      },
+      "MenuCategoryEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/MenuCategoryDto" } },
+        "required": ["data"]
+      },
       "VendorMenuItemDto": {
         "type": "object",
         "properties": {
@@ -4111,6 +4331,45 @@
         "type": "object",
         "properties": { "data": { "$ref": "#/components/schemas/OrderDetailDto" } },
         "required": ["data"]
+      },
+      "UnitTypeListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/UnitTypeDto" } }
+        },
+        "required": ["data"]
+      },
+      "CreateUnitTypeDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 1,
+            "pattern": "^[a-z0-9_]+$",
+            "description": "Immutable lowercase code, e.g. spoon, piece, plate."
+          },
+          "displayName": { "type": "string", "maxLength": 120, "minLength": 1 },
+          "countsTowardSpoonLimit": {
+            "type": "boolean",
+            "default": false,
+            "description": "When true, quantities count toward the three-spoon takeaway package limit."
+          }
+        },
+        "required": ["code", "displayName"]
+      },
+      "UnitTypeEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/UnitTypeDto" } },
+        "required": ["data"]
+      },
+      "UpdateUnitTypeDto": {
+        "type": "object",
+        "properties": {
+          "displayName": { "type": "string", "maxLength": 120, "minLength": 1 },
+          "countsTowardSpoonLimit": { "type": "boolean" },
+          "active": { "type": "boolean" }
+        }
       },
       "CatalogVendorDto": {
         "type": "object",
@@ -5343,6 +5602,24 @@
         "type": "object",
         "properties": { "data": { "$ref": "#/components/schemas/NotificationPreferencesDto" } },
         "required": ["data"]
+      },
+      "RegisterDeviceTokenDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "FCM device/registration token issued by the mobile or web client.",
+            "example": "fcm-registration-token",
+            "minLength": 1
+          },
+          "platform": {
+            "type": "string",
+            "description": "Client platform that issued the token.",
+            "enum": ["ios", "android", "web"],
+            "example": "web"
+          }
+        },
+        "required": ["token", "platform"]
       },
       "CursorPaginationMetaDto": {
         "type": "object",

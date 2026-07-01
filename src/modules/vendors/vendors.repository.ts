@@ -3,10 +3,12 @@ import { sql } from 'kysely';
 
 import { DatabaseService } from '../../database/database.service.js';
 import type {
+  CreateUnitTypeInput,
   MenuCategoryRecord,
   MenuItemAvailabilityEntry,
   MenuItemRecord,
   UnitTypeRecord,
+  UpdateUnitTypeInput,
   UpsertMenuCategoryInput,
   UpsertMenuItemInput,
   VendorAvailabilityEntry,
@@ -387,6 +389,79 @@ export class VendorsRepository implements VendorsRepositoryContract {
     `.execute(this.database.db);
 
     return result.rows;
+  }
+
+  async listAllUnitTypes(): Promise<UnitTypeRecord[]> {
+    const result = await sql<UnitTypeRecord>`
+      select
+        id::text as "id",
+        code,
+        display_name as "displayName",
+        counts_toward_spoon_limit as "countsTowardSpoonLimit",
+        active
+      from public.unit_types
+      order by active desc, display_name
+    `.execute(this.database.db);
+
+    return result.rows;
+  }
+
+  async createUnitType(input: CreateUnitTypeInput): Promise<UnitTypeRecord> {
+    const result = await sql<UnitTypeRecord>`
+      insert into public.unit_types (code, display_name, counts_toward_spoon_limit)
+      values (
+        ${input.code},
+        ${input.displayName},
+        ${input.countsTowardSpoonLimit ?? false}
+      )
+      returning
+        id::text as "id",
+        code,
+        display_name as "displayName",
+        counts_toward_spoon_limit as "countsTowardSpoonLimit",
+        active
+    `.execute(this.database.db);
+
+    const unitType = result.rows[0];
+    if (unitType === undefined) {
+      throw new Error('Unit type insert did not return a row.');
+    }
+    return unitType;
+  }
+
+  async updateUnitType(
+    id: string,
+    input: UpdateUnitTypeInput
+  ): Promise<UnitTypeRecord | undefined> {
+    const hasDisplayName = Object.hasOwn(input, 'displayName');
+    const hasCountsTowardSpoonLimit = Object.hasOwn(input, 'countsTowardSpoonLimit');
+    const hasActive = Object.hasOwn(input, 'active');
+
+    const result = await sql<UnitTypeRecord>`
+      update public.unit_types
+      set display_name = case
+            when ${hasDisplayName} then ${input.displayName ?? null}
+            else display_name
+          end,
+          counts_toward_spoon_limit = case
+            when ${hasCountsTowardSpoonLimit} then ${input.countsTowardSpoonLimit ?? null}
+            else counts_toward_spoon_limit
+          end,
+          active = case
+            when ${hasActive} then ${input.active ?? null}
+            else active
+          end,
+          updated_at = now()
+      where id = ${id}::uuid
+      returning
+        id::text as "id",
+        code,
+        display_name as "displayName",
+        counts_toward_spoon_limit as "countsTowardSpoonLimit",
+        active
+    `.execute(this.database.db);
+
+    return result.rows[0];
   }
 
   async listMenuItems(vendorId: string): Promise<MenuItemRecord[]> {

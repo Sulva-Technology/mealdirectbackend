@@ -89,6 +89,23 @@ export type UnitTypeRecord = {
   active: boolean;
 };
 
+export type CreateUnitTypeInput = {
+  code: string;
+  displayName: string;
+  countsTowardSpoonLimit?: boolean;
+};
+
+export type UpdateUnitTypeInput = {
+  displayName?: string;
+  countsTowardSpoonLimit?: boolean;
+  active?: boolean;
+};
+
+export type CreateMenuCategoryInput = {
+  name: string;
+  displayOrder?: number;
+};
+
 export type MenuMetadata = {
   categories: MenuCategoryRecord[];
   unitTypes: UnitTypeRecord[];
@@ -178,6 +195,12 @@ export type VendorsRepositoryContract = {
   ) => Promise<MenuCategoryRecord>;
   findMenuCategoryOwner: (categoryId: string) => Promise<string | undefined>;
   listUnitTypes: () => Promise<UnitTypeRecord[]>;
+  listAllUnitTypes: () => Promise<UnitTypeRecord[]>;
+  createUnitType: (input: CreateUnitTypeInput) => Promise<UnitTypeRecord>;
+  updateUnitType: (
+    id: string,
+    input: UpdateUnitTypeInput
+  ) => Promise<UnitTypeRecord | undefined>;
   listMenuItems: (vendorId: string) => Promise<MenuItemRecord[]>;
   findMenuItemById: (vendorId: string, menuItemId: string) => Promise<MenuItemRecord | undefined>;
   upsertMenuItem: (

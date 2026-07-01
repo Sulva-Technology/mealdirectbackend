@@ -4,6 +4,10 @@ import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import { createApp } from '../../src/app.factory.js';
 import { createOpenApiDocument } from '../../src/openapi.js';
 
+type SchemaWithProperties = {
+  properties?: Record<string, unknown>;
+};
+
 describe('OpenAPI contract foundation', () => {
   let app: NestFastifyApplication;
 
@@ -111,6 +115,20 @@ describe('OpenAPI contract foundation', () => {
     expect(document.paths['/v1/notifications/read-all']?.post).toBeDefined();
     expect(document.paths['/v1/notifications/preferences']?.get).toBeDefined();
     expect(document.paths['/v1/notifications/preferences']?.put).toBeDefined();
+    expect(document.paths['/v1/me/device-tokens']?.post?.requestBody).toBeDefined();
+    expect(document.paths['/v1/me/device-tokens/test']?.post).toBeDefined();
+    expect(document.paths['/v1/me/device-tokens/{token}']?.delete).toBeDefined();
+
+    const registerSchema = document.components?.schemas
+      ?.RegisterDeviceTokenDto as SchemaWithProperties;
+    expect(registerSchema?.properties?.token).toMatchObject({
+      minLength: 1,
+      type: 'string'
+    });
+    expect(registerSchema?.properties?.platform).toMatchObject({
+      enum: ['ios', 'android', 'web'],
+      type: 'string'
+    });
   });
 
   it('documents vendor profile, payout, menu, and availability endpoints', () => {

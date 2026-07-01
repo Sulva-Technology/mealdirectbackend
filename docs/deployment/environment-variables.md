@@ -31,6 +31,9 @@ Do not commit real values. Store staging and production values only in platform 
 | `PAYSTACK_SECRET_KEY`              | staging, production | yes    | Paystack secret key                                                                |
 | `PAYSTACK_WEBHOOK_INBOX_MODE`      | all                 | no     | `database` outside test                                                            |
 | `INTERNAL_OPERATIONS_TOKEN`        | staging, production | yes    | Temporary operations endpoint token                                                |
+| `FCM_PROJECT_ID`                   | staging, production | yes    | Firebase project ID for FCM push delivery                                          |
+| `FCM_CLIENT_EMAIL`                 | staging, production | yes    | Firebase service-account client email for FCM                                      |
+| `FCM_PRIVATE_KEY`                  | staging, production | yes    | Firebase service-account private key for FCM; encode newlines as `\n`              |
 | `E2E_DATABASE_URL`                 | E2E only            | yes    | Dedicated hosted Supabase E2E database URL; must match `DATABASE_URL` in E2E       |
 | `E2E_TEST_NAMESPACE`               | E2E only            | no     | Safe namespace prefix such as `e2e_meal_direct_<run_id>`                           |
 | `PRODUCTION_API_BASE_URL`          | smoke only          | no     | Production API URL used by `pnpm smoke:production`                                 |

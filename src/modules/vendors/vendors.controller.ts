@@ -33,7 +33,9 @@ import type { AuthenticatedActor } from '../auth/actor-context.js';
 import {
   AvailabilityListEnvelopeDto,
   AvailabilityUpdateDto,
+  CreateMenuCategoryDto,
   CreateMenuItemDto,
+  MenuCategoryEnvelopeDto,
   MenuItemIdParamDto,
   MenuMetadataEnvelopeDto,
   OnboardVendorDto,
@@ -49,6 +51,7 @@ import {
 import type { VendorOnboardResult } from './vendors.service.js';
 import { VendorsService } from './vendors.service.js';
 import type {
+  MenuCategoryRecord,
   MenuItemAvailabilityEntry,
   MenuItemRecord,
   MenuMetadata,
@@ -159,6 +162,22 @@ export class VendorsController {
   ): Promise<SuccessEnvelope<MenuMetadata>> {
     return createSuccessEnvelope(
       await this.vendors.getMenuMetadata(actor, vendorIdFromActor(actor))
+    );
+  }
+
+  @Post('menu-categories')
+  @ApiCreatedResponse({
+    description: 'Created (or updated on slug conflict) vendor-owned menu category.',
+    type: MenuCategoryEnvelopeDto
+  })
+  @ApiBadRequestResponse({ description: 'Invalid menu category input.' })
+  @ApiBody({ type: CreateMenuCategoryDto })
+  async createMenuCategory(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Body() input: CreateMenuCategoryDto
+  ): Promise<SuccessEnvelope<MenuCategoryRecord>> {
+    return createSuccessEnvelope(
+      await this.vendors.createMenuCategory(actor, vendorIdFromActor(actor), input)
     );
   }
 

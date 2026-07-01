@@ -4,6 +4,7 @@ import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 
 import { createApp } from '../../src/app.factory.js';
 import { DeviceTokensRepository } from '../../src/modules/notifications/device-tokens.repository.js';
+import { PushChannel } from '../../src/notifications/channels/push.channel.js';
 
 const secret = new TextEncoder().encode('test-jwt-secret-at-least-32-characters-long');
 
@@ -116,5 +117,27 @@ describe('device tokens API', () => {
       '22222222-2222-4222-8222-222222222222',
       'integration-test-device-token'
     );
+  });
+
+  it('sends a test push to the authenticated user active tokens', async () => {
+    const token = await signCustomerToken();
+    const push = app.get(PushChannel);
+    const deliverSpy = vi.spyOn(push, 'deliverToUser').mockResolvedValue(undefined);
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/v1/me/device-tokens/test',
+      headers: {
+        authorization: `Bearer ${token}`
+      }
+    });
+
+    expect(response.statusCode).toBe(204);
+    expect(deliverSpy).toHaveBeenCalledWith('22222222-2222-4222-8222-222222222222', {
+      to: '22222222-2222-4222-8222-222222222222',
+      title: 'Meal Direct test notification',
+      body: 'Push notifications are connected.',
+      linkPath: '/notifications'
+    });
   });
 });

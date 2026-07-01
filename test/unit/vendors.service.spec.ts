@@ -102,6 +102,21 @@ function createRepository(): VendorsRepositoryContract {
     }),
     findMenuCategoryOwner: vi.fn().mockResolvedValue(vendorId),
     listUnitTypes: vi.fn().mockResolvedValue([]),
+    listAllUnitTypes: vi.fn().mockResolvedValue([]),
+    createUnitType: vi.fn().mockResolvedValue({
+      id: unitTypeId,
+      code: 'spoon',
+      displayName: 'Spoon',
+      countsTowardSpoonLimit: true,
+      active: true
+    }),
+    updateUnitType: vi.fn().mockResolvedValue({
+      id: unitTypeId,
+      code: 'spoon',
+      displayName: 'Spoon',
+      countsTowardSpoonLimit: true,
+      active: true
+    }),
     listMenuItems: vi.fn().mockResolvedValue([menuItem]),
     findMenuItemById: vi.fn().mockResolvedValue(menuItem),
     upsertMenuItem: vi.fn().mockResolvedValue(menuItem),

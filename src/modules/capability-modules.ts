@@ -11,6 +11,7 @@ import { OrdersModule } from './orders/orders.module.js';
 import { PaymentsModule } from './payments/payments.module.js';
 import { ProfilesModule } from './profiles/profiles.module.js';
 import { PromotionsModule } from './promotions/promotions.module.js';
+import { ReferralsModule } from './referrals/referrals.module.js';
 import { ReviewsModule } from './reviews/reviews.module.js';
 import { RidersModule } from './riders/riders.module.js';
 import { SettlementsModule } from './settlements/settlements.module.js';
@@ -19,6 +20,7 @@ import { VendorsModule } from './vendors/vendors.module.js';
 export const capabilityModules = [
   AuthModule,
   ProfilesModule,
+  ReferralsModule,
   CampusesModule,
   VendorsModule,
   CatalogModule,

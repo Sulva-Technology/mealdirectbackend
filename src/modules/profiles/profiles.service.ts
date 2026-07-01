@@ -49,6 +49,10 @@ export class ProfilesService {
     @Inject(ProfilesRepository) private readonly repository: ProfilesRepositoryContract
   ) {}
 
+  async ensureProfile(actor: AuthenticatedActor): Promise<ProfileRecord> {
+    return this.repository.ensureProfile(actor);
+  }
+
   async getCurrentUser(actor: AuthenticatedActor): Promise<MeSession> {
     const profile = await this.repository.ensureProfile(actor);
     const [campuses, vendorMemberships, riderProfiles, adminMemberships] = await Promise.all([

@@ -21,6 +21,7 @@ import { IsDatabaseUuid } from '../../../common/validation.js';
 
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 const phonePattern = /^[+0-9][0-9 ()-]{6,24}$/;
+const unitTypeCodePattern = /^[a-z0-9_]+$/;
 const deliveryModes = ['meal_direct_rider', 'vendor_delivery'] as const;
 const vendorStatuses = ['approved', 'deactivated', 'pending', 'suspended'] as const;
 
@@ -28,6 +29,75 @@ export class MenuItemIdParamDto {
   @ApiProperty({ format: 'uuid', type: String })
   @IsDatabaseUuid()
   itemId!: string;
+}
+
+export class UnitTypeIdParamDto {
+  @ApiProperty({ format: 'uuid', type: String })
+  @IsDatabaseUuid()
+  id!: string;
+}
+
+export class CreateMenuCategoryDto {
+  @ApiProperty({ maxLength: 120, minLength: 1, type: String })
+  @IsString()
+  @MinLength(1)
+  @MaxLength(120)
+  name!: string;
+
+  @ApiPropertyOptional({ minimum: 0, type: Number })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  displayOrder?: number;
+}
+
+export class CreateUnitTypeDto {
+  @ApiProperty({
+    maxLength: 40,
+    minLength: 1,
+    pattern: unitTypeCodePattern.source,
+    type: String,
+    description: 'Immutable lowercase code, e.g. spoon, piece, plate.'
+  })
+  @IsString()
+  @MaxLength(40)
+  @Matches(unitTypeCodePattern)
+  code!: string;
+
+  @ApiProperty({ maxLength: 120, minLength: 1, type: String })
+  @IsString()
+  @MinLength(1)
+  @MaxLength(120)
+  displayName!: string;
+
+  @ApiPropertyOptional({
+    default: false,
+    type: Boolean,
+    description: 'When true, quantities count toward the three-spoon takeaway package limit.'
+  })
+  @IsOptional()
+  @IsBoolean()
+  countsTowardSpoonLimit?: boolean;
+}
+
+export class UpdateUnitTypeDto {
+  @ApiPropertyOptional({ maxLength: 120, minLength: 1, type: String })
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(120)
+  displayName?: string;
+
+  @ApiPropertyOptional({ type: Boolean })
+  @IsOptional()
+  @IsBoolean()
+  countsTowardSpoonLimit?: boolean;
+
+  @ApiPropertyOptional({ type: Boolean })
+  @IsOptional()
+  @IsBoolean()
+  active?: boolean;
 }
 
 export class OnboardVendorDto {
@@ -415,6 +485,11 @@ export class MenuCategoryDto {
   updatedAt!: string;
 }
 
+export class MenuCategoryEnvelopeDto {
+  @ApiProperty({ type: () => MenuCategoryDto })
+  data!: MenuCategoryDto;
+}
+
 export class UnitTypeDto {
   @ApiProperty({ format: 'uuid', type: String })
   id!: string;
@@ -430,6 +505,16 @@ export class UnitTypeDto {
 
   @ApiProperty({ type: Boolean })
   active!: boolean;
+}
+
+export class UnitTypeEnvelopeDto {
+  @ApiProperty({ type: () => UnitTypeDto })
+  data!: UnitTypeDto;
+}
+
+export class UnitTypeListEnvelopeDto {
+  @ApiProperty({ isArray: true, type: () => UnitTypeDto })
+  data!: UnitTypeDto[];
 }
 
 export class MenuMetadataDto {
