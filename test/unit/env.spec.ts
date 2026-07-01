@@ -74,8 +74,8 @@ describe('environment validation', () => {
     expect(() => parseEnvironment(invalidEnv)).toThrow(/PAYSTACK_BASE_URL/);
   });
 
-  it('requires Firebase Cloud Messaging credentials in staging and production', () => {
-    const invalidEnv = {
+  it('allows missing Firebase Cloud Messaging credentials in staging and production (push disabled)', () => {
+    const stagingEnv = {
       ...validEnv,
       NODE_ENV: 'staging',
       DATABASE_SSL: 'true',
@@ -85,8 +85,9 @@ describe('environment validation', () => {
       RESEND_API_KEY: 'staging-resend-key'
     };
 
-    expect(() => parseEnvironment(invalidEnv)).toThrow(/FCM_PROJECT_ID/);
-    expect(() => parseEnvironment(invalidEnv)).toThrow(/FCM_CLIENT_EMAIL/);
-    expect(() => parseEnvironment(invalidEnv)).toThrow(/FCM_PRIVATE_KEY/);
+    // FCM is optional: absence must not fail env validation (createPushSender
+    // falls back to a no-op sender), so the app still boots with push disabled.
+    expect(() => parseEnvironment(stagingEnv)).not.toThrow(/FCM_/);
+    expect(parseEnvironment(stagingEnv).FCM_PROJECT_ID).toBeUndefined();
   });
 });

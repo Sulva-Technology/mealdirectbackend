@@ -166,27 +166,9 @@ const envSchema = z
         message: 'RESEND_API_KEY must be configured outside development and test'
       });
     }
-    if ((env.NODE_ENV === 'production' || env.NODE_ENV === 'staging') && !env.FCM_PROJECT_ID) {
-      context.addIssue({
-        code: 'custom',
-        path: ['FCM_PROJECT_ID'],
-        message: 'FCM_PROJECT_ID must be configured outside development and test'
-      });
-    }
-    if ((env.NODE_ENV === 'production' || env.NODE_ENV === 'staging') && !env.FCM_CLIENT_EMAIL) {
-      context.addIssue({
-        code: 'custom',
-        path: ['FCM_CLIENT_EMAIL'],
-        message: 'FCM_CLIENT_EMAIL must be configured outside development and test'
-      });
-    }
-    if ((env.NODE_ENV === 'production' || env.NODE_ENV === 'staging') && !env.FCM_PRIVATE_KEY) {
-      context.addIssue({
-        code: 'custom',
-        path: ['FCM_PRIVATE_KEY'],
-        message: 'FCM_PRIVATE_KEY must be configured outside development and test'
-      });
-    }
+    // FCM credentials are optional: when any are absent, createPushSender falls
+    // back to a no-op sender so the app boots with push notifications disabled
+    // rather than failing environment validation.
   });
 
 export type AppEnvironment = z.infer<typeof envSchema>;
