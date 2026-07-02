@@ -16,7 +16,7 @@ const recipient = {
 describe('NotificationDispatchHandler', () => {
   it('delivers email + push and records both when enabled and not already sent', async () => {
     const reads = {
-      findRecipientForEvent: vi.fn().mockResolvedValue(recipient),
+      findRecipientsForEvent: vi.fn().mockResolvedValue([recipient]),
       alreadyDelivered: vi.fn().mockResolvedValue(false),
       recordDelivery: vi.fn().mockResolvedValue(undefined)
     };
@@ -44,7 +44,7 @@ describe('NotificationDispatchHandler', () => {
 
   it('skips channels the user disabled', async () => {
     const reads = {
-      findRecipientForEvent: vi.fn().mockResolvedValue({ ...recipient, pushEnabled: false }),
+      findRecipientsForEvent: vi.fn().mockResolvedValue([{ ...recipient, pushEnabled: false }]),
       alreadyDelivered: vi.fn().mockResolvedValue(false),
       recordDelivery: vi.fn().mockResolvedValue(undefined)
     };
@@ -65,7 +65,7 @@ describe('NotificationDispatchHandler', () => {
 
   it('no-ops when there is no materialized notification recipient', async () => {
     const reads = {
-      findRecipientForEvent: vi.fn().mockResolvedValue(undefined),
+      findRecipientsForEvent: vi.fn().mockResolvedValue([]),
       alreadyDelivered: vi.fn(),
       recordDelivery: vi.fn()
     };
@@ -81,5 +81,38 @@ describe('NotificationDispatchHandler', () => {
       attempts: 1
     });
     expect(email.deliver).not.toHaveBeenCalled();
+  });
+
+  it('delivers to every recipient of a multi-recipient event (customer + vendor)', async () => {
+    const vendorRecipient = {
+      ...recipient,
+      userId: 'v1',
+      email: 'vendor@example.com',
+      title: 'New paid order',
+      notificationId: 'n2'
+    };
+    const reads = {
+      findRecipientsForEvent: vi.fn().mockResolvedValue([recipient, vendorRecipient]),
+      alreadyDelivered: vi.fn().mockResolvedValue(false),
+      recordDelivery: vi.fn().mockResolvedValue(undefined)
+    };
+    const email = { deliver: vi.fn().mockResolvedValue(undefined) };
+    const push = { deliverToUser: vi.fn().mockResolvedValue(undefined) };
+    const handler = new NotificationDispatchHandler(reads, email, push);
+
+    await handler.handle({
+      id: 'e1',
+      eventType: 'payment.successful',
+      aggregateType: 'order',
+      aggregateId: 'o1',
+      payload: {},
+      attempts: 1
+    });
+
+    expect(push.deliverToUser).toHaveBeenCalledWith('u1', expect.anything());
+    expect(push.deliverToUser).toHaveBeenCalledWith('v1', expect.anything());
+    expect(reads.recordDelivery).toHaveBeenCalledWith('n1', 'push', 'sent', null);
+    expect(reads.recordDelivery).toHaveBeenCalledWith('n2', 'push', 'sent', null);
+    expect(email.deliver).toHaveBeenCalledTimes(2);
   });
 });
