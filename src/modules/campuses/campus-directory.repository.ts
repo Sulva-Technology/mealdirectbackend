@@ -374,6 +374,17 @@ export class CampusDirectoryRepository implements CampusDirectoryRepositoryContr
     return result.rows[0];
   }
 
+  async deleteLocation(locationId: string, scopedCampusId?: string): Promise<boolean> {
+    const result = await sql<{ id: string }>`
+      delete from public.campus_locations
+      where id = ${locationId}::uuid
+        and (${scopedCampusId ?? null}::uuid is null or campus_id = ${scopedCampusId ?? null}::uuid)
+      returning id::text as "id"
+    `.execute(this.database.db);
+
+    return result.rows.length > 0;
+  }
+
   async listPublicDeliverySlots(
     campusId: string,
     serviceDate?: string

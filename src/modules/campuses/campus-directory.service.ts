@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Inject,
   Injectable,
@@ -45,6 +46,12 @@ function badRequest(message: string): BadRequestException {
     code: ErrorCodes.VALIDATION_FAILED,
     message
   });
+}
+
+function postgresErrorCode(error: unknown): string | undefined {
+  return typeof error === 'object' && error !== null
+    ? (error as { code?: string }).code
+    : undefined;
 }
 
 @Injectable()
@@ -161,6 +168,23 @@ export class CampusDirectoryService {
     );
     if (location === undefined) throw notFound('Location');
     return location;
+  }
+
+  async deleteLocation(actor: AuthenticatedActor, locationId: string): Promise<void> {
+    try {
+      const deleted = await this.repository.deleteLocation(locationId, this.scopedCampusId(actor));
+      if (!deleted) throw notFound('Location');
+    } catch (error) {
+      // foreign_key_violation: orders reference this location (on delete restrict).
+      if (postgresErrorCode(error) === '23503') {
+        throw new ConflictException({
+          code: ErrorCodes.CONFLICT,
+          message:
+            'This location has existing orders and cannot be deleted. Deactivate it instead by setting active to false.'
+        });
+      }
+      throw error;
+    }
   }
 
   async listAdminDeliverySlots(

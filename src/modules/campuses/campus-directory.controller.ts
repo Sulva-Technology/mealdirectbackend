@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   Inject,
@@ -13,7 +14,9 @@ import {
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiConflictResponse,
   ApiForbiddenResponse,
+  ApiNoContentResponse,
   ApiOkResponse,
   ApiTags,
   ApiUnauthorizedResponse
@@ -214,6 +217,19 @@ export class AdminCampusDirectoryController {
     return createSuccessEnvelope(
       await this.campuses.updateLocation(actor, params.locationId, input)
     );
+  }
+
+  @Delete('locations/:locationId')
+  @HttpCode(204)
+  @ApiNoContentResponse({ description: 'Campus location deleted.' })
+  @ApiConflictResponse({
+    description: 'Location is referenced by existing orders; deactivate it instead.'
+  })
+  async deleteLocation(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Param() params: LocationIdParamDto
+  ): Promise<void> {
+    await this.campuses.deleteLocation(actor, params.locationId);
   }
 
   @Get('campuses/:campusId/delivery-slots')

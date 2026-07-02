@@ -65,6 +65,7 @@ describe('OpenAPI contract foundation', () => {
     expect(document.paths['/v1/admin/campuses/{campusId}/locations']?.get).toBeDefined();
     expect(document.paths['/v1/admin/campuses/{campusId}/locations']?.post).toBeDefined();
     expect(document.paths['/v1/admin/locations/{locationId}']?.patch).toBeDefined();
+    expect(document.paths['/v1/admin/locations/{locationId}']?.delete).toBeDefined();
     expect(document.paths['/v1/admin/campuses/{campusId}/delivery-slots']?.get).toBeDefined();
     expect(document.paths['/v1/admin/campuses/{campusId}/delivery-slots']?.post).toBeDefined();
     expect(document.paths['/v1/admin/delivery-slots/{slotId}']?.patch).toBeDefined();

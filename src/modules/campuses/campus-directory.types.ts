@@ -118,6 +118,7 @@ export type CampusDirectoryRepositoryContract = {
     input: UpdateLocationInput,
     scopedCampusId?: string
   ) => Promise<CampusLocationRecord | undefined>;
+  deleteLocation: (locationId: string, scopedCampusId?: string) => Promise<boolean>;
   listPublicDeliverySlots: (
     campusId: string,
     serviceDate?: string

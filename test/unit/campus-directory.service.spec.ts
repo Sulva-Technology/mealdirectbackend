@@ -1,4 +1,4 @@
-import { ForbiddenException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { AuthenticatedActor } from '../../src/modules/auth/actor-context.js';
@@ -97,6 +97,7 @@ function createRepository(): CampusDirectoryRepositoryContract {
     listAdminLocations: vi.fn().mockResolvedValue([]),
     createLocation: vi.fn().mockResolvedValue(location),
     updateLocation: vi.fn().mockResolvedValue(undefined),
+    deleteLocation: vi.fn().mockResolvedValue(true),
     listPublicDeliverySlots: vi.fn().mockResolvedValue([]),
     listAdminDeliverySlots: vi.fn().mockResolvedValue([]),
     createDeliverySlot: vi.fn().mockResolvedValue(slot),
@@ -218,5 +219,31 @@ describe('CampusDirectoryService', () => {
     expect(repository.createZone).toHaveBeenCalledOnce();
     expect(repository.createLocation).toHaveBeenCalledOnce();
     expect(repository.createDeliverySlot).toHaveBeenCalledOnce();
+  });
+
+  it('deletes a location and scopes a campus admin to their own campus', async () => {
+    await service.deleteLocation(campusAdmin, location.id);
+    expect(repository.deleteLocation).toHaveBeenCalledWith(location.id, campusId);
+  });
+
+  it('lets a super admin delete any location without campus scoping', async () => {
+    await service.deleteLocation(superAdmin, location.id);
+    expect(repository.deleteLocation).toHaveBeenCalledWith(location.id, undefined);
+  });
+
+  it('returns 404 when the location to delete does not exist or is out of scope', async () => {
+    (repository.deleteLocation as ReturnType<typeof vi.fn>).mockResolvedValueOnce(false);
+    await expect(service.deleteLocation(superAdmin, location.id)).rejects.toBeInstanceOf(
+      NotFoundException
+    );
+  });
+
+  it('maps a foreign-key violation to a 409 suggesting deactivation', async () => {
+    (repository.deleteLocation as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+      Object.assign(new Error('violates foreign key constraint'), { code: '23503' })
+    );
+    await expect(service.deleteLocation(superAdmin, location.id)).rejects.toBeInstanceOf(
+      ConflictException
+    );
   });
 });
