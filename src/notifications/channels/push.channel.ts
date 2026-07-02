@@ -11,7 +11,25 @@ export type PushSender = {
 
 export type TokenLookup = {
   tokensForUser: (userId: string) => Promise<string[]>;
+  removeToken: (token: string) => Promise<void>;
 };
+
+// FCM error codes that mean the token is permanently unusable. Pruning these
+// lets the outbox event complete instead of retrying forever and dead-lettering.
+const PERMANENT_TOKEN_ERROR_CODES = new Set([
+  'messaging/registration-token-not-registered',
+  'messaging/invalid-registration-token',
+  'messaging/invalid-argument'
+]);
+
+function isInvalidTokenError(reason: unknown): boolean {
+  const code = (reason as { code?: unknown }).code;
+  if (typeof code === 'string' && PERMANENT_TOKEN_ERROR_CODES.has(code)) {
+    return true;
+  }
+  const message = reason instanceof Error ? reason.message : '';
+  return /not a valid FCM registration token|not registered/i.test(message);
+}
 
 export class PushChannel {
   constructor(
@@ -21,7 +39,7 @@ export class PushChannel {
 
   async deliverToUser(userId: string, message: ChannelMessage): Promise<void> {
     const tokens = await this.tokens.tokensForUser(userId);
-    await Promise.all(
+    const results = await Promise.allSettled(
       tokens.map((token) =>
         this.sender.send({
           token,
@@ -31,5 +49,21 @@ export class PushChannel {
         })
       )
     );
+
+    let transientError: unknown;
+    for (const [index, result] of results.entries()) {
+      if (result.status === 'fulfilled') continue;
+      if (isInvalidTokenError(result.reason)) {
+        // Permanent: drop the dead token so it stops poisoning future events.
+        await this.tokens.removeToken(tokens[index] as string);
+        continue;
+      }
+      // Transient (network, quota, auth): remember it so the event retries.
+      transientError ??= result.reason;
+    }
+
+    if (transientError !== undefined) {
+      throw transientError instanceof Error ? transientError : new Error(String(transientError));
+    }
   }
 }

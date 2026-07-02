@@ -87,7 +87,10 @@ describe.skipIf(connectionString === undefined)('worker outbox drain', () => {
     const email = new EmailChannel(transport, 'Meal Direct <test@mealdirectly.com>');
     const push = new PushChannel(
       { send: (): Promise<void> => Promise.resolve() },
-      { tokensForUser: (): Promise<string[]> => Promise.resolve([]) }
+      {
+        tokensForUser: (): Promise<string[]> => Promise.resolve([]),
+        removeToken: (): Promise<void> => Promise.resolve()
+      }
     );
     const dispatch = new NotificationDispatchHandler(reads, email, push);
     const registry = new HandlerRegistry();

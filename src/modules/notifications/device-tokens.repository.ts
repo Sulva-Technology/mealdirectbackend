@@ -21,6 +21,10 @@ export class DeviceTokensRepository {
     );
   }
 
+  async removeToken(token: string): Promise<void> {
+    await sql`delete from public.device_tokens where token = ${token}`.execute(this.database.db);
+  }
+
   async tokensForUser(userId: string): Promise<string[]> {
     const result = await sql<{ token: string }>`
       select token from public.device_tokens where user_id = ${userId}::uuid
