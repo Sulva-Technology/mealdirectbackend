@@ -537,7 +537,8 @@ export class AdminRepository {
       select id::text as "id", campus_id::text as "campusId", vendor_id::text as "vendorId",
         rider_id::text as "riderId", settlement_date::text as "settlementDate",
         status::text as "status", gross_food_amount_kobo as "grossFoodAmountKobo",
-        delivery_earnings_kobo as "deliveryEarningsKobo", refunds_kobo as "refundsKobo",
+        delivery_earnings_kobo as "deliveryEarningsKobo", service_fee_kobo as "serviceFeeKobo",
+        refunds_kobo as "refundsKobo",
         adjustments_kobo as "adjustmentsKobo", payable_kobo as "payableKobo",
         paid_at::text as "paidAt", external_reference as "externalReference"
       from public.settlements
@@ -578,10 +579,12 @@ export class AdminRepository {
           ${date}::text as "settlementDate",
           coalesce(sum(o.food_subtotal_kobo), 0)::integer as "grossFoodAmountKobo",
           coalesce(sum(o.delivery_fee_kobo) filter (where o.delivery_mode = 'vendor_delivery'), 0)::integer as "deliveryEarningsKobo",
+          coalesce(sum(o.service_fee_kobo), 0)::integer as "serviceFeeKobo",
           coalesce(sum(r.amount_kobo), 0)::integer as "refundsKobo",
           greatest(
             coalesce(sum(o.food_subtotal_kobo), 0)
             + coalesce(sum(o.delivery_fee_kobo) filter (where o.delivery_mode = 'vendor_delivery'), 0)
+            + coalesce(sum(o.service_fee_kobo), 0)
             - coalesce(sum(r.amount_kobo), 0),
             0
           )::integer as "estimatedPayableKobo"

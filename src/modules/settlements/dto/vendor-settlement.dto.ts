@@ -60,6 +60,9 @@ export class SettlementSummaryDto {
   @ApiProperty({ type: Number })
   deliveryEarningsKobo!: number;
 
+  @ApiProperty({ description: 'Takeaway/packaging service fee reimbursed to the vendor.', type: Number })
+  serviceFeeKobo!: number;
+
   @ApiProperty({ type: Number })
   refundsKobo!: number;
 

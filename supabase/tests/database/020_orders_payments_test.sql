@@ -135,7 +135,7 @@ select is(
     where id = 'e1111111-1111-1111-1111-111111111111'
   ),
   (
-    select gross_food_amount_kobo + delivery_earnings_kobo - refunds_kobo + adjustments_kobo
+    select gross_food_amount_kobo + delivery_earnings_kobo + service_fee_kobo - refunds_kobo + adjustments_kobo
     from public.settlements
     where id = 'e1111111-1111-1111-1111-111111111111'
   ),

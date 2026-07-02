@@ -46,6 +46,7 @@ const settlement: SettlementSummary = {
   payableKobo: 200000,
   refundsKobo: 0,
   riderId: null,
+  serviceFeeKobo: 0,
   settlementDate: '2026-06-15',
   status: 'draft',
   updatedAt: '2026-06-15T09:00:00.000Z',

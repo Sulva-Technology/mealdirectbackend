@@ -620,6 +620,20 @@
         },
         "security": [{ "supabaseAuth": [] }],
         "tags": ["admin-campuses"]
+      },
+      "delete": {
+        "operationId": "AdminCampusDirectoryController_deleteLocation",
+        "parameters": [],
+        "responses": {
+          "204": { "description": "Campus location deleted." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." },
+          "409": {
+            "description": "Location is referenced by existing orders; deactivate it instead."
+          }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-campuses"]
       }
     },
     "/v1/admin/campuses/{campusId}/delivery-slots": {
@@ -5311,6 +5325,10 @@
           "status": { "type": "string", "enum": ["approved", "cancelled", "draft", "paid"] },
           "grossFoodAmountKobo": { "type": "number" },
           "deliveryEarningsKobo": { "type": "number" },
+          "serviceFeeKobo": {
+            "type": "number",
+            "description": "Takeaway/packaging service fee reimbursed to the vendor."
+          },
           "refundsKobo": { "type": "number" },
           "adjustmentsKobo": { "type": "number" },
           "payableKobo": { "type": "number" },
@@ -5329,6 +5347,7 @@
           "status",
           "grossFoodAmountKobo",
           "deliveryEarningsKobo",
+          "serviceFeeKobo",
           "refundsKobo",
           "adjustmentsKobo",
           "payableKobo",
@@ -5383,6 +5402,10 @@
           "status": { "type": "string", "enum": ["approved", "cancelled", "draft", "paid"] },
           "grossFoodAmountKobo": { "type": "number" },
           "deliveryEarningsKobo": { "type": "number" },
+          "serviceFeeKobo": {
+            "type": "number",
+            "description": "Takeaway/packaging service fee reimbursed to the vendor."
+          },
           "refundsKobo": { "type": "number" },
           "adjustmentsKobo": { "type": "number" },
           "payableKobo": { "type": "number" },
@@ -5405,6 +5428,7 @@
           "status",
           "grossFoodAmountKobo",
           "deliveryEarningsKobo",
+          "serviceFeeKobo",
           "refundsKobo",
           "adjustmentsKobo",
           "payableKobo",

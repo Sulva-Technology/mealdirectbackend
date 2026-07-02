@@ -9,6 +9,7 @@ export type SettlementSummary = {
   status: SettlementStatus;
   grossFoodAmountKobo: number;
   deliveryEarningsKobo: number;
+  serviceFeeKobo: number;
   refundsKobo: number;
   adjustmentsKobo: number;
   payableKobo: number;

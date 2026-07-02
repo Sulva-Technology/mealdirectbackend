@@ -140,14 +140,14 @@ export class NotificationsRepository implements NotificationsRepositoryContract 
   ): Promise<NotificationPreferences> {
     await this.getPreferences(userId);
 
-    const hasInAppEnabled = Object.hasOwn(input, 'inAppEnabled');
-    const hasPushEnabled = Object.hasOwn(input, 'pushEnabled');
-    const hasEmailEnabled = Object.hasOwn(input, 'emailEnabled');
-    const hasOrderUpdates = Object.hasOwn(input, 'orderUpdates');
-    const hasPaymentUpdates = Object.hasOwn(input, 'paymentUpdates');
-    const hasDeliveryUpdates = Object.hasOwn(input, 'deliveryUpdates');
-    const hasEscalationUpdates = Object.hasOwn(input, 'escalationUpdates');
-    const hasSettlementUpdates = Object.hasOwn(input, 'settlementUpdates');
+    const hasInAppEnabled = input.inAppEnabled !== undefined;
+    const hasPushEnabled = input.pushEnabled !== undefined;
+    const hasEmailEnabled = input.emailEnabled !== undefined;
+    const hasOrderUpdates = input.orderUpdates !== undefined;
+    const hasPaymentUpdates = input.paymentUpdates !== undefined;
+    const hasDeliveryUpdates = input.deliveryUpdates !== undefined;
+    const hasEscalationUpdates = input.escalationUpdates !== undefined;
+    const hasSettlementUpdates = input.settlementUpdates !== undefined;
 
     const result = await sql<NotificationPreferences>`
       update public.notification_preferences

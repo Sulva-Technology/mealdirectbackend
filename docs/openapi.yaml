@@ -521,6 +521,18 @@ paths:
         '403': *a11
       security: *a12
       tags: *a13
+    delete:
+      operationId: AdminCampusDirectoryController_deleteLocation
+      parameters: []
+      responses:
+        '204':
+          description: Campus location deleted.
+        '401': *a10
+        '403': *a11
+        '409':
+          description: Location is referenced by existing orders; deactivate it instead.
+      security: *a12
+      tags: *a13
   /v1/admin/campuses/{campusId}/delivery-slots:
     get:
       operationId: AdminCampusDirectoryController_listDeliverySlots
@@ -5642,6 +5654,9 @@ components:
           type: number
         deliveryEarningsKobo:
           type: number
+        serviceFeeKobo:
+          type: number
+          description: Takeaway/packaging service fee reimbursed to the vendor.
         refundsKobo:
           type: number
         adjustmentsKobo:
@@ -5669,6 +5684,7 @@ components:
         - status
         - grossFoodAmountKobo
         - deliveryEarningsKobo
+        - serviceFeeKobo
         - refundsKobo
         - adjustmentsKobo
         - payableKobo
@@ -5746,6 +5762,9 @@ components:
           type: number
         deliveryEarningsKobo:
           type: number
+        serviceFeeKobo:
+          type: number
+          description: Takeaway/packaging service fee reimbursed to the vendor.
         refundsKobo:
           type: number
         adjustmentsKobo:
@@ -5777,6 +5796,7 @@ components:
         - status
         - grossFoodAmountKobo
         - deliveryEarningsKobo
+        - serviceFeeKobo
         - refundsKobo
         - adjustmentsKobo
         - payableKobo
