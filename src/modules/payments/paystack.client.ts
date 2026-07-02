@@ -45,6 +45,16 @@ export class PaystackClient implements PaystackClientContract {
   constructor(@Inject(EnvService) private readonly env: EnvService) {}
 
   async initializeTransaction(input: PaystackInitializeInput): Promise<PaystackInitializeResult> {
+    // Return the customer to the order's payment-status screen after checkout, so its
+    // poll triggers our active verify. Without this Paystack redirects to the dashboard
+    // default and a paid order can sit showing "pending" until a webhook lands.
+    const orderId = input.metadata.orderId;
+    const customerAppBase = this.env.get('APP_URL_CUSTOMER');
+    const callbackUrl =
+      orderId !== undefined && customerAppBase !== undefined
+        ? `${customerAppBase}/#/payment/status/${orderId}`
+        : undefined;
+
     const envelope = await this.request('/transaction/initialize', {
       method: 'POST',
       body: JSON.stringify({
@@ -52,7 +62,8 @@ export class PaystackClient implements PaystackClientContract {
         currency: input.currency,
         email: input.email,
         metadata: input.metadata,
-        reference: input.reference
+        reference: input.reference,
+        ...(callbackUrl === undefined ? {} : { callback_url: callbackUrl })
       })
     });
 

@@ -38,6 +38,20 @@ export function createPushSender(env: AppEnvironment): PushSender {
   const clientEmail = env.FCM_CLIENT_EMAIL;
   const privateKey = env.FCM_PRIVATE_KEY;
   if (projectId === undefined || clientEmail === undefined || privateKey === undefined) {
+    const missing = [
+      projectId === undefined ? 'FCM_PROJECT_ID' : null,
+      clientEmail === undefined ? 'FCM_CLIENT_EMAIL' : null,
+      privateKey === undefined ? 'FCM_PRIVATE_KEY' : null
+    ].filter((name): name is string => name !== null);
+    console.warn(
+      JSON.stringify({
+        level: 'warn',
+        timestamp: new Date().toISOString(),
+        context: 'Worker',
+        message: 'Push notifications disabled: FCM credentials missing; using noop push sender',
+        missing
+      })
+    );
     return noopPushSender;
   }
 
