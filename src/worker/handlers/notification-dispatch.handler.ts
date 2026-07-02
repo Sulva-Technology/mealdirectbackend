@@ -14,7 +14,7 @@ export type NotificationRecipient = {
 };
 
 export type NotificationReads = {
-  findRecipientForEvent(outboxEventId: string): Promise<NotificationRecipient | undefined>;
+  findRecipientsForEvent(outboxEventId: string): Promise<NotificationRecipient[]>;
   alreadyDelivered(notificationId: string, channel: 'email' | 'push'): Promise<boolean>;
   recordDelivery(
     notificationId: string,
@@ -32,31 +32,34 @@ export class NotificationDispatchHandler {
   ) {}
 
   handle = async (event: OutboxEvent): Promise<void> => {
-    const recipient = await this.reads.findRecipientForEvent(event.id);
-    if (recipient === undefined) return;
+    // One outbox event can materialize notifications for several recipients
+    // (customer + vendor users + campus admins); deliver to each.
+    const recipients = await this.reads.findRecipientsForEvent(event.id);
 
-    const message = {
-      to: recipient.email ?? '',
-      title: recipient.title,
-      body: recipient.body,
-      linkPath: recipient.linkPath
-    };
+    for (const recipient of recipients) {
+      const message = {
+        to: recipient.email ?? '',
+        title: recipient.title,
+        body: recipient.body,
+        linkPath: recipient.linkPath
+      };
 
-    if (
-      recipient.emailEnabled &&
-      recipient.email !== null &&
-      !(await this.reads.alreadyDelivered(recipient.notificationId, 'email'))
-    ) {
-      await this.email.deliver(message);
-      await this.reads.recordDelivery(recipient.notificationId, 'email', 'sent', null);
-    }
+      if (
+        recipient.emailEnabled &&
+        recipient.email !== null &&
+        !(await this.reads.alreadyDelivered(recipient.notificationId, 'email'))
+      ) {
+        await this.email.deliver(message);
+        await this.reads.recordDelivery(recipient.notificationId, 'email', 'sent', null);
+      }
 
-    if (
-      recipient.pushEnabled &&
-      !(await this.reads.alreadyDelivered(recipient.notificationId, 'push'))
-    ) {
-      await this.push.deliverToUser(recipient.userId, message);
-      await this.reads.recordDelivery(recipient.notificationId, 'push', 'sent', null);
+      if (
+        recipient.pushEnabled &&
+        !(await this.reads.alreadyDelivered(recipient.notificationId, 'push'))
+      ) {
+        await this.push.deliverToUser(recipient.userId, message);
+        await this.reads.recordDelivery(recipient.notificationId, 'push', 'sent', null);
+      }
     }
   };
 }

@@ -78,7 +78,11 @@ export async function createApp(options: CreateAppOptions = {}): Promise<NestFas
   const adapter = new FastifyAdapter({
     bodyLimit: env?.BODY_LIMIT_BYTES ?? 1_048_576,
     trustProxy: true,
-    logger: false
+    logger: false,
+    // FCM device tokens (~160 chars) are passed as a path param on
+    // DELETE /me/device-tokens/:token; fastify's default maxParamLength of 100
+    // makes the router 404 those requests.
+    maxParamLength: 512
   });
 
   const app = await NestFactory.create<NestFastifyApplication>(AppModule, adapter, {

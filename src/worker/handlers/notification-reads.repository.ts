@@ -8,7 +8,7 @@ import type { NotificationReads, NotificationRecipient } from './notification-di
 export class NotificationReadsRepository implements NotificationReads {
   constructor(@Inject(DatabaseService) private readonly database: DatabaseService) {}
 
-  async findRecipientForEvent(outboxEventId: string): Promise<NotificationRecipient | undefined> {
+  async findRecipientsForEvent(outboxEventId: string): Promise<NotificationRecipient[]> {
     const result = await sql<{
       userId: string;
       email: string | null;
@@ -32,10 +32,9 @@ export class NotificationReadsRepository implements NotificationReads {
       join public.profiles pr on pr.id = n.recipient_user_id
       left join public.notification_preferences p on p.user_id = n.recipient_user_id
       where n.source_outbox_event_id = ${outboxEventId}::uuid
-      limit 1
     `.execute(this.database.db);
 
-    return result.rows[0];
+    return result.rows;
   }
 
   async alreadyDelivered(notificationId: string, channel: 'email' | 'push'): Promise<boolean> {
