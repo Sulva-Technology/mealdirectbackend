@@ -6,6 +6,7 @@ import { DatabaseModule } from './database/database.module.js';
 import { HealthModule } from './health/health.module.js';
 import { capabilityModules } from './modules/capability-modules.js';
 import { OperationsModule } from './operations/operations.module.js';
+import { WorkerModule } from './worker/worker.module.js';
 
 @Module({
   imports: [
@@ -14,6 +15,10 @@ import { OperationsModule } from './operations/operations.module.js';
     DatabaseModule,
     HealthModule,
     OperationsModule,
+    // Provides OutboxProcessor so the API can drain the outbox inline
+    // (Render free tier has no separate worker service). The drain loop is
+    // started only from src/main.ts, so tests using createApp never drain.
+    WorkerModule,
     ...capabilityModules
   ]
 })

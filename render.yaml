@@ -32,38 +32,9 @@ services:
         sync: false
       - key: INTERNAL_OPERATIONS_TOKEN
         sync: false
-      - key: RELEASE_VERSION
-        sync: false
-      - key: COMMIT_SHA
-        sync: false
-  - type: worker
-    name: meal-direct-worker
-    runtime: docker
-    plan: starter
-    dockerfilePath: ./Dockerfile
-    dockerCommand: node dist/worker.js
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: DATABASE_URL
-        sync: false
-      - key: DATABASE_SSL
-        value: true
-      - key: DATABASE_SSL_REJECT_UNAUTHORIZED
-        value: false
-      - key: SUPABASE_URL
-        sync: false
-      - key: SUPABASE_JWT_ISSUER
-        sync: false
-      - key: SUPABASE_JWT_SECRET
-        sync: false
-      - key: SUPABASE_ANON_KEY
-        sync: false
-      - key: SUPABASE_SERVICE_ROLE_KEY
-        sync: false
+      # Outbox draining runs inline in this web process (see src/main.ts).
+      # RESEND_API_KEY is already required for prod boot; FCM_* enable push.
       - key: RESEND_API_KEY
-        sync: false
-      - key: INTERNAL_OPERATIONS_TOKEN
         sync: false
       - key: FCM_PROJECT_ID
         sync: false
