@@ -35,42 +35,22 @@ export class PayoutRepository implements PayoutRepositoryContract {
       select
         s.id::text as "settlementId",
         s.payable_kobo as "payableKobo",
-        case when s.vendor_id is not null then 'vendor' else 'rider' end as "beneficiary",
-        case
-          when s.vendor_id is not null then vpa.id::text
-          else r.id::text
-        end as "beneficiaryRefId",
-        coalesce(vpa.paystack_recipient_code, r.paystack_recipient_code) as "recipientCode",
-        coalesce(vpa.account_name, r.display_name) as "accountName",
-        coalesce(vpa.masked_account_number, '') as "accountNumber",
-        coalesce(vpa.bank_code, '') as "bankCode",
-        'NGN' as "currency"
+        coalesce(
+          vpa.paystack_recipient_code,
+          rpa.paystack_recipient_code,
+          r.paystack_recipient_code
+        ) as "recipientCode"
       from public.settlements s
       left join public.vendor_payout_accounts vpa
         on vpa.vendor_id = s.vendor_id and vpa.active
+      left join public.rider_payout_accounts rpa
+        on rpa.rider_id = s.rider_id and rpa.active
       left join public.riders r on r.id = s.rider_id
       where s.id = ${settlementId}::uuid
       limit 1
     `.execute(this.database.db);
 
     return result.rows[0];
-  }
-
-  async saveRecipientCode(context: PayoutContext, recipientCode: string): Promise<void> {
-    if (context.beneficiary === 'vendor') {
-      await sql`
-        update public.vendor_payout_accounts
-        set paystack_recipient_code = ${recipientCode}
-        where id = ${context.beneficiaryRefId}::uuid
-      `.execute(this.database.db);
-      return;
-    }
-
-    await sql`
-      update public.riders
-      set paystack_recipient_code = ${recipientCode}
-      where id = ${context.beneficiaryRefId}::uuid
-    `.execute(this.database.db);
   }
 
   async recordTransfer(input: RecordTransferInput): Promise<PayoutTransferRecord> {

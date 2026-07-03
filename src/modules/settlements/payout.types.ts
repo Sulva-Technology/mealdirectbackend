@@ -1,16 +1,9 @@
-export type PayoutBeneficiary = 'vendor' | 'rider';
-
 export type PayoutContext = {
   settlementId: string;
-  beneficiary: PayoutBeneficiary;
-  // vendor_payout_accounts.id for a vendor settlement, riders.id for a rider settlement.
-  beneficiaryRefId: string;
   payableKobo: number;
+  // Transfer recipient provisioned when the beneficiary's bank details were captured;
+  // null means payouts cannot run until the account is (re)provisioned.
   recipientCode: string | null;
-  accountName: string;
-  accountNumber: string;
-  bankCode: string;
-  currency: string;
 };
 
 export type PayoutTransferRecord = {
@@ -35,6 +28,5 @@ export type RecordTransferInput = {
 export type PayoutRepositoryContract = {
   findTransferBySettlement: (settlementId: string) => Promise<PayoutTransferRecord | undefined>;
   findPayoutContext: (settlementId: string) => Promise<PayoutContext | undefined>;
-  saveRecipientCode: (context: PayoutContext, recipientCode: string) => Promise<void>;
   recordTransfer: (input: RecordTransferInput) => Promise<PayoutTransferRecord>;
 };

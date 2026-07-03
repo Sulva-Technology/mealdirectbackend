@@ -39,6 +39,34 @@ export type RiderOnboardRepositoryInput = RiderOnboardInput & {
   userId: string;
 };
 
+export type RiderPayoutAccount = {
+  id: string;
+  riderId: string;
+  paystackRecipientCode: string | null;
+  bankName: string;
+  bankCode: string | null;
+  maskedAccountNumber: string;
+  accountName: string;
+  verifiedAt: string | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type RiderPayoutAccountInput = {
+  bankName: string;
+  bankCode: string;
+  accountName: string;
+  accountNumber: string;
+};
+
+// The full account number is provisioned into a Paystack recipient at capture time,
+// so the repository only ever persists the mask plus the returned recipient code.
+export type RiderPayoutAccountRecordInput = Omit<RiderPayoutAccountInput, 'accountNumber'> & {
+  maskedAccountNumber: string;
+  paystackRecipientCode: string;
+};
+
 export type RiderAssignmentSummary = {
   id: string;
   batchId: string;
@@ -177,6 +205,11 @@ export type RidersRepositoryContract = {
     userId: string,
     available: boolean
   ) => Promise<RiderProfile | undefined>;
+  findActivePayoutAccount: (riderId: string) => Promise<RiderPayoutAccount | undefined>;
+  upsertPayoutAccount: (
+    riderId: string,
+    input: RiderPayoutAccountRecordInput
+  ) => Promise<RiderPayoutAccount>;
   assertRiderAccess: (riderId: string, userId: string) => Promise<boolean>;
   listAssignments: (
     riderId: string,

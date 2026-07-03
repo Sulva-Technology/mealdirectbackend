@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Put,
   Query,
   UseGuards
 } from '@nestjs/common';
@@ -45,12 +46,14 @@ import {
   RiderOnboardEnvelopeDto,
   RiderOrderDetailEnvelopeDto,
   RiderOrderIdParamDto,
+  RiderPayoutAccountEnvelopeDto,
   RiderProfileEnvelopeDto,
   RiderProfileUpdateDto,
   RiderSettlementDetailEnvelopeDto,
   RiderSettlementIdParamDto,
   RiderSettlementListEnvelopeDto,
-  RiderSettlementListQueryDto
+  RiderSettlementListQueryDto,
+  UpsertRiderPayoutAccountDto
 } from './dto/rider.dto.js';
 import type { RiderOnboardResult } from './riders.service.js';
 import { RidersService } from './riders.service.js';
@@ -60,6 +63,7 @@ import type {
   RiderEarningsSummary,
   RiderIssueRecord,
   RiderOrderDetail,
+  RiderPayoutAccount,
   RiderProfile,
   RiderSettlementDetail,
   RiderSettlementSummary
@@ -121,6 +125,32 @@ export class RidersController {
     @Body() input: RiderAvailabilityDto
   ): Promise<SuccessEnvelope<RiderProfile>> {
     return createSuccessEnvelope(await this.riders.setAvailability(actor, input.available));
+  }
+
+  @Get('payout-account')
+  @ApiOkResponse({
+    description: 'Current masked payout account snapshot, if configured.',
+    type: RiderPayoutAccountEnvelopeDto
+  })
+  async getPayoutAccount(
+    @CurrentActor() actor: AuthenticatedActor
+  ): Promise<SuccessEnvelope<RiderPayoutAccount | null>> {
+    return createSuccessEnvelope(await this.riders.getPayoutAccount(actor));
+  }
+
+  @Put('payout-account')
+  @ApiOkResponse({
+    description:
+      'Provisions a Paystack transfer recipient from the full account number and stores a masked snapshot.',
+    type: RiderPayoutAccountEnvelopeDto
+  })
+  @ApiBadRequestResponse({ description: 'Invalid payout account input.' })
+  @ApiBody({ type: UpsertRiderPayoutAccountDto })
+  async updatePayoutAccount(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Body() input: UpsertRiderPayoutAccountDto
+  ): Promise<SuccessEnvelope<RiderPayoutAccount>> {
+    return createSuccessEnvelope(await this.riders.upsertPayoutAccount(actor, input));
   }
 
   @Get('assignments')

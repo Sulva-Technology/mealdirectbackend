@@ -322,7 +322,7 @@ export class AdminRepository {
     const limit = query.limit ?? 20;
     const result = await sql<AdminRecord>`
       select r.id::text as "id", r.campus_id::text as "campusId", r.user_id::text as "userId",
-        r.display_name as "displayName", r.phone, r.status::text as "status", r.active,
+        r.display_name as "displayName", r.phone, r.status::text as "status", r.active, r.available,
         r.verified_at::text as "verifiedAt", r.created_at::text as "createdAt"
       from public.riders r
       where (${campusId ?? query.campusId ?? null}::uuid is null or r.campus_id = ${campusId ?? query.campusId ?? null}::uuid)
@@ -337,7 +337,7 @@ export class AdminRepository {
   async getRider(riderId: string, campusId?: string): Promise<AdminRecord | undefined> {
     const result = await sql<AdminRecord>`
       select id::text as "id", campus_id::text as "campusId", user_id::text as "userId",
-        display_name as "displayName", phone, status::text as "status", active,
+        display_name as "displayName", phone, status::text as "status", active, available,
         verified_at::text as "verifiedAt", created_at::text as "createdAt", updated_at::text as "updatedAt"
       from public.riders
       where id = ${riderId}::uuid

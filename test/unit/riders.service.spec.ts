@@ -15,6 +15,7 @@ import type {
   RiderEarningsSummary,
   RiderIssueRecord,
   RiderOrderDetail,
+  RiderPayoutAccount,
   RiderProfile,
   RiderSettlementDetail,
   RiderSettlementSummary,
@@ -158,6 +159,20 @@ const settlementDetail: RiderSettlementDetail = {
   lines: []
 };
 
+const payoutAccount: RiderPayoutAccount = {
+  id: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
+  riderId,
+  paystackRecipientCode: 'RCP_rider',
+  bankName: 'Test Bank',
+  bankCode: '058',
+  maskedAccountNumber: '******3210',
+  accountName: 'Ada Rider',
+  verifiedAt: null,
+  active: true,
+  createdAt: '2026-06-15T09:00:00.000Z',
+  updatedAt: '2026-06-15T09:00:00.000Z'
+};
+
 type MockRidersRepository = {
   [K in keyof RidersRepositoryContract]: ReturnType<typeof vi.fn>;
 };
@@ -172,6 +187,7 @@ function createRepository(): MockRidersRepository {
     findAssignmentOrders: vi.fn().mockResolvedValue([order]),
     findRiderIdForUser: vi.fn().mockResolvedValue(undefined),
     findRiderProfileForActor: vi.fn().mockResolvedValue(profile),
+    findActivePayoutAccount: vi.fn().mockResolvedValue(undefined),
     findRiderSettlementById: vi.fn().mockResolvedValue(settlementDetail),
     getEarningsSummary: vi.fn().mockResolvedValue(earnings),
     listAssignments: vi.fn().mockResolvedValue([assignment]),
@@ -180,7 +196,8 @@ function createRepository(): MockRidersRepository {
     onboardRider: vi.fn().mockResolvedValue(profile),
     setRiderAvailability: vi.fn().mockResolvedValue({ ...profile, available: true }),
     transitionAssignedOrderStatus: vi.fn().mockResolvedValue('out_for_delivery'),
-    updateRiderProfile: vi.fn().mockResolvedValue(profile)
+    updateRiderProfile: vi.fn().mockResolvedValue(profile),
+    upsertPayoutAccount: vi.fn().mockResolvedValue(payoutAccount)
   };
 }
 
@@ -190,17 +207,33 @@ function createAuth() {
   };
 }
 
+function createPaystack() {
+  return {
+    initializeTransaction: vi.fn(),
+    verifyTransaction: vi.fn(),
+    createRefund: vi.fn(),
+    createTransferRecipient: vi.fn().mockResolvedValue({
+      recipientCode: 'RCP_rider',
+      providerPayload: {}
+    }),
+    initiateTransfer: vi.fn()
+  };
+}
+
 describe('RidersService', () => {
   let repository: MockRidersRepository;
   let auth: ReturnType<typeof createAuth>;
+  let paystack: ReturnType<typeof createPaystack>;
   let service: RidersService;
 
   beforeEach(() => {
     repository = createRepository();
     auth = createAuth();
+    paystack = createPaystack();
     service = new RidersService(
       repository as unknown as RidersRepositoryContract,
-      auth as unknown as SupabaseAuthService
+      auth as unknown as SupabaseAuthService,
+      paystack
     );
   });
 
@@ -346,6 +379,36 @@ describe('RidersService', () => {
         dateTo: '2026-06-01'
       })
     ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('provisions a Paystack recipient from the full account number and stores only a mask', async () => {
+    await expect(
+      service.upsertPayoutAccount(actor, {
+        accountName: '  Ada Rider  ',
+        accountNumber: '0123453210',
+        bankCode: ' 058 ',
+        bankName: ' Test Bank '
+      })
+    ).resolves.toEqual(payoutAccount);
+
+    expect(paystack.createTransferRecipient).toHaveBeenCalledWith({
+      name: 'Ada Rider',
+      accountNumber: '0123453210',
+      bankCode: '058',
+      currency: 'NGN'
+    });
+    expect(repository.upsertPayoutAccount).toHaveBeenCalledWith(riderId, {
+      accountName: 'Ada Rider',
+      bankName: 'Test Bank',
+      bankCode: '058',
+      maskedAccountNumber: '******3210',
+      paystackRecipientCode: 'RCP_rider'
+    });
+  });
+
+  it('returns null when no rider payout account is configured', async () => {
+    await expect(service.getPayoutAccount(actor)).resolves.toBeNull();
+    expect(repository.findActivePayoutAccount).toHaveBeenCalledWith(riderId);
   });
 
   it('onboards a rider and writes role + rider_id to app_metadata', async () => {

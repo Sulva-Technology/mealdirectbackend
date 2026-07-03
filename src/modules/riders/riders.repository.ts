@@ -17,6 +17,8 @@ import type {
   RiderIssueRecord,
   RiderOrderDetail,
   RiderOnboardRepositoryInput,
+  RiderPayoutAccount,
+  RiderPayoutAccountRecordInput,
   RiderProfile,
   RiderProfileUpdateInput,
   RiderSettlementDetail,
@@ -167,6 +169,84 @@ export class RidersRepository implements RidersRepositoryContract {
     `.execute(this.database.db);
 
     return result.rows[0];
+  }
+
+  async findActivePayoutAccount(riderId: string): Promise<RiderPayoutAccount | undefined> {
+    const result = await sql<RiderPayoutAccount>`
+      select
+        id::text as "id",
+        rider_id::text as "riderId",
+        paystack_recipient_code as "paystackRecipientCode",
+        bank_name as "bankName",
+        bank_code as "bankCode",
+        masked_account_number as "maskedAccountNumber",
+        account_name as "accountName",
+        verified_at::text as "verifiedAt",
+        active,
+        created_at::text as "createdAt",
+        updated_at::text as "updatedAt"
+      from public.rider_payout_accounts
+      where rider_id = ${riderId}::uuid
+        and active
+      order by updated_at desc
+      limit 1
+    `.execute(this.database.db);
+
+    return result.rows[0];
+  }
+
+  async upsertPayoutAccount(
+    riderId: string,
+    input: RiderPayoutAccountRecordInput
+  ): Promise<RiderPayoutAccount> {
+    return this.database.db.transaction().execute(async (trx) => {
+      await sql`
+        update public.rider_payout_accounts
+        set active = false,
+            updated_at = now()
+        where rider_id = ${riderId}::uuid
+          and active
+      `.execute(trx);
+
+      const result = await sql<RiderPayoutAccount>`
+        insert into public.rider_payout_accounts (
+          rider_id,
+          paystack_recipient_code,
+          bank_name,
+          bank_code,
+          masked_account_number,
+          account_name,
+          active
+        )
+        values (
+          ${riderId}::uuid,
+          ${input.paystackRecipientCode},
+          ${input.bankName},
+          ${input.bankCode ?? null},
+          ${input.maskedAccountNumber},
+          ${input.accountName},
+          true
+        )
+        returning
+          id::text as "id",
+          rider_id::text as "riderId",
+          paystack_recipient_code as "paystackRecipientCode",
+          bank_name as "bankName",
+          bank_code as "bankCode",
+          masked_account_number as "maskedAccountNumber",
+          account_name as "accountName",
+          verified_at::text as "verifiedAt",
+          active,
+          created_at::text as "createdAt",
+          updated_at::text as "updatedAt"
+      `.execute(trx);
+
+      const account = result.rows[0];
+      if (account === undefined) {
+        throw new Error('Rider payout account insert did not return a row.');
+      }
+      return account;
+    });
   }
 
   async assertRiderAccess(riderId: string, userId: string): Promise<boolean> {

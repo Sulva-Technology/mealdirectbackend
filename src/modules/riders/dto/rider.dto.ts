@@ -132,6 +132,81 @@ export class RiderOnboardEnvelopeDto {
   data!: RiderOnboardResultDto;
 }
 
+export class UpsertRiderPayoutAccountDto {
+  @ApiProperty({ maxLength: 120, minLength: 1, type: String })
+  @Transform(({ value }) => trimString(value))
+  @IsString()
+  @MinLength(1)
+  @MaxLength(120)
+  bankName!: string;
+
+  @ApiProperty({
+    maxLength: 20,
+    minLength: 1,
+    type: String,
+    description: 'Paystack bank code, required to provision the transfer recipient.'
+  })
+  @Transform(({ value }) => trimString(value))
+  @IsString()
+  @MinLength(1)
+  @MaxLength(20)
+  bankCode!: string;
+
+  @ApiProperty({ maxLength: 160, minLength: 1, type: String })
+  @Transform(({ value }) => trimString(value))
+  @IsString()
+  @MinLength(1)
+  @MaxLength(160)
+  accountName!: string;
+
+  @ApiProperty({
+    description: 'Full account number used to provision the recipient; only a mask is stored.',
+    type: String
+  })
+  @Matches(/^[0-9]{6,20}$/)
+  accountNumber!: string;
+}
+
+export class RiderPayoutAccountDto {
+  @ApiProperty({ format: 'uuid', type: String })
+  id!: string;
+
+  @ApiProperty({ format: 'uuid', type: String })
+  riderId!: string;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  paystackRecipientCode!: string | null;
+
+  @ApiProperty({ type: String })
+  bankName!: string;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  bankCode!: string | null;
+
+  @ApiProperty({ type: String })
+  maskedAccountNumber!: string;
+
+  @ApiProperty({ type: String })
+  accountName!: string;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  verifiedAt!: string | null;
+
+  @ApiProperty({ type: Boolean })
+  active!: boolean;
+
+  @ApiProperty({ type: String })
+  createdAt!: string;
+
+  @ApiProperty({ type: String })
+  updatedAt!: string;
+}
+
+export class RiderPayoutAccountEnvelopeDto {
+  @ApiProperty({ nullable: true, type: () => RiderPayoutAccountDto })
+  data!: RiderPayoutAccountDto | null;
+}
+
 export class RiderAssignmentIdParamDto {
   @ApiProperty({ format: 'uuid', type: String })
   @IsDatabaseUuid()

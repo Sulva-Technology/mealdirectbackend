@@ -13,12 +13,15 @@ import { ErrorCodes } from '../../common/errors/error-codes.js';
 import type { AuthenticatedActor } from '../auth/actor-context.js';
 import { SupabaseAuthService } from '../auth/supabase-auth.service.js';
 import type { OrderStatus } from '../orders/orders.types.js';
+import { PaystackClient } from '../payments/paystack.client.js';
+import type { PaystackClientContract } from '../payments/payments.types.js';
 import type {
   CreateRiderIssueDto,
   OnboardRiderDto,
   RiderAssignmentListQueryDto,
   RiderEarningsQueryDto,
   RiderProfileUpdateDto,
+  UpsertRiderPayoutAccountDto,
   RiderSettlementListQueryDto
 } from './dto/rider.dto.js';
 import { RidersRepository } from './riders.repository.js';
@@ -28,11 +31,15 @@ import type {
   RiderEarningsSummary,
   RiderIssueRecord,
   RiderOrderDetail,
+  RiderPayoutAccount,
   RiderProfile,
   RiderSettlementDetail,
   RiderSettlementSummary,
   RidersRepositoryContract
 } from './riders.types.js';
+
+// Rider payouts settle in Naira; Paystack recipients are provisioned in the same currency.
+const RIDER_PAYOUT_CURRENCY = 'NGN';
 
 export type RiderOnboardResult = {
   rider: RiderProfile;
@@ -70,6 +77,15 @@ function notFound(message: string): NotFoundException {
   });
 }
 
+function maskAccountNumber(accountNumber: string): string {
+  const digits = accountNumber.replace(/\D/g, '');
+  if (digits.length < 6) {
+    throw badRequest('Account number must contain at least 6 digits.');
+  }
+
+  return `${'*'.repeat(Math.max(4, digits.length - 4))}${digits.slice(-4)}`;
+}
+
 function decodeTwoPartCursor(cursor: string, label: string, firstKey: string): string {
   let payload: CursorPayload;
   try {
@@ -91,7 +107,9 @@ export class RidersService {
     @Inject(RidersRepository)
     private readonly repository: RidersRepositoryContract,
     @Inject(SupabaseAuthService)
-    private readonly auth: SupabaseAuthService
+    private readonly auth: SupabaseAuthService,
+    @Inject(PaystackClient)
+    private readonly paystack: PaystackClientContract
   ) {}
 
   /**
@@ -171,6 +189,43 @@ export class RidersService {
       throw notFound('Rider profile was not found.');
     }
     return updated;
+  }
+
+  async getPayoutAccount(actor: AuthenticatedActor): Promise<RiderPayoutAccount | null> {
+    const profile = await this.resolveRiderProfile(actor, { requireActiveVerified: false });
+    return (await this.repository.findActivePayoutAccount(profile.id)) ?? null;
+  }
+
+  /**
+   * Captures a rider's bank details, provisioning a Paystack transfer recipient from the
+   * FULL account number before persistence. Only the mask + returned recipient code are
+   * stored; the full number never touches the database. Mirrors the vendor payout path so
+   * rider settlement payouts have a transfer recipient ready.
+   */
+  async upsertPayoutAccount(
+    actor: AuthenticatedActor,
+    input: UpsertRiderPayoutAccountDto
+  ): Promise<RiderPayoutAccount> {
+    const profile = await this.resolveRiderProfile(actor, { requireActiveVerified: false });
+
+    const accountName = input.accountName.trim();
+    const bankCode = input.bankCode.trim();
+    const maskedAccountNumber = maskAccountNumber(input.accountNumber);
+
+    const recipient = await this.paystack.createTransferRecipient({
+      name: accountName,
+      accountNumber: input.accountNumber,
+      bankCode,
+      currency: RIDER_PAYOUT_CURRENCY
+    });
+
+    return this.repository.upsertPayoutAccount(profile.id, {
+      accountName,
+      bankName: input.bankName.trim(),
+      bankCode,
+      maskedAccountNumber,
+      paystackRecipientCode: recipient.recipientCode
+    });
   }
 
   async listAssignments(

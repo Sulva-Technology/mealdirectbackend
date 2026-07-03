@@ -63,6 +63,7 @@ export type RiderProfile = {
   phone: string;
   status: RiderStatus;
   active: boolean;
+  available: boolean;
 };
 
 export type MeSession = {

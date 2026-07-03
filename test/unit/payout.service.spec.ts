@@ -1,3 +1,4 @@
+import { BadRequestException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { EnvService } from '../../src/config/env.service.js';
@@ -28,14 +29,8 @@ function makeEnv(payoutsEnabled: boolean): EnvService {
 function makeContext(overrides: Partial<PayoutContext> = {}): PayoutContext {
   return {
     settlementId,
-    beneficiary: 'vendor',
-    beneficiaryRefId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
     payableKobo: 60000,
-    recipientCode: null,
-    accountName: 'Ada Vendor',
-    accountNumber: '0001112223',
-    bankCode: '058',
-    currency: 'NGN',
+    recipientCode: 'RCP_existing',
     ...overrides
   };
 }
@@ -54,10 +49,7 @@ function makePaystack(): PaystackClientContract {
     initializeTransaction: vi.fn(),
     verifyTransaction: vi.fn(),
     createRefund: vi.fn(),
-    createTransferRecipient: vi.fn().mockResolvedValue({
-      recipientCode: 'RCP_new',
-      providerPayload: {}
-    }),
+    createTransferRecipient: vi.fn(),
     initiateTransfer: vi.fn().mockResolvedValue({
       transferCode: 'TRF_1',
       status: 'pending',
@@ -70,7 +62,6 @@ function makeRepository(context?: PayoutContext): PayoutRepositoryContract {
   return {
     findTransferBySettlement: vi.fn().mockResolvedValue(undefined),
     findPayoutContext: vi.fn().mockResolvedValue(context),
-    saveRecipientCode: vi.fn().mockResolvedValue(undefined),
     recordTransfer: vi.fn().mockResolvedValue(transferRecord)
   };
 }
@@ -89,17 +80,16 @@ describe('PayoutService', () => {
     expect(paystack.initiateTransfer).not.toHaveBeenCalled();
   });
 
-  it('provisions a recipient, persists it, then initiates and records the transfer', async () => {
-    const repository = makeRepository(makeContext({ recipientCode: null }));
+  it('initiates and records a transfer against the provisioned recipient code', async () => {
+    const repository = makeRepository(makeContext({ recipientCode: 'RCP_existing' }));
     const service = new PayoutService(makeEnv(true), paystack, repository);
 
     const result = await service.payToSettlement(actor, settlementId);
 
-    expect(paystack.createTransferRecipient).toHaveBeenCalledTimes(1);
-    expect(repository.saveRecipientCode).toHaveBeenCalledWith(expect.anything(), 'RCP_new');
+    expect(paystack.createTransferRecipient).not.toHaveBeenCalled();
     expect(paystack.initiateTransfer).toHaveBeenCalledWith(
       expect.objectContaining({
-        recipientCode: 'RCP_new',
+        recipientCode: 'RCP_existing',
         amountKobo: 60000,
         reference: settlementId
       })
@@ -108,17 +98,16 @@ describe('PayoutService', () => {
     expect(result).toEqual(transferRecord);
   });
 
-  it('reuses an existing recipient code without provisioning a new one', async () => {
-    const repository = makeRepository(makeContext({ recipientCode: 'RCP_existing' }));
+  it('refuses to pay when the beneficiary has no provisioned recipient code', async () => {
+    const repository = makeRepository(makeContext({ recipientCode: null }));
     const service = new PayoutService(makeEnv(true), paystack, repository);
 
-    await service.payToSettlement(actor, settlementId);
-
-    expect(paystack.createTransferRecipient).not.toHaveBeenCalled();
-    expect(repository.saveRecipientCode).not.toHaveBeenCalled();
-    expect(paystack.initiateTransfer).toHaveBeenCalledWith(
-      expect.objectContaining({ recipientCode: 'RCP_existing' })
+    await expect(service.payToSettlement(actor, settlementId)).rejects.toBeInstanceOf(
+      BadRequestException
     );
+    expect(paystack.createTransferRecipient).not.toHaveBeenCalled();
+    expect(paystack.initiateTransfer).not.toHaveBeenCalled();
+    expect(repository.recordTransfer).not.toHaveBeenCalled();
   });
 
   it('is idempotent per settlement when a transfer already exists', async () => {
@@ -129,7 +118,6 @@ describe('PayoutService', () => {
     const result = await service.payToSettlement(actor, settlementId);
 
     expect(result).toEqual(transferRecord);
-    expect(paystack.createTransferRecipient).not.toHaveBeenCalled();
     expect(paystack.initiateTransfer).not.toHaveBeenCalled();
     expect(repository.recordTransfer).not.toHaveBeenCalled();
   });

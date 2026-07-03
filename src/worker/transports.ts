@@ -70,10 +70,19 @@ export function createPushSender(env: AppEnvironment): PushSender {
         });
       }
 
+      // Data-only message (no `notification` block) on purpose: with a notification
+      // payload, web browsers auto-display the push AND fire the service worker's
+      // onBackgroundMessage, which renders it a second time — a duplicate notification.
+      // Sending title/body inside `data` lets each app's service worker render exactly
+      // one notification with full control over icon and click routing. Every Meal Direct
+      // client SW/foreground handler reads data.title/data.body.
       await getMessaging().send({
         token: input.token,
-        notification: { title: input.title, body: input.body },
-        data: input.data
+        data: {
+          title: input.title,
+          body: input.body,
+          ...input.data
+        }
       });
     }
   };

@@ -10,6 +10,8 @@ import {
 import { ErrorCodes } from '../../common/errors/error-codes.js';
 import type { AuthenticatedActor } from '../auth/actor-context.js';
 import { SupabaseAuthService } from '../auth/supabase-auth.service.js';
+import { PaystackClient } from '../payments/paystack.client.js';
+import type { PaystackClientContract } from '../payments/payments.types.js';
 import { VendorsRepository } from './vendors.repository.js';
 import type {
   AvailabilityUpdateInput,
@@ -173,7 +175,8 @@ function normalizeMenuItemInput(input: UpsertMenuItemInput): UpsertMenuItemInput
 export class VendorsService {
   constructor(
     @Inject(VendorsRepository) private readonly repository: VendorsRepositoryContract,
-    @Inject(SupabaseAuthService) private readonly auth: SupabaseAuthService
+    @Inject(SupabaseAuthService) private readonly auth: SupabaseAuthService,
+    @Inject(PaystackClient) private readonly paystack: PaystackClientContract
   ) {}
 
   /**
@@ -325,14 +328,34 @@ export class VendorsService {
   ): Promise<VendorPayoutAccount> {
     await this.assertActorCanUseVendor(actor, vendorId);
 
+    const accountName = input.accountName.trim();
+    const bankName = input.bankName.trim();
+    const bankCode = normalizeOptionalString(input.bankCode);
+    const suppliedRecipientCode = normalizeOptionalString(input.paystackRecipientCode);
+
+    // Provision the Paystack transfer recipient here, while the full account number
+    // is still in hand — it is masked before storage and never persisted, so payouts
+    // can only reference the recipient code, not re-derive the account number later.
+    let recipientCode = suppliedRecipientCode;
+    if (recipientCode === undefined) {
+      if (bankCode === undefined || bankCode.length === 0) {
+        throw badRequest('bankCode is required to provision payouts for this account.');
+      }
+      const recipient = await this.paystack.createTransferRecipient({
+        name: accountName,
+        accountNumber: input.accountNumber,
+        bankCode,
+        currency: 'NGN'
+      });
+      recipientCode = recipient.recipientCode;
+    }
+
     return this.repository.upsertPayoutAccount(vendorId, {
-      accountName: input.accountName.trim(),
-      bankName: input.bankName.trim(),
+      accountName,
+      bankName,
       maskedAccountNumber: maskAccountNumber(input.accountNumber),
-      ...(input.bankCode === undefined ? {} : { bankCode: input.bankCode.trim() }),
-      ...(input.paystackRecipientCode === undefined
-        ? {}
-        : { paystackRecipientCode: input.paystackRecipientCode.trim() })
+      paystackRecipientCode: recipientCode,
+      ...(bankCode === undefined ? {} : { bankCode })
     });
   }
 
@@ -400,10 +423,7 @@ export class VendorsService {
     }
   }
 
-  async adminUpdateUnitType(
-    id: string,
-    input: UpdateUnitTypeInput
-  ): Promise<UnitTypeRecord> {
+  async adminUpdateUnitType(id: string, input: UpdateUnitTypeInput): Promise<UnitTypeRecord> {
     const update: UpdateUnitTypeInput = {};
     if (input.displayName !== undefined) update.displayName = input.displayName.trim();
     if (input.countsTowardSpoonLimit !== undefined) {

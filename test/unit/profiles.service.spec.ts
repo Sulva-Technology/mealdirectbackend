@@ -62,7 +62,8 @@ const riderProfile: RiderProfile = {
   displayName: 'Ada Rider',
   phone: '+2348012345678',
   status: 'verified',
-  active: true
+  active: true,
+  available: true
 };
 
 const adminMembership: AdminMembership = {

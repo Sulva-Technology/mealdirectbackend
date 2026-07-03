@@ -1,4 +1,10 @@
-import { ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+  NotFoundException
+} from '@nestjs/common';
 
 import { ErrorCodes } from '../../common/errors/error-codes.js';
 import { EnvService } from '../../config/env.service.js';
@@ -40,21 +46,21 @@ export class PayoutService {
       });
     }
 
-    let recipientCode = context.recipientCode;
-    if (recipientCode === null) {
-      const recipient = await this.paystack.createTransferRecipient({
-        name: context.accountName,
-        accountNumber: context.accountNumber,
-        bankCode: context.bankCode,
-        currency: context.currency
+    // The transfer recipient is provisioned when the beneficiary's bank details are
+    // captured (the only point the full account number exists). A null code here means
+    // the beneficiary has no usable payout destination — fail loud rather than send bad
+    // data to Paystack.
+    if (context.recipientCode === null) {
+      throw new BadRequestException({
+        code: ErrorCodes.VALIDATION_FAILED,
+        message:
+          'Settlement beneficiary has no Paystack transfer recipient. Provision payout bank details first.'
       });
-      recipientCode = recipient.recipientCode;
-      await this.repository.saveRecipientCode(context, recipientCode);
     }
 
     const transfer = await this.paystack.initiateTransfer({
       amountKobo: context.payableKobo,
-      recipientCode,
+      recipientCode: context.recipientCode,
       reference: settlementId,
       reason: `Settlement ${settlementId}`
     });

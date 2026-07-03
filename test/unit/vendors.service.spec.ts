@@ -8,6 +8,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { AuthenticatedActor } from '../../src/modules/auth/actor-context.js';
 import type { SupabaseAuthService } from '../../src/modules/auth/supabase-auth.service.js';
+import type { PaystackClientContract } from '../../src/modules/payments/payments.types.js';
 import { VendorsService } from '../../src/modules/vendors/vendors.service.js';
 import type {
   MenuItemRecord,
@@ -136,15 +137,30 @@ function createAuth(): SupabaseAuthService {
   } as unknown as SupabaseAuthService;
 }
 
+function createPaystack(): PaystackClientContract {
+  return {
+    initializeTransaction: vi.fn(),
+    verifyTransaction: vi.fn(),
+    createRefund: vi.fn(),
+    createTransferRecipient: vi.fn().mockResolvedValue({
+      recipientCode: 'RCP_provisioned',
+      providerPayload: {}
+    }),
+    initiateTransfer: vi.fn()
+  };
+}
+
 describe('VendorsService', () => {
   let repository: VendorsRepositoryContract;
   let auth: SupabaseAuthService;
+  let paystack: PaystackClientContract;
   let service: VendorsService;
 
   beforeEach(() => {
     repository = createRepository();
     auth = createAuth();
-    service = new VendorsService(repository, auth);
+    paystack = createPaystack();
+    service = new VendorsService(repository, auth, paystack);
   });
 
   describe('onboardVendor', () => {
@@ -272,7 +288,7 @@ describe('VendorsService', () => {
     expect(repository.updateVendorProfile).not.toHaveBeenCalled();
   });
 
-  it('stores only a masked payout account number', async () => {
+  it('provisions a Paystack recipient from the full account number and stores only the mask', async () => {
     await service.upsertPayoutAccount(actor, vendorId, {
       accountName: 'Ada Kitchen',
       accountNumber: '0123453210',
@@ -280,13 +296,48 @@ describe('VendorsService', () => {
       bankName: 'Test Bank'
     });
 
+    expect(paystack.createTransferRecipient).toHaveBeenCalledWith({
+      name: 'Ada Kitchen',
+      accountNumber: '0123453210',
+      bankCode: '001',
+      currency: 'NGN'
+    });
     expect(repository.upsertPayoutAccount).toHaveBeenCalledWith(vendorId, {
       accountName: 'Ada Kitchen',
       bankCode: '001',
       bankName: 'Test Bank',
       maskedAccountNumber: '******3210',
-      paystackRecipientCode: undefined
+      paystackRecipientCode: 'RCP_provisioned'
     });
+  });
+
+  it('reuses a caller-supplied recipient code instead of provisioning a new one', async () => {
+    await service.upsertPayoutAccount(actor, vendorId, {
+      accountName: 'Ada Kitchen',
+      accountNumber: '0123453210',
+      bankCode: '001',
+      bankName: 'Test Bank',
+      paystackRecipientCode: 'RCP_existing'
+    });
+
+    expect(paystack.createTransferRecipient).not.toHaveBeenCalled();
+    expect(repository.upsertPayoutAccount).toHaveBeenCalledWith(
+      expect.objectContaining({}) as never,
+      expect.objectContaining({ paystackRecipientCode: 'RCP_existing' })
+    );
+  });
+
+  it('rejects a payout account without a bank code that cannot be provisioned', async () => {
+    await expect(
+      service.upsertPayoutAccount(actor, vendorId, {
+        accountName: 'Ada Kitchen',
+        accountNumber: '0123453210',
+        bankName: 'Test Bank'
+      })
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    expect(paystack.createTransferRecipient).not.toHaveBeenCalled();
+    expect(repository.upsertPayoutAccount).not.toHaveBeenCalled();
   });
 
   it('denies menu item changes outside the selected vendor', async () => {

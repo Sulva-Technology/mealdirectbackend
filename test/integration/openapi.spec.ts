@@ -187,6 +187,9 @@ describe('OpenAPI contract foundation', () => {
 
     expect(document.paths['/v1/rider/profile']?.get).toBeDefined();
     expect(document.paths['/v1/rider/profile']?.patch).toBeDefined();
+    expect(document.paths['/v1/rider/payout-account']?.get).toBeDefined();
+    expect(document.paths['/v1/rider/payout-account']?.put).toBeDefined();
+    expect(document.paths['/v1/rider/payout-account']?.put?.requestBody).toBeDefined();
     expect(document.paths['/v1/rider/assignments']?.get).toBeDefined();
     expect(document.paths['/v1/rider/assignments/{assignmentId}']?.get).toBeDefined();
     expect(document.paths['/v1/rider/assignments/{assignmentId}/accept']?.post).toBeDefined();

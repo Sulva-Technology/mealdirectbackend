@@ -1703,6 +1703,44 @@ paths:
         '403': *a44
       security: *a45
       tags: *a46
+  /v1/rider/payout-account:
+    get:
+      operationId: RidersController_getPayoutAccount
+      parameters: []
+      responses:
+        '200':
+          description: Current masked payout account snapshot, if configured.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiderPayoutAccountEnvelopeDto'
+        '401': *a43
+        '403': *a44
+      security: *a45
+      tags: *a46
+    put:
+      operationId: RidersController_updatePayoutAccount
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertRiderPayoutAccountDto'
+      responses:
+        '200':
+          description: Provisions a Paystack transfer recipient from the full account
+            number and stores a masked snapshot.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiderPayoutAccountEnvelopeDto'
+        '400':
+          description: Invalid payout account input.
+        '401': *a43
+        '403': *a44
+      security: *a45
+      tags: *a46
   /v1/rider/assignments:
     get:
       operationId: RidersController_listAssignments
@@ -3124,6 +3162,8 @@ components:
             - deactivated
         active:
           type: boolean
+        available:
+          type: boolean
       required:
         - id
         - campusId
@@ -3131,6 +3171,7 @@ components:
         - phone
         - status
         - active
+        - available
     AdminMembershipDto:
       type: object
       properties:
@@ -5056,6 +5097,80 @@ components:
           $ref: '#/components/schemas/RiderProfileDto'
       required:
         - data
+    RiderPayoutAccountDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        riderId:
+          type: string
+          format: uuid
+        paystackRecipientCode:
+          type: string
+          nullable: true
+        bankName:
+          type: string
+        bankCode:
+          type: string
+          nullable: true
+        maskedAccountNumber:
+          type: string
+        accountName:
+          type: string
+        verifiedAt:
+          type: string
+          nullable: true
+        active:
+          type: boolean
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - riderId
+        - bankName
+        - maskedAccountNumber
+        - accountName
+        - active
+        - createdAt
+        - updatedAt
+    RiderPayoutAccountEnvelopeDto:
+      type: object
+      properties:
+        data:
+          nullable: true
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/RiderPayoutAccountDto'
+      required:
+        - data
+    UpsertRiderPayoutAccountDto:
+      type: object
+      properties:
+        bankName:
+          type: string
+          maxLength: 120
+          minLength: 1
+        bankCode:
+          type: string
+          maxLength: 20
+          minLength: 1
+          description: Paystack bank code, required to provision the transfer recipient.
+        accountName:
+          type: string
+          maxLength: 160
+          minLength: 1
+        accountNumber:
+          type: string
+          description: Full account number used to provision the recipient; only a mask is
+            stored.
+      required:
+        - bankName
+        - bankCode
+        - accountName
+        - accountNumber
     RiderAssignmentSummaryDto:
       type: object
       properties:

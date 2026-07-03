@@ -128,7 +128,8 @@ export class ProfilesRepository implements ProfilesRepositoryContract {
         r.display_name as "displayName",
         r.phone as "phone",
         r.status::text as "status",
-        r.active as "active"
+        r.active as "active",
+        r.available as "available"
       from public.riders r
       join public.campuses c on c.id = r.campus_id
       where r.user_id = ${userId}::uuid

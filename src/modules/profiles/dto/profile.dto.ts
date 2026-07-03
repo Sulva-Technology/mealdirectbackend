@@ -204,6 +204,9 @@ export class RiderProfileDto {
 
   @ApiProperty({ type: Boolean })
   active!: boolean;
+
+  @ApiProperty({ type: Boolean })
+  available!: boolean;
 }
 
 export class MeActorDto {
