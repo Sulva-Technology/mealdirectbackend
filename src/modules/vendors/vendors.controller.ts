@@ -48,6 +48,12 @@ import {
   VendorPayoutAccountEnvelopeDto,
   VendorProfileEnvelopeDto
 } from './dto/vendor.dto.js';
+import {
+  ConfirmUploadDto,
+  UploadUrlEnvelopeDto,
+  UploadUrlRequestDto
+} from '../storage/dto/media.dto.js';
+import type { SignedUploadTarget } from '../storage/storage.service.js';
 import type { VendorOnboardResult } from './vendors.service.js';
 import { VendorsService } from './vendors.service.js';
 import type {
@@ -120,6 +126,40 @@ export class VendorsController {
   ): Promise<SuccessEnvelope<VendorProfile>> {
     return createSuccessEnvelope(
       await this.vendors.updateProfile(actor, vendorIdFromActor(actor), input)
+    );
+  }
+
+  @Post('profile/logo/upload-url')
+  @HttpCode(200)
+  @ApiOkResponse({
+    description: 'Signed upload URL for the vendor logo. Confirm with the returned key.',
+    type: UploadUrlEnvelopeDto
+  })
+  @ApiBadRequestResponse({ description: 'Unsupported content type or size.' })
+  @ApiBody({ type: UploadUrlRequestDto })
+  async createLogoUploadUrl(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Body() input: UploadUrlRequestDto
+  ): Promise<SuccessEnvelope<SignedUploadTarget>> {
+    return createSuccessEnvelope(
+      await this.vendors.issueLogoUpload(actor, vendorIdFromActor(actor), input)
+    );
+  }
+
+  @Post('profile/logo/confirm')
+  @HttpCode(200)
+  @ApiOkResponse({
+    description: 'Persists the uploaded logo key and returns the updated vendor profile.',
+    type: VendorProfileEnvelopeDto
+  })
+  @ApiBadRequestResponse({ description: 'Invalid or unverifiable upload key.' })
+  @ApiBody({ type: ConfirmUploadDto })
+  async confirmLogo(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Body() input: ConfirmUploadDto
+  ): Promise<SuccessEnvelope<VendorProfile>> {
+    return createSuccessEnvelope(
+      await this.vendors.confirmLogo(actor, vendorIdFromActor(actor), input.key)
     );
   }
 
@@ -273,6 +313,56 @@ export class VendorsController {
   ): Promise<SuccessEnvelope<MenuItemRecord>> {
     return createSuccessEnvelope(
       await this.vendors.deactivateMenuItem(actor, vendorIdFromActor(actor), params.itemId)
+    );
+  }
+
+  @Post('menu-items/:itemId/image/upload-url')
+  @HttpCode(200)
+  @ApiParam({ format: 'uuid', name: 'itemId', type: String })
+  @ApiOkResponse({
+    description: 'Signed upload URL for the menu item image. Confirm with the returned key.',
+    type: UploadUrlEnvelopeDto
+  })
+  @ApiBadRequestResponse({ description: 'Unsupported content type or size.' })
+  @ApiNotFoundResponse({ description: 'Menu item was not found for this vendor.' })
+  @ApiBody({ type: UploadUrlRequestDto })
+  async createMenuItemImageUploadUrl(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Param() params: MenuItemIdParamDto,
+    @Body() input: UploadUrlRequestDto
+  ): Promise<SuccessEnvelope<SignedUploadTarget>> {
+    return createSuccessEnvelope(
+      await this.vendors.issueMenuItemImageUpload(
+        actor,
+        vendorIdFromActor(actor),
+        params.itemId,
+        input
+      )
+    );
+  }
+
+  @Post('menu-items/:itemId/image/confirm')
+  @HttpCode(200)
+  @ApiParam({ format: 'uuid', name: 'itemId', type: String })
+  @ApiOkResponse({
+    description: 'Persists the uploaded image key and returns the updated menu item.',
+    type: VendorMenuItemEnvelopeDto
+  })
+  @ApiBadRequestResponse({ description: 'Invalid or unverifiable upload key.' })
+  @ApiNotFoundResponse({ description: 'Menu item was not found for this vendor.' })
+  @ApiBody({ type: ConfirmUploadDto })
+  async confirmMenuItemImage(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Param() params: MenuItemIdParamDto,
+    @Body() input: ConfirmUploadDto
+  ): Promise<SuccessEnvelope<MenuItemRecord>> {
+    return createSuccessEnvelope(
+      await this.vendors.confirmMenuItemImage(
+        actor,
+        vendorIdFromActor(actor),
+        params.itemId,
+        input.key
+      )
     );
   }
 

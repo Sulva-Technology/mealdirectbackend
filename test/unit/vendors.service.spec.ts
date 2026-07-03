@@ -10,6 +10,7 @@ import type { AuthenticatedActor } from '../../src/modules/auth/actor-context.js
 import type { SupabaseAuthService } from '../../src/modules/auth/supabase-auth.service.js';
 import type { PaystackClientContract } from '../../src/modules/payments/payments.types.js';
 import { VendorsService } from '../../src/modules/vendors/vendors.service.js';
+import { createMediaServiceMock, createStorageServiceMock } from '../helpers/storage-mocks.js';
 import type {
   MenuItemRecord,
   UpsertMenuItemInput,
@@ -154,13 +155,17 @@ describe('VendorsService', () => {
   let repository: VendorsRepositoryContract;
   let auth: SupabaseAuthService;
   let paystack: PaystackClientContract;
+  let media: ReturnType<typeof createMediaServiceMock>;
+  let storage: ReturnType<typeof createStorageServiceMock>;
   let service: VendorsService;
 
   beforeEach(() => {
     repository = createRepository();
     auth = createAuth();
     paystack = createPaystack();
-    service = new VendorsService(repository, auth, paystack);
+    media = createMediaServiceMock();
+    storage = createStorageServiceMock();
+    service = new VendorsService(repository, auth, paystack, media, storage);
   });
 
   describe('onboardVendor', () => {
@@ -392,5 +397,75 @@ describe('VendorsService', () => {
 
     expect(repository.replaceMenuItemAvailability).toHaveBeenCalledTimes(1);
     expect(repository.regenerateInventoryHorizon).toHaveBeenCalledWith(vendorId);
+  });
+
+  describe('image uploads', () => {
+    it('issues a menu item image upload scoped to the vendor and item', async () => {
+      await service.issueMenuItemImageUpload(actor, vendorId, menuItemId, {
+        contentType: 'image/webp',
+        sizeBytes: 2048
+      });
+
+      expect(media.issueUpload).toHaveBeenCalledWith(
+        expect.objectContaining({
+          bucket: 'menu-item-images',
+          ownerPrefix: `${vendorId}/${menuItemId}`
+        })
+      );
+    });
+
+    it('refuses to issue an upload URL for another vendor', async () => {
+      const intruder: AuthenticatedActor = { userId, role: 'vendor', vendorId: otherVendorId };
+      await expect(
+        service.issueMenuItemImageUpload(intruder, vendorId, menuItemId, {
+          contentType: 'image/webp',
+          sizeBytes: 2048
+        })
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      expect(media.issueUpload).not.toHaveBeenCalled();
+    });
+
+    it('refuses to issue an upload URL for a menu item owned by another vendor', async () => {
+      vi.mocked(repository.findMenuItemOwner).mockResolvedValue(otherVendorId);
+      await expect(
+        service.issueMenuItemImageUpload(actor, vendorId, menuItemId, {
+          contentType: 'image/webp',
+          sizeBytes: 2048
+        })
+      ).rejects.toBeInstanceOf(NotFoundException);
+      expect(media.issueUpload).not.toHaveBeenCalled();
+    });
+
+    it('confirms an image, persists the key, and cleans up the previous object', async () => {
+      vi.mocked(repository.findMenuItemById).mockResolvedValue({
+        ...menuItem,
+        imageUrl: `${vendorId}/${menuItemId}/old.webp`
+      });
+      const key = `${vendorId}/${menuItemId}/new.webp`;
+
+      await service.confirmMenuItemImage(actor, vendorId, menuItemId, key);
+
+      expect(media.confirmUpload).toHaveBeenCalledWith(
+        expect.objectContaining({ bucket: 'menu-item-images', key })
+      );
+      expect(repository.upsertMenuItem).toHaveBeenCalledWith(vendorId, menuItemId, {
+        imageUrl: key
+      });
+      expect(media.removeIfKey).toHaveBeenCalledWith(
+        'menu-item-images',
+        `${vendorId}/${menuItemId}/old.webp`
+      );
+    });
+
+    it('issues a logo upload scoped to the vendor prefix', async () => {
+      await service.issueLogoUpload(actor, vendorId, {
+        contentType: 'image/png',
+        sizeBytes: 1024
+      });
+
+      expect(media.issueUpload).toHaveBeenCalledWith(
+        expect.objectContaining({ bucket: 'vendor-logos', ownerPrefix: vendorId })
+      );
+    });
   });
 });

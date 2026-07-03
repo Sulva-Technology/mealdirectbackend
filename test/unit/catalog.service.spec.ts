@@ -2,6 +2,7 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CatalogService } from '../../src/modules/catalog/catalog.service.js';
+import { createStorageServiceMock } from '../helpers/storage-mocks.js';
 import type {
   CatalogRepositoryContract,
   CatalogVendor,
@@ -43,11 +44,21 @@ function createRepository(): CatalogRepositoryContract {
 
 describe('CatalogService', () => {
   let repository: CatalogRepositoryContract;
+  let storage: ReturnType<typeof createStorageServiceMock>;
   let service: CatalogService;
 
   beforeEach(() => {
     repository = createRepository();
-    service = new CatalogService(repository);
+    storage = createStorageServiceMock();
+    service = new CatalogService(repository, storage);
+  });
+
+  it('batch-signs vendor logos and menu item images from the correct buckets', async () => {
+    await service.listVendors({ campusId: vendor.campusId });
+    await service.listVendorMenu(vendor.id, {});
+
+    expect(storage.signKeys).toHaveBeenCalledWith('vendor-logos', [vendor.logoUrl]);
+    expect(storage.signKeys).toHaveBeenCalledWith('menu-item-images', [menuItem.imageUrl]);
   });
 
   it('lists vendors with campus, date, slot, and location filters', async () => {

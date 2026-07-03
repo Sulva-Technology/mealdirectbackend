@@ -12,6 +12,10 @@ import type { AuthenticatedActor } from '../auth/actor-context.js';
 import { SupabaseAuthService } from '../auth/supabase-auth.service.js';
 import { PaystackClient } from '../payments/paystack.client.js';
 import type { PaystackClientContract } from '../payments/payments.types.js';
+import { MediaService } from '../storage/media.service.js';
+import { StorageService } from '../storage/storage.service.js';
+import type { SignedUploadTarget } from '../storage/storage.service.js';
+import { MaxLogoBytes, MaxMenuImageBytes, StorageBuckets } from '../storage/storage.constants.js';
 import { VendorsRepository } from './vendors.repository.js';
 import type {
   AvailabilityUpdateInput,
@@ -176,8 +180,37 @@ export class VendorsService {
   constructor(
     @Inject(VendorsRepository) private readonly repository: VendorsRepositoryContract,
     @Inject(SupabaseAuthService) private readonly auth: SupabaseAuthService,
-    @Inject(PaystackClient) private readonly paystack: PaystackClientContract
+    @Inject(PaystackClient) private readonly paystack: PaystackClientContract,
+    @Inject(MediaService) private readonly media: MediaService,
+    @Inject(StorageService) private readonly storage: StorageService
   ) {}
+
+  // Private buckets: stored logo/image values are opaque keys, so every profile or
+  // menu item leaving the service is signed into a short-lived read URL first.
+  private async signProfile(profile: VendorProfile): Promise<VendorProfile> {
+    return {
+      ...profile,
+      logoUrl: (await this.storage.signKey(StorageBuckets.vendorLogos, profile.logoUrl)) ?? null
+    };
+  }
+
+  private async signItem(item: MenuItemRecord): Promise<MenuItemRecord> {
+    return {
+      ...item,
+      imageUrl: (await this.storage.signKey(StorageBuckets.menuItemImages, item.imageUrl)) ?? null
+    };
+  }
+
+  private async signItems(items: MenuItemRecord[]): Promise<MenuItemRecord[]> {
+    const signed = await this.storage.signKeys(
+      StorageBuckets.menuItemImages,
+      items.map((item) => item.imageUrl)
+    );
+    return items.map((item, index) => ({
+      ...item,
+      imageUrl: (signed[index] as string | null) ?? null
+    }));
+  }
 
   /**
    * Self-service vendor onboarding: provisions the vendor record + owner link and
@@ -253,7 +286,7 @@ export class VendorsService {
       throw notFound('Vendor was not found.');
     }
 
-    return profile;
+    return this.signProfile(profile);
   }
 
   async updateProfile(
@@ -289,7 +322,7 @@ export class VendorsService {
       throw notFound('Vendor was not found.');
     }
 
-    return profile;
+    return this.signProfile(profile);
   }
 
   // Validate a vendor's requested takeaway/packaging fee against the campus-set ceiling.
@@ -440,7 +473,7 @@ export class VendorsService {
 
   async listMenuItems(actor: AuthenticatedActor, vendorId: string): Promise<MenuItemRecord[]> {
     await this.assertActorCanUseVendor(actor, vendorId);
-    return this.repository.listMenuItems(vendorId);
+    return this.signItems(await this.repository.listMenuItems(vendorId));
   }
 
   async getMenuItem(
@@ -455,7 +488,7 @@ export class VendorsService {
       throw notFound('Menu item was not found.');
     }
 
-    return item;
+    return this.signItem(item);
   }
 
   async createMenuItem(
@@ -475,7 +508,7 @@ export class VendorsService {
       throw badRequest('Menu item could not be created.');
     }
 
-    return item;
+    return this.signItem(item);
   }
 
   async updateMenuItem(
@@ -497,7 +530,7 @@ export class VendorsService {
       throw notFound('Menu item was not found.');
     }
 
-    return item;
+    return this.signItem(item);
   }
 
   async activateMenuItem(
@@ -514,6 +547,92 @@ export class VendorsService {
     menuItemId: string
   ): Promise<MenuItemRecord> {
     return this.setMenuItemActive(actor, vendorId, menuItemId, false);
+  }
+
+  async issueMenuItemImageUpload(
+    actor: AuthenticatedActor,
+    vendorId: string,
+    menuItemId: string,
+    input: { contentType: string; sizeBytes: number }
+  ): Promise<SignedUploadTarget> {
+    await this.assertActorCanUseVendor(actor, vendorId);
+    await this.assertMenuItemBelongsToVendor(vendorId, menuItemId);
+    return this.media.issueUpload({
+      bucket: StorageBuckets.menuItemImages,
+      ownerPrefix: `${vendorId}/${menuItemId}`,
+      contentType: input.contentType,
+      sizeBytes: input.sizeBytes,
+      maxBytes: MaxMenuImageBytes
+    });
+  }
+
+  async confirmMenuItemImage(
+    actor: AuthenticatedActor,
+    vendorId: string,
+    menuItemId: string,
+    key: string
+  ): Promise<MenuItemRecord> {
+    await this.assertActorCanUseVendor(actor, vendorId);
+    await this.assertMenuItemBelongsToVendor(vendorId, menuItemId);
+    await this.media.confirmUpload({
+      bucket: StorageBuckets.menuItemImages,
+      key,
+      ownerPrefix: `${vendorId}/${menuItemId}`,
+      maxBytes: MaxMenuImageBytes
+    });
+
+    const existing = await this.repository.findMenuItemById(vendorId, menuItemId);
+    const previousKey = existing?.imageUrl ?? null;
+
+    const item = await this.repository.upsertMenuItem(vendorId, menuItemId, { imageUrl: key });
+    if (item === undefined) {
+      throw notFound('Menu item was not found.');
+    }
+    if (previousKey !== null && previousKey !== key) {
+      await this.media.removeIfKey(StorageBuckets.menuItemImages, previousKey);
+    }
+    return this.signItem(item);
+  }
+
+  async issueLogoUpload(
+    actor: AuthenticatedActor,
+    vendorId: string,
+    input: { contentType: string; sizeBytes: number }
+  ): Promise<SignedUploadTarget> {
+    await this.assertActorCanUseVendor(actor, vendorId);
+    return this.media.issueUpload({
+      bucket: StorageBuckets.vendorLogos,
+      ownerPrefix: vendorId,
+      contentType: input.contentType,
+      sizeBytes: input.sizeBytes,
+      maxBytes: MaxLogoBytes
+    });
+  }
+
+  async confirmLogo(
+    actor: AuthenticatedActor,
+    vendorId: string,
+    key: string
+  ): Promise<VendorProfile> {
+    await this.assertActorCanUseVendor(actor, vendorId);
+    await this.media.confirmUpload({
+      bucket: StorageBuckets.vendorLogos,
+      key,
+      ownerPrefix: vendorId,
+      maxBytes: MaxLogoBytes
+    });
+
+    const existing = await this.repository.findVendorProfile(vendorId);
+    const previousKey = existing?.logoUrl ?? null;
+
+    const profile = await this.repository.updateVendorProfile(vendorId, { logoUrl: key });
+    if (profile === undefined) {
+      throw notFound('Vendor was not found.');
+    }
+    if (previousKey !== null && previousKey !== key) {
+      await this.media.removeIfKey(StorageBuckets.vendorLogos, previousKey);
+    }
+    return this.signProfile(profile);
   }
 
   async listVendorAvailability(
@@ -602,7 +721,7 @@ export class VendorsService {
       throw notFound('Menu item was not found.');
     }
 
-    return item;
+    return this.signItem(item);
   }
 
   private async assertActorCanUseVendor(

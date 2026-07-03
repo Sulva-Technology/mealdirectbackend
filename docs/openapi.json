@@ -312,6 +312,46 @@
         "tags": ["me"]
       }
     },
+    "/v1/me/avatar/upload-url": {
+      "post": {
+        "operationId": "ProfilesController_createAvatarUploadUrl",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Signed upload URL for the user avatar. Confirm with the returned key.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UploadUrlEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Unsupported content type or size." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["me"]
+      }
+    },
+    "/v1/me/avatar/confirm": {
+      "post": {
+        "operationId": "ProfilesController_confirmAvatar",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Persists the uploaded avatar key and returns the updated profile.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ProfileEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid or unverifiable upload key." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["me"]
+      }
+    },
     "/v1/me/complete-onboarding": {
       "post": {
         "operationId": "ProfilesController_completeOnboarding",
@@ -768,6 +808,60 @@
         "tags": ["vendor"]
       }
     },
+    "/v1/vendor/profile/logo/upload-url": {
+      "post": {
+        "operationId": "VendorsController_createLogoUploadUrl",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/UploadUrlRequestDto" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Signed upload URL for the vendor logo. Confirm with the returned key.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UploadUrlEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Unsupported content type or size." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Vendor role and vendor membership are required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor"]
+      }
+    },
+    "/v1/vendor/profile/logo/confirm": {
+      "post": {
+        "operationId": "VendorsController_confirmLogo",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/ConfirmUploadDto" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Persists the uploaded logo key and returns the updated vendor profile.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VendorProfileEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid or unverifiable upload key." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Vendor role and vendor membership are required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor"]
+      }
+    },
     "/v1/vendor/payout-account": {
       "get": {
         "operationId": "VendorsController_getPayoutAccount",
@@ -1019,6 +1113,76 @@
           },
           "401": { "description": "Missing, invalid, or expired Supabase JWT." },
           "403": { "description": "Vendor role and vendor membership are required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor"]
+      }
+    },
+    "/v1/vendor/menu-items/{itemId}/image/upload-url": {
+      "post": {
+        "operationId": "VendorsController_createMenuItemImageUploadUrl",
+        "parameters": [
+          {
+            "name": "itemId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/UploadUrlRequestDto" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Signed upload URL for the menu item image. Confirm with the returned key.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UploadUrlEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Unsupported content type or size." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Vendor role and vendor membership are required." },
+          "404": { "description": "Menu item was not found for this vendor." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor"]
+      }
+    },
+    "/v1/vendor/menu-items/{itemId}/image/confirm": {
+      "post": {
+        "operationId": "VendorsController_confirmMenuItemImage",
+        "parameters": [
+          {
+            "name": "itemId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/ConfirmUploadDto" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Persists the uploaded image key and returns the updated menu item.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VendorMenuItemEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid or unverifiable upload key." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Vendor role and vendor membership are required." },
+          "404": { "description": "Menu item was not found for this vendor." }
         },
         "security": [{ "supabaseAuth": [] }],
         "tags": ["vendor"]
@@ -3692,6 +3856,26 @@
         "properties": { "data": { "$ref": "#/components/schemas/ProfileRecordDto" } },
         "required": ["data"]
       },
+      "UploadUrlResponseDto": {
+        "type": "object",
+        "properties": {
+          "uploadUrl": {
+            "type": "string",
+            "description": "Signed URL the client PUTs the binary to."
+          },
+          "token": { "type": "string", "description": "Signed upload token." },
+          "key": {
+            "type": "string",
+            "description": "Owner-scoped Storage key to confirm afterwards."
+          }
+        },
+        "required": ["uploadUrl", "token", "key"]
+      },
+      "UploadUrlEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/UploadUrlResponseDto" } },
+        "required": ["data"]
+      },
       "CampusRecordDto": {
         "type": "object",
         "properties": {
@@ -3964,6 +4148,24 @@
             "enum": ["meal_direct_rider", "vendor_delivery"]
           }
         }
+      },
+      "UploadUrlRequestDto": {
+        "type": "object",
+        "properties": {
+          "contentType": { "type": "string", "enum": ["image/jpeg", "image/png", "image/webp"] },
+          "sizeBytes": { "type": "number", "minimum": 1, "maximum": 10485760 }
+        },
+        "required": ["contentType", "sizeBytes"]
+      },
+      "ConfirmUploadDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Owner-scoped Storage key returned by the matching upload-url endpoint."
+          }
+        },
+        "required": ["key"]
       },
       "VendorPayoutAccountDto": {
         "type": "object",

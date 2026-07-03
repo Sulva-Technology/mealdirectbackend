@@ -3,6 +3,10 @@ import { BadRequestException, Inject, Injectable, NotFoundException } from '@nes
 import { ErrorCodes } from '../../common/errors/error-codes.js';
 import type { ActorRole } from '../../domain/authorization.js';
 import type { AuthenticatedActor } from '../auth/actor-context.js';
+import { MediaService } from '../storage/media.service.js';
+import { StorageService } from '../storage/storage.service.js';
+import type { SignedUploadTarget } from '../storage/storage.service.js';
+import { MaxAvatarBytes, StorageBuckets } from '../storage/storage.constants.js';
 import type {
   CampusMembership,
   CompleteOnboardingInput,
@@ -46,8 +50,19 @@ function missingProfile(): NotFoundException {
 @Injectable()
 export class ProfilesService {
   constructor(
-    @Inject(ProfilesRepository) private readonly repository: ProfilesRepositoryContract
+    @Inject(ProfilesRepository) private readonly repository: ProfilesRepositoryContract,
+    @Inject(MediaService) private readonly media: MediaService,
+    @Inject(StorageService) private readonly storage: StorageService
   ) {}
+
+  // Avatars live in a private bucket; sign the stored key into a short-lived read
+  // URL before the profile leaves the service.
+  private async signProfile(response: ProfileResponse): Promise<ProfileResponse> {
+    return {
+      ...response,
+      avatarUrl: (await this.storage.signKey(StorageBuckets.avatars, response.avatarUrl)) ?? null
+    };
+  }
 
   async ensureProfile(actor: AuthenticatedActor): Promise<ProfileRecord> {
     return this.repository.ensureProfile(actor);
@@ -74,7 +89,7 @@ export class ProfilesService {
 
     return {
       actor,
-      profile: toProfileResponse(profile),
+      profile: await this.signProfile(toProfileResponse(profile)),
       roles,
       campuses,
       vendorMemberships,
@@ -108,7 +123,42 @@ export class ProfilesService {
       throw missingProfile();
     }
 
-    return toProfileResponse(profile);
+    return this.signProfile(toProfileResponse(profile));
+  }
+
+  async issueAvatarUpload(
+    actor: AuthenticatedActor,
+    input: { contentType: string; sizeBytes: number }
+  ): Promise<SignedUploadTarget> {
+    await this.repository.ensureProfile(actor);
+    return this.media.issueUpload({
+      bucket: StorageBuckets.avatars,
+      ownerPrefix: actor.userId,
+      contentType: input.contentType,
+      sizeBytes: input.sizeBytes,
+      maxBytes: MaxAvatarBytes
+    });
+  }
+
+  async confirmAvatar(actor: AuthenticatedActor, key: string): Promise<ProfileResponse> {
+    const before = await this.repository.ensureProfile(actor);
+    await this.media.confirmUpload({
+      bucket: StorageBuckets.avatars,
+      key,
+      ownerPrefix: actor.userId,
+      maxBytes: MaxAvatarBytes
+    });
+
+    const previousKey = before.avatarUrl ?? null;
+
+    const profile = await this.repository.updateProfile(actor.userId, { avatarUrl: key });
+    if (profile === undefined) {
+      throw missingProfile();
+    }
+    if (previousKey !== null && previousKey !== key) {
+      await this.media.removeIfKey(StorageBuckets.avatars, previousKey);
+    }
+    return this.signProfile(toProfileResponse(profile));
   }
 
   async completeOnboarding(
@@ -127,7 +177,7 @@ export class ProfilesService {
       throw missingProfile();
     }
 
-    return toProfileResponse(profile);
+    return this.signProfile(toProfileResponse(profile));
   }
 
   async setDefaultLocation(
@@ -143,7 +193,7 @@ export class ProfilesService {
       throw missingProfile();
     }
 
-    return toProfileResponse(profile);
+    return this.signProfile(toProfileResponse(profile));
   }
 
   private async assertActiveLocation(campusId: string, locationId: string): Promise<void> {

@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AuthenticatedActor } from '../../src/modules/auth/actor-context.js';
 import type { CompleteOnboardingDto } from '../../src/modules/profiles/dto/profile.dto.js';
 import { ProfilesService } from '../../src/modules/profiles/profiles.service.js';
+import { createMediaServiceMock, createStorageServiceMock } from '../helpers/storage-mocks.js';
 import type {
   AdminMembership,
   CampusMembership,
@@ -100,7 +101,11 @@ describe('ProfilesService', () => {
 
   beforeEach(() => {
     repository = createRepository();
-    service = new ProfilesService(repository);
+    service = new ProfilesService(
+      repository,
+      createMediaServiceMock(),
+      createStorageServiceMock()
+    );
   });
 
   it('returns a role-aware current-user session from profile memberships', async () => {

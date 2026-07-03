@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Inject, Patch, Post, Put, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Inject,
+  Patch,
+  Post,
+  Put,
+  UseGuards
+} from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -20,6 +30,12 @@ import {
   ProfileEnvelopeDto,
   UpdateProfileDto
 } from './dto/profile.dto.js';
+import {
+  ConfirmUploadDto,
+  UploadUrlEnvelopeDto,
+  UploadUrlRequestDto
+} from '../storage/dto/media.dto.js';
+import type { SignedUploadTarget } from '../storage/storage.service.js';
 import { ProfilesService } from './profiles.service.js';
 import type { CampusMembership, MeSession, ProfileResponse } from './profiles.types.js';
 
@@ -63,6 +79,34 @@ export class ProfilesController {
     @Body() input: UpdateProfileDto
   ): Promise<SuccessEnvelope<ProfileResponse>> {
     return createSuccessEnvelope(await this.profiles.updateProfile(actor, input));
+  }
+
+  @Post('me/avatar/upload-url')
+  @HttpCode(200)
+  @ApiOkResponse({
+    description: 'Signed upload URL for the user avatar. Confirm with the returned key.',
+    type: UploadUrlEnvelopeDto
+  })
+  @ApiBadRequestResponse({ description: 'Unsupported content type or size.' })
+  async createAvatarUploadUrl(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Body() input: UploadUrlRequestDto
+  ): Promise<SuccessEnvelope<SignedUploadTarget>> {
+    return createSuccessEnvelope(await this.profiles.issueAvatarUpload(actor, input));
+  }
+
+  @Post('me/avatar/confirm')
+  @HttpCode(200)
+  @ApiOkResponse({
+    description: 'Persists the uploaded avatar key and returns the updated profile.',
+    type: ProfileEnvelopeDto
+  })
+  @ApiBadRequestResponse({ description: 'Invalid or unverifiable upload key.' })
+  async confirmAvatar(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Body() input: ConfirmUploadDto
+  ): Promise<SuccessEnvelope<ProfileResponse>> {
+    return createSuccessEnvelope(await this.profiles.confirmAvatar(actor, input.key));
   }
 
   @Post('me/complete-onboarding')

@@ -60,6 +60,9 @@ const envSchema = z
     SUPABASE_SERVICE_ROLE_KEY: optionalSecret,
     SUPABASE_JWT_SECRET: optionalSecret,
     SUPABASE_JWKS_URL: z.url().optional(),
+    // TTL (seconds) for signed read URLs minted over private Storage buckets.
+    // 1h balances leak-window against client/CDN cache reuse within a session.
+    MEDIA_SIGNED_URL_TTL_SECONDS: z.coerce.number().int().positive().max(604_800).default(3600),
     CORS_ALLOWED_ORIGINS: csvList.default(defaultCorsOrigins.split(',')),
     // Public base URLs of each role's web app. Used to build Supabase auth
     // emailRedirectTo / redirectTo links so confirmation and reset emails land

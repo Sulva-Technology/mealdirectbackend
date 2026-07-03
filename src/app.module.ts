@@ -5,6 +5,7 @@ import { EnvModule } from './config/env.module.js';
 import { DatabaseModule } from './database/database.module.js';
 import { HealthModule } from './health/health.module.js';
 import { capabilityModules } from './modules/capability-modules.js';
+import { StorageModule } from './modules/storage/storage.module.js';
 import { OperationsModule } from './operations/operations.module.js';
 import { WorkerModule } from './worker/worker.module.js';
 
@@ -13,6 +14,7 @@ import { WorkerModule } from './worker/worker.module.js';
     EnvModule,
     LoggingModule,
     DatabaseModule,
+    StorageModule,
     HealthModule,
     OperationsModule,
     // Provides OutboxProcessor so the API can drain the outbox inline
