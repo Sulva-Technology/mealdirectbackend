@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { sql } from 'kysely';
 
 import { DatabaseService } from '../../database/database.service.js';
+import { decodeCursor, encodeCursor } from '../../common/api/pagination.js';
 import type { OrderStatus } from '../orders/orders.types.js';
 import type { AdminDashboard, AdminListResult, AdminRecord } from './admin.types.js';
 import type {
@@ -49,6 +50,10 @@ export class AdminRepository {
         and (${query.slotId ?? null}::uuid is null or o.delivery_slot_id = ${query.slotId ?? null}::uuid)
         and (${query.date ?? null}::date is null or o.service_date = ${query.date ?? null}::date)
         and (${query.search ?? null}::text is null or o.order_number ilike '%' || ${query.search ?? null}::text || '%')
+        and (
+          ${this.decodeListCursor(query.cursor)?.ts ?? null}::timestamptz is null
+          or (o.created_at, o.id) < (${this.decodeListCursor(query.cursor)?.ts ?? null}::timestamptz, ${this.decodeListCursor(query.cursor)?.id ?? null}::uuid)
+        )
       order by o.created_at desc, o.id desc
       limit ${limit + 1}
     `.execute(this.database.db);
@@ -125,6 +130,10 @@ export class AdminRepository {
         and (${query.vendorId ?? null}::uuid is null or db.vendor_id = ${query.vendorId ?? null}::uuid)
         and (${query.zoneId ?? null}::uuid is null or db.zone_id = ${query.zoneId ?? null}::uuid)
         and (${query.date ?? null}::date is null or db.service_date = ${query.date ?? null}::date)
+        and (
+          ${this.decodeListCursor(query.cursor)?.ts ?? null}::timestamptz is null
+          or (db.created_at, db.id) < (${this.decodeListCursor(query.cursor)?.ts ?? null}::timestamptz, ${this.decodeListCursor(query.cursor)?.id ?? null}::uuid)
+        )
       order by db.created_at desc, db.id desc
       limit ${limit + 1}
     `.execute(this.database.db);
@@ -213,6 +222,10 @@ export class AdminRepository {
       where (${campusId ?? query.campusId ?? null}::uuid is null or campus_id = ${campusId ?? query.campusId ?? null}::uuid)
         and (${query.status ?? null}::public.vendor_status is null or status = ${query.status ?? null}::public.vendor_status)
         and (${query.search ?? null}::text is null or display_name ilike '%' || ${query.search ?? null}::text || '%' or legal_name ilike '%' || ${query.search ?? null}::text || '%')
+        and (
+          ${this.decodeListCursor(query.cursor)?.ts ?? null}::timestamptz is null
+          or (created_at, id) < (${this.decodeListCursor(query.cursor)?.ts ?? null}::timestamptz, ${this.decodeListCursor(query.cursor)?.id ?? null}::uuid)
+        )
       order by created_at desc, id desc
       limit ${limit + 1}
     `.execute(this.database.db);
@@ -328,6 +341,10 @@ export class AdminRepository {
       where (${campusId ?? query.campusId ?? null}::uuid is null or r.campus_id = ${campusId ?? query.campusId ?? null}::uuid)
         and (${query.status ?? null}::public.rider_status is null or r.status = ${query.status ?? null}::public.rider_status)
         and (${query.search ?? null}::text is null or r.display_name ilike '%' || ${query.search ?? null}::text || '%')
+        and (
+          ${this.decodeListCursor(query.cursor)?.ts ?? null}::timestamptz is null
+          or (r.created_at, r.id) < (${this.decodeListCursor(query.cursor)?.ts ?? null}::timestamptz, ${this.decodeListCursor(query.cursor)?.id ?? null}::uuid)
+        )
       order by r.created_at desc, r.id desc
       limit ${limit + 1}
     `.execute(this.database.db);
@@ -473,10 +490,14 @@ export class AdminRepository {
       where (${campusId ?? query.campusId ?? null}::uuid is null or o.campus_id = ${campusId ?? query.campusId ?? null}::uuid)
         and (${query.status ?? null}::public.escalation_status is null or e.status = ${query.status ?? null}::public.escalation_status)
         and (${query.category ?? null}::text is null or e.category = ${query.category ?? null}::text)
+        and (
+          ${this.decodeListCursor(query.cursor)?.ts ?? null}::timestamptz is null
+          or (e.opened_at, e.id) < (${this.decodeListCursor(query.cursor)?.ts ?? null}::timestamptz, ${this.decodeListCursor(query.cursor)?.id ?? null}::uuid)
+        )
       order by e.opened_at desc, e.id desc
       limit ${limit + 1}
     `.execute(this.database.db);
-    return this.toList(result.rows, limit);
+    return this.toList(result.rows, limit, 'openedAt');
   }
 
   async getEscalation(id: string, campusId?: string): Promise<AdminRecord | undefined> {
@@ -526,10 +547,14 @@ export class AdminRepository {
         and (${query.status ?? null}::public.settlement_status is null or s.status = ${query.status ?? null}::public.settlement_status)
         and (${query.date ?? null}::date is null or s.settlement_date = ${query.date ?? null}::date)
         and (${query.beneficiaryType ?? null}::text is null or (${query.beneficiaryType ?? null} = 'vendor' and s.vendor_id is not null) or (${query.beneficiaryType ?? null} = 'rider' and s.rider_id is not null))
+        and (
+          ${this.decodeListCursor(query.cursor)?.ts ?? null}::date is null
+          or (s.settlement_date, s.id) < (${this.decodeListCursor(query.cursor)?.ts ?? null}::date, ${this.decodeListCursor(query.cursor)?.id ?? null}::uuid)
+        )
       order by s.settlement_date desc, s.id desc
       limit ${limit + 1}
     `.execute(this.database.db);
-    return this.toList(result.rows, limit);
+    return this.toList(result.rows, limit, 'settlementDate');
   }
 
   async getSettlement(id: string, campusId?: string): Promise<AdminRecord | undefined> {
@@ -667,6 +692,10 @@ export class AdminRepository {
         and (${query.status ?? null}::public.review_moderation_status is null or r.moderation_status = ${query.status ?? null}::public.review_moderation_status)
         and (${query.vendorId ?? null}::uuid is null or r.vendor_id = ${query.vendorId ?? null}::uuid)
         and (${query.rating ?? null}::integer is null or r.food_rating = ${query.rating ?? null} or r.vendor_rating = ${query.rating ?? null} or r.delivery_rating = ${query.rating ?? null})
+        and (
+          ${this.decodeListCursor(query.cursor)?.ts ?? null}::timestamptz is null
+          or (r.created_at, r.id) < (${this.decodeListCursor(query.cursor)?.ts ?? null}::timestamptz, ${this.decodeListCursor(query.cursor)?.id ?? null}::uuid)
+        )
       order by r.created_at desc, r.id desc
       limit ${limit + 1}
     `.execute(this.database.db);
@@ -694,6 +723,10 @@ export class AdminRepository {
       where (${campusId ?? query.campusId ?? null}::uuid is null or p.default_campus_id = ${campusId ?? query.campusId ?? null}::uuid)
         and (${query.status ?? null}::public.account_status is null or p.account_status = ${query.status ?? null}::public.account_status)
         and (${query.search ?? null}::text is null or p.email::text ilike '%' || ${query.search ?? null}::text || '%' or p.display_name ilike '%' || ${query.search ?? null}::text || '%')
+        and (
+          ${this.decodeListCursor(query.cursor)?.ts ?? null}::timestamptz is null
+          or (p.created_at, p.id) < (${this.decodeListCursor(query.cursor)?.ts ?? null}::timestamptz, ${this.decodeListCursor(query.cursor)?.id ?? null}::uuid)
+        )
       order by p.created_at desc, p.id desc
       limit ${limit + 1}
     `.execute(this.database.db);
@@ -810,17 +843,42 @@ export class AdminRepository {
         and (${query.entityType ?? null}::text is null or entity_type = ${query.entityType ?? null})
         and (${query.entityId ?? null}::uuid is null or entity_id = ${query.entityId ?? null}::uuid)
         and (${query.requestId ?? null}::text is null or request_id = ${query.requestId ?? null})
+        and (
+          ${this.decodeListCursor(query.cursor)?.ts ?? null}::timestamptz is null
+          or (created_at, id) < (${this.decodeListCursor(query.cursor)?.ts ?? null}::timestamptz, ${this.decodeListCursor(query.cursor)?.id ?? null}::uuid)
+        )
       order by created_at desc, id desc
       limit ${limit + 1}
     `.execute(this.database.db);
     return this.toList(result.rows, limit);
   }
 
-  private toList(rows: AdminRecord[], limit: number): AdminListResult {
+  private toList(rows: AdminRecord[], limit: number, tsField = 'createdAt'): AdminListResult {
+    const hasMore = rows.length > limit;
+    const items = rows.slice(0, limit);
+    const last = items.at(-1);
     return {
-      hasMore: rows.length > limit,
-      items: rows.slice(0, limit),
-      limit
+      hasMore,
+      items,
+      limit,
+      ...(hasMore && last !== undefined
+        ? { nextCursor: encodeCursor({ ts: String(last[tsField]), id: String(last.id) }) }
+        : {})
     };
+  }
+
+  // Keyset cursor for admin lists ordered by (timestamp|date, id) desc. Payload is
+  // { ts, id }; the per-query predicate applies the correct column and cast.
+  private decodeListCursor(cursor?: string): { ts: string; id: string } | undefined {
+    if (cursor === undefined || cursor.length === 0) return undefined;
+    try {
+      const payload = decodeCursor(cursor);
+      if (typeof payload.ts === 'string' && typeof payload.id === 'string') {
+        return { ts: payload.ts, id: payload.id };
+      }
+      return undefined;
+    } catch {
+      return undefined;
+    }
   }
 }

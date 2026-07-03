@@ -4,6 +4,7 @@ export type PaystackWebhookEvent = {
     id?: string | number;
     reference?: string;
     amount?: number;
+    currency?: string;
     status?: string;
   };
 };
@@ -13,6 +14,7 @@ export type PaymentDomainEvent =
       type: 'PAYMENT_SUCCEEDED';
       providerReference: string;
       amountKobo: number;
+      currency?: string;
     }
   | {
       type: 'PAYMENT_FAILED';
@@ -49,7 +51,8 @@ export function mapPaystackEvent(input: PaystackWebhookEvent): PaymentDomainEven
     return {
       type: 'PAYMENT_SUCCEEDED',
       providerReference: reference,
-      amountKobo: input.data?.amount ?? 0
+      amountKobo: input.data?.amount ?? 0,
+      ...(input.data?.currency === undefined ? {} : { currency: input.data.currency })
     };
   }
 

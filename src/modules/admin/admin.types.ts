@@ -4,6 +4,7 @@ export type AdminListResult = {
   items: AdminRecord[];
   limit: number;
   hasMore: boolean;
+  nextCursor?: string;
 };
 
 export type AdminDashboard = {

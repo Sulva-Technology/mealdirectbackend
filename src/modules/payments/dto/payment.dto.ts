@@ -1,7 +1,19 @@
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, IsString, MaxLength, Min, MinLength } from 'class-validator';
+import {
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+  MinLength
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsDatabaseUuid } from '../../../common/validation.js';
+import type { PaymentStatus } from '../payments.types.js';
+
+const paymentStatuses = ['initialized', 'pending', 'successful', 'failed', 'refunded'] as const;
 
 export class PaymentIdParamDto {
   @ApiProperty({ format: 'uuid', type: String })
@@ -169,4 +181,74 @@ export class RefundDto {
 export class RefundEnvelopeDto {
   @ApiProperty({ type: () => RefundDto })
   data!: RefundDto;
+}
+
+export class AdminPaymentListQueryDto {
+  @ApiPropertyOptional({ type: String })
+  @IsOptional()
+  cursor?: string;
+
+  @ApiPropertyOptional({ default: 20, maximum: 100, minimum: 1, type: Number })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit?: number;
+
+  @ApiPropertyOptional({ enum: paymentStatuses })
+  @IsOptional()
+  @IsIn(paymentStatuses)
+  status?: PaymentStatus;
+
+  @ApiPropertyOptional({ format: 'uuid', type: String })
+  @IsOptional()
+  @IsDatabaseUuid()
+  vendorId?: string;
+
+  @ApiPropertyOptional({ format: 'uuid', type: String })
+  @IsOptional()
+  @IsDatabaseUuid()
+  customerId?: string;
+
+  @ApiPropertyOptional({ maxLength: 100, type: String })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  reference?: string;
+
+  @ApiPropertyOptional({ type: String })
+  @IsOptional()
+  @IsString()
+  dateFrom?: string;
+
+  @ApiPropertyOptional({ type: String })
+  @IsOptional()
+  @IsString()
+  dateTo?: string;
+}
+
+export class AdminPaymentDetailDto extends AdminPaymentDto {
+  @ApiProperty({ type: Boolean })
+  webhookReceived!: boolean;
+
+  @ApiProperty({ type: Number })
+  webhookCount!: number;
+
+  @ApiProperty({ enum: ['verified', 'unverified'], type: String })
+  verificationStatus!: string;
+
+  @ApiProperty({ type: String })
+  refundStatus!: string;
+
+  @ApiProperty({ type: Number })
+  refundedAmountKobo!: number;
+
+  @ApiProperty({ type: Number })
+  settlementImpactKobo!: number;
+}
+
+export class AdminPaymentDetailEnvelopeDto {
+  @ApiProperty({ type: () => AdminPaymentDetailDto })
+  data!: AdminPaymentDetailDto;
 }

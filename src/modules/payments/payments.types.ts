@@ -34,6 +34,48 @@ export type PaymentRecord = PaymentInitializationRecord & {
 
 export type AdminPaymentRecord = Omit<PaymentRecord, 'providerPayload'>;
 
+export type AdminPaymentListFilter = {
+  status?: PaymentStatus;
+  vendorId?: string;
+  customerId?: string;
+  reference?: string;
+  dateFrom?: string;
+  dateTo?: string;
+};
+
+export type AdminPaymentListResult = {
+  items: AdminPaymentRecord[];
+  hasMore: boolean;
+  limit: number;
+  nextCursor?: string;
+};
+
+export type AdminPaymentDetail = AdminPaymentRecord & {
+  webhookReceived: boolean;
+  webhookCount: number;
+  verificationStatus: 'verified' | 'unverified';
+  refundStatus: RefundStatus | 'none';
+  refundedAmountKobo: number;
+  settlementImpactKobo: number;
+};
+
+export type PaymentTimelineEvent = {
+  at: string;
+  type: string;
+  source: 'order' | 'payment_event' | 'refund';
+  detail: Record<string, unknown>;
+};
+
+export type PaymentWebhookRecord = {
+  id: string;
+  eventType: string;
+  providerReference: string | null;
+  signatureValid: boolean;
+  receivedAt: string;
+  processedAt: string | null;
+  processingError: string | null;
+};
+
 export type RefundRecord = {
   id: string;
   paymentId: string;
@@ -137,11 +179,21 @@ export type PaymentsRepositoryContract = {
     paymentId: string,
     providerPayload: Record<string, unknown>
   ) => Promise<PaymentRecord>;
-  listAdminPayments: (campusId?: string) => Promise<PaymentRecord[]>;
+  listAdminPaymentsPaged: (
+    filter: AdminPaymentListFilter,
+    pagination: { cursor?: string; limit: number },
+    campusId?: string
+  ) => Promise<AdminPaymentListResult>;
   findAdminPaymentById: (
     paymentId: string,
     campusId?: string
   ) => Promise<PaymentRecord | undefined>;
+  getPaymentDetail: (
+    paymentId: string,
+    campusId?: string
+  ) => Promise<AdminPaymentDetail | undefined>;
+  getPaymentTimeline: (paymentId: string) => Promise<PaymentTimelineEvent[]>;
+  getPaymentWebhooks: (providerReference: string) => Promise<PaymentWebhookRecord[]>;
   markPaymentSuccessfulFromProvider: (
     providerReference: string,
     providerTransactionId: string,

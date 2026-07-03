@@ -71,10 +71,12 @@ function listEnvelope(result: {
   items: AdminRecord[];
   hasMore: boolean;
   limit: number;
+  nextCursor?: string;
 }): ListEnvelope<AdminRecord> {
   return createListEnvelope(result.items, {
     hasMore: result.hasMore,
-    limit: result.limit
+    limit: result.limit,
+    ...(result.nextCursor === undefined ? {} : { nextCursor: result.nextCursor })
   });
 }
 

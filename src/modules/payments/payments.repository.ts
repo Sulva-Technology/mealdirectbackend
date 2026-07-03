@@ -2,9 +2,16 @@ import { Inject, Injectable } from '@nestjs/common';
 import { sql } from 'kysely';
 
 import { DatabaseService } from '../../database/database.service.js';
+import { decodeCursor, encodeCursor } from '../../common/api/pagination.js';
 import type {
+  AdminPaymentDetail,
+  AdminPaymentListFilter,
+  AdminPaymentListResult,
+  AdminPaymentRecord,
   PaymentInitializationRecord,
   PaymentRecord,
+  PaymentTimelineEvent,
+  PaymentWebhookRecord,
   PaymentsRepositoryContract,
   RefundInput,
   RefundRecord,
@@ -18,6 +25,20 @@ type OrderIdResult = {
 type RefundedAmountResult = {
   refundedAmountKobo: string | number | null;
 };
+
+type PaymentCursor = { createdAt: string; id: string };
+
+function toPaymentCursor(value: string): PaymentCursor | undefined {
+  try {
+    const payload = decodeCursor(value);
+    if (typeof payload.createdAt === 'string' && typeof payload.id === 'string') {
+      return { createdAt: payload.createdAt, id: payload.id };
+    }
+    return undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 @Injectable()
 export class PaymentsRepository implements PaymentsRepositoryContract {
@@ -130,8 +151,13 @@ export class PaymentsRepository implements PaymentsRepositoryContract {
     return payment;
   }
 
-  async listAdminPayments(campusId?: string): Promise<PaymentRecord[]> {
-    const result = await sql<PaymentRecord>`
+  async listAdminPaymentsPaged(
+    filter: AdminPaymentListFilter,
+    pagination: { cursor?: string; limit: number },
+    campusId?: string
+  ): Promise<AdminPaymentListResult> {
+    const cursor = pagination.cursor === undefined ? undefined : toPaymentCursor(pagination.cursor);
+    const result = await sql<AdminPaymentRecord & { createdAt: string }>`
       select
         p.id::text as "id",
         o.id::text as "orderId",
@@ -150,13 +176,141 @@ export class PaymentsRepository implements PaymentsRepositoryContract {
         p.initialized_at::text as "initializedAt",
         p.verified_at::text as "verifiedAt",
         p.paid_at::text as "paidAt",
-        p.provider_payload as "providerPayload"
+        p.created_at::text as "createdAt"
       from public.payments p
       join public.orders o on o.id = p.order_id
       join public.profiles pr on pr.id = o.customer_id
-      where ${campusId ?? null}::uuid is null or o.campus_id = ${campusId ?? null}::uuid
-      order by p.created_at desc
-      limit 100
+      where (${campusId ?? null}::uuid is null or o.campus_id = ${campusId ?? null}::uuid)
+        and (${filter.status ?? null}::public.payment_status is null
+             or p.status = ${filter.status ?? null}::public.payment_status)
+        and (${filter.vendorId ?? null}::uuid is null or o.vendor_id = ${filter.vendorId ?? null}::uuid)
+        and (${filter.customerId ?? null}::uuid is null or o.customer_id = ${filter.customerId ?? null}::uuid)
+        and (${filter.reference ?? null}::text is null
+             or p.provider_reference ilike '%' || ${filter.reference ?? null}::text || '%'
+             or o.order_number ilike '%' || ${filter.reference ?? null}::text || '%')
+        and (${filter.dateFrom ?? null}::timestamptz is null or p.created_at >= ${filter.dateFrom ?? null}::timestamptz)
+        and (${filter.dateTo ?? null}::timestamptz is null or p.created_at <= ${filter.dateTo ?? null}::timestamptz)
+        and (
+          ${cursor?.createdAt ?? null}::timestamptz is null
+          or (p.created_at, p.id) < (${cursor?.createdAt ?? null}::timestamptz, ${cursor?.id ?? null}::uuid)
+        )
+      order by p.created_at desc, p.id desc
+      limit ${pagination.limit + 1}
+    `.execute(this.database.db);
+
+    const rows = result.rows;
+    const hasMore = rows.length > pagination.limit;
+    const items = rows.slice(0, pagination.limit).map(({ createdAt, ...rest }) => {
+      void createdAt;
+      return rest;
+    });
+    const lastRow = rows.slice(0, pagination.limit).at(-1);
+
+    return {
+      items,
+      hasMore,
+      limit: pagination.limit,
+      ...(hasMore && lastRow !== undefined
+        ? { nextCursor: encodeCursor({ createdAt: lastRow.createdAt, id: lastRow.id }) }
+        : {})
+    };
+  }
+
+  async getPaymentDetail(
+    paymentId: string,
+    campusId?: string
+  ): Promise<AdminPaymentDetail | undefined> {
+    const result = await sql<AdminPaymentDetail>`
+      select
+        p.id::text as "id",
+        o.id::text as "orderId",
+        o.order_number as "orderNumber",
+        o.customer_id::text as "customerId",
+        pr.email::text as "customerEmail",
+        o.campus_id::text as "campusId",
+        o.order_status::text as "orderStatus",
+        o.total_kobo as "orderTotalKobo",
+        p.provider_reference as "providerReference",
+        p.status::text as "paymentStatus",
+        p.expected_amount_kobo as "expectedAmountKobo",
+        p.paid_amount_kobo as "paidAmountKobo",
+        p.provider_transaction_id as "providerTransactionId",
+        p.currency,
+        p.initialized_at::text as "initializedAt",
+        p.verified_at::text as "verifiedAt",
+        p.paid_at::text as "paidAt",
+        (exists (
+          select 1 from public.payment_events pe
+          where pe.provider_reference = p.provider_reference
+        )) as "webhookReceived",
+        (select count(*)::int from public.payment_events pe
+          where pe.provider_reference = p.provider_reference) as "webhookCount",
+        (case when p.verified_at is not null then 'verified' else 'unverified' end) as "verificationStatus",
+        coalesce((
+          select rf.status::text from public.refunds rf
+          where rf.payment_id = p.id
+          order by rf.requested_at desc limit 1
+        ), 'none') as "refundStatus",
+        coalesce((
+          select sum(rf.amount_kobo)::int from public.refunds rf
+          where rf.payment_id = p.id and rf.status not in ('failed', 'cancelled')
+        ), 0) as "refundedAmountKobo",
+        coalesce((
+          select sum(sl.amount_kobo)::int from public.settlement_lines sl
+          where sl.order_id = o.id
+        ), 0) as "settlementImpactKobo"
+      from public.payments p
+      join public.orders o on o.id = p.order_id
+      join public.profiles pr on pr.id = o.customer_id
+      where p.id = ${paymentId}::uuid
+        and (${campusId ?? null}::uuid is null or o.campus_id = ${campusId ?? null}::uuid)
+      limit 1
+    `.execute(this.database.db);
+
+    return result.rows[0];
+  }
+
+  async getPaymentTimeline(paymentId: string): Promise<PaymentTimelineEvent[]> {
+    const result = await sql<PaymentTimelineEvent>`
+      with pay as (
+        select id, order_id, provider_reference from public.payments where id = ${paymentId}::uuid
+      )
+      select osh.created_at::text as "at", 'order_status:' || osh.to_status::text as "type",
+             'order'::text as "source",
+             jsonb_build_object('fromStatus', osh.from_status, 'toStatus', osh.to_status, 'reason', osh.reason) as "detail"
+      from public.order_status_history osh
+      join pay on pay.order_id = osh.order_id
+      union all
+      select pe.received_at::text as "at", pe.event_type as "type",
+             'payment_event'::text as "source",
+             jsonb_build_object('signatureValid', pe.signature_valid, 'processingError', pe.processing_error) as "detail"
+      from public.payment_events pe
+      join pay on pay.provider_reference = pe.provider_reference
+      union all
+      select rf.requested_at::text as "at", 'refund:' || rf.status::text as "type",
+             'refund'::text as "source",
+             jsonb_build_object('amountKobo', rf.amount_kobo, 'reasonCode', rf.reason_code) as "detail"
+      from public.refunds rf
+      join pay on pay.id = rf.payment_id
+      order by "at" asc
+    `.execute(this.database.db);
+
+    return result.rows;
+  }
+
+  async getPaymentWebhooks(providerReference: string): Promise<PaymentWebhookRecord[]> {
+    const result = await sql<PaymentWebhookRecord>`
+      select
+        id::text as "id",
+        event_type as "eventType",
+        provider_reference as "providerReference",
+        signature_valid as "signatureValid",
+        received_at::text as "receivedAt",
+        processed_at::text as "processedAt",
+        processing_error as "processingError"
+      from public.payment_events
+      where provider_reference = ${providerReference}
+      order by received_at asc
     `.execute(this.database.db);
 
     return result.rows;

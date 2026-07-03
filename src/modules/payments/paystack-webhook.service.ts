@@ -86,6 +86,22 @@ export class PaystackWebhookService {
     payload: PaystackWebhookEvent,
     event: Exclude<ReturnType<typeof mapPaystackEvent>, { type: 'IGNORED' }>
   ): Promise<WebhookResult> {
+    try {
+      return await this.runWebhookTransaction(rawBody, payload, event);
+    } catch (error) {
+      // The transaction (event insert included) rolled back, so Paystack will retry.
+      // Record a durable, deduplicated issue in its own transaction so admins can see
+      // the failing event even while retries continue, then rethrow to signal Paystack.
+      await this.recordProcessingFailure(event.providerReference, error).catch(() => undefined);
+      throw error;
+    }
+  }
+
+  private runWebhookTransaction(
+    rawBody: string,
+    payload: PaystackWebhookEvent,
+    event: Exclude<ReturnType<typeof mapPaystackEvent>, { type: 'IGNORED' }>
+  ): Promise<WebhookResult> {
     return this.database.db.transaction().execute(async (trx) => {
       const inserted = await this.recordPaymentEvent(
         trx,
@@ -101,7 +117,7 @@ export class PaystackWebhookService {
       }
 
       if (event.type === 'PAYMENT_SUCCEEDED') {
-        await this.markPaymentSuccessful(trx, payload, event);
+        await this.applyVerifiedPayment(trx, payload, event);
       }
 
       if (event.type === 'TRANSFER_RECONCILED') {
@@ -137,7 +153,14 @@ export class PaystackWebhookService {
     return result.rows[0]?.inserted ?? false;
   }
 
-  private async markPaymentSuccessful(
+  /**
+   * Apply a signed `charge.success` to the local order — but only after the webhook's
+   * amount and currency are validated against the initialized payment. On any mismatch,
+   * or when the reference has no local payment, we DO NOT mark the order paid; instead we
+   * record a reconciliation issue for admin review. The event row stays committed (so
+   * Paystack stops retrying) while the order remains unpaid and flagged.
+   */
+  private async applyVerifiedPayment(
     trx: Kysely<DatabaseSchema>,
     payload: PaystackWebhookEvent,
     event: Extract<
@@ -145,14 +168,120 @@ export class PaystackWebhookService {
       { type: 'PAYMENT_SUCCEEDED' }
     >
   ): Promise<void> {
-    const transactionId = payload.data?.id?.toString() ?? event.providerReference;
+    const reference = event.providerReference;
+    const local = await sql<{
+      id: string;
+      orderId: string;
+      expectedAmountKobo: number;
+      currency: string;
+      status: string;
+    }>`
+      select
+        id::text as "id",
+        order_id::text as "orderId",
+        expected_amount_kobo as "expectedAmountKobo",
+        currency,
+        status::text as "status"
+      from public.payments
+      where provider = 'paystack'::public.payment_provider
+        and provider_reference = ${reference}
+      order by created_at desc
+      limit 1
+    `.execute(trx);
+
+    const payment = local.rows[0];
+
+    if (payment === undefined) {
+      await this.recordIssue(
+        trx,
+        `provider_success_not_local:${reference}`,
+        'provider_success_not_local',
+        'critical',
+        null,
+        null,
+        reference,
+        { webhookAmountKobo: event.amountKobo }
+      );
+      return;
+    }
+
+    if (event.amountKobo !== payment.expectedAmountKobo) {
+      await this.recordIssue(
+        trx,
+        `amount_mismatch:${payment.id}`,
+        'amount_mismatch',
+        'critical',
+        payment.id,
+        payment.orderId,
+        reference,
+        { expectedAmountKobo: payment.expectedAmountKobo, webhookAmountKobo: event.amountKobo }
+      );
+      return;
+    }
+
+    if (event.currency !== undefined && event.currency !== payment.currency) {
+      await this.recordIssue(
+        trx,
+        `currency_mismatch:${payment.id}`,
+        'currency_mismatch',
+        'critical',
+        payment.id,
+        payment.orderId,
+        reference,
+        { expectedCurrency: payment.currency, webhookCurrency: event.currency }
+      );
+      return;
+    }
+
+    const transactionId = payload.data?.id?.toString() ?? reference;
     await sql`
       select public.mark_verified_payment_successful(
         'paystack'::public.payment_provider,
-        ${event.providerReference},
+        ${reference},
         ${transactionId},
         ${event.amountKobo},
         ${JSON.stringify(payload)}::jsonb
+      )
+    `.execute(trx);
+  }
+
+  private async recordProcessingFailure(providerReference: string, error: unknown): Promise<void> {
+    const message = error instanceof Error ? error.message : 'unknown webhook processing error';
+    await this.recordIssue(
+      this.database.db,
+      `webhook_processing_failed:${providerReference}`,
+      'webhook_processing_failed',
+      'critical',
+      null,
+      null,
+      providerReference,
+      { error: message }
+    );
+  }
+
+  private async recordIssue(
+    trx: Kysely<DatabaseSchema>,
+    dedupKey: string,
+    issueType:
+      | 'amount_mismatch'
+      | 'currency_mismatch'
+      | 'provider_success_not_local'
+      | 'webhook_processing_failed',
+    severity: 'info' | 'warning' | 'critical',
+    paymentId: string | null,
+    orderId: string | null,
+    providerReference: string | null,
+    detail: Record<string, unknown>
+  ): Promise<void> {
+    await sql`
+      select public.upsert_payment_reconciliation_issue(
+        ${dedupKey},
+        ${issueType}::public.payment_reconciliation_issue_type,
+        ${severity}::public.payment_reconciliation_severity,
+        ${paymentId}::uuid,
+        ${orderId}::uuid,
+        ${providerReference},
+        ${JSON.stringify(detail)}::jsonb
       )
     `.execute(trx);
   }

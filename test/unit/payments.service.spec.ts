@@ -72,8 +72,13 @@ function createRepository(): PaymentsRepositoryContract {
     findCustomerInitializationPayment: vi.fn().mockResolvedValue(payment),
     findStuckPaystackPayments: vi.fn().mockResolvedValue([payment]),
     markPaymentInitializationPayload: vi.fn().mockResolvedValue(paymentRecord),
-    listAdminPayments: vi.fn().mockResolvedValue([paymentRecord]),
+    listAdminPaymentsPaged: vi
+      .fn()
+      .mockResolvedValue({ items: [paymentRecord], hasMore: false, limit: 20 }),
     findAdminPaymentById: vi.fn().mockResolvedValue(paymentRecord),
+    getPaymentDetail: vi.fn().mockResolvedValue(undefined),
+    getPaymentTimeline: vi.fn().mockResolvedValue([]),
+    getPaymentWebhooks: vi.fn().mockResolvedValue([]),
     markPaymentSuccessfulFromProvider: vi.fn().mockResolvedValue(payment.orderId),
     getRefundedAmountKobo: vi.fn().mockResolvedValue(0),
     createRefundRequest: vi.fn().mockResolvedValue(refund),

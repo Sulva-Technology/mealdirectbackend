@@ -1,4 +1,14 @@
-import { Body, Controller, Get, HttpCode, Inject, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Inject,
+  Param,
+  Post,
+  Query,
+  UseGuards
+} from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -19,8 +29,9 @@ import { RolesGuard } from '../auth/roles.guard.js';
 import type { AuthenticatedActor } from '../auth/actor-context.js';
 import { OrderIdParamDto } from '../orders/dto/order-api.dto.js';
 import {
-  AdminPaymentEnvelopeDto,
+  AdminPaymentDetailEnvelopeDto,
   AdminPaymentListEnvelopeDto,
+  AdminPaymentListQueryDto,
   InitiateRefundDto,
   PaymentIdParamDto,
   PaymentReconciliationEnvelopeDto,
@@ -29,34 +40,14 @@ import {
 } from './dto/payment.dto.js';
 import { PaymentsService } from './payments.service.js';
 import type {
+  AdminPaymentDetail,
   AdminPaymentRecord,
   PaymentInitializationResponse,
-  PaymentRecord,
   PaymentReconciliationResponse,
+  PaymentTimelineEvent,
+  PaymentWebhookRecord,
   RefundRecord
 } from './payments.types.js';
-
-function toAdminPaymentRecord(payment: PaymentRecord): AdminPaymentRecord {
-  return {
-    campusId: payment.campusId,
-    currency: payment.currency,
-    customerEmail: payment.customerEmail,
-    customerId: payment.customerId,
-    expectedAmountKobo: payment.expectedAmountKobo,
-    id: payment.id,
-    initializedAt: payment.initializedAt,
-    orderId: payment.orderId,
-    orderNumber: payment.orderNumber,
-    orderStatus: payment.orderStatus,
-    orderTotalKobo: payment.orderTotalKobo,
-    paidAmountKobo: payment.paidAmountKobo,
-    paidAt: payment.paidAt,
-    paymentStatus: payment.paymentStatus,
-    providerReference: payment.providerReference,
-    providerTransactionId: payment.providerTransactionId,
-    verifiedAt: payment.verifiedAt
-  };
-}
 
 @ApiTags('payments')
 @ApiBearerAuth('supabaseAuth')
@@ -99,31 +90,66 @@ export class AdminPaymentsController {
     type: AdminPaymentListEnvelopeDto
   })
   async listPayments(
-    @CurrentActor() actor: AuthenticatedActor
+    @CurrentActor() actor: AuthenticatedActor,
+    @Query() query: AdminPaymentListQueryDto
   ): Promise<ListEnvelope<AdminPaymentRecord>> {
-    const payments = await this.payments.listAdminPayments(actor);
-    return createListEnvelope(
-      payments.map((payment) => toAdminPaymentRecord(payment)),
+    const result = await this.payments.listAdminPayments(
+      actor,
       {
-        hasMore: false,
-        limit: payments.length
+        ...(query.status === undefined ? {} : { status: query.status }),
+        ...(query.vendorId === undefined ? {} : { vendorId: query.vendorId }),
+        ...(query.customerId === undefined ? {} : { customerId: query.customerId }),
+        ...(query.reference === undefined ? {} : { reference: query.reference }),
+        ...(query.dateFrom === undefined ? {} : { dateFrom: query.dateFrom }),
+        ...(query.dateTo === undefined ? {} : { dateTo: query.dateTo })
+      },
+      {
+        ...(query.cursor === undefined ? {} : { cursor: query.cursor }),
+        ...(query.limit === undefined ? {} : { limit: query.limit })
       }
     );
+    return createListEnvelope(result.items, {
+      hasMore: result.hasMore,
+      limit: result.limit,
+      ...(result.nextCursor === undefined ? {} : { nextCursor: result.nextCursor })
+    });
   }
 
   @Get(':paymentId')
   @ApiParam({ format: 'uuid', name: 'paymentId', type: String })
   @ApiOkResponse({
-    description: 'Admin-visible payment detail scoped by campus for campus admins.',
-    type: AdminPaymentEnvelopeDto
+    description: 'Admin-visible enriched payment detail scoped by campus for campus admins.',
+    type: AdminPaymentDetailEnvelopeDto
   })
   async getPayment(
     @CurrentActor() actor: AuthenticatedActor,
     @Param() params: PaymentIdParamDto
-  ): Promise<SuccessEnvelope<AdminPaymentRecord>> {
+  ): Promise<SuccessEnvelope<AdminPaymentDetail>> {
     return createSuccessEnvelope(
-      toAdminPaymentRecord(await this.payments.getAdminPayment(actor, params.paymentId))
+      await this.payments.getAdminPaymentDetail(actor, params.paymentId)
     );
+  }
+
+  @Get(':paymentId/timeline')
+  @ApiParam({ format: 'uuid', name: 'paymentId', type: String })
+  @ApiOkResponse({ description: 'Chronological payment/order/refund timeline.' })
+  async getTimeline(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Param() params: PaymentIdParamDto
+  ): Promise<ListEnvelope<PaymentTimelineEvent>> {
+    const events = await this.payments.getAdminPaymentTimeline(actor, params.paymentId);
+    return createListEnvelope(events, { hasMore: false, limit: events.length });
+  }
+
+  @Get(':paymentId/webhooks')
+  @ApiParam({ format: 'uuid', name: 'paymentId', type: String })
+  @ApiOkResponse({ description: 'Paystack webhook events recorded for this payment reference.' })
+  async getWebhooks(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Param() params: PaymentIdParamDto
+  ): Promise<ListEnvelope<PaymentWebhookRecord>> {
+    const webhooks = await this.payments.getAdminPaymentWebhooks(actor, params.paymentId);
+    return createListEnvelope(webhooks, { hasMore: false, limit: webhooks.length });
   }
 
   @Post(':paymentId/reconcile')

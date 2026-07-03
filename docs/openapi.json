@@ -1860,13 +1860,53 @@
         ],
         "responses": {
           "200": {
-            "description": "Admin-visible payment detail scoped by campus for campus admins.",
+            "description": "Admin-visible enriched payment detail scoped by campus for campus admins.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/AdminPaymentEnvelopeDto" }
+                "schema": { "$ref": "#/components/schemas/AdminPaymentDetailEnvelopeDto" }
               }
             }
           },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-payments"]
+      }
+    },
+    "/v1/admin/payments/{paymentId}/timeline": {
+      "get": {
+        "operationId": "AdminPaymentsController_getTimeline",
+        "parameters": [
+          {
+            "name": "paymentId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Chronological payment/order/refund timeline." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-payments"]
+      }
+    },
+    "/v1/admin/payments/{paymentId}/webhooks": {
+      "get": {
+        "operationId": "AdminPaymentsController_getWebhooks",
+        "parameters": [
+          {
+            "name": "paymentId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Paystack webhook events recorded for this payment reference." },
           "401": { "description": "Missing, invalid, or expired Supabase JWT." },
           "403": { "description": "Admin role is required." }
         },
@@ -1935,6 +1975,322 @@
           "401": { "description": "Missing or invalid Paystack signature." }
         },
         "tags": ["payments"]
+      }
+    },
+    "/v1/admin/payments/reconciliation/scan": {
+      "post": {
+        "operationId": "ReconciliationController_scan",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Scans the database for reconciliation discrepancies and upserts issues.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ReconciliationScanEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-reconciliation"]
+      }
+    },
+    "/v1/admin/payments/reconciliation/issues": {
+      "get": {
+        "operationId": "ReconciliationController_listIssues",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Reconciliation issues scoped by campus for campus admins.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ReconciliationIssueListEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-reconciliation"]
+      }
+    },
+    "/v1/admin/payments/reconciliation/issues/{issueId}": {
+      "get": {
+        "operationId": "ReconciliationController_getIssue",
+        "parameters": [
+          {
+            "name": "issueId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reconciliation issue detail with investigation notes.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ReconciliationIssueDetailEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-reconciliation"]
+      }
+    },
+    "/v1/admin/payments/reconciliation/issues/{issueId}/verify-payment": {
+      "post": {
+        "operationId": "ReconciliationController_verifyPayment",
+        "parameters": [
+          {
+            "name": "issueId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Re-verifies the issue payment against Paystack." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-reconciliation"]
+      }
+    },
+    "/v1/admin/payments/reconciliation/issues/{issueId}/retry-webhook": {
+      "post": {
+        "operationId": "ReconciliationController_retryWebhook",
+        "parameters": [
+          {
+            "name": "issueId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Retries a failed webhook by re-verifying its payment." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-reconciliation"]
+      }
+    },
+    "/v1/admin/payments/reconciliation/issues/{issueId}/review": {
+      "post": {
+        "operationId": "ReconciliationController_reviewIssue",
+        "parameters": [
+          {
+            "name": "issueId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Marks a reconciliation issue investigating/resolved/ignored.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ReconciliationIssueEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-reconciliation"]
+      }
+    },
+    "/v1/admin/payments/reconciliation/issues/{issueId}/notes": {
+      "post": {
+        "operationId": "ReconciliationController_addNote",
+        "parameters": [
+          {
+            "name": "issueId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Adds an internal investigation note to a reconciliation issue.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ReconciliationNoteEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-reconciliation"]
+      }
+    },
+    "/v1/admin/refunds": {
+      "get": {
+        "operationId": "RefundsController_listRefunds",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Refund records scoped by campus for campus admins.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminRefundListEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-refunds"]
+      }
+    },
+    "/v1/admin/refunds/{refundId}": {
+      "get": {
+        "operationId": "RefundsController_getRefund",
+        "parameters": [
+          {
+            "name": "refundId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Refund detail.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminRefundEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-refunds"]
+      }
+    },
+    "/v1/admin/refunds/{refundId}/retry": {
+      "post": {
+        "operationId": "RefundsController_retryRefund",
+        "parameters": [
+          {
+            "name": "refundId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Retries a failed refund against Paystack.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminRefundEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-refunds"]
+      }
+    },
+    "/v1/admin/refunds/{refundId}/resolve": {
+      "post": {
+        "operationId": "RefundsController_resolveRefund",
+        "parameters": [
+          {
+            "name": "refundId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Records a manual refund resolution.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminRefundEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-refunds"]
+      }
+    },
+    "/v1/admin/refunds/{refundId}/approve": {
+      "post": {
+        "operationId": "RefundsController_approveRefund",
+        "parameters": [
+          {
+            "name": "refundId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Approves a requested refund.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminRefundEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-refunds"]
+      }
+    },
+    "/v1/admin/refunds/{refundId}/reject": {
+      "post": {
+        "operationId": "RefundsController_rejectRefund",
+        "parameters": [
+          {
+            "name": "refundId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rejects a requested refund.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AdminRefundEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-refunds"]
       }
     },
     "/v1/promotions/validate": {
@@ -4998,9 +5354,57 @@
         },
         "required": ["data"]
       },
-      "AdminPaymentEnvelopeDto": {
+      "AdminPaymentDetailDto": {
         "type": "object",
-        "properties": { "data": { "$ref": "#/components/schemas/AdminPaymentDto" } },
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "orderId": { "type": "string", "format": "uuid" },
+          "orderNumber": { "type": "string" },
+          "customerId": { "type": "string", "format": "uuid" },
+          "customerEmail": { "type": "string", "nullable": true },
+          "campusId": { "type": "string", "format": "uuid" },
+          "orderStatus": { "type": "string" },
+          "orderTotalKobo": { "type": "number" },
+          "providerReference": { "type": "string" },
+          "paymentStatus": { "type": "string" },
+          "expectedAmountKobo": { "type": "number" },
+          "paidAmountKobo": { "type": "number", "nullable": true },
+          "providerTransactionId": { "type": "string", "nullable": true },
+          "currency": { "type": "string" },
+          "initializedAt": { "type": "string" },
+          "paidAt": { "type": "string", "nullable": true },
+          "verifiedAt": { "type": "string", "nullable": true },
+          "webhookReceived": { "type": "boolean" },
+          "webhookCount": { "type": "number" },
+          "verificationStatus": { "type": "string", "enum": ["verified", "unverified"] },
+          "refundStatus": { "type": "string" },
+          "refundedAmountKobo": { "type": "number" },
+          "settlementImpactKobo": { "type": "number" }
+        },
+        "required": [
+          "id",
+          "orderId",
+          "orderNumber",
+          "customerId",
+          "campusId",
+          "orderStatus",
+          "orderTotalKobo",
+          "providerReference",
+          "paymentStatus",
+          "expectedAmountKobo",
+          "currency",
+          "initializedAt",
+          "webhookReceived",
+          "webhookCount",
+          "verificationStatus",
+          "refundStatus",
+          "refundedAmountKobo",
+          "settlementImpactKobo"
+        ]
+      },
+      "AdminPaymentDetailEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/AdminPaymentDetailDto" } },
         "required": ["data"]
       },
       "PaymentReconciliationDto": {
@@ -5046,6 +5450,193 @@
       "RefundEnvelopeDto": {
         "type": "object",
         "properties": { "data": { "$ref": "#/components/schemas/RefundDto" } },
+        "required": ["data"]
+      },
+      "ReconciliationScanResultDto": {
+        "type": "object",
+        "properties": { "detected": { "type": "number" } },
+        "required": ["detected"]
+      },
+      "ReconciliationScanEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/ReconciliationScanResultDto" } },
+        "required": ["data"]
+      },
+      "ReconciliationIssueRecordDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "issueType": {
+            "type": "string",
+            "enum": [
+              "initialized_unconfirmed",
+              "paid_order_pending",
+              "webhook_processing_failed",
+              "provider_success_not_local",
+              "duplicate_success",
+              "amount_mismatch",
+              "currency_mismatch",
+              "refund_stuck"
+            ]
+          },
+          "status": { "type": "string", "enum": ["open", "investigating", "resolved", "ignored"] },
+          "severity": { "type": "string", "enum": ["info", "warning", "critical"] },
+          "paymentId": { "type": "string", "nullable": true },
+          "orderId": { "type": "string", "nullable": true },
+          "refundId": { "type": "string", "nullable": true },
+          "campusId": { "type": "string", "nullable": true },
+          "providerReference": { "type": "string", "nullable": true },
+          "detail": { "type": "object" },
+          "firstDetectedAt": { "type": "string" },
+          "lastDetectedAt": { "type": "string" },
+          "reviewedBy": { "type": "string", "nullable": true },
+          "reviewedAt": { "type": "string", "nullable": true },
+          "resolutionNote": { "type": "string", "nullable": true }
+        },
+        "required": [
+          "id",
+          "issueType",
+          "status",
+          "severity",
+          "detail",
+          "firstDetectedAt",
+          "lastDetectedAt"
+        ]
+      },
+      "ReconciliationIssueListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ReconciliationIssueRecordDto" }
+          }
+        },
+        "required": ["data"]
+      },
+      "ReconciliationNoteRecordDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "issueId": { "type": "string", "format": "uuid" },
+          "authorId": { "type": "string", "nullable": true },
+          "body": { "type": "string" },
+          "createdAt": { "type": "string" }
+        },
+        "required": ["id", "issueId", "body", "createdAt"]
+      },
+      "ReconciliationIssueDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "issueType": {
+            "type": "string",
+            "enum": [
+              "initialized_unconfirmed",
+              "paid_order_pending",
+              "webhook_processing_failed",
+              "provider_success_not_local",
+              "duplicate_success",
+              "amount_mismatch",
+              "currency_mismatch",
+              "refund_stuck"
+            ]
+          },
+          "status": { "type": "string", "enum": ["open", "investigating", "resolved", "ignored"] },
+          "severity": { "type": "string", "enum": ["info", "warning", "critical"] },
+          "paymentId": { "type": "string", "nullable": true },
+          "orderId": { "type": "string", "nullable": true },
+          "refundId": { "type": "string", "nullable": true },
+          "campusId": { "type": "string", "nullable": true },
+          "providerReference": { "type": "string", "nullable": true },
+          "detail": { "type": "object" },
+          "firstDetectedAt": { "type": "string" },
+          "lastDetectedAt": { "type": "string" },
+          "reviewedBy": { "type": "string", "nullable": true },
+          "reviewedAt": { "type": "string", "nullable": true },
+          "resolutionNote": { "type": "string", "nullable": true },
+          "notes": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ReconciliationNoteRecordDto" }
+          }
+        },
+        "required": [
+          "id",
+          "issueType",
+          "status",
+          "severity",
+          "detail",
+          "firstDetectedAt",
+          "lastDetectedAt",
+          "notes"
+        ]
+      },
+      "ReconciliationIssueDetailEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/ReconciliationIssueDetailDto" } },
+        "required": ["data"]
+      },
+      "ReconciliationIssueEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/ReconciliationIssueRecordDto" } },
+        "required": ["data"]
+      },
+      "ReconciliationNoteEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/ReconciliationNoteRecordDto" } },
+        "required": ["data"]
+      },
+      "AdminRefundRecordDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "paymentId": { "type": "string", "format": "uuid" },
+          "orderId": { "type": "string", "format": "uuid" },
+          "orderNumber": { "type": "string", "nullable": true },
+          "campusId": { "type": "string", "nullable": true },
+          "vendorId": { "type": "string", "nullable": true },
+          "customerId": { "type": "string", "nullable": true },
+          "customerEmail": { "type": "string", "nullable": true },
+          "providerReference": { "type": "string", "nullable": true },
+          "providerTransactionId": { "type": "string", "nullable": true },
+          "providerRefundReference": { "type": "string", "nullable": true },
+          "amountKobo": { "type": "number" },
+          "reasonCode": { "type": "string" },
+          "reasonText": { "type": "string", "nullable": true },
+          "status": {
+            "type": "string",
+            "enum": ["requested", "approved", "processing", "succeeded", "failed", "cancelled"]
+          },
+          "failureReason": { "type": "string", "nullable": true },
+          "resolutionNote": { "type": "string", "nullable": true },
+          "requestedBy": { "type": "string", "nullable": true },
+          "resolvedBy": { "type": "string", "nullable": true },
+          "requestedAt": { "type": "string" },
+          "processedAt": { "type": "string", "nullable": true },
+          "updatedAt": { "type": "string", "nullable": true }
+        },
+        "required": [
+          "id",
+          "paymentId",
+          "orderId",
+          "amountKobo",
+          "reasonCode",
+          "status",
+          "requestedAt"
+        ]
+      },
+      "AdminRefundListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AdminRefundRecordDto" }
+          }
+        },
+        "required": ["data"]
+      },
+      "AdminRefundEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/AdminRefundRecordDto" } },
         "required": ["data"]
       },
       "BatchSummaryDto": {

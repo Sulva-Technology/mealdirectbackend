@@ -8,14 +8,20 @@ import {
 } from '@nestjs/common';
 
 import { ErrorCodes } from '../../common/errors/error-codes.js';
+import { normalizeCursorPagination } from '../../common/api/pagination.js';
 import type { AuthenticatedActor } from '../auth/actor-context.js';
 import { PaystackClient } from './paystack.client.js';
 import { PaymentsRepository } from './payments.repository.js';
 import type {
+  AdminPaymentDetail,
+  AdminPaymentListFilter,
+  AdminPaymentListResult,
   PaymentInitializationRecord,
   PaymentInitializationResponse,
   PaymentRecord,
   PaymentReconciliationResponse,
+  PaymentTimelineEvent,
+  PaymentWebhookRecord,
   PaymentsRepositoryContract,
   PaystackClientContract,
   RefundInput,
@@ -196,8 +202,13 @@ export class PaymentsService {
     };
   }
 
-  async listAdminPayments(actor: AuthenticatedActor): Promise<PaymentRecord[]> {
-    return this.repository.listAdminPayments(this.adminCampusScope(actor));
+  async listAdminPayments(
+    actor: AuthenticatedActor,
+    filter: AdminPaymentListFilter,
+    pagination: { cursor?: string; limit?: number }
+  ): Promise<AdminPaymentListResult> {
+    const normalized = normalizeCursorPagination(pagination);
+    return this.repository.listAdminPaymentsPaged(filter, normalized, this.adminCampusScope(actor));
   }
 
   async getAdminPayment(actor: AuthenticatedActor, paymentId: string): Promise<PaymentRecord> {
@@ -209,6 +220,34 @@ export class PaymentsService {
       throw notFound('Payment was not found.');
     }
     return payment;
+  }
+
+  async getAdminPaymentDetail(
+    actor: AuthenticatedActor,
+    paymentId: string
+  ): Promise<AdminPaymentDetail> {
+    const detail = await this.repository.getPaymentDetail(paymentId, this.adminCampusScope(actor));
+    if (detail === undefined) {
+      throw notFound('Payment was not found.');
+    }
+    return detail;
+  }
+
+  async getAdminPaymentTimeline(
+    actor: AuthenticatedActor,
+    paymentId: string
+  ): Promise<PaymentTimelineEvent[]> {
+    // Scope check first so campus admins cannot enumerate other campuses' timelines.
+    await this.getAdminPayment(actor, paymentId);
+    return this.repository.getPaymentTimeline(paymentId);
+  }
+
+  async getAdminPaymentWebhooks(
+    actor: AuthenticatedActor,
+    paymentId: string
+  ): Promise<PaymentWebhookRecord[]> {
+    const payment = await this.getAdminPayment(actor, paymentId);
+    return this.repository.getPaymentWebhooks(payment.providerReference);
   }
 
   async reconcilePaystackPayment(

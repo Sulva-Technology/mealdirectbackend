@@ -1,7 +1,17 @@
-import { Body, Controller, HttpCode, Inject, Post, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  Inject,
+  Post,
+  Req,
+  Res,
+  UnauthorizedException
+} from '@nestjs/common';
 import { ApiAcceptedResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
+import { ErrorCodes } from '../../common/errors/error-codes.js';
 import type { PaystackWebhookEvent } from '../../domain/payments.js';
 import { PaystackWebhookService } from './paystack-webhook.service.js';
 
@@ -23,7 +33,17 @@ export class PaystackWebhookController {
   ): Promise<Record<string, unknown>> {
     const signatureHeader = request.headers['x-paystack-signature'];
     const signature = Array.isArray(signatureHeader) ? signatureHeader[0] : signatureHeader;
-    const rawBody = request.rawBody ?? JSON.stringify(payload);
+    // Signature verification MUST run against the exact bytes Paystack signed. The JSON
+    // content-type parser (app.factory) captures request.rawBody for us; if it is missing
+    // we refuse rather than re-stringify, since re-serialization can silently drift from
+    // the signed payload and defeat verification.
+    const rawBody = request.rawBody;
+    if (rawBody === undefined || rawBody.length === 0) {
+      throw new UnauthorizedException({
+        code: ErrorCodes.UNAUTHORIZED,
+        message: 'Paystack webhook raw body was not preserved.'
+      });
+    }
     const result = await this.webhookService.process(rawBody, signature, payload);
 
     if (result.status === 'duplicate') {
