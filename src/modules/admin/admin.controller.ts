@@ -24,6 +24,8 @@ import type { ListEnvelope, SuccessEnvelope } from '../../common/api/response.js
 import type { AuthenticatedActor } from '../auth/actor-context.js';
 import { CurrentActor } from '../auth/current-actor.decorator.js';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
+import { RequirePermission } from '../auth/permission.decorator.js';
+import { PermissionsGuard } from '../auth/permissions.guard.js';
 import { RequireRoles } from '../auth/roles.decorator.js';
 import { RolesGuard } from '../auth/roles.guard.js';
 import { AdminService } from './admin.service.js';
@@ -85,7 +87,7 @@ function listEnvelope(result: {
 @ApiUnauthorizedResponse({ description: 'Missing, invalid, or expired Supabase JWT.' })
 @ApiForbiddenResponse({ description: 'Admin role is required.' })
 @Controller('admin')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @RequireRoles('campus_admin', 'super_admin')
 export class AdminController {
   constructor(@Inject(AdminService) private readonly admin: AdminService) {}
@@ -246,6 +248,7 @@ export class AdminController {
   }
 
   @Post('vendors/:vendorId/approve')
+  @RequirePermission('vendors:manage')
   @HttpCode(200)
   async approveVendor(
     @CurrentActor() actor: AuthenticatedActor,
@@ -257,6 +260,7 @@ export class AdminController {
   }
 
   @Post('vendors/:vendorId/suspend')
+  @RequirePermission('vendors:manage')
   @HttpCode(200)
   async suspendVendor(
     @CurrentActor() actor: AuthenticatedActor,
@@ -268,6 +272,7 @@ export class AdminController {
   }
 
   @Post('vendors/:vendorId/activate')
+  @RequirePermission('vendors:manage')
   @HttpCode(200)
   async activateVendor(
     @CurrentActor() actor: AuthenticatedActor,
@@ -341,6 +346,7 @@ export class AdminController {
   }
 
   @Post('riders/:riderId/verify')
+  @RequirePermission('riders:manage')
   @HttpCode(200)
   async verifyRider(
     @CurrentActor() actor: AuthenticatedActor,
@@ -352,6 +358,7 @@ export class AdminController {
   }
 
   @Post('riders/:riderId/suspend')
+  @RequirePermission('riders:manage')
   @HttpCode(200)
   async suspendRider(
     @CurrentActor() actor: AuthenticatedActor,
@@ -363,6 +370,7 @@ export class AdminController {
   }
 
   @Post('riders/:riderId/activate')
+  @RequirePermission('riders:manage')
   @HttpCode(200)
   async activateRider(
     @CurrentActor() actor: AuthenticatedActor,
@@ -464,6 +472,7 @@ export class AdminController {
   }
 
   @Post('settlements/generate')
+  @RequirePermission('settlements:manage')
   @HttpCode(200)
   async generateSettlement(
     @CurrentActor() actor: AuthenticatedActor,
@@ -481,6 +490,7 @@ export class AdminController {
   }
 
   @Post('settlements/:id/approve')
+  @RequirePermission('settlements:manage')
   @HttpCode(200)
   async approveSettlement(
     @CurrentActor() actor: AuthenticatedActor,
@@ -490,6 +500,7 @@ export class AdminController {
   }
 
   @Post('settlements/:id/mark-paid')
+  @RequirePermission('settlements:manage')
   @HttpCode(200)
   async markSettlementPaid(
     @CurrentActor() actor: AuthenticatedActor,
@@ -500,6 +511,7 @@ export class AdminController {
   }
 
   @Post('settlements/:id/adjustments')
+  @RequirePermission('settlements:manage')
   async adjustSettlement(
     @CurrentActor() actor: AuthenticatedActor,
     @Param() params: UuidIdParamDto,
@@ -543,6 +555,7 @@ export class AdminController {
   }
 
   @Post('users/:userId/suspend')
+  @RequirePermission('users:manage')
   @HttpCode(200)
   async suspendUser(
     @CurrentActor() actor: AuthenticatedActor,
@@ -552,6 +565,7 @@ export class AdminController {
   }
 
   @Post('users/:userId/activate')
+  @RequirePermission('users:manage')
   @HttpCode(200)
   async activateUser(
     @CurrentActor() actor: AuthenticatedActor,
@@ -569,6 +583,7 @@ export class AdminController {
   }
 
   @Post('admin-memberships')
+  @RequirePermission('admin:manage')
   async createAdminMembership(
     @CurrentActor() actor: AuthenticatedActor,
     @Body() input: AdminCreateMembershipDto
@@ -578,6 +593,7 @@ export class AdminController {
 
   @Post('admin-memberships/:id/revoke')
   @HttpCode(200)
+  @RequirePermission('admin:manage')
   async revokeAdminMembership(
     @CurrentActor() actor: AuthenticatedActor,
     @Param() params: UuidIdParamDto
@@ -589,6 +605,7 @@ export class AdminController {
 
   @Post('admin-memberships/:id/activate')
   @HttpCode(200)
+  @RequirePermission('admin:manage')
   async activateAdminMembership(
     @CurrentActor() actor: AuthenticatedActor,
     @Param() params: UuidIdParamDto

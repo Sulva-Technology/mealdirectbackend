@@ -83,7 +83,9 @@ export class OrdersService {
     this.assertAllItemsQuoted(input, quotedItems);
 
     const zoneFeeKobo = await this.repository.findZoneDeliveryFeeKobo(input.locationId);
-    const serviceFeeKobo = await this.resolveServiceFeeKobo(input.vendorId);
+    const serviceFeeKobo = quotedItems.some((item) => item.countsTowardSpoonLimit)
+      ? await this.resolveServiceFeeKobo(input.vendorId)
+      : 0;
 
     const pricing = calculateOrderPricing({
       lines: quotedItems.map((item) => ({

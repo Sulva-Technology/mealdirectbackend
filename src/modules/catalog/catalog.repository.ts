@@ -125,13 +125,15 @@ export class CatalogRepository implements CatalogRepositoryContract {
           ami.description,
           ami.image_url as "imageUrl",
           ami.price_kobo as "priceKobo",
-          ami.remaining_quantity as "remainingQuantity"
+          ami.remaining_quantity as "remainingQuantity",
+          ut.counts_toward_spoon_limit as "countsTowardSpoonLimit"
         from target_vendor tv
         join public.available_menu_items(
           tv.campus_id,
           ${filters.date ?? null}::date,
           ${filters.slotId ?? null}::uuid
         ) ami on ami.vendor_id = tv.id
+        join public.unit_types ut on ut.id = ami.unit_type_id
         left join public.menu_categories mc on mc.id = ami.category_id
         order by mc.display_order nulls last, ami.name
       `.execute(this.database.db);
@@ -151,7 +153,8 @@ export class CatalogRepository implements CatalogRepositoryContract {
         mi.description,
         mi.image_url as "imageUrl",
         mi.price_kobo as "priceKobo",
-        null::integer as "remainingQuantity"
+        null::integer as "remainingQuantity",
+        ut.counts_toward_spoon_limit as "countsTowardSpoonLimit"
       from public.menu_items mi
       join public.vendors v on v.id = mi.vendor_id
       join public.campuses c on c.id = v.campus_id

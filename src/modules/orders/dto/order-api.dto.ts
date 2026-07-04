@@ -48,6 +48,12 @@ export class OrderQuoteItemDto {
 
   @ApiProperty({ type: Number })
   lineTotalKobo!: number;
+
+  @ApiProperty({
+    description: 'When true, this line contributes to takeaway packaging rules and fees.',
+    type: Boolean
+  })
+  countsTowardSpoonLimit!: boolean;
 }
 
 export class OrderQuoteDto {

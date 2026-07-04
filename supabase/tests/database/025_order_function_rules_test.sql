@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(6);
+select plan(8);
 
 select lives_ok(
   $$ select public.create_pending_order_and_reserve_inventory(
@@ -69,6 +69,52 @@ select is(
     )
   ),
   'duplicate idempotency key returns the same order resource'
+);
+
+create temp table _non_takeaway_fee_order on commit drop as
+select public.create_pending_order_and_reserve_inventory(
+  'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1',
+  '11111111-1111-1111-1111-111111111111',
+  '31111111-1111-1111-1111-111111111111',
+  current_date + 6,
+  '51111111-1111-1111-1111-111111111113',
+  '22111111-1111-1111-1111-111111111111',
+  'meal_direct_rider',
+  '[{"menu_item_id":"61111111-1111-1111-1111-111111111113","quantity":1}]'::jsonb,
+  'pgtap-non-takeaway-service-fee',
+  'hash-non-takeaway-service-fee',
+  null,
+  null,
+  5000
+) as order_id;
+
+select is(
+  (select service_fee_kobo from public.orders where id = (select order_id from _non_takeaway_fee_order)),
+  0,
+  'non-takeaway-only order stores zero service fee'
+);
+
+create temp table _mixed_takeaway_fee_order on commit drop as
+select public.create_pending_order_and_reserve_inventory(
+  'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1',
+  '11111111-1111-1111-1111-111111111111',
+  '31111111-1111-1111-1111-111111111111',
+  current_date + 7,
+  '51111111-1111-1111-1111-111111111113',
+  '22111111-1111-1111-1111-111111111111',
+  'meal_direct_rider',
+  '[{"menu_item_id":"61111111-1111-1111-1111-111111111111","quantity":1},{"menu_item_id":"61111111-1111-1111-1111-111111111113","quantity":1}]'::jsonb,
+  'pgtap-mixed-takeaway-service-fee',
+  'hash-mixed-takeaway-service-fee',
+  null,
+  null,
+  5000
+) as order_id;
+
+select is(
+  (select service_fee_kobo from public.orders where id = (select order_id from _mixed_takeaway_fee_order)),
+  5000,
+  'mixed order stores one flat service fee'
 );
 
 update public.menu_item_inventory

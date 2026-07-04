@@ -522,8 +522,21 @@ export class AdminCreateMembershipDto {
   @IsDatabaseUuid()
   userId!: string;
 
-  @IsIn(['campus_admin', 'super_admin'])
-  role!: 'campus_admin' | 'super_admin';
+  @IsIn([
+    'super_admin',
+    'campus_admin',
+    'finance_admin',
+    'operations_admin',
+    'support_admin',
+    'readonly_admin'
+  ])
+  role!:
+    | 'super_admin'
+    | 'campus_admin'
+    | 'finance_admin'
+    | 'operations_admin'
+    | 'support_admin'
+    | 'readonly_admin';
 
   @IsOptional()
   @IsDatabaseUuid()

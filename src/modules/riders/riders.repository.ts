@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { sql } from 'kysely';
 
 import { DatabaseService } from '../../database/database.service.js';
+import { decodeCursor } from '../../common/api/pagination.js';
 import type {
   OrderDetail,
   OrderItem,
@@ -19,6 +20,7 @@ import type {
   RiderOnboardRepositoryInput,
   RiderPayoutAccount,
   RiderPayoutAccountRecordInput,
+  RiderPayoutTransfer,
   RiderProfile,
   RiderProfileUpdateInput,
   RiderSettlementDetail,
@@ -27,6 +29,20 @@ import type {
   RiderSettlementSummary,
   RidersRepositoryContract
 } from './riders.types.js';
+
+function decodeRiderTransferCursor(
+  cursor: string
+): { createdAt: string; id: string } | undefined {
+  try {
+    const payload = decodeCursor(cursor);
+    if (typeof payload.createdAt === 'string' && typeof payload.id === 'string') {
+      return { createdAt: payload.createdAt, id: payload.id };
+    }
+    return undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 const deliveryEarningRateKobo = 7500;
 
@@ -182,6 +198,8 @@ export class RidersRepository implements RidersRepositoryContract {
         masked_account_number as "maskedAccountNumber",
         account_name as "accountName",
         verified_at::text as "verifiedAt",
+        admin_review_status as "adminReviewStatus",
+        failure_reason as "failureReason",
         active,
         created_at::text as "createdAt",
         updated_at::text as "updatedAt"
@@ -216,6 +234,8 @@ export class RidersRepository implements RidersRepositoryContract {
           bank_code,
           masked_account_number,
           account_name,
+          verified_at,
+          admin_review_status,
           active
         )
         values (
@@ -225,6 +245,8 @@ export class RidersRepository implements RidersRepositoryContract {
           ${input.bankCode ?? null},
           ${input.maskedAccountNumber},
           ${input.accountName},
+          now(),
+          'pending',
           true
         )
         returning
@@ -236,6 +258,8 @@ export class RidersRepository implements RidersRepositoryContract {
           masked_account_number as "maskedAccountNumber",
           account_name as "accountName",
           verified_at::text as "verifiedAt",
+          admin_review_status as "adminReviewStatus",
+          failure_reason as "failureReason",
           active,
           created_at::text as "createdAt",
           updated_at::text as "updatedAt"
@@ -247,6 +271,61 @@ export class RidersRepository implements RidersRepositoryContract {
       }
       return account;
     });
+  }
+
+  async markPayoutAccountVerified(riderId: string): Promise<RiderPayoutAccount | undefined> {
+    const result = await sql<RiderPayoutAccount>`
+      update public.rider_payout_accounts
+      set verified_at = now(),
+          failure_reason = null,
+          updated_at = now()
+      where rider_id = ${riderId}::uuid
+        and active
+      returning
+        id::text as "id",
+        rider_id::text as "riderId",
+        paystack_recipient_code as "paystackRecipientCode",
+        bank_name as "bankName",
+        bank_code as "bankCode",
+        masked_account_number as "maskedAccountNumber",
+        account_name as "accountName",
+        verified_at::text as "verifiedAt",
+        admin_review_status as "adminReviewStatus",
+        failure_reason as "failureReason",
+        active,
+        created_at::text as "createdAt",
+        updated_at::text as "updatedAt"
+    `.execute(this.database.db);
+    return result.rows[0];
+  }
+
+  async listPayoutTransfers(
+    riderId: string,
+    pagination: { cursor?: string; limit: number }
+  ): Promise<RiderPayoutTransfer[]> {
+    const cursor =
+      pagination.cursor === undefined ? undefined : decodeRiderTransferCursor(pagination.cursor);
+    const result = await sql<RiderPayoutTransfer>`
+      select
+        pt.id::text as "id",
+        pt.settlement_id::text as "settlementId",
+        s.settlement_date::text as "settlementDate",
+        pt.reference,
+        pt.amount_kobo as "amountKobo",
+        pt.status,
+        pt.created_at::text as "createdAt",
+        pt.updated_at::text as "updatedAt"
+      from public.payout_transfers pt
+      join public.settlements s on s.id = pt.settlement_id
+      where s.rider_id = ${riderId}::uuid
+        and (
+          ${cursor?.createdAt ?? null}::timestamptz is null
+          or (pt.created_at, pt.id) < (${cursor?.createdAt ?? null}::timestamptz, ${cursor?.id ?? null}::uuid)
+        )
+      order by pt.created_at desc, pt.id desc
+      limit ${pagination.limit + 1}
+    `.execute(this.database.db);
+    return result.rows;
   }
 
   async assertRiderAccess(riderId: string, userId: string): Promise<boolean> {

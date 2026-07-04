@@ -58,7 +58,18 @@ const quoteItem: OrderQuoteItem = {
   quantity: 2,
   remainingQuantity: 10,
   unitPriceKobo: 250000,
-  lineTotalKobo: 500000
+  lineTotalKobo: 500000,
+  countsTowardSpoonLimit: true
+};
+
+const nonTakeawayQuoteItem: OrderQuoteItem = {
+  menuItemId: '99999999-9999-4999-8999-999999999991',
+  name: 'Table Water',
+  quantity: 2,
+  remainingQuantity: 10,
+  unitPriceKobo: 20000,
+  lineTotalKobo: 40000,
+  countsTowardSpoonLimit: false
 };
 
 const orderDetail: OrderDetail = {
@@ -147,6 +158,75 @@ describe('OrdersService', () => {
       items: [quoteItem],
       totalKobo: 520000
     });
+  });
+
+  it('does not charge the service fee when no items count toward takeaway', async () => {
+    const input: CreateOrderDto = {
+      ...orderInput,
+      items: [{ menuItemId: nonTakeawayQuoteItem.menuItemId, quantity: 2 }]
+    };
+    vi.mocked(repository.quoteOrder).mockResolvedValue([nonTakeawayQuoteItem]);
+    service = new OrdersService(
+      repository,
+      createEnv({ SERVICE_FEE_KOBO: 5000 }),
+      createPayments()
+    );
+
+    await expect(service.quoteOrder(customer, input)).resolves.toEqual({
+      currency: 'NGN',
+      deliveryFeeKobo: 15000,
+      serviceFeeKobo: 0,
+      discountKobo: 0,
+      foodSubtotalKobo: 40000,
+      items: [nonTakeawayQuoteItem],
+      totalKobo: 55000
+    });
+  });
+
+  it('charges one flat service fee when a mixed cart contains a takeaway item', async () => {
+    const input: CreateOrderDto = {
+      ...orderInput,
+      items: [
+        { menuItemId: quoteItem.menuItemId, quantity: 2 },
+        { menuItemId: nonTakeawayQuoteItem.menuItemId, quantity: 2 }
+      ]
+    };
+    vi.mocked(repository.quoteOrder).mockResolvedValue([quoteItem, nonTakeawayQuoteItem]);
+    service = new OrdersService(
+      repository,
+      createEnv({ SERVICE_FEE_KOBO: 5000 }),
+      createPayments()
+    );
+
+    await expect(service.quoteOrder(customer, input)).resolves.toMatchObject({
+      foodSubtotalKobo: 540000,
+      serviceFeeKobo: 5000,
+      totalKobo: 560000
+    });
+  });
+
+  it('passes zero service fee to order creation when no items count toward takeaway', async () => {
+    const input: CreateOrderDto = {
+      ...orderInput,
+      items: [{ menuItemId: nonTakeawayQuoteItem.menuItemId, quantity: 2 }]
+    };
+    vi.mocked(repository.quoteOrder).mockResolvedValue([nonTakeawayQuoteItem]);
+    service = new OrdersService(
+      repository,
+      createEnv({ SERVICE_FEE_KOBO: 5000 }),
+      createPayments()
+    );
+
+    await service.createOrder(customer, input, 'order-key');
+
+    expect(repository.createOrder).toHaveBeenCalledWith(
+      customer.userId,
+      input,
+      'order-key',
+      expect.any(String),
+      0,
+      100_000_000
+    );
   });
 
   it('prefers the zone delivery fee over the configured fallback', async () => {

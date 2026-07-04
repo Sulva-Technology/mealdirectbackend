@@ -12,6 +12,8 @@ import { createListEnvelope, createSuccessEnvelope } from '../../common/api/resp
 import type { ListEnvelope, SuccessEnvelope } from '../../common/api/response.js';
 import { CurrentActor } from '../auth/current-actor.decorator.js';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
+import { RequirePermission } from '../auth/permission.decorator.js';
+import { PermissionsGuard } from '../auth/permissions.guard.js';
 import { RequireRoles } from '../auth/roles.decorator.js';
 import { RolesGuard } from '../auth/roles.guard.js';
 import type { AuthenticatedActor } from '../auth/actor-context.js';
@@ -30,7 +32,7 @@ import type { AdminRefundRecord } from './refunds.types.js';
 @ApiUnauthorizedResponse({ description: 'Missing, invalid, or expired Supabase JWT.' })
 @ApiForbiddenResponse({ description: 'Admin role is required.' })
 @Controller('admin/refunds')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @RequireRoles('campus_admin', 'super_admin')
 export class RefundsController {
   constructor(@Inject(RefundsService) private readonly refunds: RefundsService) {}
@@ -71,6 +73,7 @@ export class RefundsController {
 
   @Post(':refundId/retry')
   @HttpCode(200)
+  @RequirePermission('refunds:manage')
   @ApiParam({ format: 'uuid', name: 'refundId', type: String })
   @ApiOkResponse({ description: 'Retries a failed refund against Paystack.', type: AdminRefundEnvelopeDto })
   async retryRefund(
@@ -82,6 +85,7 @@ export class RefundsController {
 
   @Post(':refundId/resolve')
   @HttpCode(200)
+  @RequirePermission('refunds:manage')
   @ApiParam({ format: 'uuid', name: 'refundId', type: String })
   @ApiOkResponse({ description: 'Records a manual refund resolution.', type: AdminRefundEnvelopeDto })
   async resolveRefund(
@@ -100,6 +104,7 @@ export class RefundsController {
 
   @Post(':refundId/approve')
   @HttpCode(200)
+  @RequirePermission('refunds:manage')
   @ApiParam({ format: 'uuid', name: 'refundId', type: String })
   @ApiOkResponse({ description: 'Approves a requested refund.', type: AdminRefundEnvelopeDto })
   async approveRefund(
@@ -111,6 +116,7 @@ export class RefundsController {
 
   @Post(':refundId/reject')
   @HttpCode(200)
+  @RequirePermission('refunds:manage')
   @ApiParam({ format: 'uuid', name: 'refundId', type: String })
   @ApiOkResponse({ description: 'Rejects a requested refund.', type: AdminRefundEnvelopeDto })
   async rejectRefund(

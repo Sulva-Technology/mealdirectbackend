@@ -63,6 +63,7 @@ const menuItem: MenuItemRecord = {
   description: null,
   imageUrl: null,
   priceKobo: 250000,
+  countsTowardSpoonLimit: true,
   active: true,
   displayOrder: 0,
   createdAt: '2026-06-15T08:00:00.000Z',

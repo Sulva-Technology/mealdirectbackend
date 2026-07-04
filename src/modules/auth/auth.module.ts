@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 
 import { DatabaseModule } from '../../database/database.module.js';
+import { AdminPermissionsRepository } from './admin-permissions.repository.js';
 import { AuthController } from './auth.controller.js';
 import { JwtAuthGuard } from './jwt-auth.guard.js';
+import { PermissionsGuard } from './permissions.guard.js';
 import { RolesGuard } from './roles.guard.js';
 import { SupabaseAuthService } from './supabase-auth.service.js';
 import { SupabaseJwtService } from './supabase-jwt.service.js';
@@ -14,6 +16,8 @@ import { VendorInvitationsRepository } from './vendor-invitations.repository.js'
   providers: [
     JwtAuthGuard,
     RolesGuard,
+    PermissionsGuard,
+    AdminPermissionsRepository,
     SupabaseJwtService,
     SupabaseAuthService,
     VendorInvitationsRepository
@@ -21,6 +25,8 @@ import { VendorInvitationsRepository } from './vendor-invitations.repository.js'
   exports: [
     JwtAuthGuard,
     RolesGuard,
+    PermissionsGuard,
+    AdminPermissionsRepository,
     SupabaseJwtService,
     SupabaseAuthService,
     VendorInvitationsRepository

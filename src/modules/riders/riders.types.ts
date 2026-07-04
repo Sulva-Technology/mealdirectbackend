@@ -48,7 +48,30 @@ export type RiderPayoutAccount = {
   maskedAccountNumber: string;
   accountName: string;
   verifiedAt: string | null;
+  adminReviewStatus: 'pending' | 'approved' | 'rejected';
+  failureReason: string | null;
   active: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/**
+ * Rider-facing payout account snapshot. `payoutMode` is 'manual' at launch: bank details
+ * and a Paystack transfer recipient are captured, but rider settlement payouts are still
+ * disbursed by an admin rather than auto-transferred.
+ */
+export type RiderPayoutAccountView = RiderPayoutAccount & {
+  verificationStatus: 'verified' | 'unverified';
+  payoutMode: 'manual';
+};
+
+export type RiderPayoutTransfer = {
+  id: string;
+  settlementId: string;
+  settlementDate: string | null;
+  reference: string;
+  amountKobo: number;
+  status: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -210,6 +233,11 @@ export type RidersRepositoryContract = {
     riderId: string,
     input: RiderPayoutAccountRecordInput
   ) => Promise<RiderPayoutAccount>;
+  markPayoutAccountVerified: (riderId: string) => Promise<RiderPayoutAccount | undefined>;
+  listPayoutTransfers: (
+    riderId: string,
+    pagination: { cursor?: string; limit: number }
+  ) => Promise<RiderPayoutTransfer[]>;
   assertRiderAccess: (riderId: string, userId: string) => Promise<boolean>;
   listAssignments: (
     riderId: string,

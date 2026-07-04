@@ -7,6 +7,7 @@ import {
   NotFoundException
 } from '@nestjs/common';
 
+import { AuditService, actorTypeForRole } from '../../common/audit/audit.service.js';
 import { createCursorPage, decodeCursor, encodeCursor } from '../../common/api/pagination.js';
 import type { CursorPage, CursorPayload } from '../../common/api/pagination.js';
 import { ErrorCodes } from '../../common/errors/error-codes.js';
@@ -32,11 +33,23 @@ import type {
   RiderIssueRecord,
   RiderOrderDetail,
   RiderPayoutAccount,
+  RiderPayoutAccountView,
+  RiderPayoutTransfer,
   RiderProfile,
   RiderSettlementDetail,
   RiderSettlementSummary,
   RidersRepositoryContract
 } from './riders.types.js';
+
+// Manual payout mode at launch: bank details + Paystack recipient captured, but rider
+// settlement payouts are disbursed by an admin, not auto-transferred.
+function toPayoutView(account: RiderPayoutAccount): RiderPayoutAccountView {
+  return {
+    ...account,
+    verificationStatus: account.verifiedAt === null ? 'unverified' : 'verified',
+    payoutMode: 'manual'
+  };
+}
 
 // Rider payouts settle in Naira; Paystack recipients are provisioned in the same currency.
 const RIDER_PAYOUT_CURRENCY = 'NGN';
@@ -109,7 +122,9 @@ export class RidersService {
     @Inject(SupabaseAuthService)
     private readonly auth: SupabaseAuthService,
     @Inject(PaystackClient)
-    private readonly paystack: PaystackClientContract
+    private readonly paystack: PaystackClientContract,
+    @Inject(AuditService)
+    private readonly audit: AuditService
   ) {}
 
   /**
@@ -191,9 +206,10 @@ export class RidersService {
     return updated;
   }
 
-  async getPayoutAccount(actor: AuthenticatedActor): Promise<RiderPayoutAccount | null> {
+  async getPayoutAccount(actor: AuthenticatedActor): Promise<RiderPayoutAccountView | null> {
     const profile = await this.resolveRiderProfile(actor, { requireActiveVerified: false });
-    return (await this.repository.findActivePayoutAccount(profile.id)) ?? null;
+    const account = await this.repository.findActivePayoutAccount(profile.id);
+    return account === undefined ? null : toPayoutView(account);
   }
 
   /**
@@ -205,7 +221,7 @@ export class RidersService {
   async upsertPayoutAccount(
     actor: AuthenticatedActor,
     input: UpsertRiderPayoutAccountDto
-  ): Promise<RiderPayoutAccount> {
+  ): Promise<RiderPayoutAccountView> {
     const profile = await this.resolveRiderProfile(actor, { requireActiveVerified: false });
 
     const accountName = input.accountName.trim();
@@ -219,13 +235,72 @@ export class RidersService {
       currency: RIDER_PAYOUT_CURRENCY
     });
 
-    return this.repository.upsertPayoutAccount(profile.id, {
+    const account = await this.repository.upsertPayoutAccount(profile.id, {
       accountName,
       bankName: input.bankName.trim(),
       bankCode,
       maskedAccountNumber,
       paystackRecipientCode: recipient.recipientCode
     });
+
+    // Audit the change; full account number never logged, only the mask.
+    await this.audit.record({
+      actorUserId: actor.userId,
+      actorType: actorTypeForRole(actor.role),
+      action: 'rider.payout_account.upsert',
+      entityType: 'rider_payout_account',
+      entityId: account.id,
+      metadata: { riderId: profile.id, maskedAccountNumber, bankName: account.bankName }
+    });
+
+    return toPayoutView(account);
+  }
+
+  /**
+   * Re-attest an existing payout account. The Paystack recipient was already provisioned at
+   * capture (which validates the account), so verify refreshes verified_at and clears any
+   * prior failure. No full account number is needed or stored.
+   */
+  async verifyPayoutAccount(actor: AuthenticatedActor): Promise<RiderPayoutAccountView> {
+    const profile = await this.resolveRiderProfile(actor, { requireActiveVerified: false });
+    const existing = await this.repository.findActivePayoutAccount(profile.id);
+    if (existing === undefined) {
+      throw notFound('No payout account to verify.');
+    }
+    if (existing.paystackRecipientCode === null) {
+      throw badRequest('Payout account has no provisioned transfer recipient to verify.');
+    }
+
+    const verified = await this.repository.markPayoutAccountVerified(profile.id);
+    if (verified === undefined) {
+      throw notFound('No payout account to verify.');
+    }
+
+    await this.audit.record({
+      actorUserId: actor.userId,
+      actorType: actorTypeForRole(actor.role),
+      action: 'rider.payout_account.verify',
+      entityType: 'rider_payout_account',
+      entityId: verified.id,
+      metadata: { riderId: profile.id }
+    });
+
+    return toPayoutView(verified);
+  }
+
+  async getPayoutHistory(
+    actor: AuthenticatedActor,
+    query: { cursor?: string; limit?: number }
+  ): Promise<CursorPage<RiderPayoutTransfer>> {
+    const profile = await this.resolveRiderProfile(actor, { requireActiveVerified: false });
+    const limit = query.limit ?? 20;
+    const rows = await this.repository.listPayoutTransfers(profile.id, {
+      ...(query.cursor === undefined ? {} : { cursor: query.cursor }),
+      limit
+    });
+    return createCursorPage(rows, limit, (transfer) =>
+      encodeCursor({ createdAt: transfer.createdAt, id: transfer.id })
+    );
   }
 
   async listAssignments(

@@ -2574,6 +2574,47 @@
         "tags": ["rider"]
       }
     },
+    "/v1/rider/payout-account/verify": {
+      "post": {
+        "operationId": "RidersController_verifyPayoutAccount",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Re-attests the current payout account and refreshes its verification.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RiderPayoutAccountEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "No provisioned payout account to verify." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Verified active rider access is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["rider"]
+      }
+    },
+    "/v1/rider/payout-history": {
+      "get": {
+        "operationId": "RidersController_getPayoutHistory",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Cursor-paginated rider payout transfer history.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RiderPayoutHistoryEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Verified active rider access is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["rider"]
+      }
+    },
     "/v1/rider/assignments": {
       "get": {
         "operationId": "RidersController_listAssignments",
@@ -4650,6 +4691,10 @@
           "description": { "type": "string", "nullable": true },
           "imageUrl": { "type": "string", "nullable": true },
           "priceKobo": { "type": "number" },
+          "countsTowardSpoonLimit": {
+            "type": "boolean",
+            "description": "When true, this item contributes to takeaway packaging rules and fees."
+          },
           "active": { "type": "boolean" },
           "displayOrder": { "type": "number" },
           "createdAt": { "type": "string" },
@@ -4662,6 +4707,7 @@
           "unitCode",
           "name",
           "priceKobo",
+          "countsTowardSpoonLimit",
           "active",
           "displayOrder",
           "createdAt",
@@ -5033,9 +5079,21 @@
           "description": { "type": "string", "nullable": true },
           "imageUrl": { "type": "string", "nullable": true },
           "priceKobo": { "type": "number" },
-          "remainingQuantity": { "type": "number", "nullable": true }
+          "remainingQuantity": { "type": "number", "nullable": true },
+          "countsTowardSpoonLimit": {
+            "type": "boolean",
+            "description": "When true, this item contributes to takeaway packaging rules and fees."
+          }
         },
-        "required": ["id", "vendorId", "unitTypeId", "unitCode", "name", "priceKobo"]
+        "required": [
+          "id",
+          "vendorId",
+          "unitTypeId",
+          "unitCode",
+          "name",
+          "priceKobo",
+          "countsTowardSpoonLimit"
+        ]
       },
       "MenuItemListEnvelopeDto": {
         "type": "object",
@@ -5200,7 +5258,11 @@
           "quantity": { "type": "number" },
           "remainingQuantity": { "type": "number" },
           "unitPriceKobo": { "type": "number" },
-          "lineTotalKobo": { "type": "number" }
+          "lineTotalKobo": { "type": "number" },
+          "countsTowardSpoonLimit": {
+            "type": "boolean",
+            "description": "When true, this line contributes to takeaway packaging rules and fees."
+          }
         },
         "required": [
           "menuItemId",
@@ -5208,7 +5270,8 @@
           "quantity",
           "remainingQuantity",
           "unitPriceKobo",
-          "lineTotalKobo"
+          "lineTotalKobo",
+          "countsTowardSpoonLimit"
         ]
       },
       "OrderQuoteDto": {
@@ -5781,6 +5844,10 @@
           "maskedAccountNumber": { "type": "string" },
           "accountName": { "type": "string" },
           "verifiedAt": { "type": "string", "nullable": true },
+          "adminReviewStatus": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+          "failureReason": { "type": "string", "nullable": true },
+          "verificationStatus": { "type": "string", "enum": ["verified", "unverified"] },
+          "payoutMode": { "type": "string", "enum": ["manual"] },
           "active": { "type": "boolean" },
           "createdAt": { "type": "string" },
           "updatedAt": { "type": "string" }
@@ -5791,6 +5858,9 @@
           "bankName",
           "maskedAccountNumber",
           "accountName",
+          "adminReviewStatus",
+          "verificationStatus",
+          "payoutMode",
           "active",
           "createdAt",
           "updatedAt"
@@ -5824,6 +5894,38 @@
           }
         },
         "required": ["bankName", "bankCode", "accountName", "accountNumber"]
+      },
+      "RiderPayoutTransferDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "settlementId": { "type": "string", "format": "uuid" },
+          "settlementDate": { "type": "string", "nullable": true },
+          "reference": { "type": "string" },
+          "amountKobo": { "type": "number" },
+          "status": { "type": "string" },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" }
+        },
+        "required": [
+          "id",
+          "settlementId",
+          "reference",
+          "amountKobo",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "RiderPayoutHistoryEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/RiderPayoutTransferDto" }
+          }
+        },
+        "required": ["data"]
       },
       "RiderAssignmentSummaryDto": {
         "type": "object",

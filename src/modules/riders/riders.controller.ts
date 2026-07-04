@@ -47,6 +47,8 @@ import {
   RiderOrderDetailEnvelopeDto,
   RiderOrderIdParamDto,
   RiderPayoutAccountEnvelopeDto,
+  RiderPayoutHistoryEnvelopeDto,
+  RiderPayoutHistoryQueryDto,
   RiderProfileEnvelopeDto,
   RiderProfileUpdateDto,
   RiderSettlementDetailEnvelopeDto,
@@ -63,7 +65,8 @@ import type {
   RiderEarningsSummary,
   RiderIssueRecord,
   RiderOrderDetail,
-  RiderPayoutAccount,
+  RiderPayoutAccountView,
+  RiderPayoutTransfer,
   RiderProfile,
   RiderSettlementDetail,
   RiderSettlementSummary
@@ -134,11 +137,13 @@ export class RidersController {
   })
   async getPayoutAccount(
     @CurrentActor() actor: AuthenticatedActor
-  ): Promise<SuccessEnvelope<RiderPayoutAccount | null>> {
+  ): Promise<SuccessEnvelope<RiderPayoutAccountView | null>> {
     return createSuccessEnvelope(await this.riders.getPayoutAccount(actor));
   }
 
   @Put('payout-account')
+  @Post('payout-account')
+  @Patch('payout-account')
   @ApiOkResponse({
     description:
       'Provisions a Paystack transfer recipient from the full account number and stores a masked snapshot.',
@@ -149,8 +154,37 @@ export class RidersController {
   async updatePayoutAccount(
     @CurrentActor() actor: AuthenticatedActor,
     @Body() input: UpsertRiderPayoutAccountDto
-  ): Promise<SuccessEnvelope<RiderPayoutAccount>> {
+  ): Promise<SuccessEnvelope<RiderPayoutAccountView>> {
     return createSuccessEnvelope(await this.riders.upsertPayoutAccount(actor, input));
+  }
+
+  @Post('payout-account/verify')
+  @HttpCode(200)
+  @ApiOkResponse({
+    description: 'Re-attests the current payout account and refreshes its verification.',
+    type: RiderPayoutAccountEnvelopeDto
+  })
+  @ApiBadRequestResponse({ description: 'No provisioned payout account to verify.' })
+  async verifyPayoutAccount(
+    @CurrentActor() actor: AuthenticatedActor
+  ): Promise<SuccessEnvelope<RiderPayoutAccountView>> {
+    return createSuccessEnvelope(await this.riders.verifyPayoutAccount(actor));
+  }
+
+  @Get('payout-history')
+  @ApiOkResponse({
+    description: 'Cursor-paginated rider payout transfer history.',
+    type: RiderPayoutHistoryEnvelopeDto
+  })
+  async getPayoutHistory(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Query() query: RiderPayoutHistoryQueryDto
+  ): Promise<ListEnvelope<RiderPayoutTransfer>> {
+    const page = await this.riders.getPayoutHistory(actor, {
+      ...(query.cursor === undefined ? {} : { cursor: query.cursor }),
+      ...(query.limit === undefined ? {} : { limit: query.limit })
+    });
+    return createListEnvelope(page.items, page.pagination);
   }
 
   @Get('assignments')

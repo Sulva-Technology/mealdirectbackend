@@ -24,6 +24,8 @@ import { createListEnvelope, createSuccessEnvelope } from '../../common/api/resp
 import type { ListEnvelope, SuccessEnvelope } from '../../common/api/response.js';
 import { CurrentActor } from '../auth/current-actor.decorator.js';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
+import { RequirePermission } from '../auth/permission.decorator.js';
+import { PermissionsGuard } from '../auth/permissions.guard.js';
 import { RequireRoles } from '../auth/roles.decorator.js';
 import { RolesGuard } from '../auth/roles.guard.js';
 import type { AuthenticatedActor } from '../auth/actor-context.js';
@@ -79,7 +81,7 @@ export class CustomerPaymentsController {
 @ApiUnauthorizedResponse({ description: 'Missing, invalid, or expired Supabase JWT.' })
 @ApiForbiddenResponse({ description: 'Admin role is required.' })
 @Controller('admin/payments')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @RequireRoles('campus_admin', 'super_admin')
 export class AdminPaymentsController {
   constructor(@Inject(PaymentsService) private readonly payments: PaymentsService) {}
@@ -154,6 +156,7 @@ export class AdminPaymentsController {
 
   @Post(':paymentId/reconcile')
   @HttpCode(200)
+  @RequirePermission('payments:verify')
   @ApiParam({ format: 'uuid', name: 'paymentId', type: String })
   @ApiOkResponse({
     description: 'Verifies a Paystack transaction and marks the local payment successful.',
@@ -170,6 +173,7 @@ export class AdminPaymentsController {
 
   @Post(':paymentId/refunds')
   @HttpCode(201)
+  @RequirePermission('refunds:manage')
   @ApiParam({ format: 'uuid', name: 'paymentId', type: String })
   @ApiCreatedResponse({
     description: 'Creates a bounded Paystack refund for a successful payment.',

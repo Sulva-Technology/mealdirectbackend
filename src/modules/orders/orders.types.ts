@@ -29,6 +29,7 @@ export type OrderQuoteItem = {
   remainingQuantity: number;
   unitPriceKobo: number;
   lineTotalKobo: number;
+  countsTowardSpoonLimit: boolean;
 };
 
 export type OrderQuote = {

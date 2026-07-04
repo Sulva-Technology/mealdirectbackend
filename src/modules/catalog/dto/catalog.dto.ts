@@ -102,6 +102,12 @@ export class MenuItemDto {
 
   @ApiPropertyOptional({ nullable: true, type: Number })
   remainingQuantity!: number | null;
+
+  @ApiProperty({
+    description: 'When true, this item contributes to takeaway packaging rules and fees.',
+    type: Boolean
+  })
+  countsTowardSpoonLimit!: boolean;
 }
 
 export class CatalogVendorListEnvelopeDto {

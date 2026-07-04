@@ -31,7 +31,8 @@ const menuItem: MenuItem = {
   description: null,
   imageUrl: null,
   priceKobo: 250000,
-  remainingQuantity: 10
+  remainingQuantity: 10,
+  countsTowardSpoonLimit: true
 };
 
 function createRepository(): CatalogRepositoryContract {

@@ -168,6 +168,8 @@ const payoutAccount: RiderPayoutAccount = {
   maskedAccountNumber: '******3210',
   accountName: 'Ada Rider',
   verifiedAt: null,
+  adminReviewStatus: 'pending',
+  failureReason: null,
   active: true,
   createdAt: '2026-06-15T09:00:00.000Z',
   updatedAt: '2026-06-15T09:00:00.000Z'
@@ -197,13 +199,23 @@ function createRepository(): MockRidersRepository {
     setRiderAvailability: vi.fn().mockResolvedValue({ ...profile, available: true }),
     transitionAssignedOrderStatus: vi.fn().mockResolvedValue('out_for_delivery'),
     updateRiderProfile: vi.fn().mockResolvedValue(profile),
-    upsertPayoutAccount: vi.fn().mockResolvedValue(payoutAccount)
+    upsertPayoutAccount: vi.fn().mockResolvedValue(payoutAccount),
+    markPayoutAccountVerified: vi
+      .fn()
+      .mockResolvedValue({ ...payoutAccount, verifiedAt: '2026-07-04T00:00:00.000Z' }),
+    listPayoutTransfers: vi.fn().mockResolvedValue([])
   };
 }
 
 function createAuth() {
   return {
     setUserAppMetadata: vi.fn().mockResolvedValue(undefined)
+  };
+}
+
+function createAudit() {
+  return {
+    record: vi.fn().mockResolvedValue(undefined)
   };
 }
 
@@ -224,16 +236,19 @@ describe('RidersService', () => {
   let repository: MockRidersRepository;
   let auth: ReturnType<typeof createAuth>;
   let paystack: ReturnType<typeof createPaystack>;
+  let audit: ReturnType<typeof createAudit>;
   let service: RidersService;
 
   beforeEach(() => {
     repository = createRepository();
     auth = createAuth();
     paystack = createPaystack();
+    audit = createAudit();
     service = new RidersService(
       repository as unknown as RidersRepositoryContract,
       auth as unknown as SupabaseAuthService,
-      paystack
+      paystack,
+      audit as unknown as import('../../src/common/audit/audit.service.js').AuditService
     );
   });
 
@@ -389,7 +404,7 @@ describe('RidersService', () => {
         bankCode: ' 058 ',
         bankName: ' Test Bank '
       })
-    ).resolves.toEqual(payoutAccount);
+    ).resolves.toEqual({ ...payoutAccount, verificationStatus: 'unverified', payoutMode: 'manual' });
 
     expect(paystack.createTransferRecipient).toHaveBeenCalledWith({
       name: 'Ada Rider',

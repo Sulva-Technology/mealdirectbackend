@@ -116,13 +116,15 @@ export class OrdersRepository implements OrdersRepositoryContract {
         r.quantity,
         ami.remaining_quantity as "remainingQuantity",
         ami.price_kobo as "unitPriceKobo",
-        ami.price_kobo * r.quantity as "lineTotalKobo"
+        ami.price_kobo * r.quantity as "lineTotalKobo",
+        ut.counts_toward_spoon_limit as "countsTowardSpoonLimit"
       from requested r
       join public.available_menu_items(
         ${input.campusId}::uuid,
         ${input.serviceDate}::date,
         ${input.deliverySlotId}::uuid
       ) ami on ami.menu_item_id = r.menu_item_id
+      join public.unit_types ut on ut.id = ami.unit_type_id
       where ami.vendor_id = ${input.vendorId}::uuid
         and ami.remaining_quantity >= r.quantity
       order by ami.name

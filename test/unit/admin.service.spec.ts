@@ -4,6 +4,7 @@ import type { Mock } from 'vitest';
 import { AdminRepository } from '../../src/modules/admin/admin.repository.js';
 import { AdminService } from '../../src/modules/admin/admin.service.js';
 import type { AuthenticatedActor } from '../../src/modules/auth/actor-context.js';
+import type { SupabaseAuthService } from '../../src/modules/auth/supabase-auth.service.js';
 import type {
   CreateVendorInvitationInput,
   VendorInvitationRecord,
@@ -17,6 +18,9 @@ let listOrdersMock: ReturnType<typeof vi.fn>;
 let createInvitationMock: Mock<
   (input: CreateVendorInvitationInput) => Promise<VendorInvitationRecord | undefined>
 >;
+let addVendorUserMock: ReturnType<typeof vi.fn>;
+let createAdminMembershipMock: ReturnType<typeof vi.fn>;
+let setUserAppMetadataMock: ReturnType<typeof vi.fn>;
 
 function repositoryMock(): AdminRepository {
   listOrdersMock = vi.fn().mockResolvedValue({ hasMore: false, items: [], limit: 20 });
@@ -25,6 +29,8 @@ function repositoryMock(): AdminRepository {
       campusId,
       id: '55555555-5555-4555-8555-555555555555'
     }),
+    addVendorUser: addVendorUserMock,
+    createAdminMembership: createAdminMembershipMock,
     listOrders: listOrdersMock,
     setUserStatus: vi.fn().mockResolvedValue({ id: 'user-1', accountStatus: 'suspended' })
   } as unknown as AdminRepository;
@@ -55,17 +61,40 @@ function envMock(): EnvService {
   } as unknown as EnvService;
 }
 
+function authMock(): SupabaseAuthService {
+  setUserAppMetadataMock = vi.fn().mockResolvedValue(undefined);
+  return {
+    setUserAppMetadata: setUserAppMetadataMock
+  } as unknown as SupabaseAuthService;
+}
+
 describe('AdminService', () => {
   let repository: AdminRepository;
   let invitations: VendorInvitationsRepository;
+  let auth: SupabaseAuthService;
   let service: AdminService;
   let campusAdmin: AuthenticatedActor;
   let superAdmin: AuthenticatedActor;
 
   beforeEach(() => {
+    addVendorUserMock = vi.fn().mockResolvedValue({
+      active: true,
+      id: '77777777-7777-4777-8777-777777777777',
+      role: 'owner',
+      userId: '33333333-3333-4333-8333-333333333333',
+      vendorId: '55555555-5555-4555-8555-555555555555'
+    });
+    createAdminMembershipMock = vi.fn().mockResolvedValue({
+      active: true,
+      campusId,
+      id: '88888888-8888-4888-8888-888888888888',
+      role: 'campus_admin',
+      userId: '33333333-3333-4333-8333-333333333333'
+    });
     repository = repositoryMock();
     invitations = invitationsMock();
-    service = new AdminService(repository, envMock(), invitations);
+    auth = authMock();
+    service = new AdminService(repository, envMock(), invitations, auth);
     campusAdmin = {
       campusId,
       role: 'campus_admin',
@@ -124,5 +153,47 @@ describe('AdminService', () => {
       vendorId: '55555555-5555-4555-8555-555555555555'
     });
     expect(invitationInput?.tokenHash).toMatch(/^[a-f0-9]{64}$/);
+  });
+
+  it('syncs campus admin grants into Supabase app metadata', async () => {
+    const userId = '33333333-3333-4333-8333-333333333333';
+
+    await expect(
+      service.createAdminMembership(superAdmin, { campusId, role: 'campus_admin', userId })
+    ).resolves.toMatchObject({
+      active: true,
+      campusId,
+      role: 'campus_admin',
+      userId
+    });
+
+    expect(createAdminMembershipMock).toHaveBeenCalledWith(
+      { campusId, role: 'campus_admin', userId },
+      superAdmin.userId
+    );
+    expect(setUserAppMetadataMock).toHaveBeenCalledWith(userId, {
+      campus_id: campusId,
+      meal_direct_role: 'campus_admin'
+    });
+  });
+
+  it('syncs vendor user grants into Supabase app metadata', async () => {
+    const userId = '33333333-3333-4333-8333-333333333333';
+    const vendorId = '55555555-5555-4555-8555-555555555555';
+
+    await expect(
+      service.addVendorUser(campusAdmin, vendorId, { role: 'owner', userId })
+    ).resolves.toMatchObject({
+      active: true,
+      role: 'owner',
+      userId,
+      vendorId
+    });
+
+    expect(addVendorUserMock).toHaveBeenCalledWith(vendorId, userId, 'owner');
+    expect(setUserAppMetadataMock).toHaveBeenCalledWith(userId, {
+      meal_direct_role: 'vendor',
+      vendor_id: vendorId
+    });
   });
 });

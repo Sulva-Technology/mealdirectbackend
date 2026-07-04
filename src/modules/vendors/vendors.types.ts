@@ -122,6 +122,7 @@ export type MenuItemRecord = {
   description: string | null;
   imageUrl: string | null;
   priceKobo: number;
+  countsTowardSpoonLimit: boolean;
   active: boolean;
   displayOrder: number;
   createdAt: string;

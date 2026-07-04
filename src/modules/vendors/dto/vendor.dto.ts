@@ -561,6 +561,12 @@ export class VendorMenuItemDto {
   @ApiProperty({ type: Number })
   priceKobo!: number;
 
+  @ApiProperty({
+    description: 'When true, this item contributes to takeaway packaging rules and fees.',
+    type: Boolean
+  })
+  countsTowardSpoonLimit!: boolean;
+
   @ApiProperty({ type: Boolean })
   active!: boolean;
 

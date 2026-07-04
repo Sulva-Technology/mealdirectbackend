@@ -23,6 +23,7 @@ export type MenuItem = {
   imageUrl: string | null;
   priceKobo: number;
   remainingQuantity: number | null;
+  countsTowardSpoonLimit: boolean;
 };
 
 export type VendorListFilters = {

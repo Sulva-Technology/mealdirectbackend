@@ -12,6 +12,8 @@ import { createListEnvelope, createSuccessEnvelope } from '../../common/api/resp
 import type { ListEnvelope, SuccessEnvelope } from '../../common/api/response.js';
 import { CurrentActor } from '../auth/current-actor.decorator.js';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
+import { RequirePermission } from '../auth/permission.decorator.js';
+import { PermissionsGuard } from '../auth/permissions.guard.js';
 import { RequireRoles } from '../auth/roles.decorator.js';
 import { RolesGuard } from '../auth/roles.guard.js';
 import type { AuthenticatedActor } from '../auth/actor-context.js';
@@ -39,13 +41,14 @@ import type {
 @ApiUnauthorizedResponse({ description: 'Missing, invalid, or expired Supabase JWT.' })
 @ApiForbiddenResponse({ description: 'Admin role is required.' })
 @Controller('admin/payments/reconciliation')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @RequireRoles('campus_admin', 'super_admin')
 export class ReconciliationController {
   constructor(@Inject(ReconciliationService) private readonly reconciliation: ReconciliationService) {}
 
   @Post('scan')
   @HttpCode(200)
+  @RequirePermission('reconciliation:manage')
   @ApiOkResponse({
     description: 'Scans the database for reconciliation discrepancies and upserts issues.',
     type: ReconciliationScanEnvelopeDto
@@ -99,6 +102,7 @@ export class ReconciliationController {
 
   @Post('issues/:issueId/verify-payment')
   @HttpCode(200)
+  @RequirePermission('payments:verify')
   @ApiParam({ format: 'uuid', name: 'issueId', type: String })
   @ApiOkResponse({ description: 'Re-verifies the issue payment against Paystack.' })
   async verifyPayment(
@@ -110,6 +114,7 @@ export class ReconciliationController {
 
   @Post('issues/:issueId/retry-webhook')
   @HttpCode(200)
+  @RequirePermission('reconciliation:manage')
   @ApiParam({ format: 'uuid', name: 'issueId', type: String })
   @ApiOkResponse({ description: 'Retries a failed webhook by re-verifying its payment.' })
   async retryWebhook(
@@ -121,6 +126,7 @@ export class ReconciliationController {
 
   @Post('issues/:issueId/review')
   @HttpCode(200)
+  @RequirePermission('reconciliation:manage')
   @ApiParam({ format: 'uuid', name: 'issueId', type: String })
   @ApiOkResponse({
     description: 'Marks a reconciliation issue investigating/resolved/ignored.',
@@ -141,6 +147,7 @@ export class ReconciliationController {
 
   @Post('issues/:issueId/notes')
   @HttpCode(201)
+  @RequirePermission('reconciliation:manage')
   @ApiParam({ format: 'uuid', name: 'issueId', type: String })
   @ApiOkResponse({
     description: 'Adds an internal investigation note to a reconciliation issue.',

@@ -192,6 +192,18 @@ export class RiderPayoutAccountDto {
   @ApiPropertyOptional({ nullable: true, type: String })
   verifiedAt!: string | null;
 
+  @ApiProperty({ enum: ['pending', 'approved', 'rejected'], type: String })
+  adminReviewStatus!: string;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  failureReason!: string | null;
+
+  @ApiProperty({ enum: ['verified', 'unverified'], type: String })
+  verificationStatus!: string;
+
+  @ApiProperty({ enum: ['manual'], type: String })
+  payoutMode!: string;
+
   @ApiProperty({ type: Boolean })
   active!: boolean;
 
@@ -205,6 +217,51 @@ export class RiderPayoutAccountDto {
 export class RiderPayoutAccountEnvelopeDto {
   @ApiProperty({ nullable: true, type: () => RiderPayoutAccountDto })
   data!: RiderPayoutAccountDto | null;
+}
+
+export class RiderPayoutHistoryQueryDto {
+  @ApiPropertyOptional({ type: String })
+  @IsOptional()
+  cursor?: string;
+
+  @ApiPropertyOptional({ default: 20, maximum: 100, minimum: 1, type: Number })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit?: number;
+}
+
+export class RiderPayoutTransferDto {
+  @ApiProperty({ format: 'uuid', type: String })
+  id!: string;
+
+  @ApiProperty({ format: 'uuid', type: String })
+  settlementId!: string;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  settlementDate!: string | null;
+
+  @ApiProperty({ type: String })
+  reference!: string;
+
+  @ApiProperty({ type: Number })
+  amountKobo!: number;
+
+  @ApiProperty({ type: String })
+  status!: string;
+
+  @ApiProperty({ type: String })
+  createdAt!: string;
+
+  @ApiProperty({ type: String })
+  updatedAt!: string;
+}
+
+export class RiderPayoutHistoryEnvelopeDto {
+  @ApiProperty({ isArray: true, type: () => RiderPayoutTransferDto })
+  data!: RiderPayoutTransferDto[];
 }
 
 export class RiderAssignmentIdParamDto {
