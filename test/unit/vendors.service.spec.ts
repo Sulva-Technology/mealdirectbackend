@@ -439,7 +439,7 @@ describe('VendorsService', () => {
       unavailableDates: []
     });
     const [, persisted] = (repository.upsertStoreAvailability as ReturnType<typeof vi.fn>).mock
-      .calls[0];
+      .calls[0] ?? [];
     expect(persisted.cutoffTime).toBe('21:00:00');
   });
 
