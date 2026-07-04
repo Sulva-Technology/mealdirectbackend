@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   Inject,
@@ -290,6 +291,19 @@ export class AdminController {
     @Body() input: AdminVendorUserDto
   ): Promise<SuccessEnvelope<AdminRecord>> {
     return createSuccessEnvelope(await this.admin.addVendorUser(actor, params.vendorId, input));
+  }
+
+  @Delete('users/:userId')
+  @RequirePermission('admin:manage')
+  @ApiOkResponse({
+    description:
+      'Permanently deletes a user (any type) and all rows referencing them. Super admin only. Irreversible.'
+  })
+  async deleteUser(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Param() params: AdminUserIdParamDto
+  ): Promise<SuccessEnvelope<{ userId: string; outcome: 'deleted' | 'anonymized' }>> {
+    return createSuccessEnvelope(await this.admin.deleteUser(actor, params.userId));
   }
 
   @Post('vendors/:vendorId/invitations')

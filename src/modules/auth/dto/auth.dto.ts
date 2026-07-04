@@ -1,6 +1,9 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsEmail, IsOptional, IsString, IsUrl, MinLength } from 'class-validator';
+import { IsEmail, IsIn, IsOptional, IsString, IsUrl, MinLength } from 'class-validator';
+
+export const authPortals = ['customer', 'vendor', 'rider', 'admin'] as const;
+export type AuthPortal = (typeof authPortals)[number];
 
 function trimString(value: unknown): unknown {
   return typeof value === 'string' ? value.trim() : value;
@@ -90,6 +93,17 @@ export class EmailRequestDto {
   @Transform(({ value }) => trimString(value))
   @IsEmail()
   email!: string;
+
+  @ApiPropertyOptional({
+    enum: authPortals,
+    example: 'vendor',
+    description:
+      'Which portal the email link should redirect to. Determines the redirect base URL (customer/vendor/rider/admin). Defaults to customer.'
+  })
+  @Transform(({ value }) => trimString(value))
+  @IsOptional()
+  @IsIn(authPortals)
+  portal?: AuthPortal;
 }
 
 export class AcceptVendorInviteDto extends SignUpDto {

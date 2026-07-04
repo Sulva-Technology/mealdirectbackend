@@ -149,7 +149,7 @@ export class AuthController {
     description: 'A password reset email is sent if the account exists (non-enumerating).'
   })
   async requestPasswordReset(@Body() dto: EmailRequestDto): Promise<AuthMessageResponseDto> {
-    await this.authService.requestPasswordReset(dto.email);
+    await this.authService.requestPasswordReset(dto.email, dto.portal);
     return { message: 'If an account exists for that email, a password reset link has been sent.' };
   }
 
@@ -160,7 +160,7 @@ export class AuthController {
     description: 'A confirmation email is resent if the account is unconfirmed (non-enumerating).'
   })
   async resendConfirmation(@Body() dto: EmailRequestDto): Promise<AuthMessageResponseDto> {
-    await this.authService.resendConfirmation(dto.email);
+    await this.authService.resendConfirmation(dto.email, dto.portal);
     return { message: 'If an account exists for that email, a confirmation link has been sent.' };
   }
 

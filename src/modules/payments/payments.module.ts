@@ -3,6 +3,9 @@ import { Module } from '@nestjs/common';
 import { AuditService } from '../../common/audit/audit.service.js';
 import { AuthModule } from '../auth/auth.module.js';
 import { CustomerPaymentsController, AdminPaymentsController } from './payments.controller.js';
+import { AdminHealthController } from './admin-health.controller.js';
+import { AdminWebhooksController } from './admin-webhooks.controller.js';
+import { AdminProblemQueuesController } from './admin-problem-queues.controller.js';
 import { RefundsController } from './refunds.controller.js';
 import { RefundsRepository } from './refunds.repository.js';
 import { RefundsService } from './refunds.service.js';
@@ -20,6 +23,9 @@ import { ReconciliationService } from './reconciliation.service.js';
   controllers: [
     CustomerPaymentsController,
     AdminPaymentsController,
+    AdminHealthController,
+    AdminWebhooksController,
+    AdminProblemQueuesController,
     PaystackWebhookController,
     ReconciliationController,
     RefundsController

@@ -14,7 +14,7 @@ import { ErrorCodes } from '../../common/errors/error-codes.js';
 import { EnvService } from '../../config/env.service.js';
 import type { ActorRole } from '../../domain/authorization.js';
 import { AuthRoleGrantsRepository } from './auth-role-grants.repository.js';
-import type { AuthTokensResponseDto } from './dto/auth.dto.js';
+import type { AuthPortal, AuthTokensResponseDto } from './dto/auth.dto.js';
 import { VendorInvitationsRepository } from './vendor-invitations.repository.js';
 
 type MealDirectUserMetadata = {
@@ -102,6 +102,55 @@ export class SupabaseAuthService {
   }
 
   /**
+   * Permanently delete a Supabase Auth user via the service_role admin API. Callers must
+   * first remove the public.profiles row (profiles.id references auth.users on delete
+   * restrict), otherwise the delete is rejected. Idempotent: a missing user is treated as
+   * already deleted.
+   */
+  async deleteAuthUser(userId: string): Promise<void> {
+    const admin = this.getAdminClient();
+    if (admin === undefined) {
+      throw new BadRequestException({
+        code: ErrorCodes.AUTH_FAILED,
+        message:
+          'Server is not configured to delete users (SUPABASE_SERVICE_ROLE_KEY missing).'
+      });
+    }
+
+    const { error } = await admin.auth.admin.deleteUser(userId);
+    if (error && !/not found|does not exist/i.test(error.message)) {
+      throw new BadRequestException({
+        code: ErrorCodes.AUTH_FAILED,
+        message: error.message
+      });
+    }
+  }
+
+  /**
+   * Ban a Supabase Auth user indefinitely so they can no longer sign in. Used when a user
+   * has append-only history and cannot be hard-deleted; combined with a PII scrub this makes
+   * the account effectively removed. Requires the service_role key.
+   */
+  async banAuthUser(userId: string): Promise<void> {
+    const admin = this.getAdminClient();
+    if (admin === undefined) {
+      throw new BadRequestException({
+        code: ErrorCodes.AUTH_FAILED,
+        message: 'Server is not configured to ban users (SUPABASE_SERVICE_ROLE_KEY missing).'
+      });
+    }
+
+    // 876000h ~= 100 years: an effectively permanent ban.
+    const { error } = await admin.auth.admin.updateUserById(userId, { ban_duration: '876000h' });
+    if (error) {
+      throw new BadRequestException({
+        code: ErrorCodes.AUTH_FAILED,
+        message: error.message
+      });
+    }
+  }
+
+  /**
    * Public base URL of the web app that the given role signs in to. Confirmation
    * and password-reset emails must redirect back to the matching front-end.
    */
@@ -111,6 +160,10 @@ export class SupabaseAuthService {
         return this.env.get('APP_URL_VENDOR');
       case 'rider':
         return this.env.get('APP_URL_RIDER');
+      case 'admin':
+      case 'super_admin':
+      case 'campus_admin':
+        return this.env.get('APP_URL_ADMIN');
       default:
         return this.env.get('APP_URL_CUSTOMER');
     }
@@ -309,12 +362,20 @@ export class SupabaseAuthService {
     password: string,
     allowedRoles: string[]
   ): Promise<AuthTokensResponseDto> {
+    // Normalize the email the way signup stores it so copy-paste whitespace/case is never
+    // the cause of a failed sign-in.
+    const normalizedEmail = email.trim().toLowerCase();
     const { data, error } = await this.getClient().auth.signInWithPassword({
-      email,
+      email: normalizedEmail,
       password
     });
 
     if (error) {
+      // Log the underlying Supabase reason server-side (distinguishes "no such user" vs
+      // "bad password" vs "email not confirmed") without leaking it to the client.
+      this.logger.warn(
+        `Sign-in failed for ${normalizedEmail} (portals: ${allowedRoles.join(',')}): ${error.message}`
+      );
       throw new UnauthorizedException({
         code: ErrorCodes.AUTH_FAILED,
         message: error.message
@@ -335,9 +396,11 @@ export class SupabaseAuthService {
     if (!allowedRoles.includes(role)) {
       const grant = await this.resolveGrantForLogin(user.id, allowedRoles);
       if (grant === undefined) {
+        // Credentials were valid; the account simply is not permitted on this portal.
+        // Distinct from the pre-auth "Invalid login credentials" above.
         throw new ForbiddenException({
           code: ErrorCodes.AUTH_FAILED,
-          message: 'Invalid credentials or incorrect role.'
+          message: 'Your account is not permitted to sign in to this portal.'
         });
       }
 
@@ -487,24 +550,24 @@ export class SupabaseAuthService {
     };
   }
 
-  async requestPasswordReset(email: string): Promise<void> {
+  async requestPasswordReset(email: string, portal: AuthPortal = 'customer'): Promise<void> {
     // Swallow provider errors so the response never reveals whether an account exists.
     try {
-      await this.getClient().auth.resetPasswordForEmail(email, {
-        redirectTo: this.authRedirectUrl('customer')
+      await this.getClient().auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: this.authRedirectUrl(portal)
       });
     } catch {
       // intentionally ignored to prevent user enumeration
     }
   }
 
-  async resendConfirmation(email: string): Promise<void> {
+  async resendConfirmation(email: string, portal: AuthPortal = 'customer'): Promise<void> {
     try {
       await this.getClient().auth.resend({
         type: 'signup',
-        email,
+        email: email.trim(),
         options: {
-          emailRedirectTo: this.authRedirectUrl('customer')
+          emailRedirectTo: this.authRedirectUrl(portal)
         }
       });
     } catch {

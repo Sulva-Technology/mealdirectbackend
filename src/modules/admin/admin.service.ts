@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { createHash, randomBytes } from 'node:crypto';
 
+import { AuditService, actorTypeForRole } from '../../common/audit/audit.service.js';
 import { ErrorCodes } from '../../common/errors/error-codes.js';
 import { EnvService } from '../../config/env.service.js';
 import type { AuthenticatedActor } from '../auth/actor-context.js';
@@ -80,8 +81,62 @@ export class AdminService {
     private readonly invitations?: VendorInvitationsRepository,
     @Optional()
     @Inject(SupabaseAuthService)
-    private readonly auth?: SupabaseAuthService
+    private readonly auth?: SupabaseAuthService,
+    @Optional()
+    @Inject(AuditService)
+    private readonly audit?: AuditService
   ) {}
+
+  /**
+   * Remove a user (any type). Super admin only; an admin cannot delete their own account.
+   * A user with no append-only history is hard-deleted (profile + Auth user gone). A user
+   * with history cannot be hard-deleted (append-only guard) and is instead anonymized (PII
+   * scrubbed, roles deactivated) and banned from signing in. The chosen outcome is returned
+   * and audited with a pre-action snapshot.
+   */
+  async deleteUser(
+    actor: AuthenticatedActor,
+    userId: string
+  ): Promise<{ userId: string; outcome: 'deleted' | 'anonymized' }> {
+    this.assertSuperAdmin(actor);
+    if (userId === actor.userId) {
+      throw badRequest('You cannot delete your own account.');
+    }
+    if (this.auth === undefined) {
+      throw badRequest('Supabase auth admin is not configured.');
+    }
+
+    const snapshot = await this.repository.getUserDeletionSnapshot(userId);
+    if (snapshot === undefined) {
+      throw notFound('User was not found.');
+    }
+
+    const outcome: 'deleted' | 'anonymized' = snapshot.hasHistory ? 'anonymized' : 'deleted';
+
+    // Capture the target identity before it is scrubbed/removed; the audit actor FK survives
+    // but the target's details would otherwise be unrecoverable.
+    await this.audit?.record({
+      actorUserId: actor.userId,
+      actorType: actorTypeForRole(actor.role),
+      action: 'admin.user.delete',
+      entityType: 'user',
+      entityId: userId,
+      before: { ...snapshot },
+      metadata: { orderCount: snapshot.orderCount, outcome }
+    });
+
+    if (outcome === 'deleted') {
+      await this.repository.purgeUser(userId);
+      // profiles row is gone, so the Auth user can now be removed (FK restrict cleared).
+      await this.auth.deleteAuthUser(userId);
+    } else {
+      await this.repository.anonymizeUser(userId);
+      // Profile stays (append-only refs), so ban login rather than deleting the Auth user.
+      await this.auth.banAuthUser(userId);
+    }
+
+    return { userId, outcome };
+  }
 
   getSession(actor: AuthenticatedActor): AdminSession {
     this.assertAdmin(actor);

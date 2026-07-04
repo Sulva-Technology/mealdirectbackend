@@ -19,6 +19,21 @@ import type {
   AdminVendorListQueryDto
 } from './dto/admin.dto.js';
 
+export type UserDeletionSnapshot = {
+  id: string;
+  email: string | null;
+  displayName: string | null;
+  orderCount: number;
+  isVendor: boolean;
+  isRider: boolean;
+  isAdmin: boolean;
+  // True when the user is referenced by append-only order/audit history. Such rows (and the
+  // ON DELETE SET NULL updates a profile delete would trigger on them) are rejected by the
+  // prevent_update_delete guard, so a hard delete is impossible and the caller must
+  // anonymize instead.
+  hasHistory: boolean;
+};
+
 @Injectable()
 export class AdminRepository {
   constructor(@Inject(DatabaseService) private readonly database: DatabaseService) {}
@@ -313,6 +328,106 @@ export class AdminRepository {
       returning id::text as "id", vendor_id::text as "vendorId", user_id::text as "userId", role::text as "role", active
     `.execute(this.database.db);
     return result.rows[0];
+  }
+
+  /**
+   * Pre-deletion snapshot for the audit trail. Returns undefined when no profile exists for
+   * the id (already deleted / never existed).
+   */
+  async getUserDeletionSnapshot(userId: string): Promise<UserDeletionSnapshot | undefined> {
+    const result = await sql<UserDeletionSnapshot>`
+      select
+        p.id::text as "id",
+        p.email::text as "email",
+        p.display_name as "displayName",
+        (select count(*) from public.orders o where o.customer_id = p.id)::integer as "orderCount",
+        exists(select 1 from public.vendor_users vu where vu.user_id = p.id) as "isVendor",
+        exists(select 1 from public.riders r where r.user_id = p.id) as "isRider",
+        exists(select 1 from public.admin_memberships am where am.user_id = p.id) as "isAdmin",
+        (
+          exists(select 1 from public.orders o where o.customer_id = p.id)
+          or exists(select 1 from public.order_status_history h where h.actor_user_id = p.id)
+          or exists(select 1 from public.audit_logs a where a.actor_user_id = p.id)
+          or exists(select 1 from public.inventory_adjustments ia where ia.actor_user_id = p.id)
+        ) as "hasHistory"
+      from public.profiles p
+      where p.id = ${userId}::uuid
+    `.execute(this.database.db);
+    return result.rows[0];
+  }
+
+  /**
+   * Hard-delete a user with NO append-only history (snapshot.hasHistory === false). Removes
+   * their deletable child rows and the profile in one transaction. The caller removes the
+   * Supabase Auth user afterwards (profiles must be gone first). Must NOT be called for a
+   * user with history — the append-only prevent_update_delete guard would reject it. Returns
+   * false when no profile row existed.
+   */
+  async purgeUser(userId: string): Promise<boolean> {
+    return this.database.db.transaction().execute(async (trx) => {
+      const riders = sql`(select id from public.riders where user_id = ${userId}::uuid)`;
+
+      await sql`delete from public.notifications where recipient_user_id = ${userId}::uuid`.execute(
+        trx
+      );
+      await sql`delete from public.notification_preferences where user_id = ${userId}::uuid`.execute(
+        trx
+      );
+      await sql`delete from public.device_tokens where user_id = ${userId}::uuid`.execute(trx);
+      await sql`delete from public.referrals where referred_id = ${userId}::uuid or referrer_id = ${userId}::uuid`.execute(
+        trx
+      );
+      await sql`delete from public.campus_memberships where user_id = ${userId}::uuid`.execute(trx);
+      await sql`delete from public.vendor_users where user_id = ${userId}::uuid`.execute(trx);
+
+      // vendor_invitations references profiles with NO ACTION: detach the nullable link and
+      // drop invitations this user authored.
+      await sql`update public.vendor_invitations set accepted_by_user_id = null where accepted_by_user_id = ${userId}::uuid`.execute(
+        trx
+      );
+      await sql`delete from public.vendor_invitations where created_by_admin_id = ${userId}::uuid`.execute(
+        trx
+      );
+
+      await sql`delete from public.rider_payout_accounts where rider_id in ${riders}`.execute(trx);
+      await sql`delete from public.riders where user_id = ${userId}::uuid`.execute(trx);
+
+      await sql`delete from public.admin_memberships where user_id = ${userId}::uuid`.execute(trx);
+      const deleted = await sql`delete from public.profiles where id = ${userId}::uuid`.execute(trx);
+      return (deleted.numAffectedRows ?? 0n) > 0n;
+    });
+  }
+
+  /**
+   * Soft-remove a user that has append-only history and therefore cannot be hard-deleted.
+   * Scrubs PII from the profile, marks the account deactivated, and deactivates the user's
+   * role rows. Append-only history is left intact (it is legally immutable). The caller bans
+   * the Supabase Auth user afterwards so login is dead. Returns false when no profile existed.
+   */
+  async anonymizeUser(userId: string): Promise<boolean> {
+    return this.database.db.transaction().execute(async (trx) => {
+      await sql`delete from public.device_tokens where user_id = ${userId}::uuid`.execute(trx);
+      await sql`update public.vendor_users set active = false, updated_at = now() where user_id = ${userId}::uuid`.execute(
+        trx
+      );
+      await sql`update public.riders set active = false, available = false, updated_at = now() where user_id = ${userId}::uuid`.execute(
+        trx
+      );
+      await sql`update public.admin_memberships set active = false, revoked_at = now() where user_id = ${userId}::uuid and active = true`.execute(
+        trx
+      );
+      const updated = await sql`
+        update public.profiles
+        set display_name = null,
+            email = null,
+            phone_number = null,
+            avatar_url = null,
+            account_status = 'deactivated',
+            updated_at = now()
+        where id = ${userId}::uuid
+      `.execute(trx);
+      return (updated.numAffectedRows ?? 0n) > 0n;
+    });
   }
 
   async getVendorPerformance(vendorId: string): Promise<AdminRecord> {

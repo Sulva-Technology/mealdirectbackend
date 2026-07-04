@@ -21,6 +21,11 @@ let createInvitationMock: Mock<
 let addVendorUserMock: ReturnType<typeof vi.fn>;
 let createAdminMembershipMock: ReturnType<typeof vi.fn>;
 let setUserAppMetadataMock: ReturnType<typeof vi.fn>;
+let getUserDeletionSnapshotMock: ReturnType<typeof vi.fn>;
+let purgeUserMock: ReturnType<typeof vi.fn>;
+let anonymizeUserMock: ReturnType<typeof vi.fn>;
+let deleteAuthUserMock: ReturnType<typeof vi.fn>;
+let banAuthUserMock: ReturnType<typeof vi.fn>;
 
 function repositoryMock(): AdminRepository {
   listOrdersMock = vi.fn().mockResolvedValue({ hasMore: false, items: [], limit: 20 });
@@ -32,6 +37,9 @@ function repositoryMock(): AdminRepository {
     addVendorUser: addVendorUserMock,
     createAdminMembership: createAdminMembershipMock,
     listOrders: listOrdersMock,
+    getUserDeletionSnapshot: getUserDeletionSnapshotMock,
+    purgeUser: purgeUserMock,
+    anonymizeUser: anonymizeUserMock,
     setUserStatus: vi.fn().mockResolvedValue({ id: 'user-1', accountStatus: 'suspended' })
   } as unknown as AdminRepository;
 }
@@ -63,8 +71,12 @@ function envMock(): EnvService {
 
 function authMock(): SupabaseAuthService {
   setUserAppMetadataMock = vi.fn().mockResolvedValue(undefined);
+  deleteAuthUserMock = vi.fn().mockResolvedValue(undefined);
+  banAuthUserMock = vi.fn().mockResolvedValue(undefined);
   return {
-    setUserAppMetadata: setUserAppMetadataMock
+    setUserAppMetadata: setUserAppMetadataMock,
+    deleteAuthUser: deleteAuthUserMock,
+    banAuthUser: banAuthUserMock
   } as unknown as SupabaseAuthService;
 }
 
@@ -91,6 +103,18 @@ describe('AdminService', () => {
       role: 'campus_admin',
       userId: '33333333-3333-4333-8333-333333333333'
     });
+    getUserDeletionSnapshotMock = vi.fn().mockResolvedValue({
+      id: '33333333-3333-4333-8333-333333333333',
+      email: 'victim@example.com',
+      displayName: 'Victim',
+      orderCount: 0,
+      isVendor: false,
+      isRider: false,
+      isAdmin: false,
+      hasHistory: false
+    });
+    purgeUserMock = vi.fn().mockResolvedValue(true);
+    anonymizeUserMock = vi.fn().mockResolvedValue(true);
     repository = repositoryMock();
     invitations = invitationsMock();
     auth = authMock();
@@ -195,5 +219,67 @@ describe('AdminService', () => {
       meal_direct_role: 'vendor',
       vendor_id: vendorId
     });
+  });
+
+  it('hard-deletes a pristine user (purge then auth delete)', async () => {
+    const userId = '33333333-3333-4333-8333-333333333333';
+
+    await expect(service.deleteUser(superAdmin, userId)).resolves.toMatchObject({
+      userId,
+      outcome: 'deleted'
+    });
+
+    expect(getUserDeletionSnapshotMock).toHaveBeenCalledWith(userId);
+    expect(purgeUserMock).toHaveBeenCalledWith(userId);
+    expect(deleteAuthUserMock).toHaveBeenCalledWith(userId);
+    expect(anonymizeUserMock).not.toHaveBeenCalled();
+    expect(banAuthUserMock).not.toHaveBeenCalled();
+  });
+
+  it('anonymizes + bans a user with append-only history instead of hard-deleting', async () => {
+    const userId = '33333333-3333-4333-8333-333333333333';
+    getUserDeletionSnapshotMock.mockResolvedValue({
+      id: userId,
+      email: 'victim@example.com',
+      displayName: 'Victim',
+      orderCount: 3,
+      isVendor: false,
+      isRider: false,
+      isAdmin: false,
+      hasHistory: true
+    });
+
+    await expect(service.deleteUser(superAdmin, userId)).resolves.toMatchObject({
+      userId,
+      outcome: 'anonymized'
+    });
+
+    expect(anonymizeUserMock).toHaveBeenCalledWith(userId);
+    expect(banAuthUserMock).toHaveBeenCalledWith(userId);
+    expect(purgeUserMock).not.toHaveBeenCalled();
+    expect(deleteAuthUserMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects a campus admin from deleting a user', async () => {
+    await expect(
+      service.deleteUser(campusAdmin, '33333333-3333-4333-8333-333333333333')
+    ).rejects.toMatchObject({ status: 403 });
+    expect(purgeUserMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects an admin deleting their own account', async () => {
+    await expect(service.deleteUser(superAdmin, superAdmin.userId)).rejects.toMatchObject({
+      status: 400
+    });
+    expect(purgeUserMock).not.toHaveBeenCalled();
+  });
+
+  it('returns 404 when the user has no profile', async () => {
+    getUserDeletionSnapshotMock.mockResolvedValue(undefined);
+    await expect(
+      service.deleteUser(superAdmin, '33333333-3333-4333-8333-333333333333')
+    ).rejects.toMatchObject({ status: 404 });
+    expect(purgeUserMock).not.toHaveBeenCalled();
+    expect(deleteAuthUserMock).not.toHaveBeenCalled();
   });
 });

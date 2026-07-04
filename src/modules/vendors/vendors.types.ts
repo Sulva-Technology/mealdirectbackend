@@ -170,6 +170,25 @@ export type AvailabilityUpdateInput = {
   entries: VendorAvailabilityEntry[];
 };
 
+export type StoreAvailabilityStatus = 'open' | 'closed' | 'paused' | 'sold_out_today';
+
+export type StoreAvailabilityState = {
+  acceptingOrders: boolean;
+  state: StoreAvailabilityStatus;
+  pauseUntil: string | null;
+  cutoffTime: string | null;
+  maxOrdersPerDay: number | null;
+  unavailableDates: string[];
+};
+
+export type StoreAvailabilityUpdateInput = {
+  acceptingOrders?: boolean;
+  state?: StoreAvailabilityStatus;
+  pauseUntil?: string | null;
+  maxOrdersPerDay?: number | null;
+  unavailableDates?: string[];
+};
+
 export type MenuItemScheduleUpdateInput = {
   entries: MenuItemAvailabilityEntry[];
 };
@@ -226,4 +245,9 @@ export type VendorsRepositoryContract = {
     entries: MenuItemAvailabilityEntry[]
   ) => Promise<MenuItemAvailabilityEntry[]>;
   regenerateInventoryHorizon: (vendorId: string) => Promise<void>;
+  getStoreAvailability: (vendorId: string) => Promise<StoreAvailabilityState | undefined>;
+  upsertStoreAvailability: (
+    vendorId: string,
+    state: StoreAvailabilityState
+  ) => Promise<StoreAvailabilityState>;
 };

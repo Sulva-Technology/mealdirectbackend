@@ -39,7 +39,9 @@ import {
   MenuItemIdParamDto,
   MenuMetadataEnvelopeDto,
   OnboardVendorDto,
+  StoreAvailabilityStateEnvelopeDto,
   UpdateMenuItemDto,
+  UpdateStoreAvailabilityDto,
   UpdateVendorProfileDto,
   UpsertPayoutAccountDto,
   VendorMenuItemEnvelopeDto,
@@ -61,6 +63,7 @@ import type {
   MenuItemAvailabilityEntry,
   MenuItemRecord,
   MenuMetadata,
+  StoreAvailabilityState,
   VendorAvailabilityEntry,
   VendorPayoutAccount,
   VendorProfile
@@ -435,5 +438,34 @@ export class VendorsController {
       input
     );
     return listEnvelope(availability);
+  }
+
+  @Get('availability/state')
+  @ApiOkResponse({
+    description: 'Current storefront availability state (open/closed/paused/sold-out).',
+    type: StoreAvailabilityStateEnvelopeDto
+  })
+  async getStoreAvailability(
+    @CurrentActor() actor: AuthenticatedActor
+  ): Promise<SuccessEnvelope<StoreAvailabilityState>> {
+    return createSuccessEnvelope(
+      await this.vendors.getStoreAvailability(actor, vendorIdFromActor(actor))
+    );
+  }
+
+  @Patch('availability/state')
+  @ApiOkResponse({
+    description: 'Updated storefront availability state. cutoffTime is admin-controlled and ignored.',
+    type: StoreAvailabilityStateEnvelopeDto
+  })
+  @ApiBadRequestResponse({ description: 'Invalid storefront availability input.' })
+  @ApiBody({ type: UpdateStoreAvailabilityDto })
+  async updateStoreAvailability(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Body() input: UpdateStoreAvailabilityDto
+  ): Promise<SuccessEnvelope<StoreAvailabilityState>> {
+    return createSuccessEnvelope(
+      await this.vendors.updateStoreAvailability(actor, vendorIdFromActor(actor), input)
+    );
   }
 }

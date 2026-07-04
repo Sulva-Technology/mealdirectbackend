@@ -26,6 +26,8 @@ import type {
   MenuItemRecord,
   MenuItemScheduleUpdateInput,
   MenuMetadata,
+  StoreAvailabilityState,
+  StoreAvailabilityUpdateInput,
   UnitTypeRecord,
   UpdateUnitTypeInput,
   UpsertMenuItemInput,
@@ -86,6 +88,17 @@ function badRequest(message: string): BadRequestException {
     code: ErrorCodes.VALIDATION_FAILED,
     message
   });
+}
+
+function defaultStoreAvailability(): StoreAvailabilityState {
+  return {
+    acceptingOrders: false,
+    state: 'closed',
+    pauseUntil: null,
+    cutoffTime: null,
+    maxOrdersPerDay: null,
+    unavailableDates: []
+  };
 }
 
 function notFound(message: string): NotFoundException {
@@ -667,6 +680,38 @@ export class VendorsService {
     await this.repository.regenerateInventoryHorizon(vendorId);
 
     return result;
+  }
+
+  async getStoreAvailability(
+    actor: AuthenticatedActor,
+    vendorId: string
+  ): Promise<StoreAvailabilityState> {
+    await this.assertActorCanUseVendor(actor, vendorId);
+    return (await this.repository.getStoreAvailability(vendorId)) ?? defaultStoreAvailability();
+  }
+
+  async updateStoreAvailability(
+    actor: AuthenticatedActor,
+    vendorId: string,
+    input: StoreAvailabilityUpdateInput
+  ): Promise<StoreAvailabilityState> {
+    await this.assertActorCanUseVendor(actor, vendorId);
+
+    const current =
+      (await this.repository.getStoreAvailability(vendorId)) ?? defaultStoreAvailability();
+
+    const next: StoreAvailabilityState = {
+      acceptingOrders: input.acceptingOrders ?? current.acceptingOrders,
+      state: input.state ?? current.state,
+      pauseUntil: input.pauseUntil !== undefined ? input.pauseUntil : current.pauseUntil,
+      // cutoffTime is admin-controlled; vendor input can never change it.
+      cutoffTime: current.cutoffTime,
+      maxOrdersPerDay:
+        input.maxOrdersPerDay !== undefined ? input.maxOrdersPerDay : current.maxOrdersPerDay,
+      unavailableDates: input.unavailableDates ?? current.unavailableDates
+    };
+
+    return this.repository.upsertStoreAvailability(vendorId, next);
   }
 
   async listMenuItemSchedules(

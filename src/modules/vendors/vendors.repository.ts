@@ -10,6 +10,7 @@ import type {
   UnitTypeRecord,
   UpdateUnitTypeInput,
   UpsertMenuCategoryInput,
+  StoreAvailabilityState,
   UpsertMenuItemInput,
   VendorAvailabilityEntry,
   VendorOnboardRepositoryInput,
@@ -737,6 +738,62 @@ export class VendorsRepository implements VendorsRepositoryContract {
     });
 
     return this.listMenuItemAvailability(menuItemId);
+  }
+
+  async getStoreAvailability(vendorId: string): Promise<StoreAvailabilityState | undefined> {
+    const result = await sql<StoreAvailabilityState>`
+      select
+        accepting_orders as "acceptingOrders",
+        state,
+        to_char(pause_until at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as "pauseUntil",
+        to_char(cutoff_time, 'HH24:MI:SS') as "cutoffTime",
+        max_orders_per_day as "maxOrdersPerDay",
+        coalesce(
+          array(select to_char(d, 'YYYY-MM-DD') from unnest(unavailable_dates) as d order by d),
+          '{}'
+        ) as "unavailableDates"
+      from public.vendor_store_availability
+      where vendor_id = ${vendorId}::uuid
+    `.execute(this.database.db);
+
+    return result.rows[0];
+  }
+
+  async upsertStoreAvailability(
+    vendorId: string,
+    state: StoreAvailabilityState
+  ): Promise<StoreAvailabilityState> {
+    await sql`
+      insert into public.vendor_store_availability (
+        vendor_id,
+        accepting_orders,
+        state,
+        pause_until,
+        max_orders_per_day,
+        unavailable_dates
+      )
+      values (
+        ${vendorId}::uuid,
+        ${state.acceptingOrders},
+        ${state.state},
+        ${state.pauseUntil ?? null}::timestamptz,
+        ${state.maxOrdersPerDay ?? null}::integer,
+        ${state.unavailableDates}::date[]
+      )
+      on conflict (vendor_id) do update set
+        accepting_orders = excluded.accepting_orders,
+        state = excluded.state,
+        pause_until = excluded.pause_until,
+        max_orders_per_day = excluded.max_orders_per_day,
+        unavailable_dates = excluded.unavailable_dates
+    `.execute(this.database.db);
+
+    // cutoff_time is admin-controlled and untouched here; re-read to return it.
+    const persisted = await this.getStoreAvailability(vendorId);
+    if (persisted === undefined) {
+      throw new Error('Store availability row missing after upsert.');
+    }
+    return persisted;
   }
 
   // Materializes inventory rows (quantity 0) for today through today + 7 days

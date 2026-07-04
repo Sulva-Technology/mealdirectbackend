@@ -6,6 +6,7 @@ import {
   IsEmail,
   IsIn,
   IsInt,
+  IsISO8601,
   IsOptional,
   IsString,
   Matches,
@@ -24,6 +25,7 @@ const phonePattern = /^[+0-9][0-9 ()-]{6,24}$/;
 const unitTypeCodePattern = /^[a-z0-9_]+$/;
 const deliveryModes = ['meal_direct_rider', 'vendor_delivery'] as const;
 const vendorStatuses = ['approved', 'deactivated', 'pending', 'suspended'] as const;
+const storeStates = ['open', 'closed', 'paused', 'sold_out_today'] as const;
 
 export class MenuItemIdParamDto {
   @ApiProperty({ format: 'uuid', type: String })
@@ -345,6 +347,62 @@ export class AvailabilityUpdateDto {
   @ValidateNested({ each: true })
   @Type(() => AvailabilityEntryDto)
   entries!: AvailabilityEntryDto[];
+}
+
+export class StoreAvailabilityStateDto {
+  @ApiProperty({ type: Boolean })
+  acceptingOrders!: boolean;
+
+  @ApiProperty({ enum: storeStates })
+  state!: (typeof storeStates)[number];
+
+  @ApiPropertyOptional({ nullable: true, type: String, example: '2026-07-04T21:00:00Z' })
+  pauseUntil!: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String, example: '21:00:00' })
+  cutoffTime!: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: Number })
+  maxOrdersPerDay!: number | null;
+
+  @ApiProperty({ isArray: true, type: String, example: ['2026-07-05'] })
+  unavailableDates!: string[];
+}
+
+export class StoreAvailabilityStateEnvelopeDto {
+  @ApiProperty({ type: () => StoreAvailabilityStateDto })
+  data!: StoreAvailabilityStateDto;
+}
+
+export class UpdateStoreAvailabilityDto {
+  @ApiPropertyOptional({ type: Boolean })
+  @IsOptional()
+  @IsBoolean()
+  acceptingOrders?: boolean;
+
+  @ApiPropertyOptional({ enum: storeStates })
+  @IsOptional()
+  @IsIn(storeStates)
+  state?: (typeof storeStates)[number];
+
+  @ApiPropertyOptional({ nullable: true, type: String, example: '2026-07-04T21:00:00Z' })
+  @IsOptional()
+  @IsISO8601()
+  pauseUntil?: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: Number })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  maxOrdersPerDay?: number | null;
+
+  @ApiPropertyOptional({ isArray: true, type: String, example: ['2026-07-05'] })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(366)
+  @Matches(datePattern, { each: true })
+  unavailableDates?: string[];
 }
 
 export class VendorProfileDto {

@@ -15,13 +15,19 @@ const vendorId = '33333333-3333-4333-8333-333333333333';
 
 let signInWithPasswordMock: ReturnType<typeof vi.fn>;
 let refreshSessionMock: ReturnType<typeof vi.fn>;
+let resetPasswordForEmailMock: ReturnType<typeof vi.fn>;
+let resendMock: ReturnType<typeof vi.fn>;
 
 function envMock(): EnvService {
   return {
     get: vi.fn((key: string) => {
       const values: Record<string, string | undefined> = {
         SUPABASE_ANON_KEY: 'anon-key',
-        SUPABASE_URL: 'https://project.supabase.co'
+        SUPABASE_URL: 'https://project.supabase.co',
+        APP_URL_CUSTOMER: 'https://user.example.com',
+        APP_URL_VENDOR: 'https://vendor.example.com',
+        APP_URL_RIDER: 'https://rider.example.com',
+        APP_URL_ADMIN: 'https://admin.example.com'
       };
       return values[key];
     })
@@ -39,7 +45,9 @@ function authClient() {
   return {
     auth: {
       refreshSession: refreshSessionMock,
-      signInWithPassword: signInWithPasswordMock
+      signInWithPassword: signInWithPasswordMock,
+      resetPasswordForEmail: resetPasswordForEmailMock,
+      resend: resendMock
     }
   };
 }
@@ -89,6 +97,8 @@ describe('SupabaseAuthService', () => {
   beforeEach(() => {
     signInWithPasswordMock = vi.fn().mockResolvedValue(signInResponse());
     refreshSessionMock = vi.fn();
+    resetPasswordForEmailMock = vi.fn().mockResolvedValue({ data: {}, error: null });
+    resendMock = vi.fn().mockResolvedValue({ data: {}, error: null });
     vi.mocked(createClient).mockReturnValue(authClient() as never);
     grants = grantsMock();
     service = new SupabaseAuthService(envMock(), undefined, grants);
@@ -139,6 +149,43 @@ describe('SupabaseAuthService', () => {
       accessToken: 'vendor-token',
       refreshToken: 'new-refresh-token',
       user: { role: 'vendor' }
+    });
+  });
+
+  it('normalizes the email (trim + lowercase) before authenticating', async () => {
+    await service.signIn('  Person@Example.COM ', 'Password123!', ['customer']);
+    expect(signInWithPasswordMock).toHaveBeenCalledWith({
+      email: 'person@example.com',
+      password: 'Password123!'
+    });
+  });
+
+  it('rejects a valid credential on the wrong portal with a non-credential message', async () => {
+    await expect(service.signIn('person@example.com', 'Password123!', ['rider'])).rejects.toThrow(
+      'Your account is not permitted to sign in to this portal.'
+    );
+  });
+
+  it('routes the password reset redirect to the requested portal', async () => {
+    await service.requestPasswordReset('person@example.com', 'admin');
+    expect(resetPasswordForEmailMock).toHaveBeenCalledWith('person@example.com', {
+      redirectTo: 'https://admin.example.com/auth/callback'
+    });
+  });
+
+  it('defaults the reset redirect to the customer portal', async () => {
+    await service.requestPasswordReset('person@example.com');
+    expect(resetPasswordForEmailMock).toHaveBeenCalledWith('person@example.com', {
+      redirectTo: 'https://user.example.com/auth/callback'
+    });
+  });
+
+  it('routes the confirmation resend redirect to the requested portal', async () => {
+    await service.resendConfirmation('person@example.com', 'vendor');
+    expect(resendMock).toHaveBeenCalledWith({
+      type: 'signup',
+      email: 'person@example.com',
+      options: { emailRedirectTo: 'https://vendor.example.com/auth/callback' }
     });
   });
 });

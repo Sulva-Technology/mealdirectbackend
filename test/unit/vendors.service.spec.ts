@@ -129,7 +129,9 @@ function createRepository(): VendorsRepositoryContract {
     replaceVendorAvailability: vi.fn().mockResolvedValue([]),
     listMenuItemAvailability: vi.fn().mockResolvedValue([]),
     replaceMenuItemAvailability: vi.fn().mockResolvedValue([]),
-    regenerateInventoryHorizon: vi.fn().mockResolvedValue(undefined)
+    regenerateInventoryHorizon: vi.fn().mockResolvedValue(undefined),
+    getStoreAvailability: vi.fn().mockResolvedValue(undefined),
+    upsertStoreAvailability: vi.fn().mockImplementation((_id: string, state) => Promise.resolve(state))
   };
 }
 
@@ -398,6 +400,47 @@ describe('VendorsService', () => {
 
     expect(repository.replaceMenuItemAvailability).toHaveBeenCalledTimes(1);
     expect(repository.regenerateInventoryHorizon).toHaveBeenCalledWith(vendorId);
+  });
+
+  it('returns default store availability when no row exists', async () => {
+    const state = await service.getStoreAvailability(actor, vendorId);
+
+    expect(state).toEqual({
+      acceptingOrders: false,
+      state: 'closed',
+      pauseUntil: null,
+      cutoffTime: null,
+      maxOrdersPerDay: null,
+      unavailableDates: []
+    });
+  });
+
+  it('merges a partial store availability update onto defaults and never writes cutoffTime', async () => {
+    (repository.getStoreAvailability as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      acceptingOrders: false,
+      state: 'closed',
+      pauseUntil: null,
+      cutoffTime: '21:00:00',
+      maxOrdersPerDay: null,
+      unavailableDates: []
+    });
+
+    const updated = await service.updateStoreAvailability(actor, vendorId, {
+      acceptingOrders: true,
+      state: 'open'
+    });
+
+    expect(updated).toEqual({
+      acceptingOrders: true,
+      state: 'open',
+      pauseUntil: null,
+      cutoffTime: '21:00:00',
+      maxOrdersPerDay: null,
+      unavailableDates: []
+    });
+    const [, persisted] = (repository.upsertStoreAvailability as ReturnType<typeof vi.fn>).mock
+      .calls[0];
+    expect(persisted.cutoffTime).toBe('21:00:00');
   });
 
   describe('image uploads', () => {
