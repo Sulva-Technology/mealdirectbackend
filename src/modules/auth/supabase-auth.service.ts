@@ -575,6 +575,43 @@ export class SupabaseAuthService {
     }
   }
 
+  /**
+   * Complete a password reset. The front-end hands back the short-lived recovery
+   * access token Supabase returned to its `/auth/callback` page. We validate that
+   * token by resolving the user it belongs to (an expired/forged token yields no
+   * user), then set the new password via the service-role admin API. Only the
+   * holder of a valid recovery token — i.e. the person who received the reset
+   * email — can reach this, so it needs no separate credential check.
+   */
+  async updatePassword(accessToken: string, newPassword: string): Promise<void> {
+    const { data, error } = await this.getClient(accessToken).auth.getUser(accessToken);
+    if (error || !data.user) {
+      throw new UnauthorizedException({
+        code: ErrorCodes.AUTH_FAILED,
+        message: 'Your password reset link is invalid or has expired. Please request a new one.'
+      });
+    }
+
+    const admin = this.getAdminClient();
+    if (admin === undefined) {
+      throw new BadRequestException({
+        code: ErrorCodes.AUTH_FAILED,
+        message:
+          'Server is not configured to update passwords (SUPABASE_SERVICE_ROLE_KEY missing).'
+      });
+    }
+
+    const { error: updateError } = await admin.auth.admin.updateUserById(data.user.id, {
+      password: newPassword
+    });
+    if (updateError) {
+      throw new BadRequestException({
+        code: ErrorCodes.AUTH_FAILED,
+        message: updateError.message
+      });
+    }
+  }
+
   async signOut(accessToken: string): Promise<void> {
     const { error } = await this.getClient(accessToken).auth.signOut();
     if (error) {

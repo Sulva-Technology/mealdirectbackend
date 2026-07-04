@@ -228,7 +228,7 @@ describe('Supabase JWT authentication', () => {
 
       expect(response.statusCode).toBe(200);
       expect(response.json<{ message: string }>().message).toMatch(/password reset/i);
-      expect(resetSpy).toHaveBeenCalledWith('test@example.com');
+      expect(resetSpy).toHaveBeenCalledWith('test@example.com', undefined);
     });
 
     it('password-reset validates the email shape', async () => {
@@ -253,7 +253,32 @@ describe('Supabase JWT authentication', () => {
 
       expect(response.statusCode).toBe(200);
       expect(response.json<{ message: string }>().message).toMatch(/confirmation/i);
-      expect(resendSpy).toHaveBeenCalledWith('test@example.com');
+      expect(resendSpy).toHaveBeenCalledWith('test@example.com', undefined);
+    });
+
+    it('update-password returns 200 and sets the new password via the recovery token', async () => {
+      const authService = app.get(SupabaseAuthService);
+      const updateSpy = vi.spyOn(authService, 'updatePassword').mockResolvedValue(undefined);
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/v1/auth/update-password',
+        payload: { accessToken: 'recovery-token', password: 'NewPassword123!' }
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json<{ message: string }>().message).toMatch(/updated/i);
+      expect(updateSpy).toHaveBeenCalledWith('recovery-token', 'NewPassword123!');
+    });
+
+    it('update-password rejects a too-short password', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/v1/auth/update-password',
+        payload: { accessToken: 'recovery-token', password: '123' }
+      });
+
+      expect(response.statusCode).toBe(400);
     });
 
     it('logout returns 200', async () => {

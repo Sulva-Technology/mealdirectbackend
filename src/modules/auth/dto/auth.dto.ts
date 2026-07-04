@@ -117,6 +117,26 @@ export class AcceptVendorInviteDto extends SignUpDto {
   token!: string;
 }
 
+export class UpdatePasswordDto {
+  @ApiProperty({
+    type: String,
+    description:
+      'The short-lived recovery access token Supabase returned to the front-end /auth/callback page after the user opened the reset email link.'
+  })
+  @IsString()
+  @MinLength(1)
+  accessToken!: string;
+
+  @ApiProperty({
+    type: String,
+    example: 'NewPassword123!',
+    description: 'The new password (minimum 6 characters).'
+  })
+  @IsString()
+  @MinLength(6)
+  password!: string;
+}
+
 export class AuthMessageResponseDto {
   @ApiProperty({ type: String, description: 'A non-enumerating confirmation message.' })
   message!: string;

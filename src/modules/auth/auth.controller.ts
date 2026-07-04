@@ -18,7 +18,8 @@ import {
   EmailRequestDto,
   LoginDto,
   RefreshDto,
-  SignUpDto
+  SignUpDto,
+  UpdatePasswordDto
 } from './dto/auth.dto.js';
 import { JwtAuthGuard } from './jwt-auth.guard.js';
 import { SupabaseAuthService } from './supabase-auth.service.js';
@@ -162,6 +163,18 @@ export class AuthController {
   async resendConfirmation(@Body() dto: EmailRequestDto): Promise<AuthMessageResponseDto> {
     await this.authService.resendConfirmation(dto.email, dto.portal);
     return { message: 'If an account exists for that email, a confirmation link has been sent.' };
+  }
+
+  @Post('update-password')
+  @HttpCode(200)
+  @ApiOkResponse({
+    type: AuthMessageResponseDto,
+    description: 'Sets a new password using the recovery token from the reset email.'
+  })
+  @ApiUnauthorizedResponse({ description: 'The recovery token is invalid or expired.' })
+  async updatePassword(@Body() dto: UpdatePasswordDto): Promise<AuthMessageResponseDto> {
+    await this.authService.updatePassword(dto.accessToken, dto.password);
+    return { message: 'Your password has been updated. You can now sign in.' };
   }
 
   @ApiBearerAuth('supabaseAuth')

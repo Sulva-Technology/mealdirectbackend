@@ -17,12 +17,15 @@ let signInWithPasswordMock: ReturnType<typeof vi.fn>;
 let refreshSessionMock: ReturnType<typeof vi.fn>;
 let resetPasswordForEmailMock: ReturnType<typeof vi.fn>;
 let resendMock: ReturnType<typeof vi.fn>;
+let getUserMock: ReturnType<typeof vi.fn>;
+let updateUserByIdMock: ReturnType<typeof vi.fn>;
 
 function envMock(): EnvService {
   return {
     get: vi.fn((key: string) => {
       const values: Record<string, string | undefined> = {
         SUPABASE_ANON_KEY: 'anon-key',
+        SUPABASE_SERVICE_ROLE_KEY: 'service-role-key',
         SUPABASE_URL: 'https://project.supabase.co',
         APP_URL_CUSTOMER: 'https://user.example.com',
         APP_URL_VENDOR: 'https://vendor.example.com',
@@ -47,7 +50,11 @@ function authClient() {
       refreshSession: refreshSessionMock,
       signInWithPassword: signInWithPasswordMock,
       resetPasswordForEmail: resetPasswordForEmailMock,
-      resend: resendMock
+      resend: resendMock,
+      getUser: getUserMock,
+      admin: {
+        updateUserById: updateUserByIdMock
+      }
     }
   };
 }
@@ -99,6 +106,10 @@ describe('SupabaseAuthService', () => {
     refreshSessionMock = vi.fn();
     resetPasswordForEmailMock = vi.fn().mockResolvedValue({ data: {}, error: null });
     resendMock = vi.fn().mockResolvedValue({ data: {}, error: null });
+    getUserMock = vi
+      .fn()
+      .mockResolvedValue({ data: { user: { id: userId, email: 'person@example.com' } }, error: null });
+    updateUserByIdMock = vi.fn().mockResolvedValue({ data: { user: { id: userId } }, error: null });
     vi.mocked(createClient).mockReturnValue(authClient() as never);
     grants = grantsMock();
     service = new SupabaseAuthService(envMock(), undefined, grants);
@@ -187,5 +198,21 @@ describe('SupabaseAuthService', () => {
       email: 'person@example.com',
       options: { emailRedirectTo: 'https://vendor.example.com/auth/callback' }
     });
+  });
+
+  it('updates the password for the user the recovery token identifies', async () => {
+    await service.updatePassword('recovery-token', 'NewPassword123!');
+    // Validates the token by resolving the user it belongs to...
+    expect(getUserMock).toHaveBeenCalledWith('recovery-token');
+    // ...then sets the new password via the service-role admin API.
+    expect(updateUserByIdMock).toHaveBeenCalledWith(userId, { password: 'NewPassword123!' });
+  });
+
+  it('rejects an invalid or expired recovery token', async () => {
+    getUserMock.mockResolvedValue({ data: { user: null }, error: { message: 'invalid token' } });
+    await expect(service.updatePassword('bad-token', 'NewPassword123!')).rejects.toThrow(
+      /invalid|expired/i
+    );
+    expect(updateUserByIdMock).not.toHaveBeenCalled();
   });
 });
