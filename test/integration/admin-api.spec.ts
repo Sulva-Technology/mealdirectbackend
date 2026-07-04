@@ -128,6 +128,7 @@ describe('admin API', () => {
       id: '99999999-9999-4999-8999-999999999999',
       inviteUrl: 'https://vendor.mealdirectly.com/accept-invite?token=mock-token',
       revokedAt: null,
+      role: 'staff',
       vendorId
     });
     vi.spyOn(admin, 'setRiderStatus').mockResolvedValue({ id: riderId, status: 'verified' });
@@ -210,7 +211,7 @@ describe('admin API', () => {
       method: 'POST',
       url: `/v1/admin/vendors/${vendorId}/invitations`,
       headers: { authorization: `Bearer ${token}` },
-      payload: { email: 'owner@example.com', expiresInHours: 24 }
+      payload: { email: 'owner@example.com', role: 'owner', expiresInHours: 24 }
     });
     expect(vendorInvite.statusCode).toBe(201);
     expect(vendorInvite.json<{ data: { inviteUrl: string } }>().data.inviteUrl).toContain(

@@ -306,6 +306,18 @@ export class AdminController {
     return createSuccessEnvelope(await this.admin.deleteUser(actor, params.userId));
   }
 
+  @Get('vendors/:vendorId/invitations')
+  async listVendorInvitations(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Param() params: AdminVendorIdParamDto
+  ): Promise<ListEnvelope<AdminRecord>> {
+    const items = (await this.admin.listVendorInvitations(
+      actor,
+      params.vendorId
+    )) as unknown as AdminRecord[];
+    return createListEnvelope(items, { hasMore: false, limit: items.length });
+  }
+
   @Post('vendors/:vendorId/invitations')
   async createVendorInvitation(
     @CurrentActor() actor: AuthenticatedActor,

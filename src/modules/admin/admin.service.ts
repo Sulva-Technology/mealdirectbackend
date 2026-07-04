@@ -318,6 +318,7 @@ export class AdminService {
       actorUserId: actor.userId,
       email: input.email.trim().toLowerCase(),
       expiresInHours: input.expiresInHours ?? 72,
+      role: input.role,
       tokenHash: hashInviteToken(token),
       vendorId
     });
@@ -326,6 +327,17 @@ export class AdminService {
       ...this.requireRecord(record, 'Vendor invitation was not created.'),
       inviteUrl: this.vendorInviteUrl(token)
     };
+  }
+
+  async listVendorInvitations(
+    actor: AuthenticatedActor,
+    vendorId: string
+  ): Promise<VendorInvitationRecord[]> {
+    await this.getVendor(actor, vendorId);
+    if (this.invitations === undefined) {
+      throw badRequest('Vendor invitations are not configured.');
+    }
+    return this.invitations.listByVendor(vendorId);
   }
 
   async getVendorPerformance(actor: AuthenticatedActor, vendorId: string): Promise<AdminRecord> {

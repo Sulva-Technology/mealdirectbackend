@@ -56,6 +56,7 @@ function invitationsMock(): VendorInvitationsRepository {
     expiresAt: '2026-06-30T09:00:00.000Z',
     id: '99999999-9999-4999-8999-999999999999',
     revokedAt: null,
+    role: 'staff',
     vendorId: '55555555-5555-4555-8555-555555555555'
   });
   return {
@@ -161,6 +162,7 @@ describe('AdminService', () => {
     await expect(
       service.createVendorInvitation(campusAdmin, '55555555-5555-4555-8555-555555555555', {
         email: ' Owner@Example.com ',
+        role: 'owner',
         expiresInHours: 12
       })
     ).resolves.toMatchObject({
@@ -174,6 +176,7 @@ describe('AdminService', () => {
       actorUserId: campusAdmin.userId,
       email: 'owner@example.com',
       expiresInHours: 12,
+      role: 'owner',
       vendorId: '55555555-5555-4555-8555-555555555555'
     });
     expect(invitationInput?.tokenHash).toMatch(/^[a-f0-9]{64}$/);

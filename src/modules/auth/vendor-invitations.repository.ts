@@ -3,10 +3,13 @@ import { sql } from 'kysely';
 
 import { DatabaseService } from '../../database/database.service.js';
 
+export type VendorUserRole = 'owner' | 'staff';
+
 export type VendorInvitationRecord = {
   id: string;
   vendorId: string;
   email: string;
+  role: VendorUserRole;
   createdByAdminId: string;
   expiresAt: string;
   acceptedAt: string | null;
@@ -18,6 +21,7 @@ export type VendorInvitationRecord = {
 export type CreateVendorInvitationInput = {
   vendorId: string;
   email: string;
+  role: VendorUserRole;
   tokenHash: string;
   actorUserId: string;
   expiresInHours: number;
@@ -32,6 +36,7 @@ export class VendorInvitationsRepository {
       insert into public.vendor_invitations (
         vendor_id,
         email,
+        role,
         token_hash,
         created_by_admin_id,
         expires_at
@@ -39,6 +44,7 @@ export class VendorInvitationsRepository {
       values (
         ${input.vendorId}::uuid,
         ${input.email}::extensions.citext,
+        ${input.role}::public.vendor_user_role,
         ${input.tokenHash},
         ${input.actorUserId}::uuid,
         now() + (${input.expiresInHours}::integer * interval '1 hour')
@@ -47,6 +53,7 @@ export class VendorInvitationsRepository {
         id::text as "id",
         vendor_id::text as "vendorId",
         email::text as "email",
+        role::text as "role",
         created_by_admin_id::text as "createdByAdminId",
         expires_at::text as "expiresAt",
         accepted_at::text as "acceptedAt",
@@ -58,6 +65,27 @@ export class VendorInvitationsRepository {
     return result.rows[0];
   }
 
+  async listByVendor(vendorId: string): Promise<VendorInvitationRecord[]> {
+    const result = await sql<VendorInvitationRecord>`
+      select
+        id::text as "id",
+        vendor_id::text as "vendorId",
+        email::text as "email",
+        role::text as "role",
+        created_by_admin_id::text as "createdByAdminId",
+        expires_at::text as "expiresAt",
+        accepted_at::text as "acceptedAt",
+        accepted_by_user_id::text as "acceptedByUserId",
+        revoked_at::text as "revokedAt",
+        created_at::text as "createdAt"
+      from public.vendor_invitations
+      where vendor_id = ${vendorId}::uuid
+      order by created_at desc
+    `.execute(this.database.db);
+
+    return result.rows;
+  }
+
   async findOpenByToken(input: {
     tokenHash: string;
     email: string;
@@ -67,6 +95,7 @@ export class VendorInvitationsRepository {
         id::text as "id",
         vendor_id::text as "vendorId",
         email::text as "email",
+        role::text as "role",
         created_by_admin_id::text as "createdByAdminId",
         expires_at::text as "expiresAt",
         accepted_at::text as "acceptedAt",
@@ -103,10 +132,10 @@ export class VendorInvitationsRepository {
       ),
       linked as (
         insert into public.vendor_users (vendor_id, user_id, role)
-        select vendor_id, ${input.userId}::uuid, 'owner'::public.vendor_user_role
+        select vendor_id, ${input.userId}::uuid, role
         from invite
         on conflict (vendor_id, user_id) do update
-          set role = 'owner'::public.vendor_user_role,
+          set role = excluded.role,
               active = true,
               updated_at = now()
         returning vendor_id
@@ -121,6 +150,7 @@ export class VendorInvitationsRepository {
         vi.id::text as "id",
         vi.vendor_id::text as "vendorId",
         vi.email::text as "email",
+        vi.role::text as "role",
         vi.created_by_admin_id::text as "createdByAdminId",
         vi.expires_at::text as "expiresAt",
         vi.accepted_at::text as "acceptedAt",

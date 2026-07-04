@@ -492,6 +492,9 @@ export class AdminCreateVendorInvitationDto {
   @IsEmail()
   email!: string;
 
+  @IsIn(['owner', 'staff'])
+  role: 'owner' | 'staff' = 'staff';
+
   @IsOptional()
   @Type(() => Number)
   @IsInt()
