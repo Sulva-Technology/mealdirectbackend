@@ -10,15 +10,35 @@ import {
 import { createClient } from '@supabase/supabase-js';
 import { createHash } from 'node:crypto';
 
+import { ErrorCodes } from '../../common/errors/error-codes.js';
+import { EnvService } from '../../config/env.service.js';
+import type { ActorRole } from '../../domain/authorization.js';
+import { AuthRoleGrantsRepository } from './auth-role-grants.repository.js';
+import type { AuthTokensResponseDto } from './dto/auth.dto.js';
+import { VendorInvitationsRepository } from './vendor-invitations.repository.js';
+
 type MealDirectUserMetadata = {
   meal_direct_role?: unknown;
   role?: unknown;
 };
 
-import { ErrorCodes } from '../../common/errors/error-codes.js';
-import { EnvService } from '../../config/env.service.js';
-import type { AuthTokensResponseDto } from './dto/auth.dto.js';
-import { VendorInvitationsRepository } from './vendor-invitations.repository.js';
+type SupabaseSession = {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+};
+
+type SupabaseUser = {
+  id: string;
+  email?: string;
+  app_metadata?: Record<string, unknown>;
+  user_metadata?: Record<string, unknown>;
+};
+
+type ResolvedGrant = {
+  role: ActorRole;
+  metadata: Record<string, unknown>;
+};
 
 @Injectable()
 export class SupabaseAuthService {
@@ -28,7 +48,10 @@ export class SupabaseAuthService {
     @Inject(EnvService) private readonly env: EnvService,
     @Optional()
     @Inject(VendorInvitationsRepository)
-    private readonly invitations?: VendorInvitationsRepository
+    private readonly invitations?: VendorInvitationsRepository,
+    @Optional()
+    @Inject(AuthRoleGrantsRepository)
+    private readonly roleGrants?: AuthRoleGrantsRepository
   ) {}
 
   private getAdminClient() {
@@ -305,28 +328,124 @@ export class SupabaseAuthService {
       });
     }
 
-    const appMetadata = (data.user.app_metadata ?? {}) as MealDirectUserMetadata;
-    const userMetadata = (data.user.user_metadata ?? {}) as MealDirectUserMetadata;
-    const rawRole =
-      appMetadata.meal_direct_role ?? appMetadata.role ?? userMetadata.meal_direct_role;
-    const role = typeof rawRole === 'string' ? rawRole : 'customer';
+    let session: SupabaseSession = data.session;
+    let user: SupabaseUser = data.user;
+    let role = this.resolveUserRole(user);
 
     if (!allowedRoles.includes(role)) {
-      throw new ForbiddenException({
+      const grant = await this.resolveGrantForLogin(user.id, allowedRoles);
+      if (grant === undefined) {
+        throw new ForbiddenException({
+          code: ErrorCodes.AUTH_FAILED,
+          message: 'Invalid credentials or incorrect role.'
+        });
+      }
+
+      await this.setUserAppMetadata(user.id, grant.metadata);
+      const refreshed = await this.refreshSessionAfterMetadataSync(session.refresh_token);
+      session = refreshed.session;
+      user = refreshed.user;
+      role = this.resolveUserRole(user);
+      if (!allowedRoles.includes(role)) {
+        role = grant.role;
+      }
+    }
+
+    return {
+      accessToken: session.access_token,
+      refreshToken: session.refresh_token,
+      expiresIn: session.expires_in,
+      user: {
+        id: user.id,
+        email: user.email ?? '',
+        role
+      }
+    };
+  }
+
+  private resolveUserRole(user: {
+    app_metadata?: Record<string, unknown>;
+    user_metadata?: Record<string, unknown>;
+  }): ActorRole {
+    const appMetadata = (user.app_metadata ?? {}) as MealDirectUserMetadata;
+    const userMetadata = (user.user_metadata ?? {}) as MealDirectUserMetadata;
+    const rawRole =
+      appMetadata.meal_direct_role ?? appMetadata.role ?? userMetadata.meal_direct_role;
+    return typeof rawRole === 'string' ? (rawRole as ActorRole) : 'customer';
+  }
+
+  private async resolveGrantForLogin(
+    userId: string,
+    allowedRoles: string[]
+  ): Promise<ResolvedGrant | undefined> {
+    if (this.roleGrants === undefined) {
+      return undefined;
+    }
+
+    if (allowedRoles.includes('super_admin') || allowedRoles.includes('campus_admin')) {
+      const grant = await this.roleGrants.findAdminGrantForUser(userId);
+      if (grant !== undefined) {
+        if (grant.role === 'super_admin' && allowedRoles.includes('super_admin')) {
+          return {
+            metadata: {
+              campus_id: null,
+              meal_direct_role: 'super_admin'
+            },
+            role: 'super_admin'
+          };
+        }
+        if (allowedRoles.includes('campus_admin')) {
+          return {
+            metadata: {
+              campus_id: grant.campusId,
+              meal_direct_role: 'campus_admin'
+            },
+            role: 'campus_admin'
+          };
+        }
+      }
+    }
+
+    if (allowedRoles.includes('vendor')) {
+      const grant = await this.roleGrants.findVendorGrantForUser(userId);
+      if (grant !== undefined) {
+        return {
+          metadata: {
+            meal_direct_role: 'vendor',
+            vendor_id: grant.vendorId
+          },
+          role: 'vendor'
+        };
+      }
+    }
+
+    return undefined;
+  }
+
+  private async refreshSessionAfterMetadataSync(
+    refreshToken: string
+  ): Promise<{ session: SupabaseSession; user: SupabaseUser }> {
+    const { data, error } = await this.getClient().auth.refreshSession({
+      refresh_token: refreshToken
+    });
+
+    if (error) {
+      throw new UnauthorizedException({
         code: ErrorCodes.AUTH_FAILED,
-        message: 'Invalid credentials or incorrect role.'
+        message: error.message
+      });
+    }
+
+    if (!data.session) {
+      throw new UnauthorizedException({
+        code: ErrorCodes.AUTH_FAILED,
+        message: 'No active session was returned.'
       });
     }
 
     return {
-      accessToken: data.session.access_token,
-      refreshToken: data.session.refresh_token,
-      expiresIn: data.session.expires_in,
-      user: {
-        id: data.user.id,
-        email: data.user.email ?? '',
-        role
-      }
+      session: data.session,
+      user: data.user ?? data.session.user
     };
   }
 

@@ -11,6 +11,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { ErrorCodes } from '../../common/errors/error-codes.js';
 import { EnvService } from '../../config/env.service.js';
 import type { AuthenticatedActor } from '../auth/actor-context.js';
+import { SupabaseAuthService } from '../auth/supabase-auth.service.js';
 import { VendorInvitationsRepository } from '../auth/vendor-invitations.repository.js';
 import type { VendorInvitationRecord } from '../auth/vendor-invitations.repository.js';
 import { AdminRepository } from './admin.repository.js';
@@ -76,7 +77,10 @@ export class AdminService {
     @Optional() @Inject(EnvService) private readonly env?: EnvService,
     @Optional()
     @Inject(VendorInvitationsRepository)
-    private readonly invitations?: VendorInvitationsRepository
+    private readonly invitations?: VendorInvitationsRepository,
+    @Optional()
+    @Inject(SupabaseAuthService)
+    private readonly auth?: SupabaseAuthService
   ) {}
 
   getSession(actor: AuthenticatedActor): AdminSession {
@@ -233,10 +237,15 @@ export class AdminService {
     input: AdminVendorUserDto
   ): Promise<AdminRecord> {
     await this.getVendor(actor, vendorId);
-    return this.requireRecord(
+    const record = this.requireRecord(
       await this.repository.addVendorUser(vendorId, input.userId, input.role),
       'Vendor user was not created.'
     );
+    await this.syncUserAppMetadata(input.userId, {
+      meal_direct_role: 'vendor',
+      vendor_id: vendorId
+    });
+    return record;
   }
 
   async createVendorInvitation(
@@ -490,7 +499,7 @@ export class AdminService {
     return this.repository.listAdminMemberships();
   }
 
-  createAdminMembership(
+  async createAdminMembership(
     actor: AuthenticatedActor,
     input: AdminCreateMembershipDto
   ): Promise<AdminRecord | undefined> {
@@ -498,7 +507,11 @@ export class AdminService {
     if (input.role === 'campus_admin' && input.campusId === undefined) {
       throw badRequest('campusId is required for campus admin memberships.');
     }
-    return this.repository.createAdminMembership(input, actor.userId);
+    const record = await this.repository.createAdminMembership(input, actor.userId);
+    if (record !== undefined) {
+      await this.syncUserAppMetadata(input.userId, this.adminAppMetadata(input));
+    }
+    return record;
   }
 
   setAdminMembershipActive(
@@ -556,6 +569,30 @@ export class AdminService {
     const url = new URL('/accept-invite', baseUrl);
     url.searchParams.set('token', token);
     return url.toString();
+  }
+
+  private adminAppMetadata(input: AdminCreateMembershipDto): Record<string, unknown> {
+    if (input.role === 'super_admin') {
+      return {
+        campus_id: null,
+        meal_direct_role: 'super_admin'
+      };
+    }
+
+    return {
+      campus_id: input.campusId ?? null,
+      meal_direct_role: 'campus_admin'
+    };
+  }
+
+  private async syncUserAppMetadata(
+    userId: string,
+    metadata: Record<string, unknown>
+  ): Promise<void> {
+    if (this.auth === undefined) {
+      throw badRequest('Supabase auth metadata sync is not configured.');
+    }
+    await this.auth.setUserAppMetadata(userId, metadata);
   }
 }
 
