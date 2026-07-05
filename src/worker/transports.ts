@@ -76,14 +76,32 @@ export function createPushSender(env: AppEnvironment): PushSender {
       // Sending title/body inside `data` lets each app's service worker render exactly
       // one notification with full control over icon and click routing. Every Meal Direct
       // client SW/foreground handler reads data.title/data.body.
-      await getMessaging().send({
-        token: input.token,
-        data: {
-          title: input.title,
-          body: input.body,
-          ...input.data
-        }
-      });
+      try {
+        await getMessaging().send({
+          token: input.token,
+          data: {
+            title: input.title,
+            body: input.body,
+            ...input.data
+          }
+        });
+      } catch (error) {
+        // Surface the FCM error code/message: without this the failure is invisible
+        // (thrown transient errors just retry+dead-letter, dead tokens get pruned).
+        const code = (error as { code?: unknown }).code;
+        console.error(
+          JSON.stringify({
+            level: 'error',
+            timestamp: new Date().toISOString(),
+            context: 'PushSender',
+            message: 'FCM send failed',
+            projectId,
+            code: typeof code === 'string' ? code : undefined,
+            error: error instanceof Error ? error.message : String(error)
+          })
+        );
+        throw error;
+      }
     }
   };
 }

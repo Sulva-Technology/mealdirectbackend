@@ -11,15 +11,20 @@ export type PushSender = {
 
 export type TokenLookup = {
   tokensForUser: (userId: string) => Promise<string[]>;
-  removeToken: (token: string) => Promise<void>;
+  removeToken: (token: string, reason?: string) => Promise<void>;
 };
 
 // FCM error codes that mean the token is permanently unusable. Pruning these
 // lets the outbox event complete instead of retrying forever and dead-lettering.
+//
+// NOTE: `messaging/invalid-argument` is deliberately NOT here. FCM returns it for
+// systemic problems (backend creds / project mismatch with the app's Firebase
+// project, malformed payload), not just dead tokens. Treating it as a dead token
+// caused mass token deletion on any credential/project mismatch — silent outage.
+// It now falls through to the transient path (retry + surfaced error) instead.
 const PERMANENT_TOKEN_ERROR_CODES = new Set([
   'messaging/registration-token-not-registered',
-  'messaging/invalid-registration-token',
-  'messaging/invalid-argument'
+  'messaging/invalid-registration-token'
 ]);
 
 function isInvalidTokenError(reason: unknown): boolean {
@@ -54,8 +59,12 @@ export class PushChannel {
     for (const [index, result] of results.entries()) {
       if (result.status === 'fulfilled') continue;
       if (isInvalidTokenError(result.reason)) {
-        // Permanent: drop the dead token so it stops poisoning future events.
-        await this.tokens.removeToken(tokens[index] as string);
+        // Permanent: disable the dead token so it stops poisoning future events.
+        const code = (result.reason as { code?: unknown }).code;
+        await this.tokens.removeToken(
+          tokens[index] as string,
+          typeof code === 'string' ? code : 'invalid-token'
+        );
         continue;
       }
       // Transient (network, quota, auth): remember it so the event retries.
