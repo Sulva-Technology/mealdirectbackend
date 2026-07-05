@@ -104,6 +104,9 @@ export type OrderSummary = {
   paidAt: string | null;
   deliveredAt: string | null;
   confirmedAt: string | null;
+  // Hand-off code shown to the customer once the order is out for delivery; null otherwise.
+  // Optional because most order queries do not select it.
+  deliveryCode?: string | null;
 };
 
 export type OrderDetail = OrderSummary & {

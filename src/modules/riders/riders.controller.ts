@@ -33,6 +33,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import { RequireRoles } from '../auth/roles.decorator.js';
 import { RolesGuard } from '../auth/roles.guard.js';
 import {
+  ConfirmDeliveryDto,
   CreateRiderIssueDto,
   OnboardRiderDto,
   RiderAvailabilityDto,
@@ -279,6 +280,20 @@ export class RidersController {
     @Param() params: RiderOrderIdParamDto
   ): Promise<SuccessEnvelope<RiderOrderDetail>> {
     return createSuccessEnvelope(await this.riders.markOrderDelivered(actor, params.orderId));
+  }
+
+  @Post('orders/confirm-delivery')
+  @HttpCode(200)
+  @ApiOkResponse({
+    description: 'Order marked delivered via the customer hand-off code.',
+    type: RiderOrderDetailEnvelopeDto
+  })
+  @ApiBadRequestResponse({ description: 'Invalid code payload.' })
+  async confirmDeliveryByCode(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Body() input: ConfirmDeliveryDto
+  ): Promise<SuccessEnvelope<RiderOrderDetail>> {
+    return createSuccessEnvelope(await this.riders.confirmDeliveryByCode(actor, input.code));
   }
 
   @Post('orders/:orderId/issues')

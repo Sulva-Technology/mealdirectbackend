@@ -1,3 +1,5 @@
+import { randomInt } from 'node:crypto';
+
 import { Inject, Injectable } from '@nestjs/common';
 import { sql } from 'kysely';
 
@@ -10,6 +12,8 @@ import type {
   PaymentSnapshot
 } from '../orders/orders.types.js';
 import type {
+  DeliveryCodeAttemptState,
+  DeliveryCodeLookup,
   RiderAssignmentListFilters,
   RiderAssignmentSummary,
   RiderEarningsBatch,
@@ -520,6 +524,7 @@ export class RidersRepository implements RidersRepositoryContract {
         o.paid_at::text as "paidAt",
         o.delivered_at::text as "deliveredAt",
         o.confirmed_at::text as "confirmedAt",
+        o.delivery_code as "deliveryCode",
         da.id::text as "assignmentId",
         da.batch_id::text as "batchId",
         da.status::text as "assignmentStatus"
@@ -575,6 +580,96 @@ export class RidersRepository implements RidersRepositoryContract {
     }
 
     return status;
+  }
+
+  // Assigns a 4-digit hand-off code to an out-for-delivery order, unique among the
+  // rider's concurrently out-for-delivery orders. Retries on the rare collision; the
+  // WHERE guard makes each attempt atomic so two codes can never overlap.
+  async assignDeliveryCode(riderId: string, orderId: string): Promise<string> {
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      const code = String(randomInt(0, 10000)).padStart(4, '0');
+      const result = await sql<{ deliveryCode: string }>`
+        update public.orders o
+        set delivery_code = ${code}
+        where o.id = ${orderId}::uuid
+          and o.order_status = 'out_for_delivery'
+          and not exists (
+            select 1
+            from public.orders o2
+            join public.delivery_batch_orders dbo on dbo.order_id = o2.id
+            join public.delivery_assignments da on da.batch_id = dbo.batch_id
+            where da.rider_id = ${riderId}::uuid
+              and o2.order_status = 'out_for_delivery'
+              and o2.id <> o.id
+              and o2.delivery_code = ${code}
+          )
+        returning o.delivery_code as "deliveryCode"
+      `.execute(this.database.db);
+
+      const assigned = result.rows[0]?.deliveryCode;
+      if (assigned !== undefined) {
+        return assigned;
+      }
+    }
+
+    throw new Error('Could not assign a unique delivery code after several attempts.');
+  }
+
+  // Resolves a delivery code to one of the rider's active (out-for-delivery) orders.
+  // matchCount lets the caller distinguish "no such code" from an ambiguous collision.
+  async findActiveOrderIdByDeliveryCode(
+    riderId: string,
+    code: string
+  ): Promise<DeliveryCodeLookup> {
+    const result = await sql<{ orderId: string }>`
+      select o.id::text as "orderId"
+      from public.orders o
+      join public.delivery_batch_orders dbo on dbo.order_id = o.id
+      join public.delivery_assignments da on da.batch_id = dbo.batch_id
+      where da.rider_id = ${riderId}::uuid
+        and o.order_status = 'out_for_delivery'
+        and o.delivery_code = ${code}
+      limit 2
+    `.execute(this.database.db);
+
+    const first = result.rows[0];
+    return {
+      orderId: result.rows.length === 1 && first !== undefined ? first.orderId : null,
+      matchCount: result.rows.length
+    };
+  }
+
+  async getDeliveryCodeLock(riderId: string): Promise<string | null> {
+    const result = await sql<{ lockedUntil: string | null }>`
+      select locked_until::text as "lockedUntil"
+      from public.rider_delivery_code_attempts
+      where rider_id = ${riderId}::uuid
+        and locked_until is not null
+        and locked_until > now()
+    `.execute(this.database.db);
+
+    return result.rows[0]?.lockedUntil ?? null;
+  }
+
+  async registerDeliveryCodeFailure(riderId: string): Promise<DeliveryCodeAttemptState> {
+    const result = await sql<{ failedCount: number; lockedUntil: string | null }>`
+      select
+        failed_count as "failedCount",
+        locked_until::text as "lockedUntil"
+      from public.register_delivery_code_failure(${riderId}::uuid)
+    `.execute(this.database.db);
+
+    const row = result.rows[0];
+    return {
+      failedCount: row?.failedCount ?? 0,
+      lockedUntil: row?.lockedUntil ?? null
+    };
+  }
+
+  async resetDeliveryCodeAttempts(riderId: string): Promise<void> {
+    await sql`select public.reset_delivery_code_attempts(${riderId}::uuid)`.execute(
+      this.database.db
+    );
   }
 
   async createOrderIssue(

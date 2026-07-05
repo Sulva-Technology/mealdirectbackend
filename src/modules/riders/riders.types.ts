@@ -139,6 +139,18 @@ export type RiderIssueInput = {
   description: string;
 };
 
+// Result of resolving a delivery code to one of the rider's active orders.
+// matchCount distinguishes no-match (0) from an ambiguous collision (>1).
+export type DeliveryCodeLookup = {
+  orderId: string | null;
+  matchCount: number;
+};
+
+export type DeliveryCodeAttemptState = {
+  failedCount: number;
+  lockedUntil: string | null;
+};
+
 export type RiderIssueRecord = {
   id: string;
   orderId: string;
@@ -266,6 +278,14 @@ export type RidersRepositoryContract = {
     toStatus: OrderStatus,
     actorUserId: string
   ) => Promise<OrderStatus>;
+  assignDeliveryCode: (riderId: string, orderId: string) => Promise<string>;
+  findActiveOrderIdByDeliveryCode: (
+    riderId: string,
+    code: string
+  ) => Promise<DeliveryCodeLookup>;
+  getDeliveryCodeLock: (riderId: string) => Promise<string | null>;
+  registerDeliveryCodeFailure: (riderId: string) => Promise<DeliveryCodeAttemptState>;
+  resetDeliveryCodeAttempts: (riderId: string) => Promise<void>;
   createOrderIssue: (
     riderId: string,
     orderId: string,

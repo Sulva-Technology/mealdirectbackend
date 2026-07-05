@@ -199,6 +199,15 @@ function createRepository(): MockRidersRepository {
     onboardRider: vi.fn().mockResolvedValue(profile),
     setRiderAvailability: vi.fn().mockResolvedValue({ ...profile, available: true }),
     transitionAssignedOrderStatus: vi.fn().mockResolvedValue('out_for_delivery'),
+    assignDeliveryCode: vi.fn().mockResolvedValue('1234'),
+    findActiveOrderIdByDeliveryCode: vi
+      .fn()
+      .mockResolvedValue({ orderId: order.id, matchCount: 1 }),
+    getDeliveryCodeLock: vi.fn().mockResolvedValue(null),
+    registerDeliveryCodeFailure: vi
+      .fn()
+      .mockResolvedValue({ failedCount: 1, lockedUntil: null }),
+    resetDeliveryCodeAttempts: vi.fn().mockResolvedValue(undefined),
     updateRiderProfile: vi.fn().mockResolvedValue(profile),
     upsertPayoutAccount: vi.fn().mockResolvedValue(payoutAccount),
     markPayoutAccountVerified: vi
@@ -329,6 +338,7 @@ describe('RidersService', () => {
       'out_for_delivery',
       userId
     );
+    expect(repository.assignDeliveryCode).toHaveBeenCalledWith(riderId, orderId);
 
     await expect(
       service.createIssue(actor, orderId, {
@@ -336,6 +346,64 @@ describe('RidersService', () => {
         description: 'Customer did not answer.'
       })
     ).resolves.toEqual(issue);
+  });
+
+  it('confirms delivery by code and resets the attempt counter', async () => {
+    await expect(service.confirmDeliveryByCode(actor, '1234')).resolves.toEqual(order);
+    expect(repository.findActiveOrderIdByDeliveryCode).toHaveBeenCalledWith(riderId, '1234');
+    expect(repository.transitionAssignedOrderStatus).toHaveBeenCalledWith(
+      riderId,
+      orderId,
+      'delivered',
+      userId
+    );
+    expect(repository.resetDeliveryCodeAttempts).toHaveBeenCalledWith(riderId);
+  });
+
+  it('rejects a delivery code confirmation when the rider is locked out', async () => {
+    repository.getDeliveryCodeLock.mockResolvedValueOnce('2026-07-05T10:00:00.000Z');
+    await expect(service.confirmDeliveryByCode(actor, '1234')).rejects.toMatchObject({
+      status: 429
+    });
+    expect(repository.findActiveOrderIdByDeliveryCode).not.toHaveBeenCalled();
+    expect(repository.transitionAssignedOrderStatus).not.toHaveBeenCalled();
+  });
+
+  it('records a failure and 404s when no active order matches the code', async () => {
+    repository.findActiveOrderIdByDeliveryCode.mockResolvedValueOnce({
+      orderId: null,
+      matchCount: 0
+    });
+    await expect(service.confirmDeliveryByCode(actor, '0000')).rejects.toBeInstanceOf(
+      NotFoundException
+    );
+    expect(repository.registerDeliveryCodeFailure).toHaveBeenCalledWith(riderId);
+    expect(repository.transitionAssignedOrderStatus).not.toHaveBeenCalled();
+  });
+
+  it('locks the rider out once failures cross the threshold', async () => {
+    repository.findActiveOrderIdByDeliveryCode.mockResolvedValueOnce({
+      orderId: null,
+      matchCount: 0
+    });
+    repository.registerDeliveryCodeFailure.mockResolvedValueOnce({
+      failedCount: 5,
+      lockedUntil: '2026-07-05T10:00:00.000Z'
+    });
+    await expect(service.confirmDeliveryByCode(actor, '0000')).rejects.toMatchObject({
+      status: 429
+    });
+  });
+
+  it('refuses to guess when a code matches more than one active order', async () => {
+    repository.findActiveOrderIdByDeliveryCode.mockResolvedValueOnce({
+      orderId: null,
+      matchCount: 2
+    });
+    await expect(service.confirmDeliveryByCode(actor, '1234')).rejects.toBeInstanceOf(
+      ConflictException
+    );
+    expect(repository.transitionAssignedOrderStatus).not.toHaveBeenCalled();
   });
 
   it('returns earnings and settlements with date/cursor validation', async () => {

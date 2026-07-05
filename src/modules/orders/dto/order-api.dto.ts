@@ -174,6 +174,13 @@ export class OrderSummaryDto {
 
   @ApiPropertyOptional({ nullable: true, type: String })
   confirmedAt!: string | null;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    type: String,
+    description: 'Delivery hand-off code to read to the rider; present once out for delivery.'
+  })
+  deliveryCode?: string | null;
 }
 
 export class OrderItemDto {

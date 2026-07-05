@@ -406,6 +406,18 @@ export class RiderOrderDetailDto extends OrderDetailDto {
   zoneName!: string;
 }
 
+export class ConfirmDeliveryDto {
+  @ApiProperty({
+    pattern: '^[0-9]{4}$',
+    type: String,
+    description: 'The 4-digit code the customer reads to the rider on hand-off.'
+  })
+  @Transform(({ value }) => trimString(value))
+  @IsString()
+  @Matches(/^[0-9]{4}$/, { message: 'code must be exactly 4 digits.' })
+  code!: string;
+}
+
 export class RiderOrderDetailEnvelopeDto {
   @ApiProperty({ type: () => RiderOrderDetailDto })
   data!: RiderOrderDetailDto;

@@ -166,7 +166,8 @@ export class OrdersRepository implements OrdersRepositoryContract {
         o.updated_at::text as "updatedAt",
         o.paid_at::text as "paidAt",
         o.delivered_at::text as "deliveredAt",
-        o.confirmed_at::text as "confirmedAt"
+        o.confirmed_at::text as "confirmedAt",
+        o.delivery_code as "deliveryCode"
       from public.orders o
       join public.vendors v on v.id = o.vendor_id
       join public.delivery_slots ds on ds.id = o.delivery_slot_id
@@ -255,7 +256,8 @@ export class OrdersRepository implements OrdersRepositoryContract {
         o.updated_at::text as "updatedAt",
         o.paid_at::text as "paidAt",
         o.delivered_at::text as "deliveredAt",
-        o.confirmed_at::text as "confirmedAt"
+        o.confirmed_at::text as "confirmedAt",
+        o.delivery_code as "deliveryCode"
       from public.orders o
       join public.vendors v on v.id = o.vendor_id
       join public.delivery_slots ds on ds.id = o.delivery_slot_id

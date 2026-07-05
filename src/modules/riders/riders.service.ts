@@ -2,6 +2,8 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
+  HttpException,
+  HttpStatus,
   Inject,
   Injectable,
   NotFoundException
@@ -88,6 +90,13 @@ function notFound(message: string): NotFoundException {
     code: ErrorCodes.NOT_FOUND,
     message
   });
+}
+
+function tooManyRequests(message: string): HttpException {
+  return new HttpException(
+    { code: ErrorCodes.RATE_LIMITED, message },
+    HttpStatus.TOO_MANY_REQUESTS
+  );
 }
 
 function maskAccountNumber(accountNumber: string): string {
@@ -393,11 +402,54 @@ export class RidersService {
     actor: AuthenticatedActor,
     orderId: string
   ): Promise<RiderOrderDetail> {
-    return this.transitionOrder(actor, orderId, 'out_for_delivery');
+    const profile = await this.resolveRiderProfile(actor, { requireActiveVerified: true });
+    await this.transitionOrderForProfile(profile.id, orderId, 'out_for_delivery', actor.userId);
+    // The customer reads this code to the rider on hand-off to confirm delivery.
+    await this.repository.assignDeliveryCode(profile.id, orderId);
+    return this.requireAssignedOrder(profile.id, orderId);
   }
 
   async markOrderDelivered(actor: AuthenticatedActor, orderId: string): Promise<RiderOrderDetail> {
     return this.transitionOrder(actor, orderId, 'delivered');
+  }
+
+  // Rider confirms delivery by entering the customer's 4-digit code. No order id is
+  // supplied: the code alone resolves to the rider's one matching out-for-delivery
+  // order. Guarded by a per-rider brute-force lock (see register_delivery_code_failure).
+  async confirmDeliveryByCode(
+    actor: AuthenticatedActor,
+    code: string
+  ): Promise<RiderOrderDetail> {
+    const profile = await this.resolveRiderProfile(actor, { requireActiveVerified: true });
+
+    const lockedUntil = await this.repository.getDeliveryCodeLock(profile.id);
+    if (lockedUntil !== null) {
+      throw tooManyRequests(
+        `Too many incorrect codes. Try again after ${lockedUntil}.`
+      );
+    }
+
+    const lookup = await this.repository.findActiveOrderIdByDeliveryCode(profile.id, code);
+
+    if (lookup.matchCount > 1) {
+      // Should be impossible given code uniqueness among active orders; surface rather
+      // than guess which order to mark delivered.
+      throw conflict('This code matches more than one active order. Contact support.');
+    }
+
+    if (lookup.orderId === null) {
+      const attempt = await this.repository.registerDeliveryCodeFailure(profile.id);
+      if (attempt.lockedUntil !== null) {
+        throw tooManyRequests(
+          `Too many incorrect codes. Try again after ${attempt.lockedUntil}.`
+        );
+      }
+      throw notFound('No active delivery matches that code.');
+    }
+
+    await this.transitionOrderForProfile(profile.id, lookup.orderId, 'delivered', actor.userId);
+    await this.repository.resetDeliveryCodeAttempts(profile.id);
+    return this.requireAssignedOrder(profile.id, lookup.orderId);
   }
 
   async createIssue(
@@ -462,28 +514,43 @@ export class RidersService {
     toStatus: OrderStatus
   ): Promise<RiderOrderDetail> {
     const profile = await this.resolveRiderProfile(actor, { requireActiveVerified: true });
-    const before = await this.repository.findAssignedOrderById(profile.id, orderId);
+    await this.transitionOrderForProfile(profile.id, orderId, toStatus, actor.userId);
+    return this.requireAssignedOrder(profile.id, orderId);
+  }
+
+  private async transitionOrderForProfile(
+    profileId: string,
+    orderId: string,
+    toStatus: OrderStatus,
+    actorUserId: string
+  ): Promise<void> {
+    const before = await this.repository.findAssignedOrderById(profileId, orderId);
     if (before === undefined) {
       throw notFound('Order was not found.');
     }
 
     try {
       await this.repository.transitionAssignedOrderStatus(
-        profile.id,
+        profileId,
         orderId,
         toStatus,
-        actor.userId
+        actorUserId
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Order status transition failed.';
       throw badRequest(message);
     }
+  }
 
-    const updated = await this.repository.findAssignedOrderById(profile.id, orderId);
-    if (updated === undefined) {
+  private async requireAssignedOrder(
+    profileId: string,
+    orderId: string
+  ): Promise<RiderOrderDetail> {
+    const order = await this.repository.findAssignedOrderById(profileId, orderId);
+    if (order === undefined) {
       throw notFound('Order was not found.');
     }
-    return updated;
+    return order;
   }
 
   private async resolveRiderProfile(
