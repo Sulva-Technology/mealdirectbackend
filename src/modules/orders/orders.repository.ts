@@ -6,6 +6,7 @@ import { sql } from 'kysely';
 import { DatabaseService } from '../../database/database.service.js';
 import type { CreateOrderDto } from './dto/create-order.dto.js';
 import type {
+  LargeOrderSurchargeConfig,
   OrderDetail,
   OrderItem,
   OrderListFilters,
@@ -38,7 +39,8 @@ export class OrdersRepository implements OrdersRepositoryContract {
     idempotencyKey: string,
     requestHash: string,
     serviceFeeKobo: number,
-    maxOrderTotalKobo: number
+    maxOrderTotalKobo: number,
+    largeOrderSurcharge: LargeOrderSurchargeConfig
   ): Promise<{ orderId: string }> {
     const items = input.items.map((item) => ({
       menu_item_id: item.menuItemId,
@@ -61,7 +63,10 @@ export class OrdersRepository implements OrdersRepositoryContract {
         ${input.promotionCode ?? null},
         ${input.specialInstructions ?? null},
         ${serviceFeeKobo}::integer,
-        ${maxOrderTotalKobo}::integer
+        ${maxOrderTotalKobo}::integer,
+        ${largeOrderSurcharge.surchargeBps}::integer,
+        ${largeOrderSurcharge.surchargeFlatKobo}::integer,
+        ${largeOrderSurcharge.accepted}::boolean
       ) as order_id
     `.execute(this.database.db);
 
@@ -154,6 +159,7 @@ export class OrdersRepository implements OrdersRepositoryContract {
         o.delivery_fee_kobo as "deliveryFeeKobo",
         o.service_fee_kobo as "serviceFeeKobo",
         o.discount_kobo as "discountKobo",
+        o.large_order_surcharge_kobo as "largeOrderSurchargeKobo",
         o.total_kobo as "totalKobo",
         o.currency,
         o.created_at::text as "createdAt",
@@ -242,6 +248,7 @@ export class OrdersRepository implements OrdersRepositoryContract {
         o.delivery_fee_kobo as "deliveryFeeKobo",
         o.service_fee_kobo as "serviceFeeKobo",
         o.discount_kobo as "discountKobo",
+        o.large_order_surcharge_kobo as "largeOrderSurchargeKobo",
         o.total_kobo as "totalKobo",
         o.currency,
         o.created_at::text as "createdAt",

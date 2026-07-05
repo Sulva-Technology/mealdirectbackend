@@ -1,4 +1,4 @@
-import { addCents, assertIntegerCents } from './money.js';
+import { addCents, assertIntegerCents, calculateBasisPointsAmount } from './money.js';
 
 export type OrderLinePriceInput = {
   unitPriceCents: number;
@@ -11,6 +11,12 @@ export type OrderPricingInput = {
   deliveryFeeCents: number;
   serviceFeeCents?: number;
   discountCents?: number;
+  // Large-order surcharge: when the post-discount total strictly exceeds
+  // largeOrderThresholdCents, a surcharge of (total * bps) + flat is added on top.
+  // Omit the threshold (or leave it undefined) to disable the surcharge entirely.
+  largeOrderThresholdCents?: number;
+  largeOrderSurchargeBps?: number;
+  largeOrderSurchargeFlatCents?: number;
 };
 
 export type OrderPricing = {
@@ -18,6 +24,8 @@ export type OrderPricing = {
   deliveryFeeCents: number;
   serviceFeeCents: number;
   discountCents: number;
+  largeOrderSurchargeCents: number;
+  exceedsLargeOrderThreshold: boolean;
   totalCents: number;
   spoonCount: number;
 };
@@ -59,12 +67,48 @@ export function calculateOrderPricing(input: OrderPricingInput): OrderPricing {
     return total + requested;
   }, 0);
 
+  const preSurchargeTotalCents = grossCents - discountCents;
+  const { largeOrderSurchargeCents, exceedsLargeOrderThreshold } = calculateLargeOrderSurcharge(
+    preSurchargeTotalCents,
+    input
+  );
+
   return {
     subtotalCents,
     deliveryFeeCents,
     serviceFeeCents,
     discountCents,
-    totalCents: grossCents - discountCents,
+    largeOrderSurchargeCents,
+    exceedsLargeOrderThreshold,
+    totalCents: preSurchargeTotalCents + largeOrderSurchargeCents,
     spoonCount
+  };
+}
+
+function calculateLargeOrderSurcharge(
+  preSurchargeTotalCents: number,
+  input: OrderPricingInput
+): { largeOrderSurchargeCents: number; exceedsLargeOrderThreshold: boolean } {
+  if (input.largeOrderThresholdCents === undefined) {
+    return { largeOrderSurchargeCents: 0, exceedsLargeOrderThreshold: false };
+  }
+
+  const thresholdCents = assertIntegerCents(input.largeOrderThresholdCents, 'largeOrderThresholdCents');
+  if (preSurchargeTotalCents <= thresholdCents) {
+    return { largeOrderSurchargeCents: 0, exceedsLargeOrderThreshold: false };
+  }
+
+  const flatCents = assertIntegerCents(
+    input.largeOrderSurchargeFlatCents ?? 0,
+    'largeOrderSurchargeFlatCents'
+  );
+  const bpsAmountCents = calculateBasisPointsAmount(
+    preSurchargeTotalCents,
+    input.largeOrderSurchargeBps ?? 0
+  );
+
+  return {
+    largeOrderSurchargeCents: bpsAmountCents + flatCents,
+    exceedsLargeOrderThreshold: true
   };
 }

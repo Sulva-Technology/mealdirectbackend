@@ -54,15 +54,17 @@ export class OrdersService {
     customerOnly(actor);
     const { quote, serviceFeeKobo } = await this.buildQuote(input);
     const maxOrderTotalKobo = this.env.get('MAX_ORDER_TOTAL_KOBO');
+    const accepted = input.acceptLargeOrderSurcharge === true;
 
-    // The quoted total already includes delivery + service fees but not promo discounts
-    // (applied inside the RPC). With no promo code the quote IS the final total, so we can
-    // reject over-cap orders before any charge. When a promo code is present, the RPC is the
-    // authoritative gate (it knows the discount) so we defer to it.
-    if (input.promotionCode === undefined && quote.totalKobo > maxOrderTotalKobo) {
+    // The quoted total already includes delivery + service fees (and the large-order surcharge)
+    // but not promo discounts (applied inside the RPC). With no promo code the quote IS the final
+    // total, so we can reject an un-accepted over-cap order before any charge. When a promo code
+    // is present the RPC is the authoritative gate (it knows the discount) so we defer to it.
+    if (input.promotionCode === undefined && quote.exceedsStandardCap && !accepted) {
       throw new BadRequestException({
         code: ErrorCodes.VALIDATION_FAILED,
-        message: 'Order total exceeds the maximum allowed amount.'
+        message:
+          'Order total exceeds the standard ₦2490 cap. Set acceptLargeOrderSurcharge to accept the 1.5% + ₦100 surcharge.'
       });
     }
 
@@ -72,7 +74,12 @@ export class OrdersService {
       idempotencyKey,
       hashOrderRequest(input),
       serviceFeeKobo,
-      maxOrderTotalKobo
+      maxOrderTotalKobo,
+      {
+        surchargeBps: this.env.get('LARGE_ORDER_SURCHARGE_BPS'),
+        surchargeFlatKobo: this.env.get('LARGE_ORDER_SURCHARGE_FLAT_KOBO'),
+        accepted
+      }
     );
   }
 
@@ -93,7 +100,10 @@ export class OrdersService {
         quantity: item.quantity
       })),
       deliveryFeeCents: zoneFeeKobo ?? this.env.get('DELIVERY_FEE_KOBO'),
-      serviceFeeCents: serviceFeeKobo
+      serviceFeeCents: serviceFeeKobo,
+      largeOrderThresholdCents: this.env.get('MAX_ORDER_TOTAL_KOBO'),
+      largeOrderSurchargeBps: this.env.get('LARGE_ORDER_SURCHARGE_BPS'),
+      largeOrderSurchargeFlatCents: this.env.get('LARGE_ORDER_SURCHARGE_FLAT_KOBO')
     });
 
     return {
@@ -103,6 +113,8 @@ export class OrdersService {
         serviceFeeKobo: pricing.serviceFeeCents,
         discountKobo: pricing.discountCents,
         foodSubtotalKobo: pricing.subtotalCents,
+        largeOrderSurchargeKobo: pricing.largeOrderSurchargeCents,
+        exceedsStandardCap: pricing.exceedsLargeOrderThreshold,
         items: quotedItems,
         totalKobo: pricing.totalCents
       },

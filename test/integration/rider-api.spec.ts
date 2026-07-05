@@ -98,6 +98,7 @@ const order: RiderOrderDetail = {
   deliverySlotId: assignment.deliverySlotId,
   deliverySlotName: assignment.deliverySlotName,
   discountKobo: 0,
+  largeOrderSurchargeKobo: 0,
   foodSubtotalKobo: 250000,
   id: orderId,
   items: [],

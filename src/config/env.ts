@@ -88,9 +88,15 @@ const envSchema = z
     // override (vendors.service_fee_kobo). Surfaced as serviceFeeKobo on the order quote
     // and order total. Override per environment via SERVICE_FEE_KOBO.
     SERVICE_FEE_KOBO: z.coerce.number().int().nonnegative().default(20_000),
-    // Maximum allowed order total in kobo (₦2490). Orders whose total exceeds this are
-    // rejected at create time (service layer + RPC). Override via MAX_ORDER_TOTAL_KOBO.
+    // Standard order total threshold in kobo (₦2490). Orders whose total exceeds this are
+    // allowed only when the customer opts into the large-order surcharge; the surcharge
+    // applies to any total above this line. Override via MAX_ORDER_TOTAL_KOBO.
     MAX_ORDER_TOTAL_KOBO: z.coerce.number().int().positive().default(249_000),
+    // Large-order surcharge applied to totals above MAX_ORDER_TOTAL_KOBO: a percentage
+    // (basis points; 150 = 1.5%) of the pre-surcharge total plus a flat kobo amount (₦100).
+    // Mirrors Paystack's own fee tier. Override per environment.
+    LARGE_ORDER_SURCHARGE_BPS: z.coerce.number().int().min(0).max(10_000).default(150),
+    LARGE_ORDER_SURCHARGE_FLAT_KOBO: z.coerce.number().int().nonnegative().default(10_000),
     PAYSTACK_BASE_URL: z.url().default('https://api.paystack.co'),
     PAYSTACK_SECRET_KEY: optionalSecret,
     PAYSTACK_WEBHOOK_INBOX_MODE: z.enum(['database', 'memory']).default('database'),

@@ -4,6 +4,7 @@ import { IsDatabaseUuid } from '../../../common/validation.js';
 import {
   ArrayMinSize,
   IsArray,
+  IsBoolean,
   IsIn,
   IsInt,
   IsObject,
@@ -82,6 +83,15 @@ export class CreateOrderDto {
   @IsString()
   @MaxLength(1000)
   specialInstructions?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Set true to acknowledge and accept the large-order surcharge (1.5% + ₦100) required for order totals above the standard ₦2490 cap. Orders over the cap are rejected unless this is true.',
+    type: Boolean
+  })
+  @IsOptional()
+  @IsBoolean()
+  acceptLargeOrderSurcharge?: boolean;
 
   @ApiProperty({ isArray: true, minItems: 1, type: () => CreateOrderItemDto })
   @IsArray()

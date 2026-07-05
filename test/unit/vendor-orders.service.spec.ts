@@ -35,6 +35,7 @@ const orderSummary: OrderSummary = {
   deliveryFeeKobo: 15000,
   serviceFeeKobo: 0,
   discountKobo: 0,
+  largeOrderSurchargeKobo: 0,
   totalKobo: 265000,
   currency: 'NGN',
   createdAt: '2026-06-15T08:00:00.000Z',

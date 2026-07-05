@@ -72,6 +72,20 @@ export class OrderQuoteDto {
   @ApiProperty({ type: Number })
   discountKobo!: number;
 
+  @ApiProperty({
+    description:
+      'Large-order surcharge (1.5% + ₦100) already included in totalKobo. Zero when the order does not exceed the standard cap.',
+    type: Number
+  })
+  largeOrderSurchargeKobo!: number;
+
+  @ApiProperty({
+    description:
+      'True when the total exceeds the standard ₦2490 cap. Show the surcharge notice and require acceptLargeOrderSurcharge on create.',
+    type: Boolean
+  })
+  exceedsStandardCap!: boolean;
+
   @ApiProperty({ type: Number })
   totalKobo!: number;
 
@@ -133,6 +147,12 @@ export class OrderSummaryDto {
 
   @ApiProperty({ type: Number })
   discountKobo!: number;
+
+  @ApiProperty({
+    description: 'Large-order surcharge (1.5% + ₦100) charged on this order. Included in totalKobo.',
+    type: Number
+  })
+  largeOrderSurchargeKobo!: number;
 
   @ApiProperty({ type: Number })
   totalKobo!: number;

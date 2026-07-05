@@ -33,8 +33,45 @@ describe('production domain rules', () => {
       deliveryFeeCents: 300,
       serviceFeeCents: 100,
       discountCents: 50,
+      largeOrderSurchargeCents: 0,
+      exceedsLargeOrderThreshold: false,
       totalCents: 4_100,
       spoonCount: 1
+    });
+  });
+
+  it('adds a 1.5% + flat surcharge when the total exceeds the large-order threshold', () => {
+    // Pre-surcharge total: 250000 + 0 delivery = 250000, just over the 249000 threshold.
+    // Surcharge = round(250000 * 150 / 10000) + 10000 = 3750 + 10000 = 13750.
+    expect(
+      calculateOrderPricing({
+        lines: [{ unitPriceCents: 250_000, quantity: 1 }],
+        deliveryFeeCents: 0,
+        largeOrderThresholdCents: 249_000,
+        largeOrderSurchargeBps: 150,
+        largeOrderSurchargeFlatCents: 10_000
+      })
+    ).toMatchObject({
+      subtotalCents: 250_000,
+      largeOrderSurchargeCents: 13_750,
+      exceedsLargeOrderThreshold: true,
+      totalCents: 263_750
+    });
+  });
+
+  it('does not surcharge an order exactly at the large-order threshold', () => {
+    expect(
+      calculateOrderPricing({
+        lines: [{ unitPriceCents: 249_000, quantity: 1 }],
+        deliveryFeeCents: 0,
+        largeOrderThresholdCents: 249_000,
+        largeOrderSurchargeBps: 150,
+        largeOrderSurchargeFlatCents: 10_000
+      })
+    ).toMatchObject({
+      largeOrderSurchargeCents: 0,
+      exceedsLargeOrderThreshold: false,
+      totalCents: 249_000
     });
   });
 

@@ -17,15 +17,21 @@ function createEnv(
     DELIVERY_FEE_KOBO?: number;
     SERVICE_FEE_KOBO?: number;
     MAX_ORDER_TOTAL_KOBO?: number;
+    LARGE_ORDER_SURCHARGE_BPS?: number;
+    LARGE_ORDER_SURCHARGE_FLAT_KOBO?: number;
   } = {}
 ): EnvService {
   const values: Record<string, number> = {
     DELIVERY_FEE_KOBO: overrides.DELIVERY_FEE_KOBO ?? 15000,
     SERVICE_FEE_KOBO: overrides.SERVICE_FEE_KOBO ?? 0,
-    MAX_ORDER_TOTAL_KOBO: overrides.MAX_ORDER_TOTAL_KOBO ?? 100_000_000
+    MAX_ORDER_TOTAL_KOBO: overrides.MAX_ORDER_TOTAL_KOBO ?? 100_000_000,
+    LARGE_ORDER_SURCHARGE_BPS: overrides.LARGE_ORDER_SURCHARGE_BPS ?? 150,
+    LARGE_ORDER_SURCHARGE_FLAT_KOBO: overrides.LARGE_ORDER_SURCHARGE_FLAT_KOBO ?? 10000
   };
   return { get: (key: string) => values[key] } as unknown as EnvService;
 }
+
+const defaultSurchargeConfig = { surchargeBps: 150, surchargeFlatKobo: 10000, accepted: false };
 
 function createPayments(): PaymentsService {
   return {
@@ -91,6 +97,7 @@ const orderDetail: OrderDetail = {
   deliveryFeeKobo: 15000,
   serviceFeeKobo: 0,
   discountKobo: 0,
+  largeOrderSurchargeKobo: 0,
   totalKobo: 515000,
   currency: 'NGN',
   createdAt: '2026-06-15T08:00:00.000Z',
@@ -136,6 +143,8 @@ describe('OrdersService', () => {
       deliveryFeeKobo: 15000,
       serviceFeeKobo: 0,
       discountKobo: 0,
+      largeOrderSurchargeKobo: 0,
+      exceedsStandardCap: false,
       foodSubtotalKobo: 500000,
       items: [quoteItem],
       totalKobo: 515000
@@ -154,6 +163,8 @@ describe('OrdersService', () => {
       deliveryFeeKobo: 15000,
       serviceFeeKobo: 5000,
       discountKobo: 0,
+      largeOrderSurchargeKobo: 0,
+      exceedsStandardCap: false,
       foodSubtotalKobo: 500000,
       items: [quoteItem],
       totalKobo: 520000
@@ -177,6 +188,8 @@ describe('OrdersService', () => {
       deliveryFeeKobo: 15000,
       serviceFeeKobo: 0,
       discountKobo: 0,
+      largeOrderSurchargeKobo: 0,
+      exceedsStandardCap: false,
       foodSubtotalKobo: 40000,
       items: [nonTakeawayQuoteItem],
       totalKobo: 55000
@@ -225,7 +238,8 @@ describe('OrdersService', () => {
       'order-key',
       expect.any(String),
       0,
-      100_000_000
+      100_000_000,
+      defaultSurchargeConfig
     );
   });
 
@@ -237,6 +251,8 @@ describe('OrdersService', () => {
       deliveryFeeKobo: 25000,
       serviceFeeKobo: 0,
       discountKobo: 0,
+      largeOrderSurchargeKobo: 0,
+      exceedsStandardCap: false,
       foodSubtotalKobo: 500000,
       items: [quoteItem],
       totalKobo: 525000
@@ -274,7 +290,7 @@ describe('OrdersService', () => {
     });
   });
 
-  it('rejects order creation when the total exceeds the maximum', async () => {
+  it('rejects an over-cap order when the large-order surcharge is not accepted', async () => {
     // Subtotal 500000 + delivery 15000 = 515000 kobo, above the 249000 cap.
     service = new OrdersService(
       repository,
@@ -288,6 +304,43 @@ describe('OrdersService', () => {
     expect(repository.createOrder).not.toHaveBeenCalled();
   });
 
+  it('surfaces the surcharge on the quote when the total exceeds the cap', async () => {
+    service = new OrdersService(
+      repository,
+      createEnv({ MAX_ORDER_TOTAL_KOBO: 249000 }),
+      createPayments()
+    );
+
+    // Pre-surcharge total = 500000 + 15000 = 515000. Surcharge = round(515000*150/10000) + 10000
+    // = 7725 + 10000 = 17725. Final total = 532725.
+    await expect(service.quoteOrder(customer, orderInput)).resolves.toMatchObject({
+      largeOrderSurchargeKobo: 17725,
+      exceedsStandardCap: true,
+      totalKobo: 532725
+    });
+  });
+
+  it('creates an over-cap order when the surcharge is accepted, passing the accepted flag', async () => {
+    service = new OrdersService(
+      repository,
+      createEnv({ MAX_ORDER_TOTAL_KOBO: 249000 }),
+      createPayments()
+    );
+    const input: CreateOrderDto = { ...orderInput, acceptLargeOrderSurcharge: true };
+
+    await service.createOrder(customer, input, 'order-key');
+
+    expect(repository.createOrder).toHaveBeenCalledWith(
+      customer.userId,
+      input,
+      'order-key',
+      expect.any(String),
+      0,
+      249000,
+      { surchargeBps: 150, surchargeFlatKobo: 10000, accepted: true }
+    );
+  });
+
   it('passes the resolved service fee and max total to the repository on create', async () => {
     await service.createOrder(customer, orderInput, 'order-key');
     expect(repository.createOrder).toHaveBeenCalledWith(
@@ -296,7 +349,8 @@ describe('OrdersService', () => {
       'order-key',
       expect.any(String),
       0,
-      100_000_000
+      100_000_000,
+      defaultSurchargeConfig
     );
   });
 

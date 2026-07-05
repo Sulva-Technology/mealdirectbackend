@@ -38,8 +38,19 @@ export type OrderQuote = {
   deliveryFeeKobo: number;
   serviceFeeKobo: number;
   discountKobo: number;
+  // Large-order surcharge (1.5% + ₦100) applied when totalKobo would exceed the standard cap.
+  // largeOrderSurchargeKobo is already included in totalKobo. exceedsStandardCap tells the
+  // client to show the surcharge notice and require acceptLargeOrderSurcharge on create.
+  largeOrderSurchargeKobo: number;
+  exceedsStandardCap: boolean;
   totalKobo: number;
   items: OrderQuoteItem[];
+};
+
+export type LargeOrderSurchargeConfig = {
+  surchargeBps: number;
+  surchargeFlatKobo: number;
+  accepted: boolean;
 };
 
 export type OrderItem = {
@@ -85,6 +96,7 @@ export type OrderSummary = {
   deliveryFeeKobo: number;
   serviceFeeKobo: number;
   discountKobo: number;
+  largeOrderSurchargeKobo: number;
   totalKobo: number;
   currency: string;
   createdAt: string;
@@ -116,7 +128,8 @@ export type OrdersRepositoryContract = {
     idempotencyKey: string,
     requestHash: string,
     serviceFeeKobo: number,
-    maxOrderTotalKobo: number
+    maxOrderTotalKobo: number,
+    largeOrderSurcharge: LargeOrderSurchargeConfig
   ) => Promise<{ orderId: string }>;
   quoteOrder: (input: CreateOrderDto) => Promise<OrderQuoteItem[]>;
   findZoneDeliveryFeeKobo: (locationId: string) => Promise<number | null>;
