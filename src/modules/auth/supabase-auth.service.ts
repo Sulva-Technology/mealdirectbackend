@@ -454,6 +454,44 @@ export class SupabaseAuthService {
     return undefined;
   }
 
+  /**
+   * Portal-agnostic authoritative role for a user, used to backfill a missing
+   * app_metadata.meal_direct_role (e.g. after a password reset). Order mirrors
+   * the login precedence: an active admin grant, then a vendor grant, then the
+   * self-service base role from user_metadata, else customer. Returns undefined
+   * when the role is already present so we never downgrade an existing role.
+   */
+  private async resolveAuthoritativeMetadata(
+    user: SupabaseUser
+  ): Promise<Record<string, unknown> | undefined> {
+    const appMetadata = (user.app_metadata ?? {}) as MealDirectUserMetadata;
+    const existing = appMetadata.meal_direct_role;
+    if (typeof existing === 'string' && existing.length > 0) {
+      return undefined;
+    }
+
+    if (this.roleGrants !== undefined) {
+      const adminGrant = await this.roleGrants.findAdminGrantForUser(user.id);
+      if (adminGrant !== undefined) {
+        return {
+          campus_id: adminGrant.role === 'super_admin' ? null : adminGrant.campusId,
+          meal_direct_role: adminGrant.role
+        };
+      }
+
+      const vendorGrant = await this.roleGrants.findVendorGrantForUser(user.id);
+      if (vendorGrant !== undefined) {
+        return {
+          meal_direct_role: 'vendor',
+          vendor_id: vendorGrant.vendorId
+        };
+      }
+    }
+
+    const baseRole = this.selfServiceBaseRole(user);
+    return { meal_direct_role: baseRole ?? 'customer' };
+  }
+
   private async resolveGrantForLogin(
     user: SupabaseUser,
     allowedRoles: string[]
@@ -642,6 +680,22 @@ export class SupabaseAuthService {
         code: ErrorCodes.AUTH_FAILED,
         message: updateError.message
       });
+    }
+
+    // Self-heal a missing/stale role so the reset doesn't strand the user on the
+    // "not permitted to sign in to this portal" barrier at their next login.
+    // Best-effort: the password is already changed; a backfill failure must not
+    // fail the reset.
+    try {
+      const metadata = await this.resolveAuthoritativeMetadata(data.user);
+      if (metadata !== undefined) {
+        await this.setUserAppMetadata(data.user.id, metadata);
+      }
+    } catch (error) {
+      this.logger.error(
+        `Failed to backfill app_metadata.meal_direct_role after password reset for ${data.user.id}`,
+        error instanceof Error ? error.stack : String(error)
+      );
     }
   }
 

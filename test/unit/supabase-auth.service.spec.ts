@@ -245,6 +245,40 @@ describe('SupabaseAuthService', () => {
     expect(updateUserByIdMock).toHaveBeenCalledWith(userId, { password: 'NewPassword123!' });
   });
 
+  it('backfills a missing role from an active grant after a password reset', async () => {
+    getUserMock.mockResolvedValue({
+      data: { user: { id: userId, email: 'person@example.com', app_metadata: {}, user_metadata: {} } },
+      error: null
+    });
+    vi.mocked(grants.findVendorGrantForUser).mockResolvedValue({ vendorId });
+
+    await service.updatePassword('recovery-token', 'NewPassword123!');
+
+    expect(service.setUserAppMetadata).toHaveBeenCalledWith(userId, {
+      meal_direct_role: 'vendor',
+      vendor_id: vendorId
+    });
+  });
+
+  it('does not overwrite an existing role during a password reset', async () => {
+    getUserMock.mockResolvedValue({
+      data: {
+        user: {
+          id: userId,
+          email: 'person@example.com',
+          app_metadata: { meal_direct_role: 'campus_admin', campus_id: campusId },
+          user_metadata: {}
+        }
+      },
+      error: null
+    });
+
+    await service.updatePassword('recovery-token', 'NewPassword123!');
+
+    expect(service.setUserAppMetadata).not.toHaveBeenCalled();
+    expect(grants.findAdminGrantForUser).not.toHaveBeenCalled();
+  });
+
   it('rejects an invalid or expired recovery token', async () => {
     getUserMock.mockResolvedValue({ data: { user: null }, error: { message: 'invalid token' } });
     await expect(service.updatePassword('bad-token', 'NewPassword123!')).rejects.toThrow(
