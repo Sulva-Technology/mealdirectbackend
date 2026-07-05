@@ -394,7 +394,7 @@ export class SupabaseAuthService {
     let role = this.resolveUserRole(user);
 
     if (!allowedRoles.includes(role)) {
-      const grant = await this.resolveGrantForLogin(user.id, allowedRoles);
+      const grant = await this.resolveGrantForLogin(user, allowedRoles);
       if (grant === undefined) {
         // Credentials were valid; the account simply is not permitted on this portal.
         // Distinct from the pre-auth "Invalid login credentials" above.
@@ -437,10 +437,43 @@ export class SupabaseAuthService {
     return typeof rawRole === 'string' ? (rawRole as ActorRole) : 'customer';
   }
 
+  /**
+   * The consumer-side role the account originally signed up as, read from
+   * user_metadata (which admin/vendor grants never overwrite). Only 'rider' and
+   * 'customer' are self-service; 'vendor' is deliberately omitted so vendor
+   * access always flows through the approval-gated vendor_users grant.
+   */
+  private selfServiceBaseRole(user: {
+    user_metadata?: Record<string, unknown>;
+  }): ActorRole | undefined {
+    const userMetadata = (user.user_metadata ?? {}) as MealDirectUserMetadata;
+    const raw = userMetadata.meal_direct_role;
+    if (raw === 'rider' || raw === 'customer') {
+      return raw;
+    }
+    return undefined;
+  }
+
   private async resolveGrantForLogin(
-    userId: string,
+    user: SupabaseUser,
     allowedRoles: string[]
   ): Promise<ResolvedGrant | undefined> {
+    const userId = user.id;
+
+    // Self-service base role (rider/customer): the role the account chose at
+    // signup lives in user_metadata and is never overwritten by admin/vendor
+    // grants (those only merge app_metadata). This lets a rider who was later
+    // granted campus_admin still sign in to the rider portal — the base identity
+    // and the admin grant coexist. Vendor is intentionally excluded here so it
+    // stays gated behind the vendor_users grant table below.
+    const baseRole = this.selfServiceBaseRole(user);
+    if (baseRole !== undefined && allowedRoles.includes(baseRole)) {
+      return {
+        metadata: { meal_direct_role: baseRole },
+        role: baseRole
+      };
+    }
+
     if (this.roleGrants === undefined) {
       return undefined;
     }

@@ -163,6 +163,43 @@ describe('SupabaseAuthService', () => {
     });
   });
 
+  it('lets a rider whose base role was overwritten by an admin grant back into the rider portal', async () => {
+    // The account signed up as a rider (user_metadata.meal_direct_role='rider'),
+    // then was granted campus_admin, which overwrote app_metadata.meal_direct_role.
+    signInWithPasswordMock.mockResolvedValue({
+      data: {
+        session: {
+          access_token: 'old-token',
+          expires_in: 3600,
+          refresh_token: 'refresh-token'
+        },
+        user: {
+          app_metadata: { campus_id: campusId, meal_direct_role: 'campus_admin' },
+          email: 'person@example.com',
+          id: userId,
+          user_metadata: { meal_direct_role: 'rider' }
+        }
+      },
+      error: null
+    });
+    refreshSessionMock.mockResolvedValue(
+      refreshResponse({ meal_direct_role: 'rider' }, 'rider-token')
+    );
+
+    const result = await service.signIn('person@example.com', 'Password123!', ['rider']);
+
+    // The self-service base role is restored from user_metadata without touching
+    // the DB grant tables (which have no rider concept).
+    expect(grants.findAdminGrantForUser).not.toHaveBeenCalled();
+    expect(service.setUserAppMetadata).toHaveBeenCalledWith(userId, {
+      meal_direct_role: 'rider'
+    });
+    expect(result).toMatchObject({
+      accessToken: 'rider-token',
+      user: { role: 'rider' }
+    });
+  });
+
   it('normalizes the email (trim + lowercase) before authenticating', async () => {
     await service.signIn('  Person@Example.COM ', 'Password123!', ['customer']);
     expect(signInWithPasswordMock).toHaveBeenCalledWith({
