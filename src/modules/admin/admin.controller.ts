@@ -29,6 +29,8 @@ import { RequirePermission } from '../auth/permission.decorator.js';
 import { PermissionsGuard } from '../auth/permissions.guard.js';
 import { RequireRoles } from '../auth/roles.decorator.js';
 import { RolesGuard } from '../auth/roles.guard.js';
+import { PayoutService } from '../settlements/payout.service.js';
+import type { PayoutTransferRecord } from '../settlements/payout.types.js';
 import { AdminService } from './admin.service.js';
 import type { AdminDashboard, AdminRecord, AdminSession } from './admin.types.js';
 import {
@@ -91,7 +93,10 @@ function listEnvelope(result: {
 @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @RequireRoles('campus_admin', 'super_admin')
 export class AdminController {
-  constructor(@Inject(AdminService) private readonly admin: AdminService) {}
+  constructor(
+    @Inject(AdminService) private readonly admin: AdminService,
+    @Inject(PayoutService) private readonly payouts: PayoutService
+  ) {}
 
   @Get('session')
   @ApiOkResponse({ description: 'Authenticated admin session and scope.' })
@@ -534,6 +539,19 @@ export class AdminController {
     @Body() input: AdminMarkPaidDto
   ): Promise<SuccessEnvelope<AdminRecord>> {
     return createSuccessEnvelope(await this.admin.markSettlementPaid(actor, params.id, input));
+  }
+
+  @Post('settlements/:id/pay')
+  @RequirePermission('settlements:manage')
+  @HttpCode(200)
+  @ApiOkResponse({
+    description: 'Initiated (or returned the existing) automated Paystack payout for a settlement.'
+  })
+  async paySettlement(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Param() params: UuidIdParamDto
+  ): Promise<SuccessEnvelope<PayoutTransferRecord>> {
+    return createSuccessEnvelope(await this.payouts.payToSettlement(actor, params.id));
   }
 
   @Post('settlements/:id/adjustments')

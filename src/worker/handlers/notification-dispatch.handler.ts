@@ -36,6 +36,14 @@ export class NotificationDispatchHandler {
     // (customer + vendor users + campus admins); deliver to each.
     const recipients = await this.reads.findRecipientsForEvent(event.id);
 
+    // Channels are delivered independently. A failure in one channel must not
+    // skip the other: a broken email domain (Resend unverified) was throwing
+    // before push ran, silently swallowing every push and eventually dead-lettering
+    // the event. We collect failures and rethrow at the end so the event still
+    // retries — but a successful channel is recorded ('sent'), so on retry only the
+    // failed channel is re-attempted (alreadyDelivered guards the rest).
+    const failures: unknown[] = [];
+
     for (const recipient of recipients) {
       const message = {
         to: recipient.email ?? '',
@@ -49,17 +57,32 @@ export class NotificationDispatchHandler {
         recipient.email !== null &&
         !(await this.reads.alreadyDelivered(recipient.notificationId, 'email'))
       ) {
-        await this.email.deliver(message);
-        await this.reads.recordDelivery(recipient.notificationId, 'email', 'sent', null);
+        try {
+          await this.email.deliver(message);
+          await this.reads.recordDelivery(recipient.notificationId, 'email', 'sent', null);
+        } catch (error) {
+          failures.push(error);
+        }
       }
 
       if (
         recipient.pushEnabled &&
         !(await this.reads.alreadyDelivered(recipient.notificationId, 'push'))
       ) {
-        await this.push.deliverToUser(recipient.userId, message);
-        await this.reads.recordDelivery(recipient.notificationId, 'push', 'sent', null);
+        try {
+          await this.push.deliverToUser(recipient.userId, message);
+          await this.reads.recordDelivery(recipient.notificationId, 'push', 'sent', null);
+        } catch (error) {
+          failures.push(error);
+        }
       }
+    }
+
+    if (failures.length > 0) {
+      // Surface a representative error so fail_outbox_event records it and backs
+      // off. Only channels without a recorded delivery re-run on the retry.
+      const first = failures[0];
+      throw first instanceof Error ? first : new Error(String(first));
     }
   };
 }

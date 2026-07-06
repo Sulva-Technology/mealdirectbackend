@@ -83,6 +83,33 @@ describe('NotificationDispatchHandler', () => {
     expect(email.deliver).not.toHaveBeenCalled();
   });
 
+  it('still delivers push when email fails, and rethrows so the event retries', async () => {
+    const reads = {
+      findRecipientsForEvent: vi.fn().mockResolvedValue([recipient]),
+      alreadyDelivered: vi.fn().mockResolvedValue(false),
+      recordDelivery: vi.fn().mockResolvedValue(undefined)
+    };
+    const email = { deliver: vi.fn().mockRejectedValue(new Error('domain not verified')) };
+    const push = { deliverToUser: vi.fn().mockResolvedValue(undefined) };
+    const handler = new NotificationDispatchHandler(reads, email, push);
+
+    await expect(
+      handler.handle({
+        id: 'e1',
+        eventType: 'order.delivered',
+        aggregateType: 'order',
+        aggregateId: 'o1',
+        payload: {},
+        attempts: 1
+      })
+    ).rejects.toThrow('domain not verified');
+
+    // Email failed → not recorded (so it retries); push still ran + recorded 'sent'.
+    expect(push.deliverToUser).toHaveBeenCalledWith('u1', expect.anything());
+    expect(reads.recordDelivery).toHaveBeenCalledWith('n1', 'push', 'sent', null);
+    expect(reads.recordDelivery).not.toHaveBeenCalledWith('n1', 'email', 'sent', null);
+  });
+
   it('delivers to every recipient of a multi-recipient event (customer + vendor)', async () => {
     const vendorRecipient = {
       ...recipient,

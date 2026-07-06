@@ -18,6 +18,7 @@ import { VendorSettlementsController } from './vendor-settlements.controller.js'
     PayoutRepository,
     PayoutService,
     PaystackClient
-  ]
+  ],
+  exports: [PayoutService]
 })
 export class SettlementsModule {}
