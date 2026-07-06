@@ -803,8 +803,8 @@ export class VendorsRepository implements VendorsRepositoryContract {
   // vendor-edited quantities.
   async regenerateInventoryHorizon(vendorId: string): Promise<void> {
     await sql`
-      select public.generate_menu_item_inventory((current_date + offset)::date, ${vendorId}::uuid)
-      from generate_series(0, 7) as offset
+      select public.generate_menu_item_inventory((current_date + day_offset)::date, ${vendorId}::uuid)
+      from generate_series(0, 7) as day_offset
     `.execute(this.database.db);
   }
 }
