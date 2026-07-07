@@ -33,6 +33,22 @@ export class MenuItemIdParamDto {
   itemId!: string;
 }
 
+export class AdminMenuVendorParamDto {
+  @ApiProperty({ format: 'uuid', type: String })
+  @IsDatabaseUuid()
+  vendorId!: string;
+}
+
+export class AdminMenuItemParamDto {
+  @ApiProperty({ format: 'uuid', type: String })
+  @IsDatabaseUuid()
+  vendorId!: string;
+
+  @ApiProperty({ format: 'uuid', type: String })
+  @IsDatabaseUuid()
+  itemId!: string;
+}
+
 export class UnitTypeIdParamDto {
   @ApiProperty({ format: 'uuid', type: String })
   @IsDatabaseUuid()

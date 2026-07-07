@@ -160,6 +160,27 @@ describe('OpenAPI contract foundation', () => {
     expect(document.paths['/v1/vendor/availability']?.put?.requestBody).toBeDefined();
   });
 
+  it('documents admin vendor menu management endpoints', () => {
+    const document = createOpenApiDocument(app);
+
+    expect(document.paths['/v1/admin/vendors/{vendorId}/menu-metadata']?.get).toBeDefined();
+    expect(document.paths['/v1/admin/vendors/{vendorId}/menu-categories']?.post).toBeDefined();
+    expect(document.paths['/v1/admin/vendors/{vendorId}/menu-items']?.get).toBeDefined();
+    expect(document.paths['/v1/admin/vendors/{vendorId}/menu-items']?.post).toBeDefined();
+    expect(document.paths['/v1/admin/vendors/{vendorId}/menu-items/{itemId}']?.get).toBeDefined();
+    expect(document.paths['/v1/admin/vendors/{vendorId}/menu-items/{itemId}']?.patch).toBeDefined();
+    expect(
+      document.paths['/v1/admin/vendors/{vendorId}/menu-items/{itemId}/activate']?.post
+    ).toBeDefined();
+    expect(
+      document.paths['/v1/admin/vendors/{vendorId}/menu-items/{itemId}/deactivate']?.post
+    ).toBeDefined();
+    expect(document.paths['/v1/admin/vendors/{vendorId}/menu-items']?.post?.requestBody).toBeDefined();
+    expect(
+      document.paths['/v1/admin/vendors/{vendorId}/menu-items/{itemId}']?.patch?.requestBody
+    ).toBeDefined();
+  });
+
   it('documents vendor inventory endpoints', () => {
     const document = createOpenApiDocument(app);
 

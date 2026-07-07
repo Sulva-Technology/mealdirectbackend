@@ -849,6 +849,123 @@ export class VendorsService {
     return this.signItem(item);
   }
 
+  // ---- Admin menu management -------------------------------------------------
+  // Platform admins (campus_admin/super_admin, enforced by the controller role
+  // guard) manage any vendor's menu by explicit vendorId, bypassing the vendor
+  // membership check the vendor-facing methods above require.
+
+  private async assertVendorExists(vendorId: string): Promise<void> {
+    const profile = await this.repository.findVendorProfile(vendorId);
+    if (profile === undefined) {
+      throw notFound('Vendor was not found.');
+    }
+  }
+
+  async adminGetMenuMetadata(vendorId: string): Promise<MenuMetadata> {
+    await this.assertVendorExists(vendorId);
+    const [categories, unitTypes] = await Promise.all([
+      this.repository.listMenuCategories(vendorId),
+      this.repository.listUnitTypes()
+    ]);
+
+    return { categories, unitTypes };
+  }
+
+  async adminCreateMenuCategory(
+    vendorId: string,
+    input: CreateMenuCategoryInput
+  ): Promise<MenuCategoryRecord> {
+    await this.assertVendorExists(vendorId);
+
+    const name = input.name.trim();
+    const slug = slugify(name);
+    if (slug.length === 0) {
+      throw badRequest('Category name must contain at least one letter or digit.');
+    }
+
+    try {
+      return await this.repository.upsertMenuCategory(vendorId, {
+        name,
+        slug,
+        active: true,
+        ...(input.displayOrder === undefined ? {} : { displayOrder: input.displayOrder })
+      });
+    } catch (error) {
+      if (postgresErrorCode(error) === '23505') {
+        throw badRequest('Category already exists.');
+      }
+      throw error;
+    }
+  }
+
+  async adminListMenuItems(vendorId: string): Promise<MenuItemRecord[]> {
+    await this.assertVendorExists(vendorId);
+    return this.signItems(await this.repository.listMenuItems(vendorId));
+  }
+
+  async adminGetMenuItem(vendorId: string, menuItemId: string): Promise<MenuItemRecord> {
+    const item = await this.repository.findMenuItemById(vendorId, menuItemId);
+    if (item === undefined) {
+      throw notFound('Menu item was not found.');
+    }
+
+    return this.signItem(item);
+  }
+
+  async adminCreateMenuItem(
+    vendorId: string,
+    input: UpsertMenuItemInput
+  ): Promise<MenuItemRecord> {
+    await this.assertVendorExists(vendorId);
+    await this.assertCategoryBelongsToVendor(vendorId, input.categoryId);
+
+    const item = await this.repository.upsertMenuItem(
+      vendorId,
+      undefined,
+      normalizeMenuItemInput(input)
+    );
+    if (item === undefined) {
+      throw badRequest('Menu item could not be created.');
+    }
+
+    return this.signItem(item);
+  }
+
+  async adminUpdateMenuItem(
+    vendorId: string,
+    menuItemId: string,
+    input: UpsertMenuItemInput
+  ): Promise<MenuItemRecord> {
+    await this.assertMenuItemBelongsToVendor(vendorId, menuItemId);
+    await this.assertCategoryBelongsToVendor(vendorId, input.categoryId);
+
+    const item = await this.repository.upsertMenuItem(
+      vendorId,
+      menuItemId,
+      normalizeMenuItemInput(input)
+    );
+    if (item === undefined) {
+      throw notFound('Menu item was not found.');
+    }
+
+    return this.signItem(item);
+  }
+
+  async adminSetMenuItemActive(
+    vendorId: string,
+    menuItemId: string,
+    active: boolean
+  ): Promise<MenuItemRecord> {
+    await this.assertMenuItemBelongsToVendor(vendorId, menuItemId);
+
+    const item = await this.repository.setMenuItemActive(vendorId, menuItemId, active);
+    if (item === undefined) {
+      throw notFound('Menu item was not found.');
+    }
+
+    return this.signItem(item);
+  }
+
   private async assertActorCanUseVendor(
     actor: AuthenticatedActor,
     vendorId: string
