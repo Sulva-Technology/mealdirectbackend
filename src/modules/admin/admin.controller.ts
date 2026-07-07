@@ -30,7 +30,7 @@ import { PermissionsGuard } from '../auth/permissions.guard.js';
 import { RequireRoles } from '../auth/roles.decorator.js';
 import { RolesGuard } from '../auth/roles.guard.js';
 import { PayoutService } from '../settlements/payout.service.js';
-import type { PayoutTransferRecord } from '../settlements/payout.types.js';
+import type { PayoutDestination, PayoutTransferRecord } from '../settlements/payout.types.js';
 import { AdminService } from './admin.service.js';
 import type { AdminDashboard, AdminRecord, AdminSession } from './admin.types.js';
 import {
@@ -539,6 +539,17 @@ export class AdminController {
     @Body() input: AdminMarkPaidDto
   ): Promise<SuccessEnvelope<AdminRecord>> {
     return createSuccessEnvelope(await this.admin.markSettlementPaid(actor, params.id, input));
+  }
+
+  @Get('settlements/:id/payout-account')
+  @RequirePermission('settlements:manage')
+  @ApiOkResponse({
+    description: "Beneficiary bank account for a settlement, fetched from Paystack for manual payout."
+  })
+  async getSettlementPayoutAccount(
+    @Param() params: UuidIdParamDto
+  ): Promise<SuccessEnvelope<PayoutDestination>> {
+    return createSuccessEnvelope(await this.payouts.getPayoutDestination(params.id));
   }
 
   @Post('settlements/:id/pay')

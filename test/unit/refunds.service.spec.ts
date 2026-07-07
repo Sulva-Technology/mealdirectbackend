@@ -63,6 +63,7 @@ function createPaystack(): PaystackClientContract {
     initializeTransaction: vi.fn(),
     verifyTransaction: vi.fn(),
     createTransferRecipient: vi.fn(),
+    fetchTransferRecipient: vi.fn(),
     initiateTransfer: vi.fn()
   };
 }

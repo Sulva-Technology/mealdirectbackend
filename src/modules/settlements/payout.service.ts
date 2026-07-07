@@ -12,7 +12,11 @@ import type { AuthenticatedActor } from '../auth/actor-context.js';
 import { PaystackClient } from '../payments/paystack.client.js';
 import type { PaystackClientContract } from '../payments/payments.types.js';
 import { PayoutRepository } from './payout.repository.js';
-import type { PayoutRepositoryContract, PayoutTransferRecord } from './payout.types.js';
+import type {
+  PayoutDestination,
+  PayoutRepositoryContract,
+  PayoutTransferRecord
+} from './payout.types.js';
 
 @Injectable()
 export class PayoutService {
@@ -21,6 +25,40 @@ export class PayoutService {
     @Inject(PaystackClient) private readonly paystack: PaystackClientContract,
     @Inject(PayoutRepository) private readonly repository: PayoutRepositoryContract
   ) {}
+
+  /**
+   * Resolve the beneficiary's bank account for a settlement so an admin can pay manually.
+   * The full account number is never stored locally (only masked), so it is fetched back
+   * from Paystack using the recipient code provisioned when the bank details were captured.
+   * Intentionally NOT gated on PAYOUTS_ENABLED — this is the manual-payment fallback.
+   */
+  async getPayoutDestination(settlementId: string): Promise<PayoutDestination> {
+    const context = await this.repository.findPayoutContext(settlementId);
+    if (context === undefined) {
+      throw new NotFoundException({
+        code: ErrorCodes.NOT_FOUND,
+        message: 'Settlement was not found.'
+      });
+    }
+
+    if (context.recipientCode === null) {
+      throw new BadRequestException({
+        code: ErrorCodes.VALIDATION_FAILED,
+        message: 'Beneficiary has no payout bank account on file.'
+      });
+    }
+
+    const details = await this.paystack.fetchTransferRecipient(context.recipientCode);
+
+    return {
+      settlementId,
+      payableKobo: context.payableKobo,
+      accountNumber: details.accountNumber,
+      accountName: details.accountName,
+      bankName: details.bankName,
+      bankCode: details.bankCode
+    };
+  }
 
   async payToSettlement(
     actor: AuthenticatedActor,

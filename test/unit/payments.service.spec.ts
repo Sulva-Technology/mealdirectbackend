@@ -112,6 +112,7 @@ function createPaystack(): PaystackClientContract {
       providerPayload: { status: true },
       recipientCode: 'RCP_test'
     }),
+    fetchTransferRecipient: vi.fn(),
     initiateTransfer: vi.fn().mockResolvedValue({
       providerPayload: { status: true },
       status: 'pending',

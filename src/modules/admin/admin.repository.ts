@@ -557,7 +557,8 @@ export class AdminRepository {
       from public.menu_item_inventory inv
       join public.menu_items mi on mi.id = inv.menu_item_id
       join public.vendors v on v.id = mi.vendor_id
-      where (${campusId ?? query.campusId ?? null}::uuid is null or v.campus_id = ${campusId ?? query.campusId ?? null}::uuid)
+      where v.status <> 'suspended'
+        and (${campusId ?? query.campusId ?? null}::uuid is null or v.campus_id = ${campusId ?? query.campusId ?? null}::uuid)
         and (${query.vendorId ?? null}::uuid is null or mi.vendor_id = ${query.vendorId ?? null}::uuid)
         and (${query.slotId ?? null}::uuid is null or inv.delivery_slot_id = ${query.slotId ?? null}::uuid)
         and (${query.date ?? null}::date is null or inv.service_date = ${query.date ?? null}::date)

@@ -50,6 +50,12 @@ function makePaystack(): PaystackClientContract {
     verifyTransaction: vi.fn(),
     createRefund: vi.fn(),
     createTransferRecipient: vi.fn(),
+    fetchTransferRecipient: vi.fn().mockResolvedValue({
+      accountNumber: '0123456789',
+      accountName: 'Jane Vendor',
+      bankName: 'Kuda Bank',
+      bankCode: '50211'
+    }),
     initiateTransfer: vi.fn().mockResolvedValue({
       transferCode: 'TRF_1',
       status: 'pending',
@@ -108,6 +114,34 @@ describe('PayoutService', () => {
     expect(paystack.createTransferRecipient).not.toHaveBeenCalled();
     expect(paystack.initiateTransfer).not.toHaveBeenCalled();
     expect(repository.recordTransfer).not.toHaveBeenCalled();
+  });
+
+  it('returns the beneficiary bank account for manual payout, ignoring the payouts flag', async () => {
+    const repository = makeRepository(makeContext({ recipientCode: 'RCP_existing' }));
+    const service = new PayoutService(makeEnv(false), paystack, repository);
+
+    const destination = await service.getPayoutDestination(settlementId);
+
+    expect(paystack.fetchTransferRecipient).toHaveBeenCalledWith('RCP_existing');
+    expect(destination).toEqual(
+      expect.objectContaining({
+        settlementId,
+        payableKobo: 60000,
+        accountNumber: '0123456789',
+        accountName: 'Jane Vendor',
+        bankName: 'Kuda Bank'
+      })
+    );
+  });
+
+  it('refuses the manual payout lookup when no recipient is on file', async () => {
+    const repository = makeRepository(makeContext({ recipientCode: null }));
+    const service = new PayoutService(makeEnv(true), paystack, repository);
+
+    await expect(service.getPayoutDestination(settlementId)).rejects.toBeInstanceOf(
+      BadRequestException
+    );
+    expect(paystack.fetchTransferRecipient).not.toHaveBeenCalled();
   });
 
   it('is idempotent per settlement when a transfer already exists', async () => {

@@ -238,6 +238,7 @@ function createPaystack() {
       recipientCode: 'RCP_rider',
       providerPayload: {}
     }),
+    fetchTransferRecipient: vi.fn(),
     initiateTransfer: vi.fn()
   };
 }

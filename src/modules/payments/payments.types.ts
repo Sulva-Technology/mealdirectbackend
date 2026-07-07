@@ -139,6 +139,13 @@ export type PaystackRecipientResult = {
   providerPayload: Record<string, unknown>;
 };
 
+export type PaystackRecipientDetails = {
+  accountNumber: string;
+  accountName: string;
+  bankName: string;
+  bankCode: string;
+};
+
 export type PaystackTransferInput = {
   amountKobo: number;
   recipientCode: string;
@@ -157,6 +164,7 @@ export type PaystackClientContract = {
   verifyTransaction: (reference: string) => Promise<PaystackVerifyResult>;
   createRefund: (input: PaystackRefundInput) => Promise<PaystackRefundResult>;
   createTransferRecipient: (input: PaystackRecipientInput) => Promise<PaystackRecipientResult>;
+  fetchTransferRecipient: (recipientCode: string) => Promise<PaystackRecipientDetails>;
   initiateTransfer: (input: PaystackTransferInput) => Promise<PaystackTransferResult>;
 };
 

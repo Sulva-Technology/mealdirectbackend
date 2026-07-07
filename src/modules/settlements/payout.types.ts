@@ -6,6 +6,15 @@ export type PayoutContext = {
   recipientCode: string | null;
 };
 
+export type PayoutDestination = {
+  settlementId: string;
+  payableKobo: number;
+  accountNumber: string;
+  accountName: string;
+  bankName: string;
+  bankCode: string;
+};
+
 export type PayoutTransferRecord = {
   id: string;
   settlementId: string;

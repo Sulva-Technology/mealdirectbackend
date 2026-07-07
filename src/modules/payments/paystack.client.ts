@@ -6,6 +6,7 @@ import type {
   PaystackClientContract,
   PaystackInitializeInput,
   PaystackInitializeResult,
+  PaystackRecipientDetails,
   PaystackRecipientInput,
   PaystackRecipientResult,
   PaystackRefundInput,
@@ -177,6 +178,34 @@ export class PaystackClient implements PaystackClientContract {
     }
 
     return { providerPayload: this.providerPayload(envelope), recipientCode };
+  }
+
+  async fetchTransferRecipient(recipientCode: string): Promise<PaystackRecipientDetails> {
+    const envelope = await this.request(
+      `/transferrecipient/${encodeURIComponent(recipientCode)}`,
+      { method: 'GET' }
+    );
+
+    if (!isRecord(envelope.data) || !isRecord(envelope.data.details)) {
+      throw badGateway('Paystack recipient lookup returned an invalid response.');
+    }
+
+    const details = envelope.data.details;
+    const accountNumber = stringFrom(details.account_number);
+    const accountName = stringFrom(details.account_name) ?? stringFrom(envelope.data.name);
+    const bankName = stringFrom(details.bank_name);
+    const bankCode = stringFrom(details.bank_code);
+
+    if (accountNumber === undefined || bankName === undefined) {
+      throw badGateway('Paystack recipient response was missing bank account details.');
+    }
+
+    return {
+      accountNumber,
+      accountName: accountName ?? '',
+      bankName,
+      bankCode: bankCode ?? ''
+    };
   }
 
   async initiateTransfer(input: PaystackTransferInput): Promise<PaystackTransferResult> {

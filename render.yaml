@@ -30,6 +30,11 @@ services:
         sync: false
       - key: PAYSTACK_SECRET_KEY
         sync: false
+      # Master switch for automated Paystack payouts (POST /admin/settlements/:id/pay).
+      # Leave false to disable; set true only when Paystack transfers are live and the
+      # transfer webhook is configured.
+      - key: PAYOUTS_ENABLED
+        value: true
       - key: INTERNAL_OPERATIONS_TOKEN
         sync: false
       # Outbox draining runs inline in this web process (see src/main.ts).
