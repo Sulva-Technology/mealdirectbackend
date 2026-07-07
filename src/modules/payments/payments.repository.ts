@@ -99,8 +99,15 @@ export class PaymentsRepository implements PaymentsRepositoryContract {
       join public.profiles pr on pr.id = o.customer_id
       where p.provider = 'paystack'::public.payment_provider
         and p.status in ('initialized', 'pending')
-        and o.order_status = 'pending_payment'::public.order_status
+        -- Include expired orders: release_expired_reservations may flip an order to expired before
+        -- the provider success lands. Re-verifying these lets mark_verified_payment_successful auto-
+        -- recover them to paid, so a missed/late webhook can no longer strand a captured payment.
+        and o.order_status in ('pending_payment'::public.order_status, 'expired'::public.order_status)
         and p.created_at < now() - make_interval(secs => ${staleSeconds})
+        -- Upper age bound: a genuine late capture lands within minutes/hours, never days. Without
+        -- this, unpaid expired orders (whose payment stays pending) would be re-polled against
+        -- Paystack on every sweep forever.
+        and p.created_at > now() - interval '48 hours'
       order by p.created_at asc
       limit ${limit}
     `.execute(this.database.db);
