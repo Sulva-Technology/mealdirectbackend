@@ -55,6 +55,11 @@ export class AdminRepository {
         o.delivery_mode::text as "deliveryMode",
         o.total_kobo as "totalKobo",
         o.currency,
+        coalesce((
+          select string_agg(oi.quantity || '× ' || oi.item_name, ', ' order by oi.created_at)
+          from public.order_items oi
+          where oi.order_id = o.id
+        ), '') as "itemsSummary",
         o.created_at::text as "createdAt",
         o.updated_at::text as "updatedAt"
       from public.orders o
@@ -91,6 +96,23 @@ export class AdminRepository {
         o.service_date::text as "serviceDate",
         o.total_kobo as "totalKobo",
         o.currency,
+        coalesce((
+          select json_agg(json_build_object(
+            'id', oi.id::text,
+            'menuItemId', oi.menu_item_id::text,
+            'itemName', oi.item_name,
+            'unitType', oi.unit_type,
+            'unitPriceKobo', oi.unit_price_kobo,
+            'quantity', oi.quantity,
+            'lineTotalKobo', oi.line_total_kobo,
+            'customization', oi.customization,
+            'soupOptionId', oi.soup_option_id::text,
+            'soupName', so.name
+          ) order by oi.created_at)
+          from public.order_items oi
+          left join public.vendor_soup_options so on so.id = oi.soup_option_id
+          where oi.order_id = o.id
+        ), '[]'::json) as "items",
         o.created_at::text as "createdAt",
         o.updated_at::text as "updatedAt"
       from public.orders o
