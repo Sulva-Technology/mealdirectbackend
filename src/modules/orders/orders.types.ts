@@ -30,6 +30,10 @@ export type OrderQuoteItem = {
   unitPriceKobo: number;
   lineTotalKobo: number;
   countsTowardSpoonLimit: boolean;
+  // Whether an order containing this item pulls the flat takeaway/service fee. Independent of
+  // the spoon-limit cap: a single-portion item (e.g. pepper soup) charges the fee without
+  // counting toward the three-spoon takeaway limit.
+  triggersTakeawayFee: boolean;
 };
 
 export type OrderQuote = {
@@ -62,6 +66,9 @@ export type OrderItem = {
   quantity: number;
   lineTotalKobo: number;
   customization: Record<string, unknown>;
+  // The soup chosen for this line when the menu item required one; null otherwise.
+  soupOptionId: string | null;
+  soupName: string | null;
 };
 
 export type PaymentSnapshot = {

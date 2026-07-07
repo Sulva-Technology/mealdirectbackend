@@ -915,17 +915,20 @@ export class RidersRepository implements RidersRepositoryContract {
   private async listOrderItems(orderId: string): Promise<OrderItem[]> {
     const result = await sql<OrderItem>`
       select
-        id::text as "id",
-        menu_item_id::text as "menuItemId",
-        item_name as "itemName",
-        unit_type as "unitType",
-        unit_price_kobo as "unitPriceKobo",
-        quantity,
-        line_total_kobo as "lineTotalKobo",
-        customization
-      from public.order_items
-      where order_id = ${orderId}::uuid
-      order by created_at
+        oi.id::text as "id",
+        oi.menu_item_id::text as "menuItemId",
+        oi.item_name as "itemName",
+        oi.unit_type as "unitType",
+        oi.unit_price_kobo as "unitPriceKobo",
+        oi.quantity,
+        oi.line_total_kobo as "lineTotalKobo",
+        oi.customization,
+        oi.soup_option_id::text as "soupOptionId",
+        so.name as "soupName"
+      from public.order_items oi
+      left join public.vendor_soup_options so on so.id = oi.soup_option_id
+      where oi.order_id = ${orderId}::uuid
+      order by oi.created_at
     `.execute(this.database.db);
 
     return result.rows;

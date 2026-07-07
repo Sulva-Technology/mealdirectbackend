@@ -4,11 +4,13 @@ import { sql } from 'kysely';
 import { DatabaseService } from '../../database/database.service.js';
 import type {
   CreateUnitTypeInput,
+  CreateVendorSoupOptionInput,
   MenuCategoryRecord,
   MenuItemAvailabilityEntry,
   MenuItemRecord,
   UnitTypeRecord,
   UpdateUnitTypeInput,
+  UpdateVendorSoupOptionInput,
   UpsertMenuCategoryInput,
   StoreAvailabilityState,
   UpsertMenuItemInput,
@@ -18,6 +20,7 @@ import type {
   VendorPayoutAccountRecordInput,
   VendorProfile,
   VendorProfileUpdateInput,
+  VendorSoupOptionRecord,
   VendorsRepositoryContract
 } from './vendors.types.js';
 
@@ -383,6 +386,8 @@ export class VendorsRepository implements VendorsRepositoryContract {
         code,
         display_name as "displayName",
         counts_toward_spoon_limit as "countsTowardSpoonLimit",
+        triggers_takeaway_fee as "triggersTakeawayFee",
+        max_quantity as "maxQuantity",
         active
       from public.unit_types
       where active
@@ -399,6 +404,8 @@ export class VendorsRepository implements VendorsRepositoryContract {
         code,
         display_name as "displayName",
         counts_toward_spoon_limit as "countsTowardSpoonLimit",
+        triggers_takeaway_fee as "triggersTakeawayFee",
+        max_quantity as "maxQuantity",
         active
       from public.unit_types
       order by active desc, display_name
@@ -409,17 +416,27 @@ export class VendorsRepository implements VendorsRepositoryContract {
 
   async createUnitType(input: CreateUnitTypeInput): Promise<UnitTypeRecord> {
     const result = await sql<UnitTypeRecord>`
-      insert into public.unit_types (code, display_name, counts_toward_spoon_limit)
+      insert into public.unit_types (
+        code,
+        display_name,
+        counts_toward_spoon_limit,
+        triggers_takeaway_fee,
+        max_quantity
+      )
       values (
         ${input.code},
         ${input.displayName},
-        ${input.countsTowardSpoonLimit ?? false}
+        ${input.countsTowardSpoonLimit ?? false},
+        ${input.triggersTakeawayFee ?? false},
+        ${input.maxQuantity ?? null}::integer
       )
       returning
         id::text as "id",
         code,
         display_name as "displayName",
         counts_toward_spoon_limit as "countsTowardSpoonLimit",
+        triggers_takeaway_fee as "triggersTakeawayFee",
+        max_quantity as "maxQuantity",
         active
     `.execute(this.database.db);
 
@@ -436,6 +453,8 @@ export class VendorsRepository implements VendorsRepositoryContract {
   ): Promise<UnitTypeRecord | undefined> {
     const hasDisplayName = Object.hasOwn(input, 'displayName');
     const hasCountsTowardSpoonLimit = Object.hasOwn(input, 'countsTowardSpoonLimit');
+    const hasTriggersTakeawayFee = Object.hasOwn(input, 'triggersTakeawayFee');
+    const hasMaxQuantity = Object.hasOwn(input, 'maxQuantity');
     const hasActive = Object.hasOwn(input, 'active');
 
     const result = await sql<UnitTypeRecord>`
@@ -448,6 +467,14 @@ export class VendorsRepository implements VendorsRepositoryContract {
             when ${hasCountsTowardSpoonLimit} then ${input.countsTowardSpoonLimit ?? null}
             else counts_toward_spoon_limit
           end,
+          triggers_takeaway_fee = case
+            when ${hasTriggersTakeawayFee} then ${input.triggersTakeawayFee ?? null}
+            else triggers_takeaway_fee
+          end,
+          max_quantity = case
+            when ${hasMaxQuantity} then ${input.maxQuantity ?? null}::integer
+            else max_quantity
+          end,
           active = case
             when ${hasActive} then ${input.active ?? null}
             else active
@@ -459,7 +486,98 @@ export class VendorsRepository implements VendorsRepositoryContract {
         code,
         display_name as "displayName",
         counts_toward_spoon_limit as "countsTowardSpoonLimit",
+        triggers_takeaway_fee as "triggersTakeawayFee",
+        max_quantity as "maxQuantity",
         active
+    `.execute(this.database.db);
+
+    return result.rows[0];
+  }
+
+  async listVendorSoupOptions(
+    vendorId: string,
+    activeOnly: boolean
+  ): Promise<VendorSoupOptionRecord[]> {
+    const result = await sql<VendorSoupOptionRecord>`
+      select
+        id::text as "id",
+        vendor_id::text as "vendorId",
+        name,
+        active,
+        display_order as "displayOrder",
+        created_at::text as "createdAt",
+        updated_at::text as "updatedAt"
+      from public.vendor_soup_options
+      where vendor_id = ${vendorId}::uuid
+        and (${activeOnly}::boolean is false or active)
+      order by active desc, display_order, name
+    `.execute(this.database.db);
+
+    return result.rows;
+  }
+
+  async createVendorSoupOption(
+    vendorId: string,
+    input: CreateVendorSoupOptionInput
+  ): Promise<VendorSoupOptionRecord> {
+    const result = await sql<VendorSoupOptionRecord>`
+      insert into public.vendor_soup_options (vendor_id, name, display_order)
+      values (
+        ${vendorId}::uuid,
+        ${input.name},
+        ${input.displayOrder ?? 0}
+      )
+      returning
+        id::text as "id",
+        vendor_id::text as "vendorId",
+        name,
+        active,
+        display_order as "displayOrder",
+        created_at::text as "createdAt",
+        updated_at::text as "updatedAt"
+    `.execute(this.database.db);
+
+    const soup = result.rows[0];
+    if (soup === undefined) {
+      throw new Error('Soup option insert did not return a row.');
+    }
+    return soup;
+  }
+
+  async updateVendorSoupOption(
+    vendorId: string,
+    soupOptionId: string,
+    input: UpdateVendorSoupOptionInput
+  ): Promise<VendorSoupOptionRecord | undefined> {
+    const hasName = Object.hasOwn(input, 'name');
+    const hasActive = Object.hasOwn(input, 'active');
+    const hasDisplayOrder = Object.hasOwn(input, 'displayOrder');
+
+    const result = await sql<VendorSoupOptionRecord>`
+      update public.vendor_soup_options
+      set name = case
+            when ${hasName} then ${input.name ?? null}
+            else name
+          end,
+          active = case
+            when ${hasActive} then ${input.active ?? null}
+            else active
+          end,
+          display_order = case
+            when ${hasDisplayOrder} then ${input.displayOrder ?? null}
+            else display_order
+          end,
+          updated_at = now()
+      where id = ${soupOptionId}::uuid
+        and vendor_id = ${vendorId}::uuid
+      returning
+        id::text as "id",
+        vendor_id::text as "vendorId",
+        name,
+        active,
+        display_order as "displayOrder",
+        created_at::text as "createdAt",
+        updated_at::text as "updatedAt"
     `.execute(this.database.db);
 
     return result.rows[0];
@@ -479,6 +597,7 @@ export class VendorsRepository implements VendorsRepositoryContract {
         mi.image_url as "imageUrl",
         mi.price_kobo as "priceKobo",
         ut.counts_toward_spoon_limit as "countsTowardSpoonLimit",
+        mi.requires_soup as "requiresSoup",
         mi.active,
         mi.display_order as "displayOrder",
         mi.created_at::text as "createdAt",
@@ -510,6 +629,7 @@ export class VendorsRepository implements VendorsRepositoryContract {
         mi.image_url as "imageUrl",
         mi.price_kobo as "priceKobo",
         ut.counts_toward_spoon_limit as "countsTowardSpoonLimit",
+        mi.requires_soup as "requiresSoup",
         mi.active,
         mi.display_order as "displayOrder",
         mi.created_at::text as "createdAt",
@@ -539,6 +659,7 @@ export class VendorsRepository implements VendorsRepositoryContract {
           description,
           image_url,
           price_kobo,
+          requires_soup,
           display_order
         )
         values (
@@ -549,6 +670,7 @@ export class VendorsRepository implements VendorsRepositoryContract {
           ${input.description ?? null},
           ${input.imageUrl ?? null},
           ${input.priceKobo ?? null},
+          ${input.requiresSoup ?? false},
           ${input.displayOrder ?? 0}
         )
         returning id::text as "id"
@@ -564,6 +686,7 @@ export class VendorsRepository implements VendorsRepositoryContract {
     const hasDescription = Object.hasOwn(input, 'description');
     const hasImageUrl = Object.hasOwn(input, 'imageUrl');
     const hasPriceKobo = Object.hasOwn(input, 'priceKobo');
+    const hasRequiresSoup = Object.hasOwn(input, 'requiresSoup');
     const hasDisplayOrder = Object.hasOwn(input, 'displayOrder');
 
     const updated = await sql<IdResult>`
@@ -591,6 +714,10 @@ export class VendorsRepository implements VendorsRepositoryContract {
           price_kobo = case
             when ${hasPriceKobo} then ${input.priceKobo ?? null}
             else price_kobo
+          end,
+          requires_soup = case
+            when ${hasRequiresSoup} then ${input.requiresSoup ?? null}
+            else requires_soup
           end,
           display_order = case
             when ${hasDisplayOrder} then ${input.displayOrder ?? null}

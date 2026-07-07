@@ -35,20 +35,25 @@ import {
   AvailabilityUpdateDto,
   CreateMenuCategoryDto,
   CreateMenuItemDto,
+  CreateVendorSoupOptionDto,
   MenuCategoryEnvelopeDto,
   MenuItemIdParamDto,
   MenuMetadataEnvelopeDto,
   OnboardVendorDto,
+  SoupOptionIdParamDto,
   StoreAvailabilityStateEnvelopeDto,
   UpdateMenuItemDto,
   UpdateStoreAvailabilityDto,
   UpdateVendorProfileDto,
+  UpdateVendorSoupOptionDto,
   UpsertPayoutAccountDto,
   VendorMenuItemEnvelopeDto,
   VendorMenuItemListEnvelopeDto,
   VendorOnboardEnvelopeDto,
   VendorPayoutAccountEnvelopeDto,
-  VendorProfileEnvelopeDto
+  VendorProfileEnvelopeDto,
+  VendorSoupOptionEnvelopeDto,
+  VendorSoupOptionListEnvelopeDto
 } from './dto/vendor.dto.js';
 import {
   ConfirmUploadDto,
@@ -66,7 +71,8 @@ import type {
   StoreAvailabilityState,
   VendorAvailabilityEntry,
   VendorPayoutAccount,
-  VendorProfile
+  VendorProfile,
+  VendorSoupOptionRecord
 } from './vendors.types.js';
 
 function listEnvelope<T>(items: T[]): ListEnvelope<T> {
@@ -221,6 +227,58 @@ export class VendorsController {
   ): Promise<SuccessEnvelope<MenuCategoryRecord>> {
     return createSuccessEnvelope(
       await this.vendors.createMenuCategory(actor, vendorIdFromActor(actor), input)
+    );
+  }
+
+  @Get('soup-options')
+  @ApiOkResponse({
+    description: "The vendor's soup options (including inactive ones).",
+    type: VendorSoupOptionListEnvelopeDto
+  })
+  async listSoupOptions(
+    @CurrentActor() actor: AuthenticatedActor
+  ): Promise<ListEnvelope<VendorSoupOptionRecord>> {
+    const items = await this.vendors.listSoupOptions(actor, vendorIdFromActor(actor));
+    return listEnvelope(items);
+  }
+
+  @Post('soup-options')
+  @ApiCreatedResponse({
+    description: 'Created vendor-owned soup option.',
+    type: VendorSoupOptionEnvelopeDto
+  })
+  @ApiBadRequestResponse({ description: 'Invalid soup input or duplicate name.' })
+  @ApiBody({ type: CreateVendorSoupOptionDto })
+  async createSoupOption(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Body() input: CreateVendorSoupOptionDto
+  ): Promise<SuccessEnvelope<VendorSoupOptionRecord>> {
+    return createSuccessEnvelope(
+      await this.vendors.createSoupOption(actor, vendorIdFromActor(actor), input)
+    );
+  }
+
+  @Patch('soup-options/:soupOptionId')
+  @ApiParam({ format: 'uuid', name: 'soupOptionId', type: String })
+  @ApiOkResponse({
+    description: 'Updated vendor-owned soup option (rename, reorder, or toggle active).',
+    type: VendorSoupOptionEnvelopeDto
+  })
+  @ApiBadRequestResponse({ description: 'Invalid soup input or duplicate name.' })
+  @ApiNotFoundResponse({ description: 'Soup option was not found.' })
+  @ApiBody({ type: UpdateVendorSoupOptionDto })
+  async updateSoupOption(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Param() params: SoupOptionIdParamDto,
+    @Body() input: UpdateVendorSoupOptionDto
+  ): Promise<SuccessEnvelope<VendorSoupOptionRecord>> {
+    return createSuccessEnvelope(
+      await this.vendors.updateSoupOption(
+        actor,
+        vendorIdFromActor(actor),
+        params.soupOptionId,
+        input
+      )
     );
   }
 

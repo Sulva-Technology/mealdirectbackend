@@ -90,7 +90,7 @@ export class OrdersService {
     this.assertAllItemsQuoted(input, quotedItems);
 
     const zoneFeeKobo = await this.repository.findZoneDeliveryFeeKobo(input.locationId);
-    const serviceFeeKobo = quotedItems.some((item) => item.countsTowardSpoonLimit)
+    const serviceFeeKobo = quotedItems.some((item) => item.triggersTakeawayFee)
       ? await this.resolveServiceFeeKobo(input.vendorId)
       : 0;
 

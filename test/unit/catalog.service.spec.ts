@@ -17,7 +17,8 @@ const vendor: CatalogVendor = {
   description: 'Campus meals',
   logoUrl: null,
   kitchenLocation: 'Main gate',
-  defaultDeliveryMode: 'meal_direct_rider'
+  defaultDeliveryMode: 'meal_direct_rider',
+  soupOptions: [{ id: '77777777-7777-4777-8777-777777777777', name: 'Egusi' }]
 };
 
 const menuItem: MenuItem = {
@@ -32,7 +33,8 @@ const menuItem: MenuItem = {
   imageUrl: null,
   priceKobo: 250000,
   remainingQuantity: 10,
-  countsTowardSpoonLimit: true
+  countsTowardSpoonLimit: true,
+  requiresSoup: false
 };
 
 function createRepository(): CatalogRepositoryContract {

@@ -26,6 +26,7 @@ const slotId = '44444444-4444-4444-8444-444444444444';
 const menuItemId = '55555555-5555-4555-8555-555555555555';
 const categoryId = '66666666-6666-4666-8666-666666666666';
 const unitTypeId = '77777777-7777-4777-8777-777777777777';
+const soupOptionId = '99999999-9999-4999-8999-999999999990';
 
 const actor: AuthenticatedActor = {
   userId,
@@ -64,6 +65,7 @@ const menuItem: MenuItemRecord = {
   imageUrl: null,
   priceKobo: 250000,
   countsTowardSpoonLimit: true,
+  requiresSoup: false,
   active: true,
   displayOrder: 0,
   createdAt: '2026-06-15T08:00:00.000Z',
@@ -111,6 +113,8 @@ function createRepository(): VendorsRepositoryContract {
       code: 'spoon',
       displayName: 'Spoon',
       countsTowardSpoonLimit: true,
+      triggersTakeawayFee: true,
+      maxQuantity: null,
       active: true
     }),
     updateUnitType: vi.fn().mockResolvedValue({
@@ -118,7 +122,28 @@ function createRepository(): VendorsRepositoryContract {
       code: 'spoon',
       displayName: 'Spoon',
       countsTowardSpoonLimit: true,
+      triggersTakeawayFee: true,
+      maxQuantity: null,
       active: true
+    }),
+    listVendorSoupOptions: vi.fn().mockResolvedValue([]),
+    createVendorSoupOption: vi.fn().mockResolvedValue({
+      id: soupOptionId,
+      vendorId,
+      name: 'Egusi',
+      active: true,
+      displayOrder: 0,
+      createdAt: '2026-06-15T08:00:00.000Z',
+      updatedAt: '2026-06-15T08:00:00.000Z'
+    }),
+    updateVendorSoupOption: vi.fn().mockResolvedValue({
+      id: soupOptionId,
+      vendorId,
+      name: 'Egusi',
+      active: false,
+      displayOrder: 0,
+      createdAt: '2026-06-15T08:00:00.000Z',
+      updatedAt: '2026-06-15T08:00:00.000Z'
     }),
     listMenuItems: vi.fn().mockResolvedValue([menuItem]),
     findMenuItemById: vi.fn().mockResolvedValue(menuItem),
@@ -150,6 +175,7 @@ function createPaystack(): PaystackClientContract {
       recipientCode: 'RCP_provisioned',
       providerPayload: {}
     }),
+    fetchTransferRecipient: vi.fn(),
     initiateTransfer: vi.fn()
   };
 }
@@ -510,6 +536,48 @@ describe('VendorsService', () => {
       expect(media.issueUpload).toHaveBeenCalledWith(
         expect.objectContaining({ bucket: 'vendor-logos', ownerPrefix: vendorId })
       );
+    });
+  });
+
+  describe('soup options', () => {
+    it('creates a trimmed soup option scoped to the vendor', async () => {
+      await service.createSoupOption(actor, vendorId, { name: '  Egusi  ' });
+
+      expect(repository.createVendorSoupOption).toHaveBeenCalledWith(vendorId, { name: 'Egusi' });
+    });
+
+    it('rejects a blank soup name', async () => {
+      await expect(
+        service.createSoupOption(actor, vendorId, { name: '   ' })
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(repository.createVendorSoupOption).not.toHaveBeenCalled();
+    });
+
+    it('maps a duplicate soup name to a bad request', async () => {
+      vi.mocked(repository.createVendorSoupOption).mockRejectedValueOnce({ code: '23505' });
+
+      await expect(
+        service.createSoupOption(actor, vendorId, { name: 'Egusi' })
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it('returns not found when updating a soup the vendor does not own', async () => {
+      vi.mocked(repository.updateVendorSoupOption).mockResolvedValueOnce(undefined);
+
+      await expect(
+        service.updateSoupOption(actor, vendorId, soupOptionId, { active: false })
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it('deactivates a soup option', async () => {
+      const result = await service.updateSoupOption(actor, vendorId, soupOptionId, {
+        active: false
+      });
+
+      expect(repository.updateVendorSoupOption).toHaveBeenCalledWith(vendorId, soupOptionId, {
+        active: false
+      });
+      expect(result.active).toBe(false);
     });
   });
 });

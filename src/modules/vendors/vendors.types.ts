@@ -86,6 +86,8 @@ export type UnitTypeRecord = {
   code: string;
   displayName: string;
   countsTowardSpoonLimit: boolean;
+  triggersTakeawayFee: boolean;
+  maxQuantity: number | null;
   active: boolean;
 };
 
@@ -93,12 +95,37 @@ export type CreateUnitTypeInput = {
   code: string;
   displayName: string;
   countsTowardSpoonLimit?: boolean;
+  triggersTakeawayFee?: boolean;
+  maxQuantity?: number | null;
 };
 
 export type UpdateUnitTypeInput = {
   displayName?: string;
   countsTowardSpoonLimit?: boolean;
+  triggersTakeawayFee?: boolean;
+  maxQuantity?: number | null;
   active?: boolean;
+};
+
+export type VendorSoupOptionRecord = {
+  id: string;
+  vendorId: string;
+  name: string;
+  active: boolean;
+  displayOrder: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CreateVendorSoupOptionInput = {
+  name: string;
+  displayOrder?: number;
+};
+
+export type UpdateVendorSoupOptionInput = {
+  name?: string;
+  active?: boolean;
+  displayOrder?: number;
 };
 
 export type CreateMenuCategoryInput = {
@@ -123,6 +150,7 @@ export type MenuItemRecord = {
   imageUrl: string | null;
   priceKobo: number;
   countsTowardSpoonLimit: boolean;
+  requiresSoup: boolean;
   active: boolean;
   displayOrder: number;
   createdAt: string;
@@ -136,6 +164,7 @@ export type UpsertMenuItemInput = {
   description?: string | null;
   imageUrl?: string | null;
   priceKobo?: number;
+  requiresSoup?: boolean;
   displayOrder?: number;
 };
 
@@ -214,6 +243,16 @@ export type VendorsRepositoryContract = {
     input: UpsertMenuCategoryInput
   ) => Promise<MenuCategoryRecord>;
   findMenuCategoryOwner: (categoryId: string) => Promise<string | undefined>;
+  listVendorSoupOptions: (vendorId: string, activeOnly: boolean) => Promise<VendorSoupOptionRecord[]>;
+  createVendorSoupOption: (
+    vendorId: string,
+    input: CreateVendorSoupOptionInput
+  ) => Promise<VendorSoupOptionRecord>;
+  updateVendorSoupOption: (
+    vendorId: string,
+    soupOptionId: string,
+    input: UpdateVendorSoupOptionInput
+  ) => Promise<VendorSoupOptionRecord | undefined>;
   listUnitTypes: () => Promise<UnitTypeRecord[]>;
   listAllUnitTypes: () => Promise<UnitTypeRecord[]>;
   createUnitType: (input: CreateUnitTypeInput) => Promise<UnitTypeRecord>;

@@ -54,6 +54,13 @@ export class OrderQuoteItemDto {
     type: Boolean
   })
   countsTowardSpoonLimit!: boolean;
+
+  @ApiProperty({
+    description:
+      'When true, this line pulls the flat takeaway/service fee (independent of the spoon-limit cap).',
+    type: Boolean
+  })
+  triggersTakeawayFee!: boolean;
 }
 
 export class OrderQuoteDto {
@@ -207,6 +214,21 @@ export class OrderItemDto {
 
   @ApiProperty({ type: Object, additionalProperties: true })
   customization!: Record<string, unknown>;
+
+  @ApiPropertyOptional({
+    format: 'uuid',
+    nullable: true,
+    type: String,
+    description: 'The chosen soup option id when the item required a soup; null otherwise.'
+  })
+  soupOptionId!: string | null;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    type: String,
+    description: 'Display name of the chosen soup; null when no soup was required.'
+  })
+  soupName!: string | null;
 }
 
 export class PaymentSnapshotDto {

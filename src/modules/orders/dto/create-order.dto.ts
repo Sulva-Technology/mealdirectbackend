@@ -40,6 +40,19 @@ export class CreateOrderItemDto {
   @IsOptional()
   @IsObject()
   customization?: Record<string, unknown>;
+
+  // Required only when the menu item is flagged requires_soup: the chosen soup from the
+  // vendor's soup list. Validated and persisted by the order RPC; ignored for items that
+  // don't require a soup.
+  @ApiPropertyOptional({
+    format: 'uuid',
+    description:
+      "Chosen soup option id (from the vendor's soup list). Required when the menu item requires a soup.",
+    type: String
+  })
+  @IsOptional()
+  @IsDatabaseUuid()
+  soupOptionId?: string;
 }
 
 export class CreateOrderDto {

@@ -81,6 +81,29 @@ export class CreateUnitTypeDto {
   @IsOptional()
   @IsBoolean()
   countsTowardSpoonLimit?: boolean;
+
+  @ApiPropertyOptional({
+    default: false,
+    type: Boolean,
+    description:
+      'When true, an order containing this item pulls the flat takeaway/service fee, independent of the spoon-limit cap.'
+  })
+  @IsOptional()
+  @IsBoolean()
+  triggersTakeawayFee?: boolean;
+
+  @ApiPropertyOptional({
+    minimum: 1,
+    nullable: true,
+    type: Number,
+    description: 'Maximum quantity per order line for this unit type; null means unlimited.'
+  })
+  @IsOptional()
+  @ValidateIf((_, value) => value !== null)
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  maxQuantity?: number | null;
 }
 
 export class UpdateUnitTypeDto {
@@ -99,7 +122,95 @@ export class UpdateUnitTypeDto {
   @ApiPropertyOptional({ type: Boolean })
   @IsOptional()
   @IsBoolean()
+  triggersTakeawayFee?: boolean;
+
+  @ApiPropertyOptional({ minimum: 1, nullable: true, type: Number })
+  @IsOptional()
+  @ValidateIf((_, value) => value !== null)
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  maxQuantity?: number | null;
+
+  @ApiPropertyOptional({ type: Boolean })
+  @IsOptional()
+  @IsBoolean()
   active?: boolean;
+}
+
+export class SoupOptionIdParamDto {
+  @ApiProperty({ format: 'uuid', type: String })
+  @IsDatabaseUuid()
+  soupOptionId!: string;
+}
+
+export class CreateVendorSoupOptionDto {
+  @ApiProperty({ maxLength: 120, minLength: 1, type: String })
+  @IsString()
+  @MinLength(1)
+  @MaxLength(120)
+  name!: string;
+
+  @ApiPropertyOptional({ minimum: 0, type: Number })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  displayOrder?: number;
+}
+
+export class UpdateVendorSoupOptionDto {
+  @ApiPropertyOptional({ maxLength: 120, minLength: 1, type: String })
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(120)
+  name?: string;
+
+  @ApiPropertyOptional({ type: Boolean })
+  @IsOptional()
+  @IsBoolean()
+  active?: boolean;
+
+  @ApiPropertyOptional({ minimum: 0, type: Number })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  displayOrder?: number;
+}
+
+export class VendorSoupOptionDto {
+  @ApiProperty({ format: 'uuid', type: String })
+  id!: string;
+
+  @ApiProperty({ format: 'uuid', type: String })
+  vendorId!: string;
+
+  @ApiProperty({ type: String })
+  name!: string;
+
+  @ApiProperty({ type: Boolean })
+  active!: boolean;
+
+  @ApiProperty({ type: Number })
+  displayOrder!: number;
+
+  @ApiProperty({ type: String })
+  createdAt!: string;
+
+  @ApiProperty({ type: String })
+  updatedAt!: string;
+}
+
+export class VendorSoupOptionEnvelopeDto {
+  @ApiProperty({ type: () => VendorSoupOptionDto })
+  data!: VendorSoupOptionDto;
+}
+
+export class VendorSoupOptionListEnvelopeDto {
+  @ApiProperty({ isArray: true, type: () => VendorSoupOptionDto })
+  data!: VendorSoupOptionDto[];
 }
 
 export class OnboardVendorDto {
@@ -258,6 +369,16 @@ export class CreateMenuItemDto {
   @Min(0)
   priceKobo!: number;
 
+  @ApiPropertyOptional({
+    default: false,
+    type: Boolean,
+    description:
+      "When true, ordering this item requires the customer to pick one of the vendor's active soups."
+  })
+  @IsOptional()
+  @IsBoolean()
+  requiresSoup?: boolean;
+
   @ApiPropertyOptional({ minimum: 0, type: Number })
   @IsOptional()
   @Type(() => Number)
@@ -304,6 +425,11 @@ export class UpdateMenuItemDto {
   @IsInt()
   @Min(0)
   priceKobo?: number;
+
+  @ApiPropertyOptional({ type: Boolean })
+  @IsOptional()
+  @IsBoolean()
+  requiresSoup?: boolean;
 
   @ApiPropertyOptional({ minimum: 0, type: Number })
   @IsOptional()
@@ -562,6 +688,12 @@ export class UnitTypeDto {
   countsTowardSpoonLimit!: boolean;
 
   @ApiProperty({ type: Boolean })
+  triggersTakeawayFee!: boolean;
+
+  @ApiPropertyOptional({ nullable: true, type: Number })
+  maxQuantity!: number | null;
+
+  @ApiProperty({ type: Boolean })
   active!: boolean;
 }
 
@@ -624,6 +756,12 @@ export class VendorMenuItemDto {
     type: Boolean
   })
   countsTowardSpoonLimit!: boolean;
+
+  @ApiProperty({
+    description: "When true, ordering this item requires picking one of the vendor's soups.",
+    type: Boolean
+  })
+  requiresSoup!: boolean;
 
   @ApiProperty({ type: Boolean })
   active!: boolean;

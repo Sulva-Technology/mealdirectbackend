@@ -21,6 +21,7 @@ import type {
   AvailabilityUpdateInput,
   CreateMenuCategoryInput,
   CreateUnitTypeInput,
+  CreateVendorSoupOptionInput,
   MenuCategoryRecord,
   MenuItemAvailabilityEntry,
   MenuItemRecord,
@@ -30,6 +31,7 @@ import type {
   StoreAvailabilityUpdateInput,
   UnitTypeRecord,
   UpdateUnitTypeInput,
+  UpdateVendorSoupOptionInput,
   UpsertMenuItemInput,
   VendorAvailabilityEntry,
   VendorOnboardInput,
@@ -37,6 +39,7 @@ import type {
   VendorPayoutAccountInput,
   VendorProfile,
   VendorProfileUpdateInput,
+  VendorSoupOptionRecord,
   VendorsRepositoryContract
 } from './vendors.types.js';
 
@@ -184,6 +187,7 @@ function normalizeMenuItemInput(input: UpsertMenuItemInput): UpsertMenuItemInput
       ? { imageUrl: normalizeNullableString(input.imageUrl) ?? null }
       : {}),
     ...(input.priceKobo === undefined ? {} : { priceKobo: input.priceKobo }),
+    ...(input.requiresSoup === undefined ? {} : { requiresSoup: input.requiresSoup }),
     ...(input.displayOrder === undefined ? {} : { displayOrder: input.displayOrder })
   };
 }
@@ -443,6 +447,74 @@ export class VendorsService {
     }
   }
 
+  // Vendor soup options: a shared per-vendor list of labelled soups reused by any menu
+  // item flagged requires_soup. Vendor-scoped like menu categories.
+  async listSoupOptions(
+    actor: AuthenticatedActor,
+    vendorId: string
+  ): Promise<VendorSoupOptionRecord[]> {
+    await this.assertActorCanUseVendor(actor, vendorId);
+    return this.repository.listVendorSoupOptions(vendorId, false);
+  }
+
+  async createSoupOption(
+    actor: AuthenticatedActor,
+    vendorId: string,
+    input: CreateVendorSoupOptionInput
+  ): Promise<VendorSoupOptionRecord> {
+    await this.assertActorCanUseVendor(actor, vendorId);
+
+    const name = input.name.trim();
+    if (name.length === 0) {
+      throw badRequest('Soup name must contain at least one character.');
+    }
+
+    try {
+      return await this.repository.createVendorSoupOption(vendorId, {
+        name,
+        ...(input.displayOrder === undefined ? {} : { displayOrder: input.displayOrder })
+      });
+    } catch (error) {
+      if (postgresErrorCode(error) === '23505') {
+        throw badRequest('A soup with this name already exists.');
+      }
+      throw error;
+    }
+  }
+
+  async updateSoupOption(
+    actor: AuthenticatedActor,
+    vendorId: string,
+    soupOptionId: string,
+    input: UpdateVendorSoupOptionInput
+  ): Promise<VendorSoupOptionRecord> {
+    await this.assertActorCanUseVendor(actor, vendorId);
+
+    const update: UpdateVendorSoupOptionInput = {};
+    if (input.name !== undefined) {
+      const name = input.name.trim();
+      if (name.length === 0) {
+        throw badRequest('Soup name must contain at least one character.');
+      }
+      update.name = name;
+    }
+    if (input.active !== undefined) update.active = input.active;
+    if (input.displayOrder !== undefined) update.displayOrder = input.displayOrder;
+
+    try {
+      const soup = await this.repository.updateVendorSoupOption(vendorId, soupOptionId, update);
+      if (soup === undefined) {
+        throw notFound('Soup option was not found.');
+      }
+      return soup;
+    } catch (error) {
+      if (postgresErrorCode(error) === '23505') {
+        throw badRequest('A soup with this name already exists.');
+      }
+      throw error;
+    }
+  }
+
   // Unit types are a global, admin-managed catalogue shared across all vendors;
   // the admin role guard on the controller is the only authorization gate.
   async adminListUnitTypes(): Promise<UnitTypeRecord[]> {
@@ -459,7 +531,9 @@ export class VendorsService {
       return await this.repository.createUnitType({
         code,
         displayName: input.displayName.trim(),
-        countsTowardSpoonLimit: input.countsTowardSpoonLimit ?? false
+        countsTowardSpoonLimit: input.countsTowardSpoonLimit ?? false,
+        triggersTakeawayFee: input.triggersTakeawayFee ?? false,
+        maxQuantity: input.maxQuantity ?? null
       });
     } catch (error) {
       if (postgresErrorCode(error) === '23505') {
@@ -474,6 +548,12 @@ export class VendorsService {
     if (input.displayName !== undefined) update.displayName = input.displayName.trim();
     if (input.countsTowardSpoonLimit !== undefined) {
       update.countsTowardSpoonLimit = input.countsTowardSpoonLimit;
+    }
+    if (input.triggersTakeawayFee !== undefined) {
+      update.triggersTakeawayFee = input.triggersTakeawayFee;
+    }
+    if (Object.hasOwn(input, 'maxQuantity')) {
+      update.maxQuantity = input.maxQuantity ?? null;
     }
     if (input.active !== undefined) update.active = input.active;
 

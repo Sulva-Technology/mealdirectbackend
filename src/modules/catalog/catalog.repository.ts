@@ -29,7 +29,13 @@ export class CatalogRepository implements CatalogRepositoryContract {
           v.description,
           v.logo_url as "logoUrl",
           v.kitchen_location as "kitchenLocation",
-          av.default_delivery_mode::text as "defaultDeliveryMode"
+          av.default_delivery_mode::text as "defaultDeliveryMode",
+          coalesce((
+            select jsonb_agg(jsonb_build_object('id', so.id::text, 'name', so.name)
+                             order by so.display_order, so.name)
+            from public.vendor_soup_options so
+            where so.vendor_id = v.id and so.active
+          ), '[]'::jsonb) as "soupOptions"
         from public.available_vendors(
           ${filters.campusId}::uuid,
           ${filters.date ?? null}::date,
@@ -59,7 +65,13 @@ export class CatalogRepository implements CatalogRepositoryContract {
         v.description,
         v.logo_url as "logoUrl",
         v.kitchen_location as "kitchenLocation",
-        v.default_delivery_mode::text as "defaultDeliveryMode"
+        v.default_delivery_mode::text as "defaultDeliveryMode",
+        coalesce((
+          select jsonb_agg(jsonb_build_object('id', so.id::text, 'name', so.name)
+                           order by so.display_order, so.name)
+          from public.vendor_soup_options so
+          where so.vendor_id = v.id and so.active
+        ), '[]'::jsonb) as "soupOptions"
       from public.vendors v
       join public.campuses c on c.id = v.campus_id
       where v.campus_id = ${filters.campusId}::uuid
@@ -92,7 +104,13 @@ export class CatalogRepository implements CatalogRepositoryContract {
         v.description,
         v.logo_url as "logoUrl",
         v.kitchen_location as "kitchenLocation",
-        v.default_delivery_mode::text as "defaultDeliveryMode"
+        v.default_delivery_mode::text as "defaultDeliveryMode",
+        coalesce((
+          select jsonb_agg(jsonb_build_object('id', so.id::text, 'name', so.name)
+                           order by so.display_order, so.name)
+          from public.vendor_soup_options so
+          where so.vendor_id = v.id and so.active
+        ), '[]'::jsonb) as "soupOptions"
       from public.vendors v
       join public.campuses c on c.id = v.campus_id
       where v.id = ${vendorId}::uuid
@@ -126,13 +144,15 @@ export class CatalogRepository implements CatalogRepositoryContract {
           ami.image_url as "imageUrl",
           ami.price_kobo as "priceKobo",
           ami.remaining_quantity as "remainingQuantity",
-          ut.counts_toward_spoon_limit as "countsTowardSpoonLimit"
+          ut.counts_toward_spoon_limit as "countsTowardSpoonLimit",
+          mi.requires_soup as "requiresSoup"
         from target_vendor tv
         join public.available_menu_items(
           tv.campus_id,
           ${filters.date ?? null}::date,
           ${filters.slotId ?? null}::uuid
         ) ami on ami.vendor_id = tv.id
+        join public.menu_items mi on mi.id = ami.menu_item_id
         join public.unit_types ut on ut.id = ami.unit_type_id
         left join public.menu_categories mc on mc.id = ami.category_id
         order by mc.display_order nulls last, ami.name
@@ -154,7 +174,8 @@ export class CatalogRepository implements CatalogRepositoryContract {
         mi.image_url as "imageUrl",
         mi.price_kobo as "priceKobo",
         null::integer as "remainingQuantity",
-        ut.counts_toward_spoon_limit as "countsTowardSpoonLimit"
+        ut.counts_toward_spoon_limit as "countsTowardSpoonLimit",
+        mi.requires_soup as "requiresSoup"
       from public.menu_items mi
       join public.vendors v on v.id = mi.vendor_id
       join public.campuses c on c.id = v.campus_id

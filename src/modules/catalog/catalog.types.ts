@@ -1,5 +1,10 @@
 export type DeliveryMode = 'meal_direct_rider' | 'vendor_delivery';
 
+export type CatalogSoupOption = {
+  id: string;
+  name: string;
+};
+
 export type CatalogVendor = {
   id: string;
   campusId: string;
@@ -9,6 +14,9 @@ export type CatalogVendor = {
   logoUrl: string | null;
   kitchenLocation: string | null;
   defaultDeliveryMode: DeliveryMode;
+  // Active soups this vendor offers; the client renders these as the picker for any
+  // menu item flagged requiresSoup.
+  soupOptions: CatalogSoupOption[];
 };
 
 export type MenuItem = {
@@ -24,6 +32,7 @@ export type MenuItem = {
   priceKobo: number;
   remainingQuantity: number | null;
   countsTowardSpoonLimit: boolean;
+  requiresSoup: boolean;
 };
 
 export type VendorListFilters = {

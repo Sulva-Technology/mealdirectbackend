@@ -43,6 +43,14 @@ export class VendorMenuQueryDto {
   slotId?: string;
 }
 
+export class CatalogSoupOptionDto {
+  @ApiProperty({ format: 'uuid', type: String })
+  id!: string;
+
+  @ApiProperty({ type: String })
+  name!: string;
+}
+
 export class CatalogVendorDto {
   @ApiProperty({ format: 'uuid', type: String })
   id!: string;
@@ -67,6 +75,13 @@ export class CatalogVendorDto {
 
   @ApiProperty({ enum: ['meal_direct_rider', 'vendor_delivery'], type: String })
   defaultDeliveryMode!: string;
+
+  @ApiProperty({
+    isArray: true,
+    type: () => CatalogSoupOptionDto,
+    description: "The vendor's active soups; rendered as the picker for items requiring a soup."
+  })
+  soupOptions!: CatalogSoupOptionDto[];
 }
 
 export class MenuItemDto {
@@ -108,6 +123,12 @@ export class MenuItemDto {
     type: Boolean
   })
   countsTowardSpoonLimit!: boolean;
+
+  @ApiProperty({
+    description: "When true, the customer must pick one of the vendor's soups for this item.",
+    type: Boolean
+  })
+  requiresSoup!: boolean;
 }
 
 export class CatalogVendorListEnvelopeDto {

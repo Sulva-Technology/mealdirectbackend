@@ -65,7 +65,8 @@ const quoteItem: OrderQuoteItem = {
   remainingQuantity: 10,
   unitPriceKobo: 250000,
   lineTotalKobo: 500000,
-  countsTowardSpoonLimit: true
+  countsTowardSpoonLimit: true,
+  triggersTakeawayFee: true
 };
 
 const nonTakeawayQuoteItem: OrderQuoteItem = {
@@ -75,7 +76,21 @@ const nonTakeawayQuoteItem: OrderQuoteItem = {
   remainingQuantity: 10,
   unitPriceKobo: 20000,
   lineTotalKobo: 40000,
-  countsTowardSpoonLimit: false
+  countsTowardSpoonLimit: false,
+  triggersTakeawayFee: false
+};
+
+// Pepper soup: single-portion + takeaway. Pulls the takeaway fee but does NOT count toward
+// the three-spoon cap — proves the two behaviours are now independent.
+const singleTakeawayQuoteItem: OrderQuoteItem = {
+  menuItemId: '99999999-9999-4999-8999-999999999992',
+  name: 'Pepper Soup',
+  quantity: 1,
+  remainingQuantity: 10,
+  unitPriceKobo: 300000,
+  lineTotalKobo: 300000,
+  countsTowardSpoonLimit: false,
+  triggersTakeawayFee: true
 };
 
 const orderDetail: OrderDetail = {
@@ -215,6 +230,25 @@ describe('OrdersService', () => {
       foodSubtotalKobo: 540000,
       serviceFeeKobo: 5000,
       totalKobo: 560000
+    });
+  });
+
+  it('charges the takeaway fee for a single-portion item that is not a spoon unit', async () => {
+    const input: CreateOrderDto = {
+      ...orderInput,
+      items: [{ menuItemId: singleTakeawayQuoteItem.menuItemId, quantity: 1 }]
+    };
+    vi.mocked(repository.quoteOrder).mockResolvedValue([singleTakeawayQuoteItem]);
+    service = new OrdersService(
+      repository,
+      createEnv({ SERVICE_FEE_KOBO: 5000 }),
+      createPayments()
+    );
+
+    await expect(service.quoteOrder(customer, input)).resolves.toMatchObject({
+      foodSubtotalKobo: 300000,
+      serviceFeeKobo: 5000,
+      totalKobo: 320000
     });
   });
 
