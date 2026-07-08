@@ -553,6 +553,21 @@ export class SupabaseAuthService {
       }
     }
 
+    // Universal base identity: every account is a customer (the /me roles array
+    // always includes 'customer'). The customer portal must therefore accept any
+    // valid credential, even when an admin/vendor grant has overwritten
+    // app_metadata.meal_direct_role and the account predates the user_metadata
+    // base-role tag (seeded/legacy users signed up before signUp stored it).
+    // Without this, granting admin to such a customer strands them: the erased
+    // default role no longer resolves to 'customer' and there is no grant-table
+    // fallback for the customer portal.
+    if (allowedRoles.includes('customer')) {
+      return {
+        metadata: { meal_direct_role: 'customer' },
+        role: 'customer'
+      };
+    }
+
     return undefined;
   }
 

@@ -155,6 +155,19 @@ set display_name = excluded.display_name,
     counts_toward_spoon_limit = excluded.counts_toward_spoon_limit,
     active = excluded.active;
 
+-- Fee-split unit types (see 20260707000100_snack_and_single_unit_types.sql). Snacks and the
+-- plain single portion never pull the takeaway fee; single is capped at one per line.
+insert into public.unit_types (id, code, display_name, counts_toward_spoon_limit, triggers_takeaway_fee, max_quantity, active)
+values
+  ('41111111-1111-1111-1111-111111111118', 'snacks', 'Snack', false, false, null, true),
+  ('41111111-1111-1111-1111-111111111119', 'single', 'Single portion', false, false, 1, true)
+on conflict (code) do update
+set display_name = excluded.display_name,
+    counts_toward_spoon_limit = excluded.counts_toward_spoon_limit,
+    triggers_takeaway_fee = excluded.triggers_takeaway_fee,
+    max_quantity = excluded.max_quantity,
+    active = excluded.active;
+
 insert into public.delivery_slots (id, campus_id, name, delivery_time, cutoff_minutes, active, display_order)
 values
   ('51111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', '08:00', '08:00', 60, true, 1),

@@ -200,6 +200,42 @@ describe('SupabaseAuthService', () => {
     });
   });
 
+  it('lets a legacy customer whose base role was overwritten by an admin grant back into the customer portal', async () => {
+    // Seeded/legacy customer: no meal_direct_role in user_metadata, then granted
+    // campus_admin, which wrote app_metadata.meal_direct_role='campus_admin'. The
+    // erased default no longer resolves to 'customer' and there is no customer
+    // grant table, so the customer portal must fall back to the base identity.
+    signInWithPasswordMock.mockResolvedValue({
+      data: {
+        session: {
+          access_token: 'old-token',
+          expires_in: 3600,
+          refresh_token: 'refresh-token'
+        },
+        user: {
+          app_metadata: { campus_id: campusId, meal_direct_role: 'campus_admin' },
+          email: 'person@example.com',
+          id: userId,
+          user_metadata: {}
+        }
+      },
+      error: null
+    });
+    refreshSessionMock.mockResolvedValue(
+      refreshResponse({ meal_direct_role: 'customer' }, 'customer-token')
+    );
+
+    const result = await service.signIn('person@example.com', 'Password123!', ['customer']);
+
+    expect(service.setUserAppMetadata).toHaveBeenCalledWith(userId, {
+      meal_direct_role: 'customer'
+    });
+    expect(result).toMatchObject({
+      accessToken: 'customer-token',
+      user: { role: 'customer' }
+    });
+  });
+
   it('normalizes the email (trim + lowercase) before authenticating', async () => {
     await service.signIn('  Person@Example.COM ', 'Password123!', ['customer']);
     expect(signInWithPasswordMock).toHaveBeenCalledWith({
