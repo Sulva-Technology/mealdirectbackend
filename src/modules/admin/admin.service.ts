@@ -206,10 +206,12 @@ export class AdminService {
   }
 
   async getBatch(actor: AuthenticatedActor, batchId: string): Promise<AdminRecord> {
-    return this.requireRecord(
+    const batch = this.requireRecord(
       await this.repository.getBatch(batchId, this.campusScope(actor)),
       'Batch was not found.'
     );
+    const orders = await this.repository.findBatchOrders(batchId);
+    return { ...batch, orders };
   }
 
   async closeBatch(actor: AuthenticatedActor, batchId: string): Promise<AdminRecord> {

@@ -207,6 +207,27 @@ export class AdminRepository {
     return result.rows[0];
   }
 
+  async findBatchOrders(batchId: string): Promise<AdminRecord[]> {
+    const result = await sql<AdminRecord>`
+      select
+        o.id::text as "id",
+        o.order_number as "orderNumber",
+        o.customer_id::text as "customerId",
+        cl.name as "locationName",
+        o.room_number as "roomNumber",
+        o.order_status::text as "orderStatus",
+        o.delivery_mode::text as "deliveryMode",
+        o.total_kobo as "totalKobo",
+        dbo.sequence as "sequence"
+      from public.delivery_batch_orders dbo
+      join public.orders o on o.id = dbo.order_id
+      join public.campus_locations cl on cl.id = o.location_id
+      where dbo.batch_id = ${batchId}::uuid
+      order by dbo.sequence nulls last, dbo.added_at
+    `.execute(this.database.db);
+    return result.rows;
+  }
+
   async closeBatch(batchId: string): Promise<AdminRecord | undefined> {
     await sql`
       update public.delivery_batches
