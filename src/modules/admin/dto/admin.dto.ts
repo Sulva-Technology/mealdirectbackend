@@ -336,6 +336,8 @@ export class AdminBatchIdParamDto {
   batchId!: string;
 }
 
+export class AdminBatchChatQueryDto extends AdminCursorQueryDto {}
+
 export class AdminVendorIdParamDto {
   @IsDatabaseUuid()
   vendorId!: string;

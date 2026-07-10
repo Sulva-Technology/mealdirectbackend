@@ -74,6 +74,28 @@ export class ChatService {
     return this.repository.listParticipants(batchId);
   }
 
+  // Read-only oversight for admins. The caller (AdminService) is responsible for
+  // authorizing access (admin role + campus scope); no participant check applies, and
+  // `mine` is always false since the admin is not a sender.
+  listMessagesForOversight(
+    batchId: string,
+    input: CursorPaginationInput
+  ): Promise<CursorPage<ChatMessage>> {
+    const normalized = normalizeCursorPagination(input);
+    if (normalized.cursor !== undefined) {
+      try {
+        decodeCursor(normalized.cursor);
+      } catch {
+        throw badCursor();
+      }
+    }
+    return this.repository.listMessages(batchId, '', normalized);
+  }
+
+  listParticipantsForOversight(batchId: string): Promise<ChatParticipant[]> {
+    return this.repository.listParticipants(batchId);
+  }
+
   private async assertParticipant(actor: AuthenticatedActor, batchId: string): Promise<void> {
     const isParticipant = await this.repository.isParticipant(batchId, actor.userId);
     if (!isParticipant) {

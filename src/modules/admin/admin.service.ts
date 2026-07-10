@@ -11,7 +11,10 @@ import { createHash, randomBytes } from 'node:crypto';
 import { AuditService, actorTypeForRole } from '../../common/audit/audit.service.js';
 import { ErrorCodes } from '../../common/errors/error-codes.js';
 import { EnvService } from '../../config/env.service.js';
+import type { CursorPage, CursorPaginationInput } from '../../common/api/pagination.js';
 import type { AuthenticatedActor } from '../auth/actor-context.js';
+import { ChatService } from '../chat/chat.service.js';
+import type { ChatMessage, ChatParticipant } from '../chat/chat.types.js';
 import { SupabaseAuthService } from '../auth/supabase-auth.service.js';
 import { VendorInvitationsRepository } from '../auth/vendor-invitations.repository.js';
 import type { VendorInvitationRecord } from '../auth/vendor-invitations.repository.js';
@@ -84,7 +87,10 @@ export class AdminService {
     private readonly auth?: SupabaseAuthService,
     @Optional()
     @Inject(AuditService)
-    private readonly audit?: AuditService
+    private readonly audit?: AuditService,
+    @Optional()
+    @Inject(ChatService)
+    private readonly chat?: ChatService
   ) {}
 
   /**
@@ -217,6 +223,30 @@ export class AdminService {
   async closeBatch(actor: AuthenticatedActor, batchId: string): Promise<AdminRecord> {
     await this.getBatch(actor, batchId);
     return this.requireRecord(await this.repository.closeBatch(batchId), 'Batch was not found.');
+  }
+
+  // Read-only chat oversight. getBatch enforces admin campus scope + existence first.
+  async getBatchChatMessages(
+    actor: AuthenticatedActor,
+    batchId: string,
+    input: CursorPaginationInput
+  ): Promise<CursorPage<ChatMessage>> {
+    await this.getBatch(actor, batchId);
+    if (this.chat === undefined) {
+      throw badRequest('Chat oversight is not configured.');
+    }
+    return this.chat.listMessagesForOversight(batchId, input);
+  }
+
+  async getBatchChatParticipants(
+    actor: AuthenticatedActor,
+    batchId: string
+  ): Promise<ChatParticipant[]> {
+    await this.getBatch(actor, batchId);
+    if (this.chat === undefined) {
+      throw badRequest('Chat oversight is not configured.');
+    }
+    return this.chat.listParticipantsForOversight(batchId);
   }
 
   async assignBatch(

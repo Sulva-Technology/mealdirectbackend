@@ -31,12 +31,14 @@ import { RequireRoles } from '../auth/roles.decorator.js';
 import { RolesGuard } from '../auth/roles.guard.js';
 import { PayoutService } from '../settlements/payout.service.js';
 import type { PayoutDestination, PayoutTransferRecord } from '../settlements/payout.types.js';
+import type { ChatMessage, ChatParticipant } from '../chat/chat.types.js';
 import { AdminService } from './admin.service.js';
 import type { AdminDashboard, AdminRecord, AdminSession } from './admin.types.js';
 import {
   AdminAnalyticsQueryDto,
   AdminAssignRiderDto,
   AdminAuditLogQueryDto,
+  AdminBatchChatQueryDto,
   AdminBatchIdParamDto,
   AdminBatchListQueryDto,
   AdminCreateMembershipDto,
@@ -164,6 +166,28 @@ export class AdminController {
     @Param() params: AdminBatchIdParamDto
   ): Promise<SuccessEnvelope<AdminRecord>> {
     return createSuccessEnvelope(await this.admin.getBatch(actor, params.batchId));
+  }
+
+  @Get('batches/:batchId/chat/messages')
+  async getBatchChatMessages(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Param() params: AdminBatchIdParamDto,
+    @Query() query: AdminBatchChatQueryDto
+  ): Promise<ListEnvelope<ChatMessage>> {
+    const page = await this.admin.getBatchChatMessages(actor, params.batchId, {
+      ...(query.cursor === undefined ? {} : { cursor: query.cursor }),
+      ...(query.limit === undefined ? {} : { limit: query.limit })
+    });
+    return createListEnvelope(page.items, page.pagination);
+  }
+
+  @Get('batches/:batchId/chat/participants')
+  async getBatchChatParticipants(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Param() params: AdminBatchIdParamDto
+  ): Promise<ListEnvelope<ChatParticipant>> {
+    const participants = await this.admin.getBatchChatParticipants(actor, params.batchId);
+    return createListEnvelope(participants, { hasMore: false, limit: participants.length });
   }
 
   @Post('batches/:batchId/close')

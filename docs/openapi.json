@@ -3823,6 +3823,32 @@
         "tags": ["admin"]
       }
     },
+    "/v1/admin/batches/{batchId}/chat/messages": {
+      "get": {
+        "operationId": "AdminController_getBatchChatMessages",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/batches/{batchId}/chat/participants": {
+      "get": {
+        "operationId": "AdminController_getBatchChatParticipants",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
     "/v1/admin/batches/{batchId}/close": {
       "post": {
         "operationId": "AdminController_closeBatch",

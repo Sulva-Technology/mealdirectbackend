@@ -3257,6 +3257,28 @@ paths:
         '403': *a81
       security: *a82
       tags: *a83
+  /v1/admin/batches/{batchId}/chat/messages:
+    get:
+      operationId: AdminController_getBatchChatMessages
+      parameters: []
+      responses:
+        '200':
+          description: ''
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
+  /v1/admin/batches/{batchId}/chat/participants:
+    get:
+      operationId: AdminController_getBatchChatParticipants
+      parameters: []
+      responses:
+        '200':
+          description: ''
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/batches/{batchId}/close:
     post:
       operationId: AdminController_closeBatch
