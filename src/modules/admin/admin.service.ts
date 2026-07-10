@@ -249,6 +249,19 @@ export class AdminService {
     return this.chat.listParticipantsForOversight(batchId);
   }
 
+  // Admin posts into the batch chat as "Support". getBatch enforces campus scope first.
+  async postBatchChatMessage(
+    actor: AuthenticatedActor,
+    batchId: string,
+    body: string
+  ): Promise<ChatMessage> {
+    await this.getBatch(actor, batchId);
+    if (this.chat === undefined) {
+      throw badRequest('Chat oversight is not configured.');
+    }
+    return this.chat.postAsAdmin(batchId, actor.userId, body);
+  }
+
   async assignBatch(
     actor: AuthenticatedActor,
     batchId: string,

@@ -96,6 +96,18 @@ export class ChatService {
     return this.repository.listParticipants(batchId);
   }
 
+  // Admin posts as "Support". Caller (AdminService) authorizes via campus-scoped
+  // getBatch. The admin is added as a hidden participant so the stamp trigger accepts
+  // the message; it fans out to every rider + customer on the batch.
+  async postAsAdmin(batchId: string, adminUserId: string, body: string): Promise<ChatMessage> {
+    const status = await this.repository.findBatchStatus(batchId);
+    if (status !== undefined && CLOSED_STATUSES.has(status)) {
+      throw conflict('This batch chat is closed.');
+    }
+    await this.repository.ensureAdminParticipant(batchId, adminUserId);
+    return this.repository.insertMessage(batchId, adminUserId, body);
+  }
+
   private async assertParticipant(actor: AuthenticatedActor, batchId: string): Promise<void> {
     const isParticipant = await this.repository.isParticipant(batchId, actor.userId);
     if (!isParticipant) {

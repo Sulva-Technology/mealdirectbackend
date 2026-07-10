@@ -1,6 +1,6 @@
 import type { CursorPage } from '../../common/api/pagination.js';
 
-export type ChatSenderRole = 'rider' | 'customer' | 'vendor';
+export type ChatSenderRole = 'rider' | 'customer' | 'vendor' | 'admin';
 
 export type ChatMessage = {
   id: string;
@@ -28,6 +28,7 @@ export type ChatMessageListInput = {
 export type ChatRepositoryContract = {
   isParticipant: (batchId: string, userId: string) => Promise<boolean>;
   findBatchStatus: (batchId: string) => Promise<string | undefined>;
+  ensureAdminParticipant: (batchId: string, userId: string) => Promise<void>;
   insertMessage: (batchId: string, senderUserId: string, body: string) => Promise<ChatMessage>;
   listMessages: (
     batchId: string,

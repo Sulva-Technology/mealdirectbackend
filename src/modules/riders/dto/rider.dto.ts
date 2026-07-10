@@ -392,11 +392,7 @@ export class RiderOrderDetailDto extends OrderDetailDto {
   @ApiProperty({ enum: assignmentStatuses, type: String })
   assignmentStatus!: string;
 
-  @ApiPropertyOptional({ nullable: true, type: String })
-  customerDisplayName!: string | null;
-
-  @ApiPropertyOptional({ nullable: true, type: String })
-  customerPhone!: string | null;
+  // customerDisplayName and customerPhone are inherited from OrderDetailDto.
 
   @ApiPropertyOptional({ nullable: true, type: String })
   deliveryInstructions!: string | null;

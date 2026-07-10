@@ -3834,6 +3834,17 @@
         },
         "security": [{ "supabaseAuth": [] }],
         "tags": ["admin"]
+      },
+      "post": {
+        "operationId": "AdminController_postBatchChatMessage",
+        "parameters": [],
+        "responses": {
+          "201": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
       }
     },
     "/v1/admin/batches/{batchId}/chat/participants": {
@@ -5628,6 +5639,16 @@
           "id": { "type": "string", "format": "uuid" },
           "orderNumber": { "type": "string" },
           "customerId": { "type": "string", "format": "uuid" },
+          "customerDisplayName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Customer display name. Present only on vendor/admin/rider order views."
+          },
+          "customerPhone": {
+            "type": "string",
+            "nullable": true,
+            "description": "Customer phone number. Present only on vendor/admin/rider order views."
+          },
           "campusId": { "type": "string", "format": "uuid" },
           "vendorId": { "type": "string", "format": "uuid" },
           "vendorDisplayName": { "type": "string" },
@@ -5789,6 +5810,16 @@
           "id": { "type": "string", "format": "uuid" },
           "orderNumber": { "type": "string" },
           "customerId": { "type": "string", "format": "uuid" },
+          "customerDisplayName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Customer display name. Present only on vendor/admin/rider order views."
+          },
+          "customerPhone": {
+            "type": "string",
+            "nullable": true,
+            "description": "Customer phone number. Present only on vendor/admin/rider order views."
+          },
           "campusId": { "type": "string", "format": "uuid" },
           "vendorId": { "type": "string", "format": "uuid" },
           "vendorDisplayName": { "type": "string" },
@@ -7068,6 +7099,16 @@
           "id": { "type": "string", "format": "uuid" },
           "orderNumber": { "type": "string" },
           "customerId": { "type": "string", "format": "uuid" },
+          "customerDisplayName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Customer display name. Present only on vendor/admin/rider order views."
+          },
+          "customerPhone": {
+            "type": "string",
+            "nullable": true,
+            "description": "Customer phone number. Present only on vendor/admin/rider order views."
+          },
           "campusId": { "type": "string", "format": "uuid" },
           "vendorId": { "type": "string", "format": "uuid" },
           "vendorDisplayName": { "type": "string" },
@@ -7143,8 +7184,6 @@
             "type": "string",
             "enum": ["accepted", "assigned", "cancelled", "completed", "picked_up"]
           },
-          "customerDisplayName": { "type": "string", "nullable": true },
-          "customerPhone": { "type": "string", "nullable": true },
           "deliveryInstructions": { "type": "string", "nullable": true },
           "zoneName": { "type": "string" }
         },

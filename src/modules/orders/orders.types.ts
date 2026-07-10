@@ -98,6 +98,10 @@ export type OrderSummary = {
   id: string;
   orderNumber: string;
   customerId: string;
+  // Customer contact, exposed only to vendor/admin/rider order views (not customer-facing
+  // queries). Optional because most order queries do not join the profiles table.
+  customerDisplayName?: string | null;
+  customerPhone?: string | null;
   campusId: string;
   vendorId: string;
   vendorDisplayName: string;

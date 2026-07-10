@@ -21,6 +21,7 @@ function makeRepository(overrides: Partial<ChatRepositoryContract> = {}): ChatRe
   return {
     isParticipant: vi.fn().mockResolvedValue(true),
     findBatchStatus: vi.fn().mockResolvedValue('in_progress'),
+    ensureAdminParticipant: vi.fn(),
     insertMessage: vi.fn(),
     listMessages: vi.fn(),
     listParticipants: vi.fn(),
@@ -151,6 +152,47 @@ describe('ChatService', () => {
 
       expect(result).toEqual(participants);
       expect(listParticipants).toHaveBeenCalledWith(batchId);
+    });
+  });
+
+  describe('postAsAdmin', () => {
+    it('adds a hidden admin participant then inserts (no participant check)', async () => {
+      const created: ChatMessage = {
+        id: '99999999-9999-4999-8999-999999999999',
+        batchId,
+        senderUserId: 'admin-user',
+        senderLabel: 'Support',
+        senderRole: 'admin',
+        body: 'Reaching out',
+        createdAt: '2026-07-10T12:00:00.000Z',
+        mine: true
+      };
+      const ensureAdminParticipant = vi.fn().mockResolvedValue(undefined);
+      const insertMessage = vi.fn().mockResolvedValue(created);
+      const isParticipant = vi.fn().mockResolvedValue(false);
+      const repository = makeRepository({ ensureAdminParticipant, insertMessage, isParticipant });
+      const service = makeService(repository);
+
+      const result = await service.postAsAdmin(batchId, 'admin-user', 'Reaching out');
+
+      expect(result).toEqual(created);
+      expect(ensureAdminParticipant).toHaveBeenCalledWith(batchId, 'admin-user');
+      expect(insertMessage).toHaveBeenCalledWith(batchId, 'admin-user', 'Reaching out');
+      expect(isParticipant).not.toHaveBeenCalled();
+    });
+
+    it('rejects posting to a closed batch', async () => {
+      const ensureAdminParticipant = vi.fn();
+      const repository = makeRepository({
+        findBatchStatus: vi.fn().mockResolvedValue('completed'),
+        ensureAdminParticipant
+      });
+      const service = makeService(repository);
+
+      await expect(service.postAsAdmin(batchId, 'admin-user', 'hi')).rejects.toBeInstanceOf(
+        ConflictException
+      );
+      expect(ensureAdminParticipant).not.toHaveBeenCalled();
     });
   });
 });

@@ -31,6 +31,7 @@ import { RequireRoles } from '../auth/roles.decorator.js';
 import { RolesGuard } from '../auth/roles.guard.js';
 import { PayoutService } from '../settlements/payout.service.js';
 import type { PayoutDestination, PayoutTransferRecord } from '../settlements/payout.types.js';
+import { SendChatMessageDto } from '../chat/dto/chat.dto.js';
 import type { ChatMessage, ChatParticipant } from '../chat/chat.types.js';
 import { AdminService } from './admin.service.js';
 import type { AdminDashboard, AdminRecord, AdminSession } from './admin.types.js';
@@ -188,6 +189,18 @@ export class AdminController {
   ): Promise<ListEnvelope<ChatParticipant>> {
     const participants = await this.admin.getBatchChatParticipants(actor, params.batchId);
     return createListEnvelope(participants, { hasMore: false, limit: participants.length });
+  }
+
+  @Post('batches/:batchId/chat/messages')
+  @HttpCode(201)
+  async postBatchChatMessage(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Param() params: AdminBatchIdParamDto,
+    @Body() input: SendChatMessageDto
+  ): Promise<SuccessEnvelope<ChatMessage>> {
+    return createSuccessEnvelope(
+      await this.admin.postBatchChatMessage(actor, params.batchId, input.body)
+    );
   }
 
   @Post('batches/:batchId/close')

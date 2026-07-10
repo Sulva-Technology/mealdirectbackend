@@ -45,6 +45,7 @@ export class AdminRepository {
         o.id::text as "id",
         o.order_number as "orderNumber",
         o.customer_id::text as "customerId",
+        p.phone_number as "customerPhone",
         o.campus_id::text as "campusId",
         o.vendor_id::text as "vendorId",
         v.display_name as "vendorDisplayName",
@@ -65,6 +66,7 @@ export class AdminRepository {
         o.updated_at::text as "updatedAt"
       from public.orders o
       join public.vendors v on v.id = o.vendor_id
+      left join public.profiles p on p.id = o.customer_id
       where (${campusId ?? query.campusId ?? null}::uuid is null or o.campus_id = ${campusId ?? query.campusId ?? null}::uuid)
         and (${query.status ?? null}::public.order_status is null or o.order_status = ${query.status ?? null}::public.order_status)
         and (${query.vendorId ?? null}::uuid is null or o.vendor_id = ${query.vendorId ?? null}::uuid)
@@ -89,6 +91,8 @@ export class AdminRepository {
         o.order_number as "orderNumber",
         o.customer_id::text as "customerId",
         p.email::text as "customerEmail",
+        coalesce(p.display_name, 'Customer') as "customerDisplayName",
+        p.phone_number as "customerPhone",
         o.campus_id::text as "campusId",
         o.vendor_id::text as "vendorId",
         v.display_name as "vendorDisplayName",

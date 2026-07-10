@@ -34,6 +34,8 @@ export class VendorOrdersRepository {
         o.id::text as "id",
         o.order_number as "orderNumber",
         o.customer_id::text as "customerId",
+        coalesce(p.display_name, 'Customer') as "customerDisplayName",
+        p.phone_number as "customerPhone",
         o.campus_id::text as "campusId",
         o.vendor_id::text as "vendorId",
         v.display_name as "vendorDisplayName",
@@ -62,6 +64,7 @@ export class VendorOrdersRepository {
       join public.vendors v on v.id = o.vendor_id
       join public.delivery_slots ds on ds.id = o.delivery_slot_id
       join public.campus_locations cl on cl.id = o.location_id
+      left join public.profiles p on p.id = o.customer_id
       where o.vendor_id = ${vendorId}::uuid
         and o.paid_at is not null
         and o.order_status <> 'expired'
@@ -81,6 +84,8 @@ export class VendorOrdersRepository {
         o.id::text as "id",
         o.order_number as "orderNumber",
         o.customer_id::text as "customerId",
+        coalesce(p.display_name, 'Customer') as "customerDisplayName",
+        p.phone_number as "customerPhone",
         o.campus_id::text as "campusId",
         o.vendor_id::text as "vendorId",
         v.display_name as "vendorDisplayName",
@@ -109,6 +114,7 @@ export class VendorOrdersRepository {
       join public.vendors v on v.id = o.vendor_id
       join public.delivery_slots ds on ds.id = o.delivery_slot_id
       join public.campus_locations cl on cl.id = o.location_id
+      left join public.profiles p on p.id = o.customer_id
       where o.vendor_id = ${vendorId}::uuid
         and o.id = ${orderId}::uuid
         and o.paid_at is not null

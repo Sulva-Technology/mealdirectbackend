@@ -3268,6 +3268,16 @@ paths:
         '403': *a81
       security: *a82
       tags: *a83
+    post:
+      operationId: AdminController_postBatchChatMessage
+      parameters: []
+      responses:
+        '201':
+          description: ''
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/batches/{batchId}/chat/participants:
     get:
       operationId: AdminController_getBatchChatParticipants
@@ -5305,6 +5315,16 @@ components:
         customerId:
           type: string
           format: uuid
+        customerDisplayName:
+          type: string
+          nullable: true
+          description: Customer display name. Present only on vendor/admin/rider order
+            views.
+        customerPhone:
+          type: string
+          nullable: true
+          description: Customer phone number. Present only on vendor/admin/rider order
+            views.
         campusId:
           type: string
           format: uuid
@@ -5514,6 +5534,16 @@ components:
         customerId:
           type: string
           format: uuid
+        customerDisplayName:
+          type: string
+          nullable: true
+          description: Customer display name. Present only on vendor/admin/rider order
+            views.
+        customerPhone:
+          type: string
+          nullable: true
+          description: Customer phone number. Present only on vendor/admin/rider order
+            views.
         campusId:
           type: string
           format: uuid
@@ -7331,6 +7361,16 @@ components:
         customerId:
           type: string
           format: uuid
+        customerDisplayName:
+          type: string
+          nullable: true
+          description: Customer display name. Present only on vendor/admin/rider order
+            views.
+        customerPhone:
+          type: string
+          nullable: true
+          description: Customer phone number. Present only on vendor/admin/rider order
+            views.
         campusId:
           type: string
           format: uuid
@@ -7424,12 +7464,6 @@ components:
         assignmentStatus:
           type: string
           enum: *a102
-        customerDisplayName:
-          type: string
-          nullable: true
-        customerPhone:
-          type: string
-          nullable: true
         deliveryInstructions:
           type: string
           nullable: true

@@ -137,6 +137,20 @@ export class OrderSummaryDto {
   @ApiProperty({ format: 'uuid', type: String })
   customerId!: string;
 
+  @ApiPropertyOptional({
+    nullable: true,
+    type: String,
+    description: 'Customer display name. Present only on vendor/admin/rider order views.'
+  })
+  customerDisplayName?: string | null;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    type: String,
+    description: 'Customer phone number. Present only on vendor/admin/rider order views.'
+  })
+  customerPhone?: string | null;
+
   @ApiProperty({ format: 'uuid', type: String })
   campusId!: string;
 

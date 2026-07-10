@@ -45,6 +45,14 @@ export class ChatRepository implements ChatRepositoryContract {
     return result.rows[0]?.status;
   }
 
+  async ensureAdminParticipant(batchId: string, userId: string): Promise<void> {
+    // Hidden 'admin' participant labelled "Support"; keeps them out of the roster
+    // while letting the message stamp trigger accept their post.
+    await sql`
+      select public.upsert_batch_chat_participant(${batchId}::uuid, ${userId}::uuid, 'admin', true)
+    `.execute(this.database.db);
+  }
+
   async insertMessage(batchId: string, senderUserId: string, body: string): Promise<ChatMessage> {
     // sender_label / sender_role are populated by the batch_messages_stamp
     // BEFORE trigger from the participant row, so we omit them here.
