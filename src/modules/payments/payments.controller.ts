@@ -34,6 +34,7 @@ import {
   AdminPaymentDetailEnvelopeDto,
   AdminPaymentListEnvelopeDto,
   AdminPaymentListQueryDto,
+  ForcePaymentPaidDto,
   InitiateRefundDto,
   PaymentIdParamDto,
   PaymentReconciliationEnvelopeDto,
@@ -168,6 +169,26 @@ export class AdminPaymentsController {
   ): Promise<SuccessEnvelope<PaymentReconciliationResponse>> {
     return createSuccessEnvelope(
       await this.payments.reconcilePaystackPayment(actor, params.paymentId)
+    );
+  }
+
+  @Post(':paymentId/force-paid')
+  @HttpCode(200)
+  @RequirePermission('payments:verify')
+  @ApiParam({ format: 'uuid', name: 'paymentId', type: String })
+  @ApiOkResponse({
+    description:
+      'Manually marks a payment successful without Paystack verification (money confirmed out-of-band). Recovers an expired order to paid. Requires a reason; audited.',
+    type: PaymentReconciliationEnvelopeDto
+  })
+  @ApiBadRequestResponse({ description: 'Payment is already successful or cannot be resolved.' })
+  async forcePaid(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Param() params: PaymentIdParamDto,
+    @Body() input: ForcePaymentPaidDto
+  ): Promise<SuccessEnvelope<PaymentReconciliationResponse>> {
+    return createSuccessEnvelope(
+      await this.payments.forcePaymentPaid(actor, params.paymentId, input.reason)
     );
   }
 

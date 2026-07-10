@@ -208,6 +208,11 @@ export type PaymentsRepositoryContract = {
     paidAmountKobo: number,
     providerPayload: Record<string, unknown>
   ) => Promise<string>;
+  forcePaymentPaidManual: (
+    providerReference: string,
+    paidAmountKobo: number,
+    providerPayload: Record<string, unknown>
+  ) => Promise<string>;
   getRefundedAmountKobo: (paymentId: string) => Promise<number>;
   createRefundRequest: (
     paymentId: string,

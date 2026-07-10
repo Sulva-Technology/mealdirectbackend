@@ -381,6 +381,37 @@ export class PaymentsRepository implements PaymentsRepositoryContract {
     return orderId;
   }
 
+  /**
+   * Manual admin override: resolve a payment to successful WITHOUT a Paystack verification.
+   * Used when the money is confirmed out-of-band (e.g. seen in the Paystack dashboard) but the
+   * live reference is not verifiable from this environment (prod runs test keys). Reuses the same
+   * mark_verified_payment_successful RPC so inventory booking, batch assignment and the order
+   * expired/pending -> paid transition all fire identically. provider_transaction_id is left null
+   * so a later real refund still falls back to the provider reference; the manual marker lives in
+   * the provider_payload instead.
+   */
+  async forcePaymentPaidManual(
+    providerReference: string,
+    paidAmountKobo: number,
+    providerPayload: Record<string, unknown>
+  ): Promise<string> {
+    const result = await sql<OrderIdResult>`
+      select public.mark_verified_payment_successful(
+        'paystack'::public.payment_provider,
+        ${providerReference},
+        ${null}::text,
+        ${paidAmountKobo},
+        ${JSON.stringify(providerPayload)}::jsonb
+      )::text as "orderId"
+    `.execute(this.database.db);
+
+    const orderId = result.rows[0]?.orderId;
+    if (orderId === undefined) {
+      throw new Error('Manual payment override did not return an order ID.');
+    }
+    return orderId;
+  }
+
   async getRefundedAmountKobo(paymentId: string): Promise<number> {
     const result = await sql<RefundedAmountResult>`
       select coalesce(sum(amount_kobo), 0) as "refundedAmountKobo"

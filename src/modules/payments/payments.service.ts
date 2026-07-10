@@ -9,6 +9,7 @@ import {
 
 import { ErrorCodes } from '../../common/errors/error-codes.js';
 import { normalizeCursorPagination } from '../../common/api/pagination.js';
+import { AuditService, actorTypeForRole } from '../../common/audit/audit.service.js';
 import type { AuthenticatedActor } from '../auth/actor-context.js';
 import { PaystackClient } from './paystack.client.js';
 import { PaymentsRepository } from './payments.repository.js';
@@ -60,7 +61,8 @@ export class PaymentsService {
 
   constructor(
     @Inject(PaymentsRepository) private readonly repository: PaymentsRepositoryContract,
-    @Inject(PaystackClient) private readonly paystack: PaystackClientContract
+    @Inject(PaystackClient) private readonly paystack: PaystackClientContract,
+    @Inject(AuditService) private readonly audit: AuditService
   ) {}
 
   /**
@@ -276,6 +278,55 @@ export class PaymentsService {
       verified.amountKobo,
       verified.providerPayload
     );
+
+    return {
+      orderId,
+      paymentId: payment.id,
+      providerReference: payment.providerReference,
+      status: 'successful'
+    };
+  }
+
+  /**
+   * Manual force-paid override. Skips the Paystack verification gate that reconcilePaystackPayment
+   * enforces — the operator has confirmed the capture out-of-band (e.g. seen it in the Paystack
+   * dashboard) but the live reference cannot be re-verified from this environment. Reuses the same
+   * RPC as the webhook/reconcile path so an expired order is recovered to paid with inventory and
+   * batch booking intact. Reason is required and captured in both the audit log and the payment's
+   * provider_payload. super_admin + campus_admin (campus-scoped via getAdminPayment).
+   */
+  async forcePaymentPaid(
+    actor: AuthenticatedActor,
+    paymentId: string,
+    reason: string
+  ): Promise<PaymentReconciliationResponse> {
+    const payment = await this.getAdminPayment(actor, paymentId);
+    if (payment.paymentStatus === 'successful') {
+      throw badRequest('Payment is already successful.');
+    }
+
+    const orderId = await this.repository.forcePaymentPaidManual(
+      payment.providerReference,
+      payment.expectedAmountKobo,
+      {
+        manual_override: true,
+        reason,
+        actorUserId: actor.userId,
+        forcedAt: new Date().toISOString()
+      }
+    );
+
+    await this.audit.record({
+      actorUserId: actor.userId,
+      actorType: actorTypeForRole(actor.role),
+      action: 'payment.force_paid',
+      entityType: 'payment',
+      entityId: payment.id,
+      campusId: payment.campusId,
+      before: { paymentStatus: payment.paymentStatus, orderStatus: payment.orderStatus },
+      after: { paymentStatus: 'successful', orderStatus: 'paid' },
+      metadata: { reason, providerReference: payment.providerReference }
+    });
 
     return {
       orderId,

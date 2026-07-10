@@ -2,6 +2,7 @@ import { BadRequestException, ForbiddenException, NotFoundException } from '@nes
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { AuthenticatedActor } from '../../src/modules/auth/actor-context.js';
+import type { AuditService } from '../../src/common/audit/audit.service.js';
 import { PaymentsService } from '../../src/modules/payments/payments.service.js';
 import type {
   PaystackClientContract,
@@ -80,6 +81,7 @@ function createRepository(): PaymentsRepositoryContract {
     getPaymentTimeline: vi.fn().mockResolvedValue([]),
     getPaymentWebhooks: vi.fn().mockResolvedValue([]),
     markPaymentSuccessfulFromProvider: vi.fn().mockResolvedValue(payment.orderId),
+    forcePaymentPaidManual: vi.fn().mockResolvedValue(payment.orderId),
     getRefundedAmountKobo: vi.fn().mockResolvedValue(0),
     createRefundRequest: vi.fn().mockResolvedValue(refund),
     updateRefundProviderPayload: vi.fn().mockResolvedValue(refund)
@@ -124,12 +126,14 @@ function createPaystack(): PaystackClientContract {
 describe('PaymentsService', () => {
   let repository: PaymentsRepositoryContract;
   let paystack: PaystackClientContract;
+  let audit: AuditService;
   let service: PaymentsService;
 
   beforeEach(() => {
     repository = createRepository();
     paystack = createPaystack();
-    service = new PaymentsService(repository, paystack);
+    audit = { record: vi.fn().mockResolvedValue(undefined) } as unknown as AuditService;
+    service = new PaymentsService(repository, paystack, audit);
   });
 
   it('initializes Paystack using the stored payment amount and reference', async () => {
@@ -208,6 +212,39 @@ describe('PaymentsService', () => {
     await expect(service.reconcilePaystackPayment(superAdmin, payment.id)).rejects.toBeInstanceOf(
       BadRequestException
     );
+  });
+
+  it('force-pays a payment without calling Paystack and audits the override', async () => {
+    await expect(
+      service.forcePaymentPaid(campusAdmin, payment.id, 'Confirmed in Paystack dashboard')
+    ).resolves.toEqual({
+      orderId: payment.orderId,
+      paymentId: payment.id,
+      providerReference: payment.providerReference,
+      status: 'successful'
+    });
+
+    expect(paystack.verifyTransaction).not.toHaveBeenCalled();
+    expect(repository.forcePaymentPaidManual).toHaveBeenCalledWith(
+      payment.providerReference,
+      payment.expectedAmountKobo,
+      expect.objectContaining({ manual_override: true, reason: 'Confirmed in Paystack dashboard' })
+    );
+    expect(audit.record).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'payment.force_paid', entityId: payment.id })
+    );
+  });
+
+  it('rejects force-pay when the payment is already successful', async () => {
+    vi.mocked(repository.findAdminPaymentById).mockResolvedValue({
+      ...paymentRecord,
+      paymentStatus: 'successful'
+    });
+
+    await expect(
+      service.forcePaymentPaid(superAdmin, payment.id, 'already done')
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(repository.forcePaymentPaidManual).not.toHaveBeenCalled();
   });
 
   it('marks a pending order paid when Paystack verify returns a matching success', async () => {

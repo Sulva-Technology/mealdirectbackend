@@ -42,6 +42,14 @@ export class InitiateRefundDto {
   reasonText?: string;
 }
 
+export class ForcePaymentPaidDto {
+  @ApiProperty({ maxLength: 500, minLength: 3, type: String })
+  @IsString()
+  @MinLength(3)
+  @MaxLength(500)
+  reason!: string;
+}
+
 export class PaystackInitializationDto {
   @ApiProperty({ format: 'uuid', type: String })
   paymentId!: string;
