@@ -193,6 +193,20 @@ paths:
               schema:
                 $ref: '#/components/schemas/AuthMessageResponseDto'
       tags: *a2
+  /v1/auth/update-password:
+    post:
+      operationId: AuthController_updatePassword
+      parameters: []
+      responses:
+        '200':
+          description: Sets a new password using the recovery token from the reset email.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthMessageResponseDto'
+        '401':
+          description: The recovery token is invalid or expired.
+      tags: *a2
   /v1/auth/logout:
     post:
       operationId: AuthController_logout
@@ -797,6 +811,74 @@ paths:
         '403': *a15
       security: *a16
       tags: *a17
+  /v1/vendor/soup-options:
+    get:
+      operationId: VendorsController_listSoupOptions
+      parameters: []
+      responses:
+        '200':
+          description: The vendor's soup options (including inactive ones).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorSoupOptionListEnvelopeDto'
+        '401': *a14
+        '403': *a15
+      security: *a16
+      tags: *a17
+    post:
+      operationId: VendorsController_createSoupOption
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVendorSoupOptionDto'
+      responses:
+        '201':
+          description: Created vendor-owned soup option.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorSoupOptionEnvelopeDto'
+        '400':
+          description: Invalid soup input or duplicate name.
+        '401': *a14
+        '403': *a15
+      security: *a16
+      tags: *a17
+  /v1/vendor/soup-options/{soupOptionId}:
+    patch:
+      operationId: VendorsController_updateSoupOption
+      parameters:
+        - name: soupOptionId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateVendorSoupOptionDto'
+      responses:
+        '200':
+          description: Updated vendor-owned soup option (rename, reorder, or toggle active).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorSoupOptionEnvelopeDto'
+        '400':
+          description: Invalid soup input or duplicate name.
+        '401': *a14
+        '403': *a15
+        '404':
+          description: Soup option was not found.
+      security: *a16
+      tags: *a17
   /v1/vendor/menu-items:
     get:
       operationId: VendorsController_listMenuItems
@@ -1078,6 +1160,44 @@ paths:
         '403': *a15
       security: *a16
       tags: *a17
+  /v1/vendor/availability/state:
+    get:
+      operationId: VendorsController_getStoreAvailability
+      parameters: []
+      responses:
+        '200':
+          description: Current storefront availability state (open/closed/paused/sold-out).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreAvailabilityStateEnvelopeDto'
+        '401': *a14
+        '403': *a15
+      security: *a16
+      tags: *a17
+    patch:
+      operationId: VendorsController_updateStoreAvailability
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateStoreAvailabilityDto'
+      responses:
+        '200':
+          description: Updated storefront availability state. cutoffTime is
+            admin-controlled and ignored.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreAvailabilityStateEnvelopeDto'
+        '400':
+          description: Invalid storefront availability input.
+        '401': *a14
+        '403': *a15
+      security: *a16
+      tags: *a17
   /v1/vendor/orders:
     get:
       operationId: VendorOrdersController_listOrders
@@ -1294,6 +1414,240 @@ paths:
           description: Unit type was not found.
       security: *a24
       tags: *a25
+  /v1/admin/vendors/{vendorId}/menu-metadata:
+    get:
+      operationId: AdminVendorMenuController_getMenuMetadata
+      parameters:
+        - name: vendorId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: Vendor menu categories and active unit types.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MenuMetadataEnvelopeDto'
+        '401': &a26
+          description: Missing, invalid, or expired Supabase JWT.
+        '403': &a27
+          description: Admin role is required.
+        '404':
+          description: Vendor was not found.
+      security: &a28
+        - supabaseAuth: []
+      tags: &a29
+        - admin
+  /v1/admin/vendors/{vendorId}/menu-categories:
+    post:
+      operationId: AdminVendorMenuController_createMenuCategory
+      parameters:
+        - name: vendorId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMenuCategoryDto'
+      responses:
+        '201':
+          description: Created (or updated on slug conflict) vendor menu category.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MenuCategoryEnvelopeDto'
+        '400':
+          description: Invalid menu category input.
+        '401': *a26
+        '403': *a27
+        '404':
+          description: Vendor was not found.
+      security: *a28
+      tags: *a29
+  /v1/admin/vendors/{vendorId}/menu-items:
+    get:
+      operationId: AdminVendorMenuController_listMenuItems
+      parameters:
+        - name: vendorId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: Vendor menu items including inactive historical items.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorMenuItemListEnvelopeDto'
+        '401': *a26
+        '403': *a27
+        '404':
+          description: Vendor was not found.
+      security: *a28
+      tags: *a29
+    post:
+      operationId: AdminVendorMenuController_createMenuItem
+      parameters:
+        - name: vendorId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMenuItemDto'
+      responses:
+        '201':
+          description: Created vendor menu item.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorMenuItemEnvelopeDto'
+        '400':
+          description: Invalid menu item input.
+        '401': *a26
+        '403': *a27
+        '404':
+          description: Vendor was not found.
+      security: *a28
+      tags: *a29
+  /v1/admin/vendors/{vendorId}/menu-items/{itemId}:
+    get:
+      operationId: AdminVendorMenuController_getMenuItem
+      parameters:
+        - name: itemId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+        - name: vendorId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: Vendor menu item detail.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorMenuItemEnvelopeDto'
+        '401': *a26
+        '403': *a27
+        '404':
+          description: Menu item was not found for this vendor.
+      security: *a28
+      tags: *a29
+    patch:
+      operationId: AdminVendorMenuController_updateMenuItem
+      parameters:
+        - name: itemId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+        - name: vendorId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMenuItemDto'
+      responses:
+        '200':
+          description: Updated vendor menu item.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorMenuItemEnvelopeDto'
+        '400':
+          description: Invalid menu item input.
+        '401': *a26
+        '403': *a27
+        '404':
+          description: Menu item was not found for this vendor.
+      security: *a28
+      tags: *a29
+  /v1/admin/vendors/{vendorId}/menu-items/{itemId}/activate:
+    post:
+      operationId: AdminVendorMenuController_activateMenuItem
+      parameters:
+        - name: itemId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+        - name: vendorId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: Activated a vendor menu item.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorMenuItemEnvelopeDto'
+        '401': *a26
+        '403': *a27
+        '404':
+          description: Menu item was not found for this vendor.
+      security: *a28
+      tags: *a29
+  /v1/admin/vendors/{vendorId}/menu-items/{itemId}/deactivate:
+    post:
+      operationId: AdminVendorMenuController_deactivateMenuItem
+      parameters:
+        - name: itemId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+        - name: vendorId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: Deactivated a vendor menu item without deleting history.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorMenuItemEnvelopeDto'
+        '401': *a26
+        '403': *a27
+        '404':
+          description: Menu item was not found for this vendor.
+      security: *a28
+      tags: *a29
   /v1/catalog/vendors:
     get:
       operationId: CatalogController_listVendors
@@ -1307,7 +1661,7 @@ paths:
                 $ref: '#/components/schemas/CatalogVendorListEnvelopeDto'
         '400':
           description: Invalid catalog filters.
-      tags: &a26
+      tags: &a30
         - catalog
   /v1/catalog/vendors/{vendorId}:
     get:
@@ -1324,7 +1678,7 @@ paths:
           description: Invalid vendor ID.
         '404':
           description: Vendor not found or unavailable.
-      tags: *a26
+      tags: *a30
   /v1/catalog/vendors/{vendorId}/menu:
     get:
       operationId: CatalogController_listVendorMenu
@@ -1338,7 +1692,7 @@ paths:
                 $ref: '#/components/schemas/MenuItemListEnvelopeDto'
         '400':
           description: Invalid vendor ID or menu filters.
-      tags: *a26
+      tags: *a30
   /v1/vendor/inventory:
     get:
       operationId: InventoryController_listInventory
@@ -1353,13 +1707,13 @@ paths:
                 $ref: '#/components/schemas/VendorInventoryListEnvelopeDto'
         '400':
           description: Invalid inventory filters.
-        '401': &a27
+        '401': &a31
           description: Missing, invalid, or expired Supabase JWT.
-        '403': &a28
+        '403': &a32
           description: Vendor role and vendor membership are required.
-      security: &a29
+      security: &a33
         - supabaseAuth: []
-      tags: &a30
+      tags: &a34
         - vendor-inventory
   /v1/vendor/inventory/{inventoryId}:
     put:
@@ -1387,12 +1741,12 @@ paths:
                 $ref: '#/components/schemas/VendorInventoryEnvelopeDto'
         '400':
           description: Invalid inventory quantity or stale state.
-        '401': *a27
-        '403': *a28
+        '401': *a31
+        '403': *a32
         '404':
           description: Inventory row was not found for this vendor.
-      security: *a29
-      tags: *a30
+      security: *a33
+      tags: *a34
   /v1/vendor/inventory/{inventoryId}/adjustments:
     post:
       operationId: InventoryController_createAdjustment
@@ -1418,12 +1772,12 @@ paths:
                 $ref: '#/components/schemas/InventoryAdjustmentEnvelopeDto'
         '400':
           description: Invalid inventory adjustment.
-        '401': *a27
-        '403': *a28
+        '401': *a31
+        '403': *a32
         '404':
           description: Inventory row was not found for this vendor.
-      security: *a29
-      tags: *a30
+      security: *a33
+      tags: *a34
   /v1/orders/quote:
     post:
       operationId: OrdersController_quoteOrder
@@ -1441,9 +1795,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OrderQuoteEnvelopeDto'
-      security: &a31
+      security: &a35
         - supabaseAuth: []
-      tags: &a32
+      tags: &a36
         - orders
   /v1/orders:
     get:
@@ -1456,8 +1810,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OrderListEnvelopeDto'
-      security: *a31
-      tags: *a32
+      security: *a35
+      tags: *a36
     post:
       operationId: OrdersController_createOrder
       parameters: []
@@ -1469,9 +1823,14 @@ paths:
               $ref: '#/components/schemas/CreateOrderDto'
       responses:
         '201':
-          description: Order was created idempotently and inventory was reserved.
-      security: *a31
-      tags: *a32
+          description: Order was created idempotently, inventory was reserved, and
+            hand-off code returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedOrderDto'
+      security: *a35
+      tags: *a36
   /v1/orders/{orderId}/payment-status:
     get:
       operationId: OrdersController_paymentStatus
@@ -1483,8 +1842,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OrderPaymentStatusEnvelopeDto'
-      security: *a31
-      tags: *a32
+      security: *a35
+      tags: *a36
   /v1/orders/{orderId}/confirm-delivery:
     post:
       operationId: OrdersController_confirmDelivery
@@ -1496,8 +1855,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DeliveryConfirmationEnvelopeDto'
-      security: *a31
-      tags: *a32
+      security: *a35
+      tags: *a36
   /v1/orders/{orderId}:
     get:
       operationId: OrdersController_getOrder
@@ -1509,8 +1868,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OrderDetailEnvelopeDto'
-      security: *a31
-      tags: *a32
+      security: *a35
+      tags: *a36
   /v1/orders/{orderId}/payments/paystack/initialize:
     post:
       operationId: CustomerPaymentsController_initializePaystack
@@ -1547,13 +1906,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AdminPaymentListEnvelopeDto'
-        '401': &a33
+        '401': &a37
           description: Missing, invalid, or expired Supabase JWT.
-        '403': &a34
+        '403': &a38
           description: Admin role is required.
-      security: &a35
+      security: &a39
         - supabaseAuth: []
-      tags: &a36
+      tags: &a40
         - admin-payments
   /v1/admin/payments/{paymentId}:
     get:
@@ -1573,10 +1932,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AdminPaymentDetailEnvelopeDto'
-        '401': *a33
-        '403': *a34
-      security: *a35
-      tags: *a36
+        '401': *a37
+        '403': *a38
+      security: *a39
+      tags: *a40
   /v1/admin/payments/{paymentId}/timeline:
     get:
       operationId: AdminPaymentsController_getTimeline
@@ -1590,10 +1949,10 @@ paths:
       responses:
         '200':
           description: Chronological payment/order/refund timeline.
-        '401': *a33
-        '403': *a34
-      security: *a35
-      tags: *a36
+        '401': *a37
+        '403': *a38
+      security: *a39
+      tags: *a40
   /v1/admin/payments/{paymentId}/webhooks:
     get:
       operationId: AdminPaymentsController_getWebhooks
@@ -1607,10 +1966,10 @@ paths:
       responses:
         '200':
           description: Paystack webhook events recorded for this payment reference.
-        '401': *a33
-        '403': *a34
-      security: *a35
-      tags: *a36
+        '401': *a37
+        '403': *a38
+      security: *a39
+      tags: *a40
   /v1/admin/payments/{paymentId}/reconcile:
     post:
       operationId: AdminPaymentsController_reconcilePayment
@@ -1629,10 +1988,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaymentReconciliationEnvelopeDto'
-        '401': *a33
-        '403': *a34
-      security: *a35
-      tags: *a36
+        '401': *a37
+        '403': *a38
+      security: *a39
+      tags: *a40
   /v1/admin/payments/{paymentId}/refunds:
     post:
       operationId: AdminPaymentsController_initiateRefund
@@ -1650,10 +2009,120 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RefundEnvelopeDto'
-        '401': *a33
-        '403': *a34
-      security: *a35
-      tags: *a36
+        '401': *a37
+        '403': *a38
+      security: *a39
+      tags: *a40
+  /v1/admin/health:
+    get:
+      operationId: AdminHealthController_getHealth
+      parameters: []
+      responses:
+        '200':
+          description: Admin system health overview.
+        '401':
+          description: Missing, invalid, or expired Supabase JWT.
+        '403':
+          description: Admin role is required.
+      security:
+        - supabaseAuth: []
+      tags:
+        - admin-health
+  /v1/admin/webhooks:
+    get:
+      operationId: AdminWebhooksController_listWebhooks
+      parameters: []
+      responses:
+        '200':
+          description: Paginated list of Paystack webhook events.
+        '401': &a41
+          description: Missing, invalid, or expired Supabase JWT.
+        '403': &a42
+          description: Admin role is required.
+      security: &a43
+        - supabaseAuth: []
+      tags: &a44
+        - admin-webhooks
+  /v1/admin/webhooks/{webhookId}:
+    get:
+      operationId: AdminWebhooksController_getWebhook
+      parameters:
+        - name: webhookId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Single webhook event detail.
+        '401': *a41
+        '403': *a42
+      security: *a43
+      tags: *a44
+  /v1/admin/webhooks/{webhookId}/retry:
+    post:
+      operationId: AdminWebhooksController_retryWebhook
+      parameters:
+        - name: webhookId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Webhook cleared for reprocessing.
+        '401': *a41
+        '403': *a42
+      security: *a43
+      tags: *a44
+  /v1/admin/webhooks/{webhookId}/review:
+    post:
+      operationId: AdminWebhooksController_reviewWebhook
+      parameters:
+        - name: webhookId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Webhook acknowledged and marked as reviewed.
+        '401': *a41
+        '403': *a42
+      security: *a43
+      tags: *a44
+  /v1/admin/payments/problem-queues:
+    get:
+      operationId: AdminProblemQueuesController_listProblemQueue
+      parameters: []
+      responses:
+        '200':
+          description: Paginated reconciliation problem queue.
+        '401': &a45
+          description: Missing, invalid, or expired Supabase JWT.
+        '403': &a46
+          description: Admin role is required.
+      security: &a47
+        - supabaseAuth: []
+      tags: &a48
+        - admin-problem-queues
+  /v1/admin/payments/problem-queues/{issueId}/review:
+    post:
+      operationId: AdminProblemQueuesController_reviewQueueItem
+      parameters:
+        - name: issueId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: Marks the problem queue item as investigating.
+        '401': *a45
+        '403': *a46
+      security: *a47
+      tags: *a48
   /v1/payments/webhooks/paystack:
     post:
       operationId: PaystackWebhookController_handlePaystackWebhook
@@ -1677,13 +2146,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReconciliationScanEnvelopeDto'
-        '401': &a37
+        '401': &a49
           description: Missing, invalid, or expired Supabase JWT.
-        '403': &a38
+        '403': &a50
           description: Admin role is required.
-      security: &a39
+      security: &a51
         - supabaseAuth: []
-      tags: &a40
+      tags: &a52
         - admin-reconciliation
   /v1/admin/payments/reconciliation/issues:
     get:
@@ -1696,10 +2165,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReconciliationIssueListEnvelopeDto'
-        '401': *a37
-        '403': *a38
-      security: *a39
-      tags: *a40
+        '401': *a49
+        '403': *a50
+      security: *a51
+      tags: *a52
   /v1/admin/payments/reconciliation/issues/{issueId}:
     get:
       operationId: ReconciliationController_getIssue
@@ -1717,10 +2186,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReconciliationIssueDetailEnvelopeDto'
-        '401': *a37
-        '403': *a38
-      security: *a39
-      tags: *a40
+        '401': *a49
+        '403': *a50
+      security: *a51
+      tags: *a52
   /v1/admin/payments/reconciliation/issues/{issueId}/verify-payment:
     post:
       operationId: ReconciliationController_verifyPayment
@@ -1734,10 +2203,10 @@ paths:
       responses:
         '200':
           description: Re-verifies the issue payment against Paystack.
-        '401': *a37
-        '403': *a38
-      security: *a39
-      tags: *a40
+        '401': *a49
+        '403': *a50
+      security: *a51
+      tags: *a52
   /v1/admin/payments/reconciliation/issues/{issueId}/retry-webhook:
     post:
       operationId: ReconciliationController_retryWebhook
@@ -1751,10 +2220,10 @@ paths:
       responses:
         '200':
           description: Retries a failed webhook by re-verifying its payment.
-        '401': *a37
-        '403': *a38
-      security: *a39
-      tags: *a40
+        '401': *a49
+        '403': *a50
+      security: *a51
+      tags: *a52
   /v1/admin/payments/reconciliation/issues/{issueId}/review:
     post:
       operationId: ReconciliationController_reviewIssue
@@ -1772,10 +2241,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReconciliationIssueEnvelopeDto'
-        '401': *a37
-        '403': *a38
-      security: *a39
-      tags: *a40
+        '401': *a49
+        '403': *a50
+      security: *a51
+      tags: *a52
   /v1/admin/payments/reconciliation/issues/{issueId}/notes:
     post:
       operationId: ReconciliationController_addNote
@@ -1793,10 +2262,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReconciliationNoteEnvelopeDto'
-        '401': *a37
-        '403': *a38
-      security: *a39
-      tags: *a40
+        '401': *a49
+        '403': *a50
+      security: *a51
+      tags: *a52
   /v1/admin/refunds:
     get:
       operationId: RefundsController_listRefunds
@@ -1808,13 +2277,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AdminRefundListEnvelopeDto'
-        '401': &a41
+        '401': &a53
           description: Missing, invalid, or expired Supabase JWT.
-        '403': &a42
+        '403': &a54
           description: Admin role is required.
-      security: &a43
+      security: &a55
         - supabaseAuth: []
-      tags: &a44
+      tags: &a56
         - admin-refunds
   /v1/admin/refunds/{refundId}:
     get:
@@ -1833,10 +2302,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AdminRefundEnvelopeDto'
-        '401': *a41
-        '403': *a42
-      security: *a43
-      tags: *a44
+        '401': *a53
+        '403': *a54
+      security: *a55
+      tags: *a56
   /v1/admin/refunds/{refundId}/retry:
     post:
       operationId: RefundsController_retryRefund
@@ -1854,10 +2323,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AdminRefundEnvelopeDto'
-        '401': *a41
-        '403': *a42
-      security: *a43
-      tags: *a44
+        '401': *a53
+        '403': *a54
+      security: *a55
+      tags: *a56
   /v1/admin/refunds/{refundId}/resolve:
     post:
       operationId: RefundsController_resolveRefund
@@ -1875,10 +2344,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AdminRefundEnvelopeDto'
-        '401': *a41
-        '403': *a42
-      security: *a43
-      tags: *a44
+        '401': *a53
+        '403': *a54
+      security: *a55
+      tags: *a56
   /v1/admin/refunds/{refundId}/approve:
     post:
       operationId: RefundsController_approveRefund
@@ -1896,10 +2365,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AdminRefundEnvelopeDto'
-        '401': *a41
-        '403': *a42
-      security: *a43
-      tags: *a44
+        '401': *a53
+        '403': *a54
+      security: *a55
+      tags: *a56
   /v1/admin/refunds/{refundId}/reject:
     post:
       operationId: RefundsController_rejectRefund
@@ -1917,10 +2386,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AdminRefundEnvelopeDto'
-        '401': *a41
-        '403': *a42
-      security: *a43
-      tags: *a44
+        '401': *a53
+        '403': *a54
+      security: *a55
+      tags: *a56
   /v1/promotions/validate:
     post:
       operationId: PromotionsController_validate
@@ -1939,9 +2408,9 @@ paths:
       responses:
         '200':
           description: Created a promotion code.
-      security: &a45
+      security: &a57
         - supabaseAuth: []
-      tags: &a46
+      tags: &a58
         - promotions
     get:
       operationId: AdminPromotionsController_list
@@ -1949,8 +2418,8 @@ paths:
       responses:
         '200':
           description: Listed all promotion codes.
-      security: *a45
-      tags: *a46
+      security: *a57
+      tags: *a58
   /v1/admin/promotions/{id}/deactivate:
     post:
       operationId: AdminPromotionsController_deactivate
@@ -1958,8 +2427,8 @@ paths:
       responses:
         '200':
           description: Deactivated a promotion code.
-      security: *a45
-      tags: *a46
+      security: *a57
+      tags: *a58
   /v1/vendor/batches:
     get:
       operationId: VendorBatchesController_listBatches
@@ -1973,13 +2442,13 @@ paths:
                 $ref: '#/components/schemas/BatchListEnvelopeDto'
         '400':
           description: Invalid query filters.
-        '401': &a47
+        '401': &a59
           description: Missing, invalid, or expired Supabase JWT.
-        '403': &a48
+        '403': &a60
           description: Vendor role and vendor membership are required.
-      security: &a49
+      security: &a61
         - supabaseAuth: []
-      tags: &a50
+      tags: &a62
         - vendor-batches
   /v1/vendor/batches/{batchId}:
     get:
@@ -1998,12 +2467,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/BatchDetailEnvelopeDto'
-        '401': *a47
-        '403': *a48
+        '401': *a59
+        '403': *a60
         '404':
           description: Batch not found for this vendor.
-      security: *a49
-      tags: *a50
+      security: *a61
+      tags: *a62
   /v1/vendor/batches/{batchId}/pickup:
     post:
       operationId: VendorBatchesController_pickupBatch
@@ -2023,12 +2492,12 @@ paths:
                 $ref: '#/components/schemas/BatchDetailEnvelopeDto'
         '400':
           description: Invalid batch transition.
-        '401': *a47
-        '403': *a48
+        '401': *a59
+        '403': *a60
         '404':
           description: Batch not found for this vendor.
-      security: *a49
-      tags: *a50
+      security: *a61
+      tags: *a62
   /v1/vendor/batches/{batchId}/ready-for-pickup:
     post:
       operationId: VendorBatchesController_readyForPickupBatch
@@ -2048,12 +2517,90 @@ paths:
                 $ref: '#/components/schemas/BatchDetailEnvelopeDto'
         '400':
           description: Invalid batch transition.
-        '401': *a47
-        '403': *a48
+        '401': *a59
+        '403': *a60
         '404':
           description: Batch not found for this vendor.
-      security: *a49
-      tags: *a50
+      security: *a61
+      tags: *a62
+  /v1/batches/{batchId}/chat/messages:
+    get:
+      operationId: ChatController_listMessages
+      parameters:
+        - name: batchId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: Cursor-paginated chat history for the batch (newest first).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatMessageListEnvelopeDto'
+        '400':
+          description: Invalid cursor or limit.
+        '401': &a63
+          description: Missing, invalid, or expired Supabase JWT.
+        '403': &a64
+          description: Caller is not a participant of this batch chat.
+      security: &a65
+        - supabaseAuth: []
+      tags: &a66
+        - batch-chat
+    post:
+      operationId: ChatController_postMessage
+      parameters:
+        - name: batchId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendChatMessageDto'
+      responses:
+        '201':
+          description: Message posted to the batch chat.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatMessageEnvelopeDto'
+        '400':
+          description: Invalid message body.
+        '401': *a63
+        '403': *a64
+        '409':
+          description: The batch chat is closed.
+      security: *a65
+      tags: *a66
+  /v1/batches/{batchId}/chat/participants:
+    get:
+      operationId: ChatController_listParticipants
+      parameters:
+        - name: batchId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: Visible participants of the batch chat (pseudonymised labels).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatParticipantListEnvelopeDto'
+        '401': *a63
+        '403': *a64
+      security: *a65
+      tags: *a66
   /v1/rider/onboard:
     post:
       operationId: RidersController_onboard
@@ -2076,15 +2623,15 @@ paths:
                 $ref: '#/components/schemas/RiderOnboardEnvelopeDto'
         '400':
           description: Invalid onboarding input or unknown campus.
-        '401': &a51
+        '401': &a67
           description: Missing, invalid, or expired Supabase JWT.
-        '403': &a52
+        '403': &a68
           description: Verified active rider access is required.
         '409':
           description: This account is already linked to a rider.
-      security: &a53
+      security: &a69
         - supabaseAuth: []
-      tags: &a54
+      tags: &a70
         - rider
   /v1/rider/profile:
     get:
@@ -2097,12 +2644,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RiderProfileEnvelopeDto'
-        '401': *a51
-        '403': *a52
+        '401': *a67
+        '403': *a68
         '404':
           description: Rider profile not found.
-      security: *a53
-      tags: *a54
+      security: *a69
+      tags: *a70
     patch:
       operationId: RidersController_updateProfile
       parameters: []
@@ -2115,10 +2662,10 @@ paths:
                 $ref: '#/components/schemas/RiderProfileEnvelopeDto'
         '400':
           description: Invalid profile input.
-        '401': *a51
-        '403': *a52
-      security: *a53
-      tags: *a54
+        '401': *a67
+        '403': *a68
+      security: *a69
+      tags: *a70
   /v1/rider/availability:
     patch:
       operationId: RidersController_setAvailability
@@ -2132,10 +2679,10 @@ paths:
                 $ref: '#/components/schemas/RiderProfileEnvelopeDto'
         '400':
           description: Invalid availability input.
-        '401': *a51
-        '403': *a52
-      security: *a53
-      tags: *a54
+        '401': *a67
+        '403': *a68
+      security: *a69
+      tags: *a70
   /v1/rider/payout-account:
     get:
       operationId: RidersController_getPayoutAccount
@@ -2147,10 +2694,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RiderPayoutAccountEnvelopeDto'
-        '401': *a51
-        '403': *a52
-      security: *a53
-      tags: *a54
+        '401': *a67
+        '403': *a68
+      security: *a69
+      tags: *a70
     put:
       operationId: RidersController_updatePayoutAccount
       parameters: []
@@ -2170,10 +2717,10 @@ paths:
                 $ref: '#/components/schemas/RiderPayoutAccountEnvelopeDto'
         '400':
           description: Invalid payout account input.
-        '401': *a51
-        '403': *a52
-      security: *a53
-      tags: *a54
+        '401': *a67
+        '403': *a68
+      security: *a69
+      tags: *a70
   /v1/rider/payout-account/verify:
     post:
       operationId: RidersController_verifyPayoutAccount
@@ -2187,10 +2734,10 @@ paths:
                 $ref: '#/components/schemas/RiderPayoutAccountEnvelopeDto'
         '400':
           description: No provisioned payout account to verify.
-        '401': *a51
-        '403': *a52
-      security: *a53
-      tags: *a54
+        '401': *a67
+        '403': *a68
+      security: *a69
+      tags: *a70
   /v1/rider/payout-history:
     get:
       operationId: RidersController_getPayoutHistory
@@ -2202,10 +2749,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RiderPayoutHistoryEnvelopeDto'
-        '401': *a51
-        '403': *a52
-      security: *a53
-      tags: *a54
+        '401': *a67
+        '403': *a68
+      security: *a69
+      tags: *a70
   /v1/rider/assignments:
     get:
       operationId: RidersController_listAssignments
@@ -2219,10 +2766,10 @@ paths:
                 $ref: '#/components/schemas/RiderAssignmentListEnvelopeDto'
         '400':
           description: Invalid filters or cursor.
-        '401': *a51
-        '403': *a52
-      security: *a53
-      tags: *a54
+        '401': *a67
+        '403': *a68
+      security: *a69
+      tags: *a70
   /v1/rider/assignments/{assignmentId}:
     get:
       operationId: RidersController_getAssignment
@@ -2240,12 +2787,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RiderAssignmentDetailEnvelopeDto'
-        '401': *a51
-        '403': *a52
+        '401': *a67
+        '403': *a68
         '404':
           description: Assignment not found for this rider.
-      security: *a53
-      tags: *a54
+      security: *a69
+      tags: *a70
   /v1/rider/assignments/{assignmentId}/accept:
     post:
       operationId: RidersController_acceptAssignment
@@ -2263,10 +2810,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RiderAssignmentDetailEnvelopeDto'
-        '401': *a51
-        '403': *a52
-      security: *a53
-      tags: *a54
+        '401': *a67
+        '403': *a68
+      security: *a69
+      tags: *a70
   /v1/rider/assignments/{assignmentId}/picked-up:
     post:
       operationId: RidersController_markAssignmentPickedUp
@@ -2284,10 +2831,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RiderAssignmentDetailEnvelopeDto'
-        '401': *a51
-        '403': *a52
-      security: *a53
-      tags: *a54
+        '401': *a67
+        '403': *a68
+      security: *a69
+      tags: *a70
   /v1/rider/orders/{orderId}:
     get:
       operationId: RidersController_getOrder
@@ -2305,12 +2852,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RiderOrderDetailEnvelopeDto'
-        '401': *a51
-        '403': *a52
+        '401': *a67
+        '403': *a68
         '404':
           description: Order not found for this rider.
-      security: *a53
-      tags: *a54
+      security: *a69
+      tags: *a70
   /v1/rider/orders/{orderId}/out-for-delivery:
     post:
       operationId: RidersController_markOrderOutForDelivery
@@ -2328,10 +2875,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RiderOrderDetailEnvelopeDto'
-        '401': *a51
-        '403': *a52
-      security: *a53
-      tags: *a54
+        '401': *a67
+        '403': *a68
+      security: *a69
+      tags: *a70
   /v1/rider/orders/{orderId}/delivered:
     post:
       operationId: RidersController_markOrderDelivered
@@ -2349,10 +2896,27 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RiderOrderDetailEnvelopeDto'
-        '401': *a51
-        '403': *a52
-      security: *a53
-      tags: *a54
+        '401': *a67
+        '403': *a68
+      security: *a69
+      tags: *a70
+  /v1/rider/orders/confirm-delivery:
+    post:
+      operationId: RidersController_confirmDeliveryByCode
+      parameters: []
+      responses:
+        '200':
+          description: Order marked delivered via the customer hand-off code.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiderOrderDetailEnvelopeDto'
+        '400':
+          description: Invalid code payload.
+        '401': *a67
+        '403': *a68
+      security: *a69
+      tags: *a70
   /v1/rider/orders/{orderId}/issues:
     post:
       operationId: RidersController_createIssue
@@ -2372,10 +2936,10 @@ paths:
                 $ref: '#/components/schemas/RiderIssueEnvelopeDto'
         '400':
           description: Invalid issue payload.
-        '401': *a51
-        '403': *a52
-      security: *a53
-      tags: *a54
+        '401': *a67
+        '403': *a68
+      security: *a69
+      tags: *a70
   /v1/rider/earnings:
     get:
       operationId: RidersController_getEarnings
@@ -2389,10 +2953,10 @@ paths:
                 $ref: '#/components/schemas/RiderEarningsEnvelopeDto'
         '400':
           description: Invalid earnings date range.
-        '401': *a51
-        '403': *a52
-      security: *a53
-      tags: *a54
+        '401': *a67
+        '403': *a68
+      security: *a69
+      tags: *a70
   /v1/rider/settlements:
     get:
       operationId: RidersController_listSettlements
@@ -2406,10 +2970,10 @@ paths:
                 $ref: '#/components/schemas/RiderSettlementListEnvelopeDto'
         '400':
           description: Invalid settlement filters or cursor.
-        '401': *a51
-        '403': *a52
-      security: *a53
-      tags: *a54
+        '401': *a67
+        '403': *a68
+      security: *a69
+      tags: *a70
   /v1/rider/settlements/{id}:
     get:
       operationId: RidersController_getSettlement
@@ -2427,12 +2991,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RiderSettlementDetailEnvelopeDto'
-        '401': *a51
-        '403': *a52
+        '401': *a67
+        '403': *a68
         '404':
           description: Settlement not found for this rider.
-      security: *a53
-      tags: *a54
+      security: *a69
+      tags: *a70
   /v1/settlements/vendors/{vendorId}/daily:
     post:
       operationId: SettlementsController_generateVendorDailySettlement
@@ -2440,9 +3004,9 @@ paths:
       responses:
         '201':
           description: Vendor daily settlement was generated idempotently.
-      security: &a55
+      security: &a71
         - supabaseAuth: []
-      tags: &a56
+      tags: &a72
         - settlements
   /v1/settlements/riders/{riderId}/daily:
     post:
@@ -2451,8 +3015,8 @@ paths:
       responses:
         '201':
           description: Rider daily settlement was generated idempotently.
-      security: *a55
-      tags: *a56
+      security: *a71
+      tags: *a72
   /v1/settlements/{settlementId}/pay:
     post:
       operationId: SettlementsController_paySettlement
@@ -2461,8 +3025,8 @@ paths:
         '200':
           description: Initiated (or returned the existing) automated payout transfer for
             a settlement.
-      security: *a55
-      tags: *a56
+      security: *a71
+      tags: *a72
   /v1/vendor/settlements:
     get:
       operationId: VendorSettlementsController_listSettlements
@@ -2476,13 +3040,13 @@ paths:
                 $ref: '#/components/schemas/VendorSettlementListEnvelopeDto'
         '400':
           description: Invalid filters or cursor.
-        '401': &a57
+        '401': &a73
           description: Missing, invalid, or expired Supabase JWT.
-        '403': &a58
+        '403': &a74
           description: Vendor role and vendor membership are required.
-      security: &a59
+      security: &a75
         - supabaseAuth: []
-      tags: &a60
+      tags: &a76
         - vendor-settlements
   /v1/vendor/settlements/{id}:
     get:
@@ -2501,12 +3065,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/VendorSettlementDetailEnvelopeDto'
-        '401': *a57
-        '403': *a58
+        '401': *a73
+        '403': *a74
         '404':
           description: Settlement not found for this vendor.
-      security: *a59
-      tags: *a60
+      security: *a75
+      tags: *a76
   /v1/orders/{orderId}/review:
     post:
       operationId: CustomerReviewsController_createReview
@@ -2568,11 +3132,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EscalationListEnvelopeDto'
-        '401': &a61
+        '401': &a77
           description: Missing, invalid, or expired Supabase JWT.
-      security: &a62
+      security: &a78
         - supabaseAuth: []
-      tags: &a63
+      tags: &a79
         - escalations
     post:
       operationId: CustomerEscalationsController_openEscalation
@@ -2592,9 +3156,9 @@ paths:
                 $ref: '#/components/schemas/EscalationEnvelopeDto'
         '400':
           description: Invalid escalation input or ineligible order.
-        '401': *a61
-      security: *a62
-      tags: *a63
+        '401': *a77
+      security: *a78
+      tags: *a79
   /v1/admin/session:
     get:
       operationId: AdminController_getSession
@@ -2602,13 +3166,13 @@ paths:
       responses:
         '200':
           description: Authenticated admin session and scope.
-        '401': &a64
+        '401': &a80
           description: Missing, invalid, or expired Supabase JWT.
-        '403': &a65
+        '403': &a81
           description: Admin role is required.
-      security: &a66
+      security: &a82
         - supabaseAuth: []
-      tags: &a67
+      tags: &a83
         - admin
   /v1/admin/dashboard:
     get:
@@ -2617,10 +3181,10 @@ paths:
       responses:
         '200':
           description: Admin operational dashboard for a service date.
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/orders:
     get:
       operationId: AdminController_listOrders
@@ -2628,10 +3192,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/orders/{orderId}:
     get:
       operationId: AdminController_getOrder
@@ -2645,10 +3209,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/orders/{orderId}/cancel:
     post:
       operationId: AdminController_cancelOrder
@@ -2656,10 +3220,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/orders/{orderId}/status-transition:
     post:
       operationId: AdminController_transitionOrder
@@ -2667,10 +3231,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/batches:
     get:
       operationId: AdminController_listBatches
@@ -2678,10 +3242,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/batches/{batchId}:
     get:
       operationId: AdminController_getBatch
@@ -2689,10 +3253,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/batches/{batchId}/close:
     post:
       operationId: AdminController_closeBatch
@@ -2700,10 +3264,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/batches/{batchId}/assign-rider:
     post:
       operationId: AdminController_assignRider
@@ -2711,10 +3275,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/batches/{batchId}/assign-vendor-delivery:
     post:
       operationId: AdminController_assignVendorDelivery
@@ -2722,10 +3286,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/batches/{batchId}/reassign-rider:
     post:
       operationId: AdminController_reassignRider
@@ -2733,10 +3297,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/batches/{batchId}/cancel-assignment:
     post:
       operationId: AdminController_cancelAssignment
@@ -2744,10 +3308,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/vendors:
     get:
       operationId: AdminController_listVendors
@@ -2755,20 +3319,20 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
     post:
       operationId: AdminController_createVendor
       parameters: []
       responses:
         '201':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/vendors/{vendorId}:
     get:
       operationId: AdminController_getVendor
@@ -2776,20 +3340,20 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
     patch:
       operationId: AdminController_updateVendor
       parameters: []
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/vendors/{vendorId}/approve:
     post:
       operationId: AdminController_approveVendor
@@ -2797,10 +3361,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/vendors/{vendorId}/suspend:
     post:
       operationId: AdminController_suspendVendor
@@ -2808,10 +3372,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/vendors/{vendorId}/activate:
     post:
       operationId: AdminController_activateVendor
@@ -2819,10 +3383,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/vendors/{vendorId}/users:
     post:
       operationId: AdminController_addVendorUser
@@ -2830,21 +3394,53 @@ paths:
       responses:
         '201':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
+  /v1/admin/users/{userId}:
+    delete:
+      operationId: AdminController_deleteUser
+      parameters: []
+      responses:
+        '200':
+          description: Permanently deletes a user (any type) and all rows referencing
+            them. Super admin only. Irreversible.
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
+    get:
+      operationId: AdminController_getUser
+      parameters: []
+      responses:
+        '200':
+          description: ''
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/vendors/{vendorId}/invitations:
+    get:
+      operationId: AdminController_listVendorInvitations
+      parameters: []
+      responses:
+        '200':
+          description: ''
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
     post:
       operationId: AdminController_createVendorInvitation
       parameters: []
       responses:
         '201':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/vendors/{vendorId}/performance:
     get:
       operationId: AdminController_getVendorPerformance
@@ -2852,10 +3448,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/riders:
     get:
       operationId: AdminController_listRiders
@@ -2863,10 +3459,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/riders/{riderId}:
     get:
       operationId: AdminController_getRider
@@ -2874,10 +3470,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/riders/{riderId}/assignments:
     get:
       operationId: AdminController_getRiderAssignments
@@ -2885,10 +3481,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/riders/{riderId}/settlements:
     get:
       operationId: AdminController_getRiderSettlements
@@ -2896,10 +3492,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/riders/{riderId}/verify:
     post:
       operationId: AdminController_verifyRider
@@ -2907,10 +3503,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/riders/{riderId}/suspend:
     post:
       operationId: AdminController_suspendRider
@@ -2918,10 +3514,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/riders/{riderId}/activate:
     post:
       operationId: AdminController_activateRider
@@ -2929,10 +3525,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/inventory:
     get:
       operationId: AdminController_listInventory
@@ -2940,10 +3536,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/inventory/{inventoryId}/adjustments:
     post:
       operationId: AdminController_adjustInventory
@@ -2951,10 +3547,10 @@ paths:
       responses:
         '201':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/escalations:
     get:
       operationId: AdminController_listEscalations
@@ -2962,10 +3558,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/escalations/{id}:
     get:
       operationId: AdminController_getEscalation
@@ -2973,10 +3569,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/escalations/{id}/assign:
     post:
       operationId: AdminController_assignEscalation
@@ -2984,10 +3580,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/escalations/{id}/request-evidence:
     post:
       operationId: AdminController_requestEvidence
@@ -2995,10 +3591,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/escalations/{id}/resolve:
     post:
       operationId: AdminController_resolveEscalation
@@ -3006,10 +3602,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/escalations/{id}/refunds:
     post:
       operationId: AdminController_refundEscalation
@@ -3017,10 +3613,10 @@ paths:
       responses:
         '201':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/settlements:
     get:
       operationId: AdminController_listSettlements
@@ -3028,10 +3624,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/settlements/preview:
     post:
       operationId: AdminController_previewSettlement
@@ -3039,10 +3635,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/settlements/generate:
     post:
       operationId: AdminController_generateSettlement
@@ -3050,10 +3646,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/settlements/{id}:
     get:
       operationId: AdminController_getSettlement
@@ -3061,10 +3657,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/settlements/{id}/approve:
     post:
       operationId: AdminController_approveSettlement
@@ -3072,10 +3668,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/settlements/{id}/mark-paid:
     post:
       operationId: AdminController_markSettlementPaid
@@ -3083,10 +3679,34 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
+  /v1/admin/settlements/{id}/payout-account:
+    get:
+      operationId: AdminController_getSettlementPayoutAccount
+      parameters: []
+      responses:
+        '200':
+          description: Beneficiary bank account for a settlement, fetched from Paystack
+            for manual payout.
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
+  /v1/admin/settlements/{id}/pay:
+    post:
+      operationId: AdminController_paySettlement
+      parameters: []
+      responses:
+        '200':
+          description: Initiated (or returned the existing) automated Paystack payout for
+            a settlement.
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/settlements/{id}/adjustments:
     post:
       operationId: AdminController_adjustSettlement
@@ -3094,10 +3714,10 @@ paths:
       responses:
         '201':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/reviews:
     get:
       operationId: AdminController_listReviews
@@ -3105,10 +3725,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/reviews/{reviewId}/moderate:
     post:
       operationId: AdminController_moderateReview
@@ -3116,10 +3736,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/users:
     get:
       operationId: AdminController_listUsers
@@ -3127,21 +3747,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
-  /v1/admin/users/{userId}:
-    get:
-      operationId: AdminController_getUser
-      parameters: []
-      responses:
-        '200':
-          description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/users/{userId}/suspend:
     post:
       operationId: AdminController_suspendUser
@@ -3149,10 +3758,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/users/{userId}/activate:
     post:
       operationId: AdminController_activateUser
@@ -3160,10 +3769,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/admin-memberships:
     get:
       operationId: AdminController_listAdminMemberships
@@ -3171,20 +3780,20 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
     post:
       operationId: AdminController_createAdminMembership
       parameters: []
       responses:
         '201':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/admin-memberships/{id}/revoke:
     post:
       operationId: AdminController_revokeAdminMembership
@@ -3192,10 +3801,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/admin-memberships/{id}/activate:
     post:
       operationId: AdminController_activateAdminMembership
@@ -3203,10 +3812,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/analytics:
     get:
       operationId: AdminController_getAnalytics
@@ -3214,10 +3823,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/audit-logs:
     get:
       operationId: AdminController_listAuditLogs
@@ -3225,10 +3834,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a64
-        '403': *a65
-      security: *a66
-      tags: *a67
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/notifications:
     get:
       operationId: NotificationsController_listNotifications
@@ -3240,11 +3849,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotificationListEnvelopeDto'
-        '401': &a68
+        '401': &a84
           description: Missing, invalid, or expired Supabase JWT.
-      security: &a69
+      security: &a85
         - supabaseAuth: []
-      tags: &a70
+      tags: &a86
         - notifications
   /v1/notifications/read-all:
     post:
@@ -3257,9 +3866,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MarkAllNotificationsReadEnvelopeDto'
-        '401': *a68
-      security: *a69
-      tags: *a70
+        '401': *a84
+      security: *a85
+      tags: *a86
   /v1/notifications/{notificationId}/read:
     post:
       operationId: NotificationsController_markRead
@@ -3277,9 +3886,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotificationEnvelopeDto'
-        '401': *a68
-      security: *a69
-      tags: *a70
+        '401': *a84
+      security: *a85
+      tags: *a86
   /v1/notifications/preferences:
     get:
       operationId: NotificationsController_getPreferences
@@ -3291,9 +3900,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotificationPreferencesEnvelopeDto'
-        '401': *a68
-      security: *a69
-      tags: *a70
+        '401': *a84
+      security: *a85
+      tags: *a86
     put:
       operationId: NotificationsController_updatePreferences
       parameters: []
@@ -3304,9 +3913,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotificationPreferencesEnvelopeDto'
-        '401': *a68
-      security: *a69
-      tags: *a70
+        '401': *a84
+      security: *a85
+      tags: *a86
   /v1/me/device-tokens:
     post:
       operationId: DeviceTokensController_register
@@ -3320,11 +3929,11 @@ paths:
       responses:
         '204':
           description: Registers (or refreshes) a push device token for the current user.
-        '401': &a71
+        '401': &a87
           description: Missing, invalid, or expired Supabase JWT.
-      security: &a72
+      security: &a88
         - supabaseAuth: []
-      tags: &a73
+      tags: &a89
         - notifications
   /v1/me/device-tokens/test:
     post:
@@ -3334,9 +3943,9 @@ paths:
         '204':
           description: Sends a test push notification to all active tokens for the current
             user.
-        '401': *a71
-      security: *a72
-      tags: *a73
+        '401': *a87
+      security: *a88
+      tags: *a89
   /v1/me/device-tokens/{token}:
     delete:
       operationId: DeviceTokensController_remove
@@ -3344,9 +3953,9 @@ paths:
       responses:
         '204':
           description: Unregisters a push device token for the current user.
-        '401': *a71
-      security: *a72
-      tags: *a73
+        '401': *a87
+      security: *a88
+      tags: *a89
   /v1/admin/system:
     get:
       operationId: JobsController_getSystemSummary
@@ -3354,13 +3963,13 @@ paths:
       responses:
         '200':
           description: Worker and outbox operational summary.
-        '401': &a74
+        '401': &a90
           description: Missing, invalid, or expired Supabase JWT.
-        '403': &a75
+        '403': &a91
           description: Admin role is required.
-      security: &a76
+      security: &a92
         - supabaseAuth: []
-      tags: &a77
+      tags: &a93
         - admin-jobs
   /v1/admin/jobs/outbox:
     get:
@@ -3369,10 +3978,10 @@ paths:
       responses:
         '200':
           description: Outbox event list for admin operations.
-        '401': *a74
-        '403': *a75
-      security: *a76
-      tags: *a77
+        '401': *a90
+        '403': *a91
+      security: *a92
+      tags: *a93
   /v1/admin/jobs/outbox/process:
     post:
       operationId: JobsController_processOutboxEvents
@@ -3380,10 +3989,10 @@ paths:
       responses:
         '200':
           description: Claims currently available outbox events for a worker.
-        '401': *a74
-        '403': *a75
-      security: *a76
-      tags: *a77
+        '401': *a90
+        '403': *a91
+      security: *a92
+      tags: *a93
 info:
   title: Meal Direct API
   description: Stable REST API for Meal Direct web and future mobile clients.
@@ -3471,7 +4080,7 @@ components:
           format: uuid
         role:
           type: string
-          enum: &a78
+          enum: &a94
             - customer
             - vendor
             - rider
@@ -3675,7 +4284,7 @@ components:
           type: array
           items:
             type: string
-            enum: *a78
+            enum: *a94
         campuses:
           type: array
           items:
@@ -4034,7 +4643,7 @@ components:
           type: boolean
         defaultDeliveryMode:
           type: string
-          enum: &a79
+          enum: &a95
             - meal_direct_rider
             - vendor_delivery
         createdAt:
@@ -4112,7 +4721,7 @@ components:
             global default; may not exceed the campus ceiling.
         defaultDeliveryMode:
           type: string
-          enum: *a79
+          enum: *a95
     UploadUrlRequestDto:
       type: object
       properties:
@@ -4255,6 +4864,11 @@ components:
           type: string
         countsTowardSpoonLimit:
           type: boolean
+        triggersTakeawayFee:
+          type: boolean
+        maxQuantity:
+          type: number
+          nullable: true
         active:
           type: boolean
       required:
@@ -4262,6 +4876,7 @@ components:
         - code
         - displayName
         - countsTowardSpoonLimit
+        - triggersTakeawayFee
         - active
     MenuMetadataDto:
       type: object
@@ -4303,6 +4918,73 @@ components:
           $ref: '#/components/schemas/MenuCategoryDto'
       required:
         - data
+    VendorSoupOptionDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        vendorId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        active:
+          type: boolean
+        displayOrder:
+          type: number
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - vendorId
+        - name
+        - active
+        - displayOrder
+        - createdAt
+        - updatedAt
+    VendorSoupOptionListEnvelopeDto:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/VendorSoupOptionDto'
+      required:
+        - data
+    CreateVendorSoupOptionDto:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 120
+          minLength: 1
+        displayOrder:
+          type: number
+          minimum: 0
+      required:
+        - name
+    VendorSoupOptionEnvelopeDto:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/VendorSoupOptionDto'
+      required:
+        - data
+    UpdateVendorSoupOptionDto:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 120
+          minLength: 1
+        active:
+          type: boolean
+        displayOrder:
+          type: number
+          minimum: 0
     VendorMenuItemDto:
       type: object
       properties:
@@ -4338,6 +5020,10 @@ components:
           type: boolean
           description: When true, this item contributes to takeaway packaging rules and
             fees.
+        requiresSoup:
+          type: boolean
+          description: When true, ordering this item requires picking one of the vendor's
+            soups.
         active:
           type: boolean
         displayOrder:
@@ -4354,6 +5040,7 @@ components:
         - name
         - priceKobo
         - countsTowardSpoonLimit
+        - requiresSoup
         - active
         - displayOrder
         - createdAt
@@ -4392,6 +5079,11 @@ components:
         priceKobo:
           type: number
           minimum: 0
+        requiresSoup:
+          type: boolean
+          default: false
+          description: When true, ordering this item requires the customer to pick one of
+            the vendor's active soups.
         displayOrder:
           type: number
           minimum: 0
@@ -4431,6 +5123,8 @@ components:
         priceKobo:
           type: number
           minimum: 0
+        requiresSoup:
+          type: boolean
         displayOrder:
           type: number
           minimum: 0
@@ -4504,6 +5198,80 @@ components:
             $ref: '#/components/schemas/AvailabilityEntryDto'
       required:
         - entries
+    StoreAvailabilityStateDto:
+      type: object
+      properties:
+        acceptingOrders:
+          type: boolean
+        state:
+          type: string
+          enum: &a96
+            - open
+            - closed
+            - paused
+            - sold_out_today
+        pauseUntil:
+          type: string
+          nullable: true
+          example: 2026-07-04T21:00:00Z
+        cutoffTime:
+          type: string
+          nullable: true
+          example: 21:00:00
+        maxOrdersPerDay:
+          type: number
+          nullable: true
+        unavailableDates:
+          example:
+            - 2026-07-05
+          type: array
+          items:
+            type: string
+      required:
+        - acceptingOrders
+        - state
+        - unavailableDates
+    StoreAvailabilityStateEnvelopeDto:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/StoreAvailabilityStateDto'
+      required:
+        - data
+    UpdateStoreAvailabilityDto:
+      type: object
+      properties:
+        acceptingOrders:
+          type: boolean
+        state:
+          type: string
+          enum: *a96
+        pauseUntil:
+          type: string
+          nullable: true
+          example: 2026-07-04T21:00:00Z
+        maxOrdersPerDay:
+          type: number
+          nullable: true
+        unavailableDates:
+          example:
+            - 2026-07-05
+          type: array
+          items:
+            type: string
+    DeliveryHandoffDto:
+      type: object
+      properties:
+        code:
+          type: string
+          pattern: ^[0-9]{4}$
+          description: Code the customer gives to the rider after receiving the order.
+        instruction:
+          type: string
+          description: Customer-facing instruction to show with the delivery code.
+      required:
+        - code
+        - instruction
     OrderSummaryDto:
       type: object
       properties:
@@ -4537,7 +5305,7 @@ components:
           type: string
         orderStatus:
           type: string
-          enum: &a80
+          enum: &a97
             - accepted
             - administratively_completed
             - cancelled
@@ -4555,6 +5323,10 @@ components:
         specialInstructions:
           type: string
           nullable: true
+        roomNumber:
+          type: string
+          nullable: true
+          description: Hostel room number when the delivery location is a hostel.
         foodSubtotalKobo:
           type: number
         deliveryFeeKobo:
@@ -4563,6 +5335,10 @@ components:
           type: number
         discountKobo:
           type: number
+        largeOrderSurchargeKobo:
+          type: number
+          description: Large-order surcharge (1.5% + ₦100) charged on this order. Included
+            in totalKobo.
         totalKobo:
           type: number
         currency:
@@ -4580,6 +5356,23 @@ components:
         confirmedAt:
           type: string
           nullable: true
+        deliveryCode:
+          type: string
+          nullable: true
+          description: Delivery hand-off code to read to the rider after receiving the
+            order.
+        deliveryHandoff:
+          nullable: true
+          description: Customer-facing code + instruction payload for delivery hand-off.
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/DeliveryHandoffDto'
+        batchId:
+          type: string
+          nullable: true
+          format: uuid
+          description: Delivery batch this order belongs to, when batched. Powers the
+            batch chat.
       required:
         - id
         - orderNumber
@@ -4598,6 +5391,7 @@ components:
         - deliveryFeeKobo
         - serviceFeeKobo
         - discountKobo
+        - largeOrderSurchargeKobo
         - totalKobo
         - currency
         - createdAt
@@ -4633,6 +5427,16 @@ components:
         customization:
           type: object
           additionalProperties: true
+        soupOptionId:
+          type: string
+          format: uuid
+          nullable: true
+          description: The chosen soup option id when the item required a soup; null
+            otherwise.
+        soupName:
+          type: string
+          nullable: true
+          description: Display name of the chosen soup; null when no soup was required.
       required:
         - id
         - menuItemId
@@ -4710,12 +5514,16 @@ components:
           type: string
         orderStatus:
           type: string
-          enum: *a80
+          enum: *a97
         deliveryMode:
           type: string
         specialInstructions:
           type: string
           nullable: true
+        roomNumber:
+          type: string
+          nullable: true
+          description: Hostel room number when the delivery location is a hostel.
         foodSubtotalKobo:
           type: number
         deliveryFeeKobo:
@@ -4724,6 +5532,10 @@ components:
           type: number
         discountKobo:
           type: number
+        largeOrderSurchargeKobo:
+          type: number
+          description: Large-order surcharge (1.5% + ₦100) charged on this order. Included
+            in totalKobo.
         totalKobo:
           type: number
         currency:
@@ -4741,6 +5553,23 @@ components:
         confirmedAt:
           type: string
           nullable: true
+        deliveryCode:
+          type: string
+          nullable: true
+          description: Delivery hand-off code to read to the rider after receiving the
+            order.
+        deliveryHandoff:
+          nullable: true
+          description: Customer-facing code + instruction payload for delivery hand-off.
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/DeliveryHandoffDto'
+        batchId:
+          type: string
+          nullable: true
+          format: uuid
+          description: Delivery batch this order belongs to, when batched. Powers the
+            batch chat.
         items:
           type: array
           items:
@@ -4768,6 +5597,7 @@ components:
         - deliveryFeeKobo
         - serviceFeeKobo
         - discountKobo
+        - largeOrderSurchargeKobo
         - totalKobo
         - currency
         - createdAt
@@ -4807,6 +5637,17 @@ components:
           default: false
           description: When true, quantities count toward the three-spoon takeaway package
             limit.
+        triggersTakeawayFee:
+          type: boolean
+          default: false
+          description: When true, an order containing this item pulls the flat
+            takeaway/service fee, independent of the spoon-limit cap.
+        maxQuantity:
+          type: number
+          minimum: 1
+          nullable: true
+          description: Maximum quantity per order line for this unit type; null means
+            unlimited.
       required:
         - code
         - displayName
@@ -4826,8 +5667,25 @@ components:
           minLength: 1
         countsTowardSpoonLimit:
           type: boolean
+        triggersTakeawayFee:
+          type: boolean
+        maxQuantity:
+          type: number
+          minimum: 1
+          nullable: true
         active:
           type: boolean
+    CatalogSoupOptionDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+      required:
+        - id
+        - name
     CatalogVendorDto:
       type: object
       properties:
@@ -4855,12 +5713,19 @@ components:
           enum:
             - meal_direct_rider
             - vendor_delivery
+        soupOptions:
+          description: The vendor's active soups; rendered as the picker for items
+            requiring a soup.
+          type: array
+          items:
+            $ref: '#/components/schemas/CatalogSoupOptionDto'
       required:
         - id
         - campusId
         - displayName
         - slug
         - defaultDeliveryMode
+        - soupOptions
     CatalogVendorListEnvelopeDto:
       type: object
       properties:
@@ -4915,6 +5780,10 @@ components:
           type: boolean
           description: When true, this item contributes to takeaway packaging rules and
             fees.
+        requiresSoup:
+          type: boolean
+          description: When true, the customer must pick one of the vendor's soups for
+            this item.
       required:
         - id
         - vendorId
@@ -4923,6 +5792,7 @@ components:
         - name
         - priceKobo
         - countsTowardSpoonLimit
+        - requiresSoup
     MenuItemListEnvelopeDto:
       type: object
       properties:
@@ -5108,6 +5978,11 @@ components:
           description: Per-item customization object (e.g. spoonsCount, customFoodType,
             customProtein, customFoodSelections, drinks). Stored and returned
             verbatim.
+        soupOptionId:
+          type: string
+          format: uuid
+          description: Chosen soup option id (from the vendor's soup list). Required when
+            the menu item requires a soup.
       required:
         - menuItemId
         - quantity
@@ -5142,6 +6017,16 @@ components:
           type: string
           description: Order-level delivery note / special instructions.
           maxLength: 1000
+        roomNumber:
+          type: string
+          description: Hostel room number. Required when the selected delivery location is
+            a hostel.
+          maxLength: 32
+        acceptLargeOrderSurcharge:
+          type: boolean
+          description: Set true to acknowledge and accept the large-order surcharge (1.5%
+            + ₦100) required for order totals above the standard ₦2490 cap.
+            Orders over the cap are rejected unless this is true.
         items:
           minItems: 1
           type: array
@@ -5174,6 +6059,10 @@ components:
           type: boolean
           description: When true, this line contributes to takeaway packaging rules and
             fees.
+        triggersTakeawayFee:
+          type: boolean
+          description: When true, this line pulls the flat takeaway/service fee
+            (independent of the spoon-limit cap).
       required:
         - menuItemId
         - name
@@ -5182,6 +6071,7 @@ components:
         - unitPriceKobo
         - lineTotalKobo
         - countsTowardSpoonLimit
+        - triggersTakeawayFee
     OrderQuoteDto:
       type: object
       properties:
@@ -5195,6 +6085,14 @@ components:
           type: number
         discountKobo:
           type: number
+        largeOrderSurchargeKobo:
+          type: number
+          description: Large-order surcharge (1.5% + ₦100) already included in totalKobo.
+            Zero when the order does not exceed the standard cap.
+        exceedsStandardCap:
+          type: boolean
+          description: True when the total exceeds the standard ₦2490 cap. Show the
+            surcharge notice and require acceptLargeOrderSurcharge on create.
         totalKobo:
           type: number
         items:
@@ -5207,6 +6105,8 @@ components:
         - deliveryFeeKobo
         - serviceFeeKobo
         - discountKobo
+        - largeOrderSurchargeKobo
+        - exceedsStandardCap
         - totalKobo
         - items
     OrderQuoteEnvelopeDto:
@@ -5225,6 +6125,20 @@ components:
             $ref: '#/components/schemas/OrderSummaryDto'
       required:
         - data
+    CreatedOrderDto:
+      type: object
+      properties:
+        orderId:
+          type: string
+          format: uuid
+        deliveryHandoff:
+          nullable: true
+          description: Immediate pop-up payload for the customer after order creation.
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/DeliveryHandoffDto'
+      required:
+        - orderId
     OrderPaymentStatusDto:
       type: object
       properties:
@@ -5233,7 +6147,7 @@ components:
           format: uuid
         orderStatus:
           type: string
-          enum: *a80
+          enum: *a97
         payment:
           nullable: true
           type: object
@@ -5546,7 +6460,7 @@ components:
           format: uuid
         issueType:
           type: string
-          enum: &a81
+          enum: &a98
             - initialized_unconfirmed
             - paid_order_pending
             - webhook_processing_failed
@@ -5557,14 +6471,14 @@ components:
             - refund_stuck
         status:
           type: string
-          enum: &a82
+          enum: &a99
             - open
             - investigating
             - resolved
             - ignored
         severity:
           type: string
-          enum: &a83
+          enum: &a100
             - info
             - warning
             - critical
@@ -5644,13 +6558,13 @@ components:
           format: uuid
         issueType:
           type: string
-          enum: *a81
+          enum: *a98
         status:
           type: string
-          enum: *a82
+          enum: *a99
         severity:
           type: string
-          enum: *a83
+          enum: *a100
         paymentId:
           type: string
           nullable: true
@@ -5835,7 +6749,7 @@ components:
           type: string
         status:
           type: string
-          enum: &a84
+          enum: &a101
             - open
             - closed
             - assigned
@@ -5905,7 +6819,7 @@ components:
           type: string
         status:
           type: string
-          enum: *a84
+          enum: *a101
         deliveryMode:
           type: string
         orderCount:
@@ -5946,6 +6860,96 @@ components:
       properties:
         data:
           $ref: '#/components/schemas/BatchDetailDto'
+      required:
+        - data
+    ChatMessageDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        batchId:
+          type: string
+          format: uuid
+        senderUserId:
+          type: string
+          format: uuid
+        senderLabel:
+          type: string
+        senderRole:
+          type: string
+          enum:
+            - rider
+            - customer
+            - vendor
+        body:
+          type: string
+        createdAt:
+          type: string
+        mine:
+          type: boolean
+      required:
+        - id
+        - batchId
+        - senderUserId
+        - senderLabel
+        - senderRole
+        - body
+        - createdAt
+        - mine
+    ChatMessageListEnvelopeDto:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatMessageDto'
+      required:
+        - data
+    SendChatMessageDto:
+      type: object
+      properties:
+        body:
+          type: string
+          maxLength: 2000
+          minLength: 1
+      required:
+        - body
+    ChatMessageEnvelopeDto:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/ChatMessageDto'
+      required:
+        - data
+    ChatParticipantDto:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        role:
+          type: string
+          enum:
+            - rider
+            - customer
+            - vendor
+        label:
+          type: string
+        joinedAt:
+          type: string
+      required:
+        - userId
+        - role
+        - label
+        - joinedAt
+    ChatParticipantListEnvelopeDto:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChatParticipantDto'
       required:
         - data
     OnboardRiderDto:
@@ -6162,7 +7166,7 @@ components:
           type: string
         status:
           type: string
-          enum: &a85
+          enum: &a102
             - accepted
             - assigned
             - cancelled
@@ -6247,7 +7251,7 @@ components:
           type: string
         status:
           type: string
-          enum: *a85
+          enum: *a102
         batchStatus:
           type: string
         orderCount:
@@ -6327,12 +7331,16 @@ components:
           type: string
         orderStatus:
           type: string
-          enum: *a80
+          enum: *a97
         deliveryMode:
           type: string
         specialInstructions:
           type: string
           nullable: true
+        roomNumber:
+          type: string
+          nullable: true
+          description: Hostel room number when the delivery location is a hostel.
         foodSubtotalKobo:
           type: number
         deliveryFeeKobo:
@@ -6341,6 +7349,10 @@ components:
           type: number
         discountKobo:
           type: number
+        largeOrderSurchargeKobo:
+          type: number
+          description: Large-order surcharge (1.5% + ₦100) charged on this order. Included
+            in totalKobo.
         totalKobo:
           type: number
         currency:
@@ -6358,6 +7370,23 @@ components:
         confirmedAt:
           type: string
           nullable: true
+        deliveryCode:
+          type: string
+          nullable: true
+          description: Delivery hand-off code to read to the rider after receiving the
+            order.
+        deliveryHandoff:
+          nullable: true
+          description: Customer-facing code + instruction payload for delivery hand-off.
+          type: object
+          allOf:
+            - $ref: '#/components/schemas/DeliveryHandoffDto'
+        batchId:
+          type: string
+          nullable: true
+          format: uuid
+          description: Delivery batch this order belongs to, when batched. Powers the
+            batch chat.
         items:
           type: array
           items:
@@ -6370,12 +7399,9 @@ components:
         assignmentId:
           type: string
           format: uuid
-        batchId:
-          type: string
-          format: uuid
         assignmentStatus:
           type: string
-          enum: *a85
+          enum: *a102
         customerDisplayName:
           type: string
           nullable: true
@@ -6405,13 +7431,13 @@ components:
         - deliveryFeeKobo
         - serviceFeeKobo
         - discountKobo
+        - largeOrderSurchargeKobo
         - totalKobo
         - currency
         - createdAt
         - updatedAt
         - items
         - assignmentId
-        - batchId
         - assignmentStatus
         - zoneName
     RiderOrderDetailEnvelopeDto:
@@ -6483,7 +7509,7 @@ components:
           nullable: true
         settlementStatus:
           type: string
-          enum: &a86
+          enum: &a103
             - approved
             - cancelled
             - draft
@@ -6563,7 +7589,7 @@ components:
           type: string
         status:
           type: string
-          enum: *a86
+          enum: *a103
         deliveryEarningsKobo:
           type: number
         adjustmentsKobo:
@@ -6650,7 +7676,7 @@ components:
           type: string
         status:
           type: string
-          enum: *a86
+          enum: *a103
         deliveryEarningsKobo:
           type: number
         adjustmentsKobo:
@@ -6715,7 +7741,7 @@ components:
           example: 2026-06-15
         status:
           type: string
-          enum: &a87
+          enum: &a104
             - approved
             - cancelled
             - draft
@@ -6827,7 +7853,7 @@ components:
           example: 2026-06-15
         status:
           type: string
-          enum: *a87
+          enum: *a104
         grossFoodAmountKobo:
           type: number
         deliveryEarningsKobo:
@@ -7160,6 +8186,8 @@ components:
           type: boolean
         settlementUpdates:
           type: boolean
+        batchChatEnabled:
+          type: boolean
         updatedAt:
           type: string
       required:
@@ -7172,6 +8200,7 @@ components:
         - deliveryUpdates
         - escalationUpdates
         - settlementUpdates
+        - batchChatEnabled
         - updatedAt
     NotificationPreferencesEnvelopeDto:
       type: object

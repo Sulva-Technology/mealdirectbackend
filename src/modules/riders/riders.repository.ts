@@ -512,6 +512,7 @@ export class RidersRepository implements RidersRepositoryContract {
         o.order_status::text as "orderStatus",
         o.delivery_mode::text as "deliveryMode",
         o.special_instructions as "specialInstructions",
+        o.room_number as "roomNumber",
         o.food_subtotal_kobo as "foodSubtotalKobo",
         o.delivery_fee_kobo as "deliveryFeeKobo",
         o.service_fee_kobo as "serviceFeeKobo",
@@ -586,6 +587,30 @@ export class RidersRepository implements RidersRepositoryContract {
   // rider's concurrently out-for-delivery orders. Retries on the rare collision; the
   // WHERE guard makes each attempt atomic so two codes can never overlap.
   async assignDeliveryCode(riderId: string, orderId: string): Promise<string> {
+    const existing = await sql<{ deliveryCode: string }>`
+      select o.delivery_code as "deliveryCode"
+      from public.orders o
+      where o.id = ${orderId}::uuid
+        and o.order_status = 'out_for_delivery'
+        and o.delivery_code is not null
+        and not exists (
+          select 1
+          from public.orders o2
+          join public.delivery_batch_orders dbo on dbo.order_id = o2.id
+          join public.delivery_assignments da on da.batch_id = dbo.batch_id
+          where da.rider_id = ${riderId}::uuid
+            and o2.order_status = 'out_for_delivery'
+            and o2.id <> o.id
+            and o2.delivery_code = o.delivery_code
+        )
+      limit 1
+    `.execute(this.database.db);
+
+    const existingCode = existing.rows[0]?.deliveryCode;
+    if (existingCode !== undefined) {
+      return existingCode;
+    }
+
     for (let attempt = 0; attempt < 10; attempt += 1) {
       const code = String(randomInt(0, 10000)).padStart(4, '0');
       const result = await sql<{ deliveryCode: string }>`
@@ -888,6 +913,7 @@ export class RidersRepository implements RidersRepositoryContract {
         o.order_status::text as "orderStatus",
         o.delivery_mode::text as "deliveryMode",
         o.special_instructions as "specialInstructions",
+        o.room_number as "roomNumber",
         o.food_subtotal_kobo as "foodSubtotalKobo",
         o.delivery_fee_kobo as "deliveryFeeKobo",
         o.service_fee_kobo as "serviceFeeKobo",

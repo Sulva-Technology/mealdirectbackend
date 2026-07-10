@@ -148,6 +148,7 @@ export class NotificationsRepository implements NotificationsRepositoryContract 
     const hasDeliveryUpdates = input.deliveryUpdates !== undefined;
     const hasEscalationUpdates = input.escalationUpdates !== undefined;
     const hasSettlementUpdates = input.settlementUpdates !== undefined;
+    const hasBatchChatEnabled = input.batchChatEnabled !== undefined;
 
     const result = await sql<NotificationPreferences>`
       update public.notification_preferences
@@ -159,6 +160,7 @@ export class NotificationsRepository implements NotificationsRepositoryContract 
           delivery_updates = case when ${hasDeliveryUpdates} then ${input.deliveryUpdates ?? null} else delivery_updates end,
           escalation_updates = case when ${hasEscalationUpdates} then ${input.escalationUpdates ?? null} else escalation_updates end,
           settlement_updates = case when ${hasSettlementUpdates} then ${input.settlementUpdates ?? null} else settlement_updates end,
+          batch_chat_enabled = case when ${hasBatchChatEnabled} then ${input.batchChatEnabled ?? null} else batch_chat_enabled end,
           updated_at = now()
       where user_id = ${userId}::uuid
       returning
@@ -171,6 +173,7 @@ export class NotificationsRepository implements NotificationsRepositoryContract 
         delivery_updates as "deliveryUpdates",
         escalation_updates as "escalationUpdates",
         settlement_updates as "settlementUpdates",
+        batch_chat_enabled as "batchChatEnabled",
         updated_at::text as "updatedAt"
     `.execute(this.database.db);
 
@@ -193,6 +196,7 @@ export class NotificationsRepository implements NotificationsRepositoryContract 
         delivery_updates as "deliveryUpdates",
         escalation_updates as "escalationUpdates",
         settlement_updates as "settlementUpdates",
+        batch_chat_enabled as "batchChatEnabled",
         updated_at::text as "updatedAt"
       from public.notification_preferences
       where user_id = ${userId}::uuid

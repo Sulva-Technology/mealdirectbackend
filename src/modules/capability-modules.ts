@@ -3,6 +3,7 @@ import { AuthModule } from './auth/auth.module.js';
 import { BatchesModule } from './batches/batches.module.js';
 import { CampusesModule } from './campuses/campuses.module.js';
 import { CatalogModule } from './catalog/catalog.module.js';
+import { ChatModule } from './chat/chat.module.js';
 import { EscalationsModule } from './escalations/escalations.module.js';
 import { InventoryModule } from './inventory/inventory.module.js';
 import { JobsModule } from './jobs/jobs.module.js';
@@ -29,6 +30,7 @@ export const capabilityModules = [
   PaymentsModule,
   PromotionsModule,
   BatchesModule,
+  ChatModule,
   RidersModule,
   SettlementsModule,
   ReviewsModule,

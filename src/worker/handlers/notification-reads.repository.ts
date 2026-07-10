@@ -22,7 +22,10 @@ export class NotificationReadsRepository implements NotificationReads {
       select
         n.recipient_user_id::text as "userId",
         pr.email as "email",
-        coalesce(p.email_enabled, false) as "emailEnabled",
+        -- Chat is push + in-app only; never email chat traffic even if the user
+        -- has the email channel enabled globally.
+        case when n.event_type like 'batch_chat.%' then false
+             else coalesce(p.email_enabled, false) end as "emailEnabled",
         coalesce(p.push_enabled, false) as "pushEnabled",
         n.title as "title",
         n.body as "body",

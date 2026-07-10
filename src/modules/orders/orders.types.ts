@@ -57,6 +57,16 @@ export type LargeOrderSurchargeConfig = {
   accepted: boolean;
 };
 
+export type DeliveryHandoff = {
+  code: string;
+  instruction: string;
+};
+
+export type CreatedOrder = {
+  orderId: string;
+  deliveryHandoff: DeliveryHandoff | null;
+};
+
 export type OrderItem = {
   id: string;
   menuItemId: string;
@@ -99,6 +109,7 @@ export type OrderSummary = {
   orderStatus: OrderStatus;
   deliveryMode: string;
   specialInstructions: string | null;
+  roomNumber: string | null;
   foodSubtotalKobo: number;
   deliveryFeeKobo: number;
   serviceFeeKobo: number;
@@ -114,6 +125,10 @@ export type OrderSummary = {
   // Hand-off code shown to the customer once the order is out for delivery; null otherwise.
   // Optional because most order queries do not select it.
   deliveryCode?: string | null;
+  deliveryHandoff?: DeliveryHandoff | null;
+  // Delivery batch this order belongs to, when batched. Powers the batch chat entry
+  // point. Optional because most order queries do not join the batch mapping.
+  batchId?: string | null;
 };
 
 export type OrderDetail = OrderSummary & {
@@ -140,8 +155,9 @@ export type OrdersRepositoryContract = {
     serviceFeeKobo: number,
     maxOrderTotalKobo: number,
     largeOrderSurcharge: LargeOrderSurchargeConfig
-  ) => Promise<{ orderId: string }>;
+  ) => Promise<CreatedOrder>;
   quoteOrder: (input: CreateOrderDto) => Promise<OrderQuoteItem[]>;
+  findLocationType: (locationId: string) => Promise<'department' | 'hostel' | undefined>;
   findZoneDeliveryFeeKobo: (locationId: string) => Promise<number | null>;
   findVendorServiceFeeConfig: (
     vendorId: string

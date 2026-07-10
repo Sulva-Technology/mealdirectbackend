@@ -87,6 +87,8 @@ export class BatchesRepository implements BatchesRepositoryContract {
         cl.name as "locationName",
         o.order_status::text as "orderStatus",
         o.delivery_mode::text as "deliveryMode",
+        o.special_instructions as "specialInstructions",
+        o.room_number as "roomNumber",
         o.food_subtotal_kobo as "foodSubtotalKobo",
         o.delivery_fee_kobo as "deliveryFeeKobo",
         o.service_fee_kobo as "serviceFeeKobo",

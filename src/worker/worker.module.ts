@@ -57,7 +57,7 @@ import { createEmailTransport, createPushSender } from './transports.js';
         autoDispatch: AutoDispatchHandler
       ): HandlerRegistry => {
         const registry = new HandlerRegistry();
-        for (const prefix of ['order.', 'payment.', 'settlement.']) {
+        for (const prefix of ['order.', 'payment.', 'settlement.', 'batch_chat.']) {
           registry.registerPrefix(prefix, dispatch.handle);
         }
         registry.register('order.ready', autoDispatch.handle);

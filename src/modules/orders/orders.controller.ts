@@ -30,6 +30,7 @@ import { RolesGuard } from '../auth/roles.guard.js';
 import type { AuthenticatedActor } from '../auth/actor-context.js';
 import { CreateOrderDto } from './dto/create-order.dto.js';
 import {
+  CreatedOrderDto,
   DeliveryConfirmationEnvelopeDto,
   OrderDetailEnvelopeDto,
   OrderIdParamDto,
@@ -39,7 +40,13 @@ import {
   OrderQuoteEnvelopeDto
 } from './dto/order-api.dto.js';
 import { OrdersService } from './orders.service.js';
-import type { OrderDetail, OrderPaymentStatus, OrderQuote, OrderSummary } from './orders.types.js';
+import type {
+  CreatedOrder,
+  OrderDetail,
+  OrderPaymentStatus,
+  OrderQuote,
+  OrderSummary
+} from './orders.types.js';
 
 function requireIdempotencyKey(value: string | string[] | undefined): string {
   try {
@@ -89,12 +96,15 @@ export class OrdersController {
   @HttpCode(201)
   @RequireRoles('customer')
   @ApiBody({ type: CreateOrderDto })
-  @ApiCreatedResponse({ description: 'Order was created idempotently and inventory was reserved.' })
+  @ApiCreatedResponse({
+    description: 'Order was created idempotently, inventory was reserved, and hand-off code returned.',
+    type: CreatedOrderDto
+  })
   async createOrder(
     @CurrentActor() actor: AuthenticatedActor,
     @Headers('idempotency-key') idempotencyKey: string | string[] | undefined,
     @Body() input: CreateOrderDto
-  ): Promise<{ orderId: string }> {
+  ): Promise<CreatedOrder> {
     return this.orders.createOrder(actor, input, requireIdempotencyKey(idempotencyKey));
   }
 

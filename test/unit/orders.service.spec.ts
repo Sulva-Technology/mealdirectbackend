@@ -108,6 +108,7 @@ const orderDetail: OrderDetail = {
   orderStatus: 'pending_payment',
   deliveryMode: 'meal_direct_rider',
   specialInstructions: null,
+  roomNumber: null,
   foodSubtotalKobo: 500000,
   deliveryFeeKobo: 15000,
   serviceFeeKobo: 0,
@@ -129,7 +130,15 @@ function createRepository(): OrdersRepositoryContract {
     confirmDelivery: vi
       .fn()
       .mockResolvedValue({ confirmationId: '99999999-9999-4999-8999-999999999999' }),
-    createOrder: vi.fn().mockResolvedValue({ orderId: orderDetail.id }),
+    createOrder: vi.fn().mockResolvedValue({
+      orderId: orderDetail.id,
+      deliveryHandoff: {
+        code: '1234',
+        instruction:
+          'Give this code to the rider only after you receive your order. The rider will ask for it to confirm delivery.'
+      }
+    }),
+    findLocationType: vi.fn().mockResolvedValue('department'),
     findCustomerOrderById: vi.fn().mockResolvedValue(orderDetail),
     findPaymentStatus: vi.fn().mockResolvedValue({
       orderId: orderDetail.id,
@@ -380,6 +389,32 @@ describe('OrdersService', () => {
     expect(repository.createOrder).toHaveBeenCalledWith(
       customer.userId,
       orderInput,
+      'order-key',
+      expect.any(String),
+      0,
+      100_000_000,
+      defaultSurchargeConfig
+    );
+  });
+
+  it('requires a room number when the selected location is a hostel', async () => {
+    vi.mocked(repository.findLocationType).mockResolvedValue('hostel');
+
+    await expect(service.createOrder(customer, orderInput, 'order-key')).rejects.toBeInstanceOf(
+      BadRequestException
+    );
+    expect(repository.createOrder).not.toHaveBeenCalled();
+  });
+
+  it('allows hostel orders when a room number is provided', async () => {
+    vi.mocked(repository.findLocationType).mockResolvedValue('hostel');
+    const input: CreateOrderDto = { ...orderInput, roomNumber: 'B12' };
+
+    await service.createOrder(customer, input, 'order-key');
+
+    expect(repository.createOrder).toHaveBeenCalledWith(
+      customer.userId,
+      input,
       'order-key',
       expect.any(String),
       0,

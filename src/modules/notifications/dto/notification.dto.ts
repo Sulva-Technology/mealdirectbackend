@@ -52,6 +52,11 @@ export class UpdateNotificationPreferencesDto {
   @IsOptional()
   @IsBoolean()
   settlementUpdates?: boolean;
+
+  @ApiPropertyOptional({ type: Boolean })
+  @IsOptional()
+  @IsBoolean()
+  batchChatEnabled?: boolean;
 }
 
 export class NotificationRecordDto {
@@ -136,6 +141,9 @@ export class NotificationPreferencesDto {
 
   @ApiProperty({ type: Boolean })
   settlementUpdates!: boolean;
+
+  @ApiProperty({ type: Boolean })
+  batchChatEnabled!: boolean;
 
   @ApiProperty({ type: String })
   updatedAt!: string;

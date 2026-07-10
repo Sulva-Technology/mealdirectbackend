@@ -100,6 +100,33 @@ export class OrderQuoteDto {
   items!: OrderQuoteItemDto[];
 }
 
+export class DeliveryHandoffDto {
+  @ApiProperty({
+    pattern: '^[0-9]{4}$',
+    type: String,
+    description: 'Code the customer gives to the rider after receiving the order.'
+  })
+  code!: string;
+
+  @ApiProperty({
+    type: String,
+    description: 'Customer-facing instruction to show with the delivery code.'
+  })
+  instruction!: string;
+}
+
+export class CreatedOrderDto {
+  @ApiProperty({ format: 'uuid', type: String })
+  orderId!: string;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    type: () => DeliveryHandoffDto,
+    description: 'Immediate pop-up payload for the customer after order creation.'
+  })
+  deliveryHandoff!: DeliveryHandoffDto | null;
+}
+
 export class OrderSummaryDto {
   @ApiProperty({ format: 'uuid', type: String })
   id!: string;
@@ -143,6 +170,13 @@ export class OrderSummaryDto {
   @ApiPropertyOptional({ nullable: true, type: String })
   specialInstructions!: string | null;
 
+  @ApiPropertyOptional({
+    nullable: true,
+    type: String,
+    description: 'Hostel room number when the delivery location is a hostel.'
+  })
+  roomNumber!: string | null;
+
   @ApiProperty({ type: Number })
   foodSubtotalKobo!: number;
 
@@ -185,9 +219,24 @@ export class OrderSummaryDto {
   @ApiPropertyOptional({
     nullable: true,
     type: String,
-    description: 'Delivery hand-off code to read to the rider; present once out for delivery.'
+    description: 'Delivery hand-off code to read to the rider after receiving the order.'
   })
   deliveryCode?: string | null;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    type: () => DeliveryHandoffDto,
+    description: 'Customer-facing code + instruction payload for delivery hand-off.'
+  })
+  deliveryHandoff?: DeliveryHandoffDto | null;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    format: 'uuid',
+    type: String,
+    description: 'Delivery batch this order belongs to, when batched. Powers the batch chat.'
+  })
+  batchId?: string | null;
 }
 
 export class OrderItemDto {
@@ -290,6 +339,11 @@ export class DeliveryConfirmationDto {
 export class OrderQuoteEnvelopeDto {
   @ApiProperty({ type: () => OrderQuoteDto })
   data!: OrderQuoteDto;
+}
+
+export class CreatedOrderEnvelopeDto {
+  @ApiProperty({ type: () => CreatedOrderDto })
+  data!: CreatedOrderDto;
 }
 
 export class OrderListEnvelopeDto {

@@ -45,6 +45,7 @@ export class VendorOrdersRepository {
         o.order_status::text as "orderStatus",
         o.delivery_mode::text as "deliveryMode",
         o.special_instructions as "specialInstructions",
+        o.room_number as "roomNumber",
         o.food_subtotal_kobo as "foodSubtotalKobo",
         o.delivery_fee_kobo as "deliveryFeeKobo",
         o.service_fee_kobo as "serviceFeeKobo",
@@ -62,6 +63,9 @@ export class VendorOrdersRepository {
       join public.delivery_slots ds on ds.id = o.delivery_slot_id
       join public.campus_locations cl on cl.id = o.location_id
       where o.vendor_id = ${vendorId}::uuid
+        and o.paid_at is not null
+        and o.order_status <> 'expired'
+        and o.order_status <> 'pending_payment'
         and (${filters.status ?? null}::public.order_status is null or o.order_status = ${filters.status ?? null}::public.order_status)
         and (${filters.date ?? null}::date is null or o.service_date = ${filters.date ?? null}::date)
       order by o.created_at desc
@@ -88,6 +92,7 @@ export class VendorOrdersRepository {
         o.order_status::text as "orderStatus",
         o.delivery_mode::text as "deliveryMode",
         o.special_instructions as "specialInstructions",
+        o.room_number as "roomNumber",
         o.food_subtotal_kobo as "foodSubtotalKobo",
         o.delivery_fee_kobo as "deliveryFeeKobo",
         o.service_fee_kobo as "serviceFeeKobo",
@@ -106,6 +111,9 @@ export class VendorOrdersRepository {
       join public.campus_locations cl on cl.id = o.location_id
       where o.vendor_id = ${vendorId}::uuid
         and o.id = ${orderId}::uuid
+        and o.paid_at is not null
+        and o.order_status <> 'expired'
+        and o.order_status <> 'pending_payment'
     `.execute(this.database.db);
 
     const order = orderResult.rows[0];

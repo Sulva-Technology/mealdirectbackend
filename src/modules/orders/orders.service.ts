@@ -13,6 +13,7 @@ import type {
   OrderPaymentStatus,
   OrderQuote,
   OrderQuoteItem,
+  CreatedOrder,
   OrdersRepositoryContract,
   OrderSummary
 } from './orders.types.js';
@@ -50,8 +51,9 @@ export class OrdersService {
     actor: AuthenticatedActor,
     input: CreateOrderDto,
     idempotencyKey: string
-  ): Promise<{ orderId: string }> {
+  ): Promise<CreatedOrder> {
     customerOnly(actor);
+    await this.assertRoomNumberWhenHostel(input);
     const { quote, serviceFeeKobo } = await this.buildQuote(input);
     const maxOrderTotalKobo = this.env.get('MAX_ORDER_TOTAL_KOBO');
     const accepted = input.acceptLargeOrderSurcharge === true;
@@ -120,6 +122,18 @@ export class OrdersService {
       },
       serviceFeeKobo
     };
+  }
+
+  private async assertRoomNumberWhenHostel(input: CreateOrderDto): Promise<void> {
+    const locationType = await this.repository.findLocationType(input.locationId);
+    const roomNumber = input.roomNumber?.trim();
+
+    if (locationType === 'hostel' && (roomNumber === undefined || roomNumber.length === 0)) {
+      throw new BadRequestException({
+        code: ErrorCodes.VALIDATION_FAILED,
+        message: 'Room number is required for hostel delivery locations.'
+      });
+    }
   }
 
   // Effective takeaway/packaging fee: the vendor's own value when set, otherwise the global

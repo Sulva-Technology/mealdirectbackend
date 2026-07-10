@@ -1,11 +1,14 @@
-import { createHash } from 'node:crypto';
+import { createHash, randomInt } from 'node:crypto';
 
 import { Inject, Injectable } from '@nestjs/common';
-import { sql } from 'kysely';
+import { sql, type Kysely, type Transaction } from 'kysely';
 
 import { DatabaseService } from '../../database/database.service.js';
+import type { DatabaseSchema } from '../../database/database.types.js';
 import type { CreateOrderDto } from './dto/create-order.dto.js';
 import type {
+  CreatedOrder,
+  DeliveryHandoff,
   LargeOrderSurchargeConfig,
   OrderDetail,
   OrderItem,
@@ -25,8 +28,26 @@ type ConfirmationResult = {
   confirmation_id: string;
 };
 
+type DatabaseExecutor = Kysely<DatabaseSchema> | Transaction<DatabaseSchema>;
+
 export function hashOrderRequest(input: unknown): string {
   return createHash('sha256').update(JSON.stringify(input)).digest('hex');
+}
+
+const deliveryHandoffInstruction =
+  'Give this code to the rider only after you receive your order. The rider will ask for it to confirm delivery.';
+
+function buildDeliveryHandoff(deliveryCode: string | null | undefined): DeliveryHandoff | null {
+  if (deliveryCode == null) return null;
+  return {
+    code: deliveryCode,
+    instruction: deliveryHandoffInstruction
+  };
+}
+
+function normalizeRoomNumber(roomNumber: string | undefined): string | null {
+  const trimmed = roomNumber?.trim();
+  return trimmed === undefined || trimmed.length === 0 ? null : trimmed;
 }
 
 @Injectable()
@@ -41,7 +62,7 @@ export class OrdersRepository implements OrdersRepositoryContract {
     serviceFeeKobo: number,
     maxOrderTotalKobo: number,
     largeOrderSurcharge: LargeOrderSurchargeConfig
-  ): Promise<{ orderId: string }> {
+  ): Promise<CreatedOrder> {
     const items = input.items.map((item) => ({
       menu_item_id: item.menuItemId,
       quantity: item.quantity,
@@ -49,34 +70,107 @@ export class OrdersRepository implements OrdersRepositoryContract {
       soup_option_id: item.soupOptionId ?? null
     }));
 
-    const result = await sql<CreateOrderResult>`
-      select public.create_pending_order_and_reserve_inventory(
-        ${customerId}::uuid,
-        ${input.campusId}::uuid,
-        ${input.vendorId}::uuid,
-        ${input.serviceDate}::date,
-        ${input.deliverySlotId}::uuid,
-        ${input.locationId}::uuid,
-        ${input.deliveryMode ?? null}::public.delivery_mode,
-        ${JSON.stringify(items)}::jsonb,
-        ${idempotencyKey},
-        ${requestHash},
-        ${input.promotionCode ?? null},
-        ${input.specialInstructions ?? null},
-        ${serviceFeeKobo}::integer,
-        ${maxOrderTotalKobo}::integer,
-        ${largeOrderSurcharge.surchargeBps}::integer,
-        ${largeOrderSurcharge.surchargeFlatKobo}::integer,
-        ${largeOrderSurcharge.accepted}::boolean
-      ) as order_id
-    `.execute(this.database.db);
+    return this.database.db.transaction().execute(async (trx) => {
+      const result = await sql<CreateOrderResult>`
+        select public.create_pending_order_and_reserve_inventory(
+          ${customerId}::uuid,
+          ${input.campusId}::uuid,
+          ${input.vendorId}::uuid,
+          ${input.serviceDate}::date,
+          ${input.deliverySlotId}::uuid,
+          ${input.locationId}::uuid,
+          ${input.deliveryMode ?? null}::public.delivery_mode,
+          ${JSON.stringify(items)}::jsonb,
+          ${idempotencyKey},
+          ${requestHash},
+          ${input.promotionCode ?? null},
+          ${input.specialInstructions ?? null},
+          ${serviceFeeKobo}::integer,
+          ${maxOrderTotalKobo}::integer,
+          ${largeOrderSurcharge.surchargeBps}::integer,
+          ${largeOrderSurcharge.surchargeFlatKobo}::integer,
+          ${largeOrderSurcharge.accepted}::boolean
+        ) as order_id
+      `.execute(trx);
 
-    const orderId = result.rows[0]?.order_id;
-    if (orderId === undefined) {
-      throw new Error('Order creation did not return an order ID.');
+      const orderId = result.rows[0]?.order_id;
+      if (orderId === undefined) {
+        throw new Error('Order creation did not return an order ID.');
+      }
+
+      const deliveryCode = await this.ensureOrderDeliveryMetadata(
+        orderId,
+        normalizeRoomNumber(input.roomNumber),
+        trx
+      );
+
+      return { orderId, deliveryHandoff: buildDeliveryHandoff(deliveryCode) };
+    });
+  }
+
+  private async ensureOrderDeliveryMetadata(
+    orderId: string,
+    roomNumber: string | null,
+    executor: DatabaseExecutor
+  ): Promise<string> {
+    const existing = await sql<{ deliveryCode: string | null }>`
+      select delivery_code as "deliveryCode"
+      from public.orders
+      where id = ${orderId}::uuid
+      for update
+    `.execute(executor);
+
+    const existingCode = existing.rows[0]?.deliveryCode;
+    if (existingCode !== undefined && existingCode !== null) {
+      await sql`
+        update public.orders
+        set room_number = ${roomNumber}
+        where id = ${orderId}::uuid
+      `.execute(executor);
+      return existingCode;
     }
 
-    return { orderId };
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      const code = String(randomInt(0, 10000)).padStart(4, '0');
+      const result = await sql<{ deliveryCode: string }>`
+        update public.orders
+        set room_number = ${roomNumber},
+            delivery_code = ${code}
+        where id = ${orderId}::uuid
+          and not exists (
+            select 1
+            from public.orders o2
+            where o2.id <> public.orders.id
+              and o2.delivery_code = ${code}
+              and o2.order_status in (
+                'accepted',
+                'pending_payment',
+                'paid',
+                'preparing',
+                'ready',
+                'out_for_delivery'
+              )
+          )
+        returning delivery_code as "deliveryCode"
+      `.execute(executor);
+
+      const assigned = result.rows[0]?.deliveryCode;
+      if (assigned !== undefined) {
+        return assigned;
+      }
+    }
+
+    throw new Error('Could not assign a unique delivery code after several attempts.');
+  }
+
+  async findLocationType(locationId: string): Promise<'department' | 'hostel' | undefined> {
+    const result = await sql<{ type: 'department' | 'hostel' }>`
+      select type::text as "type"
+      from public.campus_locations
+      where id = ${locationId}::uuid
+    `.execute(this.database.db);
+
+    return result.rows[0]?.type;
   }
 
   async findZoneDeliveryFeeKobo(locationId: string): Promise<number | null> {
@@ -157,6 +251,7 @@ export class OrdersRepository implements OrdersRepositoryContract {
         o.order_status::text as "orderStatus",
         o.delivery_mode::text as "deliveryMode",
         o.special_instructions as "specialInstructions",
+        o.room_number as "roomNumber",
         o.food_subtotal_kobo as "foodSubtotalKobo",
         o.delivery_fee_kobo as "deliveryFeeKobo",
         o.service_fee_kobo as "serviceFeeKobo",
@@ -169,7 +264,14 @@ export class OrdersRepository implements OrdersRepositoryContract {
         o.paid_at::text as "paidAt",
         o.delivered_at::text as "deliveredAt",
         o.confirmed_at::text as "confirmedAt",
-        o.delivery_code as "deliveryCode"
+        o.delivery_code as "deliveryCode",
+        case
+          when o.delivery_code is null then null
+          else jsonb_build_object(
+            'code', o.delivery_code,
+            'instruction', ${deliveryHandoffInstruction}
+          )
+        end as "deliveryHandoff"
       from public.orders o
       join public.vendors v on v.id = o.vendor_id
       join public.delivery_slots ds on ds.id = o.delivery_slot_id
@@ -247,6 +349,7 @@ export class OrdersRepository implements OrdersRepositoryContract {
         o.order_status::text as "orderStatus",
         o.delivery_mode::text as "deliveryMode",
         o.special_instructions as "specialInstructions",
+        o.room_number as "roomNumber",
         o.food_subtotal_kobo as "foodSubtotalKobo",
         o.delivery_fee_kobo as "deliveryFeeKobo",
         o.service_fee_kobo as "serviceFeeKobo",
@@ -259,11 +362,20 @@ export class OrdersRepository implements OrdersRepositoryContract {
         o.paid_at::text as "paidAt",
         o.delivered_at::text as "deliveredAt",
         o.confirmed_at::text as "confirmedAt",
-        o.delivery_code as "deliveryCode"
+        o.delivery_code as "deliveryCode",
+        dbo.batch_id::text as "batchId",
+        case
+          when o.delivery_code is null then null
+          else jsonb_build_object(
+            'code', o.delivery_code,
+            'instruction', ${deliveryHandoffInstruction}
+          )
+        end as "deliveryHandoff"
       from public.orders o
       join public.vendors v on v.id = o.vendor_id
       join public.delivery_slots ds on ds.id = o.delivery_slot_id
       join public.campus_locations cl on cl.id = o.location_id
+      left join public.delivery_batch_orders dbo on dbo.order_id = o.id
       where o.customer_id = ${customerId}::uuid
         and o.id = ${orderId}::uuid
     `.execute(this.database.db);

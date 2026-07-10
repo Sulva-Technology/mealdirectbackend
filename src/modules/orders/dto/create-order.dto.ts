@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { IsDatabaseUuid } from '../../../common/validation.js';
 import {
   ArrayMinSize,
@@ -17,6 +17,10 @@ import {
 } from 'class-validator';
 
 const deliveryModes = ['vendor_delivery', 'meal_direct_rider'] as const;
+
+function trimString(value: unknown): unknown {
+  return typeof value === 'string' ? value.trim() : value;
+}
 
 export class CreateOrderItemDto {
   @ApiProperty({ format: 'uuid', type: String })
@@ -96,6 +100,17 @@ export class CreateOrderDto {
   @IsString()
   @MaxLength(1000)
   specialInstructions?: string;
+
+  @ApiPropertyOptional({
+    description: 'Hostel room number. Required when the selected delivery location is a hostel.',
+    maxLength: 32,
+    type: String
+  })
+  @IsOptional()
+  @Transform(({ value }) => trimString(value))
+  @IsString()
+  @MaxLength(32)
+  roomNumber?: string;
 
   @ApiPropertyOptional({
     description:

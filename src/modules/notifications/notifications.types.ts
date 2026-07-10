@@ -24,12 +24,14 @@ export type NotificationPreferences = {
   deliveryUpdates: boolean;
   escalationUpdates: boolean;
   settlementUpdates: boolean;
+  batchChatEnabled: boolean;
   updatedAt: string;
 };
 
 export type NotificationPreferenceUpdate = Partial<
   Pick<
     NotificationPreferences,
+    | 'batchChatEnabled'
     | 'deliveryUpdates'
     | 'emailEnabled'
     | 'escalationUpdates'

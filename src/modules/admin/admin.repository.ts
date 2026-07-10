@@ -53,6 +53,7 @@ export class AdminRepository {
         o.location_id::text as "locationId",
         o.order_status::text as "orderStatus",
         o.delivery_mode::text as "deliveryMode",
+        o.room_number as "roomNumber",
         o.total_kobo as "totalKobo",
         o.currency,
         coalesce((
@@ -93,6 +94,7 @@ export class AdminRepository {
         v.display_name as "vendorDisplayName",
         o.order_status::text as "orderStatus",
         o.delivery_mode::text as "deliveryMode",
+        o.room_number as "roomNumber",
         o.service_date::text as "serviceDate",
         o.total_kobo as "totalKobo",
         o.currency,

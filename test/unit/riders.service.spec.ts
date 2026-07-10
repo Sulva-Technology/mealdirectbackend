@@ -95,6 +95,7 @@ const order: RiderOrderDetail = {
   deliveryInstructions: 'Call at the gate.',
   deliveryMode: 'meal_direct_rider',
   specialInstructions: null,
+  roomNumber: null,
   deliverySlotId: assignment.deliverySlotId,
   deliverySlotName: assignment.deliverySlotName,
   discountKobo: 0,

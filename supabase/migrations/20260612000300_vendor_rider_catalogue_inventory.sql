@@ -178,7 +178,7 @@ create table public.delivery_slots (
   campus_id uuid not null references public.campuses(id) on delete restrict,
   name text not null,
   delivery_time time not null,
-  cutoff_minutes integer not null default 60,
+  cutoff_minutes integer not null default 30,
   active boolean not null default true,
   display_order integer not null default 0,
   created_at timestamptz not null default now(),

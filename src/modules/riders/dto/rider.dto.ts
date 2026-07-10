@@ -387,8 +387,7 @@ export class RiderOrderDetailDto extends OrderDetailDto {
   @ApiProperty({ format: 'uuid', type: String })
   assignmentId!: string;
 
-  @ApiProperty({ format: 'uuid', type: String })
-  batchId!: string;
+  // batchId is inherited from OrderDetailDto.
 
   @ApiProperty({ enum: assignmentStatuses, type: String })
   assignmentStatus!: string;

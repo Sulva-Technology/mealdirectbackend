@@ -232,6 +232,24 @@
         "tags": ["auth"]
       }
     },
+    "/v1/auth/update-password": {
+      "post": {
+        "operationId": "AuthController_updatePassword",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Sets a new password using the recovery token from the reset email.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthMessageResponseDto" }
+              }
+            }
+          },
+          "401": { "description": "The recovery token is invalid or expired." }
+        },
+        "tags": ["auth"]
+      }
+    },
     "/v1/auth/logout": {
       "post": {
         "operationId": "AuthController_logout",
@@ -958,6 +976,90 @@
         "tags": ["vendor"]
       }
     },
+    "/v1/vendor/soup-options": {
+      "get": {
+        "operationId": "VendorsController_listSoupOptions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The vendor's soup options (including inactive ones).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VendorSoupOptionListEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Vendor role and vendor membership are required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor"]
+      },
+      "post": {
+        "operationId": "VendorsController_createSoupOption",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateVendorSoupOptionDto" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created vendor-owned soup option.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VendorSoupOptionEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid soup input or duplicate name." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Vendor role and vendor membership are required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor"]
+      }
+    },
+    "/v1/vendor/soup-options/{soupOptionId}": {
+      "patch": {
+        "operationId": "VendorsController_updateSoupOption",
+        "parameters": [
+          {
+            "name": "soupOptionId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateVendorSoupOptionDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated vendor-owned soup option (rename, reorder, or toggle active).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VendorSoupOptionEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid soup input or duplicate name." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Vendor role and vendor membership are required." },
+          "404": { "description": "Soup option was not found." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor"]
+      }
+    },
     "/v1/vendor/menu-items": {
       "get": {
         "operationId": "VendorsController_listMenuItems",
@@ -1296,6 +1398,53 @@
         "tags": ["vendor"]
       }
     },
+    "/v1/vendor/availability/state": {
+      "get": {
+        "operationId": "VendorsController_getStoreAvailability",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Current storefront availability state (open/closed/paused/sold-out).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/StoreAvailabilityStateEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Vendor role and vendor membership are required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor"]
+      },
+      "patch": {
+        "operationId": "VendorsController_updateStoreAvailability",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateStoreAvailabilityDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated storefront availability state. cutoffTime is admin-controlled and ignored.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/StoreAvailabilityStateEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid storefront availability input." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Vendor role and vendor membership are required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor"]
+      }
+    },
     "/v1/vendor/orders": {
       "get": {
         "operationId": "VendorOrdersController_listOrders",
@@ -1541,6 +1690,273 @@
         "tags": ["admin"]
       }
     },
+    "/v1/admin/vendors/{vendorId}/menu-metadata": {
+      "get": {
+        "operationId": "AdminVendorMenuController_getMenuMetadata",
+        "parameters": [
+          {
+            "name": "vendorId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vendor menu categories and active unit types.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MenuMetadataEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." },
+          "404": { "description": "Vendor was not found." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/vendors/{vendorId}/menu-categories": {
+      "post": {
+        "operationId": "AdminVendorMenuController_createMenuCategory",
+        "parameters": [
+          {
+            "name": "vendorId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateMenuCategoryDto" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created (or updated on slug conflict) vendor menu category.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MenuCategoryEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid menu category input." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." },
+          "404": { "description": "Vendor was not found." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/vendors/{vendorId}/menu-items": {
+      "get": {
+        "operationId": "AdminVendorMenuController_listMenuItems",
+        "parameters": [
+          {
+            "name": "vendorId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vendor menu items including inactive historical items.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VendorMenuItemListEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." },
+          "404": { "description": "Vendor was not found." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      },
+      "post": {
+        "operationId": "AdminVendorMenuController_createMenuItem",
+        "parameters": [
+          {
+            "name": "vendorId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/CreateMenuItemDto" } }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created vendor menu item.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VendorMenuItemEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid menu item input." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." },
+          "404": { "description": "Vendor was not found." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/vendors/{vendorId}/menu-items/{itemId}": {
+      "get": {
+        "operationId": "AdminVendorMenuController_getMenuItem",
+        "parameters": [
+          {
+            "name": "itemId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          },
+          {
+            "name": "vendorId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vendor menu item detail.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VendorMenuItemEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." },
+          "404": { "description": "Menu item was not found for this vendor." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      },
+      "patch": {
+        "operationId": "AdminVendorMenuController_updateMenuItem",
+        "parameters": [
+          {
+            "name": "itemId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          },
+          {
+            "name": "vendorId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/UpdateMenuItemDto" } }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated vendor menu item.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VendorMenuItemEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid menu item input." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." },
+          "404": { "description": "Menu item was not found for this vendor." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/vendors/{vendorId}/menu-items/{itemId}/activate": {
+      "post": {
+        "operationId": "AdminVendorMenuController_activateMenuItem",
+        "parameters": [
+          {
+            "name": "itemId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          },
+          {
+            "name": "vendorId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Activated a vendor menu item.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VendorMenuItemEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." },
+          "404": { "description": "Menu item was not found for this vendor." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/vendors/{vendorId}/menu-items/{itemId}/deactivate": {
+      "post": {
+        "operationId": "AdminVendorMenuController_deactivateMenuItem",
+        "parameters": [
+          {
+            "name": "itemId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          },
+          {
+            "name": "vendorId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deactivated a vendor menu item without deleting history.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VendorMenuItemEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." },
+          "404": { "description": "Menu item was not found for this vendor." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
     "/v1/catalog/vendors": {
       "get": {
         "operationId": "CatalogController_listVendors",
@@ -1740,7 +2156,12 @@
           }
         },
         "responses": {
-          "201": { "description": "Order was created idempotently and inventory was reserved." }
+          "201": {
+            "description": "Order was created idempotently, inventory was reserved, and hand-off code returned.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/CreatedOrderDto" } }
+            }
+          }
         },
         "security": [{ "supabaseAuth": [] }],
         "tags": ["orders"]
@@ -1964,6 +2385,110 @@
         },
         "security": [{ "supabaseAuth": [] }],
         "tags": ["admin-payments"]
+      }
+    },
+    "/v1/admin/health": {
+      "get": {
+        "operationId": "AdminHealthController_getHealth",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Admin system health overview." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-health"]
+      }
+    },
+    "/v1/admin/webhooks": {
+      "get": {
+        "operationId": "AdminWebhooksController_listWebhooks",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Paginated list of Paystack webhook events." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-webhooks"]
+      }
+    },
+    "/v1/admin/webhooks/{webhookId}": {
+      "get": {
+        "operationId": "AdminWebhooksController_getWebhook",
+        "parameters": [
+          { "name": "webhookId", "required": true, "in": "path", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Single webhook event detail." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-webhooks"]
+      }
+    },
+    "/v1/admin/webhooks/{webhookId}/retry": {
+      "post": {
+        "operationId": "AdminWebhooksController_retryWebhook",
+        "parameters": [
+          { "name": "webhookId", "required": true, "in": "path", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Webhook cleared for reprocessing." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-webhooks"]
+      }
+    },
+    "/v1/admin/webhooks/{webhookId}/review": {
+      "post": {
+        "operationId": "AdminWebhooksController_reviewWebhook",
+        "parameters": [
+          { "name": "webhookId", "required": true, "in": "path", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Webhook acknowledged and marked as reviewed." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-webhooks"]
+      }
+    },
+    "/v1/admin/payments/problem-queues": {
+      "get": {
+        "operationId": "AdminProblemQueuesController_listProblemQueue",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Paginated reconciliation problem queue." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-problem-queues"]
+      }
+    },
+    "/v1/admin/payments/problem-queues/{issueId}/review": {
+      "post": {
+        "operationId": "AdminProblemQueuesController_reviewQueueItem",
+        "parameters": [
+          {
+            "name": "issueId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Marks the problem queue item as investigating." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-problem-queues"]
       }
     },
     "/v1/payments/webhooks/paystack": {
@@ -2438,6 +2963,94 @@
         "tags": ["vendor-batches"]
       }
     },
+    "/v1/batches/{batchId}/chat/messages": {
+      "get": {
+        "operationId": "ChatController_listMessages",
+        "parameters": [
+          {
+            "name": "batchId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cursor-paginated chat history for the batch (newest first).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChatMessageListEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid cursor or limit." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Caller is not a participant of this batch chat." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["batch-chat"]
+      },
+      "post": {
+        "operationId": "ChatController_postMessage",
+        "parameters": [
+          {
+            "name": "batchId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/SendChatMessageDto" } }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Message posted to the batch chat.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChatMessageEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid message body." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Caller is not a participant of this batch chat." },
+          "409": { "description": "The batch chat is closed." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["batch-chat"]
+      }
+    },
+    "/v1/batches/{batchId}/chat/participants": {
+      "get": {
+        "operationId": "ChatController_listParticipants",
+        "parameters": [
+          {
+            "name": "batchId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Visible participants of the batch chat (pseudonymised labels).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ChatParticipantListEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Caller is not a participant of this batch chat." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["batch-chat"]
+      }
+    },
     "/v1/rider/onboard": {
       "post": {
         "operationId": "RidersController_onboard",
@@ -2793,6 +3406,27 @@
               }
             }
           },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Verified active rider access is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["rider"]
+      }
+    },
+    "/v1/rider/orders/confirm-delivery": {
+      "post": {
+        "operationId": "RidersController_confirmDeliveryByCode",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Order marked delivered via the customer hand-off code.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RiderOrderDetailEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid code payload." },
           "401": { "description": "Missing, invalid, or expired Supabase JWT." },
           "403": { "description": "Verified active rider access is required." }
         },
@@ -3354,7 +3988,44 @@
         "tags": ["admin"]
       }
     },
+    "/v1/admin/users/{userId}": {
+      "delete": {
+        "operationId": "AdminController_deleteUser",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Permanently deletes a user (any type) and all rows referencing them. Super admin only. Irreversible."
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      },
+      "get": {
+        "operationId": "AdminController_getUser",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
     "/v1/admin/vendors/{vendorId}/invitations": {
+      "get": {
+        "operationId": "AdminController_listVendorInvitations",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      },
       "post": {
         "operationId": "AdminController_createVendorInvitation",
         "parameters": [],
@@ -3653,6 +4324,36 @@
         "tags": ["admin"]
       }
     },
+    "/v1/admin/settlements/{id}/payout-account": {
+      "get": {
+        "operationId": "AdminController_getSettlementPayoutAccount",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Beneficiary bank account for a settlement, fetched from Paystack for manual payout."
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/settlements/{id}/pay": {
+      "post": {
+        "operationId": "AdminController_paySettlement",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Initiated (or returned the existing) automated Paystack payout for a settlement."
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
     "/v1/admin/settlements/{id}/adjustments": {
       "post": {
         "operationId": "AdminController_adjustSettlement",
@@ -3695,19 +4396,6 @@
     "/v1/admin/users": {
       "get": {
         "operationId": "AdminController_listUsers",
-        "parameters": [],
-        "responses": {
-          "200": { "description": "" },
-          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
-          "403": { "description": "Admin role is required." }
-        },
-        "security": [{ "supabaseAuth": [] }],
-        "tags": ["admin"]
-      }
-    },
-    "/v1/admin/users/{userId}": {
-      "get": {
-        "operationId": "AdminController_getUser",
         "parameters": [],
         "responses": {
           "200": { "description": "" },
@@ -4645,9 +5333,18 @@
           "code": { "type": "string" },
           "displayName": { "type": "string" },
           "countsTowardSpoonLimit": { "type": "boolean" },
+          "triggersTakeawayFee": { "type": "boolean" },
+          "maxQuantity": { "type": "number", "nullable": true },
           "active": { "type": "boolean" }
         },
-        "required": ["id", "code", "displayName", "countsTowardSpoonLimit", "active"]
+        "required": [
+          "id",
+          "code",
+          "displayName",
+          "countsTowardSpoonLimit",
+          "triggersTakeawayFee",
+          "active"
+        ]
       },
       "MenuMetadataDto": {
         "type": "object",
@@ -4678,6 +5375,50 @@
         "properties": { "data": { "$ref": "#/components/schemas/MenuCategoryDto" } },
         "required": ["data"]
       },
+      "VendorSoupOptionDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "vendorId": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "active": { "type": "boolean" },
+          "displayOrder": { "type": "number" },
+          "createdAt": { "type": "string" },
+          "updatedAt": { "type": "string" }
+        },
+        "required": ["id", "vendorId", "name", "active", "displayOrder", "createdAt", "updatedAt"]
+      },
+      "VendorSoupOptionListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/VendorSoupOptionDto" }
+          }
+        },
+        "required": ["data"]
+      },
+      "CreateVendorSoupOptionDto": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "maxLength": 120, "minLength": 1 },
+          "displayOrder": { "type": "number", "minimum": 0 }
+        },
+        "required": ["name"]
+      },
+      "VendorSoupOptionEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/VendorSoupOptionDto" } },
+        "required": ["data"]
+      },
+      "UpdateVendorSoupOptionDto": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "maxLength": 120, "minLength": 1 },
+          "active": { "type": "boolean" },
+          "displayOrder": { "type": "number", "minimum": 0 }
+        }
+      },
       "VendorMenuItemDto": {
         "type": "object",
         "properties": {
@@ -4695,6 +5436,10 @@
             "type": "boolean",
             "description": "When true, this item contributes to takeaway packaging rules and fees."
           },
+          "requiresSoup": {
+            "type": "boolean",
+            "description": "When true, ordering this item requires picking one of the vendor's soups."
+          },
           "active": { "type": "boolean" },
           "displayOrder": { "type": "number" },
           "createdAt": { "type": "string" },
@@ -4708,6 +5453,7 @@
           "name",
           "priceKobo",
           "countsTowardSpoonLimit",
+          "requiresSoup",
           "active",
           "displayOrder",
           "createdAt",
@@ -4730,6 +5476,11 @@
           "description": { "type": "string", "maxLength": 1000, "nullable": true },
           "imageUrl": { "type": "string", "maxLength": 2048, "nullable": true },
           "priceKobo": { "type": "number", "minimum": 0 },
+          "requiresSoup": {
+            "type": "boolean",
+            "default": false,
+            "description": "When true, ordering this item requires the customer to pick one of the vendor's active soups."
+          },
           "displayOrder": { "type": "number", "minimum": 0 }
         },
         "required": ["unitTypeId", "name", "priceKobo"]
@@ -4748,6 +5499,7 @@
           "description": { "type": "string", "maxLength": 1000, "nullable": true },
           "imageUrl": { "type": "string", "maxLength": 2048, "nullable": true },
           "priceKobo": { "type": "number", "minimum": 0 },
+          "requiresSoup": { "type": "boolean" },
           "displayOrder": { "type": "number", "minimum": 0 }
         }
       },
@@ -4794,6 +5546,56 @@
         },
         "required": ["entries"]
       },
+      "StoreAvailabilityStateDto": {
+        "type": "object",
+        "properties": {
+          "acceptingOrders": { "type": "boolean" },
+          "state": { "type": "string", "enum": ["open", "closed", "paused", "sold_out_today"] },
+          "pauseUntil": { "type": "string", "nullable": true, "example": "2026-07-04T21:00:00Z" },
+          "cutoffTime": { "type": "string", "nullable": true, "example": "21:00:00" },
+          "maxOrdersPerDay": { "type": "number", "nullable": true },
+          "unavailableDates": {
+            "example": ["2026-07-05"],
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "required": ["acceptingOrders", "state", "unavailableDates"]
+      },
+      "StoreAvailabilityStateEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/StoreAvailabilityStateDto" } },
+        "required": ["data"]
+      },
+      "UpdateStoreAvailabilityDto": {
+        "type": "object",
+        "properties": {
+          "acceptingOrders": { "type": "boolean" },
+          "state": { "type": "string", "enum": ["open", "closed", "paused", "sold_out_today"] },
+          "pauseUntil": { "type": "string", "nullable": true, "example": "2026-07-04T21:00:00Z" },
+          "maxOrdersPerDay": { "type": "number", "nullable": true },
+          "unavailableDates": {
+            "example": ["2026-07-05"],
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      },
+      "DeliveryHandoffDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "pattern": "^[0-9]{4}$",
+            "description": "Code the customer gives to the rider after receiving the order."
+          },
+          "instruction": {
+            "type": "string",
+            "description": "Customer-facing instruction to show with the delivery code."
+          }
+        },
+        "required": ["code", "instruction"]
+      },
       "OrderSummaryDto": {
         "type": "object",
         "properties": {
@@ -4827,17 +5629,43 @@
           },
           "deliveryMode": { "type": "string" },
           "specialInstructions": { "type": "string", "nullable": true },
+          "roomNumber": {
+            "type": "string",
+            "nullable": true,
+            "description": "Hostel room number when the delivery location is a hostel."
+          },
           "foodSubtotalKobo": { "type": "number" },
           "deliveryFeeKobo": { "type": "number" },
           "serviceFeeKobo": { "type": "number" },
           "discountKobo": { "type": "number" },
+          "largeOrderSurchargeKobo": {
+            "type": "number",
+            "description": "Large-order surcharge (1.5% + ₦100) charged on this order. Included in totalKobo."
+          },
           "totalKobo": { "type": "number" },
           "currency": { "type": "string" },
           "createdAt": { "type": "string" },
           "updatedAt": { "type": "string" },
           "paidAt": { "type": "string", "nullable": true },
           "deliveredAt": { "type": "string", "nullable": true },
-          "confirmedAt": { "type": "string", "nullable": true }
+          "confirmedAt": { "type": "string", "nullable": true },
+          "deliveryCode": {
+            "type": "string",
+            "nullable": true,
+            "description": "Delivery hand-off code to read to the rider after receiving the order."
+          },
+          "deliveryHandoff": {
+            "nullable": true,
+            "description": "Customer-facing code + instruction payload for delivery hand-off.",
+            "type": "object",
+            "allOf": [{ "$ref": "#/components/schemas/DeliveryHandoffDto" }]
+          },
+          "batchId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid",
+            "description": "Delivery batch this order belongs to, when batched. Powers the batch chat."
+          }
         },
         "required": [
           "id",
@@ -4857,6 +5685,7 @@
           "deliveryFeeKobo",
           "serviceFeeKobo",
           "discountKobo",
+          "largeOrderSurchargeKobo",
           "totalKobo",
           "currency",
           "createdAt",
@@ -4880,7 +5709,18 @@
           "unitPriceKobo": { "type": "number" },
           "quantity": { "type": "number" },
           "lineTotalKobo": { "type": "number" },
-          "customization": { "type": "object", "additionalProperties": true }
+          "customization": { "type": "object", "additionalProperties": true },
+          "soupOptionId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "The chosen soup option id when the item required a soup; null otherwise."
+          },
+          "soupName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Display name of the chosen soup; null when no soup was required."
+          }
         },
         "required": [
           "id",
@@ -4950,10 +5790,19 @@
           },
           "deliveryMode": { "type": "string" },
           "specialInstructions": { "type": "string", "nullable": true },
+          "roomNumber": {
+            "type": "string",
+            "nullable": true,
+            "description": "Hostel room number when the delivery location is a hostel."
+          },
           "foodSubtotalKobo": { "type": "number" },
           "deliveryFeeKobo": { "type": "number" },
           "serviceFeeKobo": { "type": "number" },
           "discountKobo": { "type": "number" },
+          "largeOrderSurchargeKobo": {
+            "type": "number",
+            "description": "Large-order surcharge (1.5% + ₦100) charged on this order. Included in totalKobo."
+          },
           "totalKobo": { "type": "number" },
           "currency": { "type": "string" },
           "createdAt": { "type": "string" },
@@ -4961,6 +5810,23 @@
           "paidAt": { "type": "string", "nullable": true },
           "deliveredAt": { "type": "string", "nullable": true },
           "confirmedAt": { "type": "string", "nullable": true },
+          "deliveryCode": {
+            "type": "string",
+            "nullable": true,
+            "description": "Delivery hand-off code to read to the rider after receiving the order."
+          },
+          "deliveryHandoff": {
+            "nullable": true,
+            "description": "Customer-facing code + instruction payload for delivery hand-off.",
+            "type": "object",
+            "allOf": [{ "$ref": "#/components/schemas/DeliveryHandoffDto" }]
+          },
+          "batchId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid",
+            "description": "Delivery batch this order belongs to, when batched. Powers the batch chat."
+          },
           "items": { "type": "array", "items": { "$ref": "#/components/schemas/OrderItemDto" } },
           "latestPayment": {
             "nullable": true,
@@ -4986,6 +5852,7 @@
           "deliveryFeeKobo",
           "serviceFeeKobo",
           "discountKobo",
+          "largeOrderSurchargeKobo",
           "totalKobo",
           "currency",
           "createdAt",
@@ -5020,6 +5887,17 @@
             "type": "boolean",
             "default": false,
             "description": "When true, quantities count toward the three-spoon takeaway package limit."
+          },
+          "triggersTakeawayFee": {
+            "type": "boolean",
+            "default": false,
+            "description": "When true, an order containing this item pulls the flat takeaway/service fee, independent of the spoon-limit cap."
+          },
+          "maxQuantity": {
+            "type": "number",
+            "minimum": 1,
+            "nullable": true,
+            "description": "Maximum quantity per order line for this unit type; null means unlimited."
           }
         },
         "required": ["code", "displayName"]
@@ -5034,8 +5912,18 @@
         "properties": {
           "displayName": { "type": "string", "maxLength": 120, "minLength": 1 },
           "countsTowardSpoonLimit": { "type": "boolean" },
+          "triggersTakeawayFee": { "type": "boolean" },
+          "maxQuantity": { "type": "number", "minimum": 1, "nullable": true },
           "active": { "type": "boolean" }
         }
+      },
+      "CatalogSoupOptionDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" }
+        },
+        "required": ["id", "name"]
       },
       "CatalogVendorDto": {
         "type": "object",
@@ -5050,9 +5938,14 @@
           "defaultDeliveryMode": {
             "type": "string",
             "enum": ["meal_direct_rider", "vendor_delivery"]
+          },
+          "soupOptions": {
+            "description": "The vendor's active soups; rendered as the picker for items requiring a soup.",
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CatalogSoupOptionDto" }
           }
         },
-        "required": ["id", "campusId", "displayName", "slug", "defaultDeliveryMode"]
+        "required": ["id", "campusId", "displayName", "slug", "defaultDeliveryMode", "soupOptions"]
       },
       "CatalogVendorListEnvelopeDto": {
         "type": "object",
@@ -5083,6 +5976,10 @@
           "countsTowardSpoonLimit": {
             "type": "boolean",
             "description": "When true, this item contributes to takeaway packaging rules and fees."
+          },
+          "requiresSoup": {
+            "type": "boolean",
+            "description": "When true, the customer must pick one of the vendor's soups for this item."
           }
         },
         "required": [
@@ -5092,7 +5989,8 @@
           "unitCode",
           "name",
           "priceKobo",
-          "countsTowardSpoonLimit"
+          "countsTowardSpoonLimit",
+          "requiresSoup"
         ]
       },
       "MenuItemListEnvelopeDto": {
@@ -5219,6 +6117,11 @@
             "type": "object",
             "additionalProperties": true,
             "description": "Per-item customization object (e.g. spoonsCount, customFoodType, customProtein, customFoodSelections, drinks). Stored and returned verbatim."
+          },
+          "soupOptionId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Chosen soup option id (from the vendor's soup list). Required when the menu item requires a soup."
           }
         },
         "required": ["menuItemId", "quantity"]
@@ -5242,6 +6145,15 @@
             "description": "Order-level delivery note / special instructions.",
             "maxLength": 1000
           },
+          "roomNumber": {
+            "type": "string",
+            "description": "Hostel room number. Required when the selected delivery location is a hostel.",
+            "maxLength": 32
+          },
+          "acceptLargeOrderSurcharge": {
+            "type": "boolean",
+            "description": "Set true to acknowledge and accept the large-order surcharge (1.5% + ₦100) required for order totals above the standard ₦2490 cap. Orders over the cap are rejected unless this is true."
+          },
           "items": {
             "minItems": 1,
             "type": "array",
@@ -5262,6 +6174,10 @@
           "countsTowardSpoonLimit": {
             "type": "boolean",
             "description": "When true, this line contributes to takeaway packaging rules and fees."
+          },
+          "triggersTakeawayFee": {
+            "type": "boolean",
+            "description": "When true, this line pulls the flat takeaway/service fee (independent of the spoon-limit cap)."
           }
         },
         "required": [
@@ -5271,7 +6187,8 @@
           "remainingQuantity",
           "unitPriceKobo",
           "lineTotalKobo",
-          "countsTowardSpoonLimit"
+          "countsTowardSpoonLimit",
+          "triggersTakeawayFee"
         ]
       },
       "OrderQuoteDto": {
@@ -5282,6 +6199,14 @@
           "deliveryFeeKobo": { "type": "number" },
           "serviceFeeKobo": { "type": "number" },
           "discountKobo": { "type": "number" },
+          "largeOrderSurchargeKobo": {
+            "type": "number",
+            "description": "Large-order surcharge (1.5% + ₦100) already included in totalKobo. Zero when the order does not exceed the standard cap."
+          },
+          "exceedsStandardCap": {
+            "type": "boolean",
+            "description": "True when the total exceeds the standard ₦2490 cap. Show the surcharge notice and require acceptLargeOrderSurcharge on create."
+          },
           "totalKobo": { "type": "number" },
           "items": {
             "type": "array",
@@ -5294,6 +6219,8 @@
           "deliveryFeeKobo",
           "serviceFeeKobo",
           "discountKobo",
+          "largeOrderSurchargeKobo",
+          "exceedsStandardCap",
           "totalKobo",
           "items"
         ]
@@ -5309,6 +6236,19 @@
           "data": { "type": "array", "items": { "$ref": "#/components/schemas/OrderSummaryDto" } }
         },
         "required": ["data"]
+      },
+      "CreatedOrderDto": {
+        "type": "object",
+        "properties": {
+          "orderId": { "type": "string", "format": "uuid" },
+          "deliveryHandoff": {
+            "nullable": true,
+            "description": "Immediate pop-up payload for the customer after order creation.",
+            "type": "object",
+            "allOf": [{ "$ref": "#/components/schemas/DeliveryHandoffDto" }]
+          }
+        },
+        "required": ["orderId"]
       },
       "OrderPaymentStatusDto": {
         "type": "object",
@@ -5794,6 +6734,66 @@
         "properties": { "data": { "$ref": "#/components/schemas/BatchDetailDto" } },
         "required": ["data"]
       },
+      "ChatMessageDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "batchId": { "type": "string", "format": "uuid" },
+          "senderUserId": { "type": "string", "format": "uuid" },
+          "senderLabel": { "type": "string" },
+          "senderRole": { "type": "string", "enum": ["rider", "customer", "vendor"] },
+          "body": { "type": "string" },
+          "createdAt": { "type": "string" },
+          "mine": { "type": "boolean" }
+        },
+        "required": [
+          "id",
+          "batchId",
+          "senderUserId",
+          "senderLabel",
+          "senderRole",
+          "body",
+          "createdAt",
+          "mine"
+        ]
+      },
+      "ChatMessageListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/ChatMessageDto" } }
+        },
+        "required": ["data"]
+      },
+      "SendChatMessageDto": {
+        "type": "object",
+        "properties": { "body": { "type": "string", "maxLength": 2000, "minLength": 1 } },
+        "required": ["body"]
+      },
+      "ChatMessageEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/ChatMessageDto" } },
+        "required": ["data"]
+      },
+      "ChatParticipantDto": {
+        "type": "object",
+        "properties": {
+          "userId": { "type": "string", "format": "uuid" },
+          "role": { "type": "string", "enum": ["rider", "customer", "vendor"] },
+          "label": { "type": "string" },
+          "joinedAt": { "type": "string" }
+        },
+        "required": ["userId", "role", "label", "joinedAt"]
+      },
+      "ChatParticipantListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ChatParticipantDto" }
+          }
+        },
+        "required": ["data"]
+      },
       "OnboardRiderDto": {
         "type": "object",
         "properties": {
@@ -6069,10 +7069,19 @@
           },
           "deliveryMode": { "type": "string" },
           "specialInstructions": { "type": "string", "nullable": true },
+          "roomNumber": {
+            "type": "string",
+            "nullable": true,
+            "description": "Hostel room number when the delivery location is a hostel."
+          },
           "foodSubtotalKobo": { "type": "number" },
           "deliveryFeeKobo": { "type": "number" },
           "serviceFeeKobo": { "type": "number" },
           "discountKobo": { "type": "number" },
+          "largeOrderSurchargeKobo": {
+            "type": "number",
+            "description": "Large-order surcharge (1.5% + ₦100) charged on this order. Included in totalKobo."
+          },
           "totalKobo": { "type": "number" },
           "currency": { "type": "string" },
           "createdAt": { "type": "string" },
@@ -6080,6 +7089,23 @@
           "paidAt": { "type": "string", "nullable": true },
           "deliveredAt": { "type": "string", "nullable": true },
           "confirmedAt": { "type": "string", "nullable": true },
+          "deliveryCode": {
+            "type": "string",
+            "nullable": true,
+            "description": "Delivery hand-off code to read to the rider after receiving the order."
+          },
+          "deliveryHandoff": {
+            "nullable": true,
+            "description": "Customer-facing code + instruction payload for delivery hand-off.",
+            "type": "object",
+            "allOf": [{ "$ref": "#/components/schemas/DeliveryHandoffDto" }]
+          },
+          "batchId": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid",
+            "description": "Delivery batch this order belongs to, when batched. Powers the batch chat."
+          },
           "items": { "type": "array", "items": { "$ref": "#/components/schemas/OrderItemDto" } },
           "latestPayment": {
             "nullable": true,
@@ -6087,7 +7113,6 @@
             "allOf": [{ "$ref": "#/components/schemas/PaymentSnapshotDto" }]
           },
           "assignmentId": { "type": "string", "format": "uuid" },
-          "batchId": { "type": "string", "format": "uuid" },
           "assignmentStatus": {
             "type": "string",
             "enum": ["accepted", "assigned", "cancelled", "completed", "picked_up"]
@@ -6115,13 +7140,13 @@
           "deliveryFeeKobo",
           "serviceFeeKobo",
           "discountKobo",
+          "largeOrderSurchargeKobo",
           "totalKobo",
           "currency",
           "createdAt",
           "updatedAt",
           "items",
           "assignmentId",
-          "batchId",
           "assignmentStatus",
           "zoneName"
         ]
@@ -6605,6 +7630,7 @@
           "deliveryUpdates": { "type": "boolean" },
           "escalationUpdates": { "type": "boolean" },
           "settlementUpdates": { "type": "boolean" },
+          "batchChatEnabled": { "type": "boolean" },
           "updatedAt": { "type": "string" }
         },
         "required": [
@@ -6617,6 +7643,7 @@
           "deliveryUpdates",
           "escalationUpdates",
           "settlementUpdates",
+          "batchChatEnabled",
           "updatedAt"
         ]
       },

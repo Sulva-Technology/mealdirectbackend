@@ -29,6 +29,7 @@ const notification: NotificationRecord = {
 };
 
 const preferences: NotificationPreferences = {
+  batchChatEnabled: true,
   deliveryUpdates: true,
   emailEnabled: false,
   escalationUpdates: true,

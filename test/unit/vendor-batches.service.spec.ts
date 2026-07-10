@@ -50,6 +50,7 @@ const orderSummary: OrderSummary = {
   orderStatus: 'ready',
   deliveryMode: 'meal_direct_rider',
   specialInstructions: null,
+  roomNumber: null,
   foodSubtotalKobo: 250000,
   deliveryFeeKobo: 15000,
   serviceFeeKobo: 0,
