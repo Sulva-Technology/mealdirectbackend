@@ -157,6 +157,7 @@ export class AdminProblemQueuesController {
       detail: Record<string, unknown>;
       firstDetectedAt: string;
       reviewedAt: string | null;
+      customerName: string | null;
       customerEmail: string | null;
     };
 
@@ -173,9 +174,11 @@ export class AdminProblemQueuesController {
           i.detail,
           i.first_detected_at::text as "firstDetectedAt",
           i.reviewed_at::text as "reviewedAt",
-          p.customer_email as "customerEmail"
+          pr.display_name as "customerName",
+          pr.email::text as "customerEmail"
         from public.payment_reconciliation_issues i
-        left join public.payments p on p.id = i.payment_id
+        left join public.orders o on o.id = i.order_id
+        left join public.profiles pr on pr.id = o.customer_id
         where i.status = 'open' and i.campus_id = ${campusId}::uuid
         order by i.severity desc, i.first_detected_at asc
         limit ${limit + 1}
@@ -192,9 +195,11 @@ export class AdminProblemQueuesController {
           i.detail,
           i.first_detected_at::text as "firstDetectedAt",
           i.reviewed_at::text as "reviewedAt",
-          p.customer_email as "customerEmail"
+          pr.display_name as "customerName",
+          pr.email::text as "customerEmail"
         from public.payment_reconciliation_issues i
-        left join public.payments p on p.id = i.payment_id
+        left join public.orders o on o.id = i.order_id
+        left join public.profiles pr on pr.id = o.customer_id
         where i.status = 'open'
         order by i.severity desc, i.first_detected_at asc
         limit ${limit + 1}
@@ -212,7 +217,7 @@ export class AdminProblemQueuesController {
         severity: r.severity,
         paymentReference: r.providerReference ?? 'N/A',
         orderId: r.orderId ?? 'N/A',
-        customerName: (detail['customerName'] as string | undefined) ?? null,
+        customerName: r.customerName ?? (detail['customerName'] as string | undefined) ?? null,
         customerEmail: r.customerEmail,
         amountKobo:
           (detail['expectedAmountKobo'] as number | undefined) ??
