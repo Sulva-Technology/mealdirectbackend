@@ -20,6 +20,10 @@ process.env.LOG_LEVEL = 'silent';
 process.env.BODY_LIMIT_BYTES = '1048576';
 process.env.RATE_LIMIT_MAX = '120';
 process.env.RATE_LIMIT_WINDOW_MS = '60000';
+// Keep the stricter auth-endpoint limiter out of the way of integration suites
+// that hit login/signup many times; its own behavior is unit-tested directly.
+process.env.AUTH_RATE_LIMIT_MAX = '1000';
+process.env.AUTH_RATE_LIMIT_WINDOW_MS = '60000';
 process.env.REQUEST_ID_HEADER = 'x-request-id';
 process.env.TRACE_ID_HEADER = 'x-trace-id';
 process.env.RELEASE_VERSION = 'test';

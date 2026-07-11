@@ -12,20 +12,24 @@ import { isActorRole } from './actor-context.js';
 // not user-editable. user_metadata IS user-editable, so it can never grant them.
 const selfServiceRoles: readonly ActorRole[] = ['customer', 'vendor', 'rider'];
 
-// app_metadata is authoritative. user_metadata.meal_direct_role is honored only
-// transitionally and only for self-service roles, to keep pre-migration users
-// working until their app_metadata is backfilled. Drop the fallback after backfill.
+// app_metadata is authoritative. user_metadata.meal_direct_role is user-editable,
+// so honoring it lets a user self-assign a role. It is a transitional fallback for
+// pre-migration users, gated behind AUTH_ALLOW_USER_METADATA_ROLE_FALLBACK and off
+// by default. Drop it entirely once every user's role is backfilled to app_metadata.
 function resolveRole(
   appMetadata: Record<string, unknown>,
-  userMetadata: Record<string, unknown>
+  userMetadata: Record<string, unknown>,
+  allowUserMetadataFallback: boolean
 ): ActorRole {
   const appRole = appMetadata.meal_direct_role ?? appMetadata.role;
   if (isActorRole(appRole)) {
     return appRole;
   }
-  const userRole = userMetadata.meal_direct_role;
-  if (isActorRole(userRole) && selfServiceRoles.includes(userRole)) {
-    return userRole;
+  if (allowUserMetadataFallback) {
+    const userRole = userMetadata.meal_direct_role;
+    if (isActorRole(userRole) && selfServiceRoles.includes(userRole)) {
+      return userRole;
+    }
   }
   return 'customer';
 }
@@ -118,7 +122,11 @@ export class SupabaseJwtService {
 
     const appMetadata = objectValue(claims.app_metadata);
     const userMetadata = objectValue(claims.user_metadata);
-    const role = resolveRole(appMetadata, userMetadata);
+    const role = resolveRole(
+      appMetadata,
+      userMetadata,
+      this.env.get('AUTH_ALLOW_USER_METADATA_ROLE_FALLBACK')
+    );
     const email = stringValue(claims.email);
     const campusId = stringValue(appMetadata.campus_id);
     const vendorId = stringValue(appMetadata.vendor_id);

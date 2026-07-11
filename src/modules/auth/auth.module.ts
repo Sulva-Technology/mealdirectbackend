@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { DatabaseModule } from '../../database/database.module.js';
+import { AuthThrottleGuard } from '../../common/http/auth-throttle.guard.js';
 import { AdminPermissionsRepository } from './admin-permissions.repository.js';
 import { AuthController } from './auth.controller.js';
 import { AuthRoleGrantsRepository } from './auth-role-grants.repository.js';
@@ -15,6 +16,7 @@ import { VendorInvitationsRepository } from './vendor-invitations.repository.js'
   imports: [DatabaseModule],
   controllers: [AuthController],
   providers: [
+    AuthThrottleGuard,
     JwtAuthGuard,
     RolesGuard,
     PermissionsGuard,

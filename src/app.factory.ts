@@ -165,7 +165,10 @@ export async function createApp(options: CreateAppOptions = {}): Promise<NestFas
   app.setGlobalPrefix(config.API_PREFIX);
   configureGlobals(app, createErrorReporter(config));
 
-  if (options.enableOpenApi ?? true) {
+  // Tests may force-enable via options.enableOpenApi; otherwise the env flag
+  // decides. Turn ENABLE_API_DOCS off in production so the API surface isn't
+  // publicly mapped at /docs.
+  if (options.enableOpenApi ?? config.ENABLE_API_DOCS) {
     mountOpenApi(app);
   }
 

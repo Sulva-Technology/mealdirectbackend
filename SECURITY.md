@@ -43,4 +43,16 @@ Required controls before production launch:
 - Immutable payment, refund, settlement, order status, inventory adjustment, and audit history.
 - Exact CORS allowlist for the four frontend domains.
 - No service-role keys in client code or logs.
+- Session tokens held only in httpOnly cookies at every portal — never in
+  `localStorage`/`sessionStorage` or other browser-readable JS. Each portal
+  reaches the backend through a same-origin BFF/proxy that injects the bearer
+  server-side (`admin`, `user`, `vendor`, `rider`).
+- Stricter per-IP rate limiting on unauthenticated credential endpoints
+  (`AUTH_RATE_LIMIT_MAX`), on top of the global limit.
+- API docs (`/docs`) disabled in production (`ENABLE_API_DOCS=false`).
+- `AUTH_ALLOW_USER_METADATA_ROLE_FALLBACK=false` in production; role authority
+  comes only from `app_metadata`.
+- Multi-factor auth required on all `super_admin` accounts (Supabase Auth): a
+  `super_admin` JWT bypasses the granular permission guard by design, so the
+  account itself must be hardened.
 - Production secrets only in Supabase, Render, GitHub, and Paystack secret stores.

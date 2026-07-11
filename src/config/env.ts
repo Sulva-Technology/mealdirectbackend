@@ -75,6 +75,19 @@ const envSchema = z
     BODY_LIMIT_BYTES: z.coerce.number().int().positive().max(10_485_760).default(1_048_576),
     RATE_LIMIT_MAX: z.coerce.number().int().positive().default(120),
     RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60_000),
+    // Stricter limiter for unauthenticated credential endpoints (login/signup/
+    // password-reset/refresh). Applied per client IP on top of the global limit
+    // to slow password guessing and account-enumeration probing.
+    AUTH_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(10),
+    AUTH_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60_000),
+    // Serves Swagger UI + openapi.json at /docs. Left on by default for
+    // dev/staging; set false in production so the API surface isn't publicly mapped.
+    ENABLE_API_DOCS: booleanFromString.default(true),
+    // Transitional: honor user_metadata.meal_direct_role for self-service roles
+    // (customer/vendor/rider) when app_metadata has none. user_metadata is
+    // user-editable, so this lets a user self-assign vendor/rider. Keep true ONLY
+    // until every user's role is backfilled into app_metadata, then leave false.
+    AUTH_ALLOW_USER_METADATA_ROLE_FALLBACK: booleanFromString.default(false),
     REQUEST_ID_HEADER: z.string().min(1).default('x-request-id'),
     TRACE_ID_HEADER: z.string().min(1).default('x-trace-id'),
     RELEASE_VERSION: z.string().min(1).default('local'),

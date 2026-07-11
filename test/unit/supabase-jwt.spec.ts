@@ -88,4 +88,46 @@ describe('SupabaseJwtService', () => {
     const service = new SupabaseJwtService(makeEnv({}));
     await expect(service.verifyToken('any.token.value')).rejects.toThrow();
   });
+
+  it('ignores a user_metadata role when the fallback is off (default)', async () => {
+    const token = await new SignJWT({
+      email: 'attacker@example.com',
+      app_metadata: {},
+      user_metadata: { meal_direct_role: 'vendor' }
+    })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setSubject('33333333-3333-4333-8333-333333333333')
+      .setIssuer(issuer)
+      .setAudience(audience)
+      .setIssuedAt()
+      .setExpirationTime('15m')
+      .sign(new TextEncoder().encode(hsSecret));
+
+    const service = new SupabaseJwtService(makeEnv({ SUPABASE_JWT_SECRET: hsSecret }));
+    const actor = await service.verifyToken(token);
+
+    expect(actor.role).toBe('customer');
+  });
+
+  it('honors a self-service user_metadata role only when the fallback is enabled', async () => {
+    const token = await new SignJWT({
+      email: 'vendor@example.com',
+      app_metadata: {},
+      user_metadata: { meal_direct_role: 'vendor' }
+    })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setSubject('44444444-4444-4444-8444-444444444444')
+      .setIssuer(issuer)
+      .setAudience(audience)
+      .setIssuedAt()
+      .setExpirationTime('15m')
+      .sign(new TextEncoder().encode(hsSecret));
+
+    const service = new SupabaseJwtService(
+      makeEnv({ SUPABASE_JWT_SECRET: hsSecret, AUTH_ALLOW_USER_METADATA_ROLE_FALLBACK: true })
+    );
+    const actor = await service.verifyToken(token);
+
+    expect(actor.role).toBe('vendor');
+  });
 });

@@ -21,6 +21,7 @@ import {
   SignUpDto,
   UpdatePasswordDto
 } from './dto/auth.dto.js';
+import { AuthThrottleGuard } from '../../common/http/auth-throttle.guard.js';
 import { JwtAuthGuard } from './jwt-auth.guard.js';
 import { SupabaseAuthService } from './supabase-auth.service.js';
 
@@ -33,6 +34,7 @@ export class AuthController {
   ) {}
 
   @Post('customer/signup')
+  @UseGuards(AuthThrottleGuard)
   @ApiCreatedResponse({
     type: AuthTokensResponseDto,
     description: 'Customer registered successfully.'
@@ -51,6 +53,7 @@ export class AuthController {
   }
 
   @Post('customer/login')
+  @UseGuards(AuthThrottleGuard)
   @HttpCode(200)
   @ApiOkResponse({ type: AuthTokensResponseDto, description: 'Customer logged in successfully.' })
   @ApiUnauthorizedResponse({ description: 'Invalid credentials.' })
@@ -60,6 +63,7 @@ export class AuthController {
   }
 
   @Post('vendor/signup')
+  @UseGuards(AuthThrottleGuard)
   @ApiCreatedResponse({
     type: AuthTokensResponseDto,
     description: 'Vendor registered successfully.'
@@ -76,6 +80,7 @@ export class AuthController {
   }
 
   @Post('vendor/accept-invite')
+  @UseGuards(AuthThrottleGuard)
   @ApiCreatedResponse({
     type: AuthTokensResponseDto,
     description: 'Vendor account created from an admin-issued invite link.'
@@ -93,6 +98,7 @@ export class AuthController {
   }
 
   @Post('vendor/login')
+  @UseGuards(AuthThrottleGuard)
   @HttpCode(200)
   @ApiOkResponse({ type: AuthTokensResponseDto, description: 'Vendor logged in successfully.' })
   @ApiUnauthorizedResponse({ description: 'Invalid credentials.' })
@@ -102,6 +108,7 @@ export class AuthController {
   }
 
   @Post('rider/signup')
+  @UseGuards(AuthThrottleGuard)
   @ApiCreatedResponse({
     type: AuthTokensResponseDto,
     description: 'Rider registered successfully.'
@@ -118,6 +125,7 @@ export class AuthController {
   }
 
   @Post('rider/login')
+  @UseGuards(AuthThrottleGuard)
   @HttpCode(200)
   @ApiOkResponse({ type: AuthTokensResponseDto, description: 'Rider logged in successfully.' })
   @ApiUnauthorizedResponse({ description: 'Invalid credentials.' })
@@ -127,6 +135,7 @@ export class AuthController {
   }
 
   @Post('admin/login')
+  @UseGuards(AuthThrottleGuard)
   @HttpCode(200)
   @ApiOkResponse({ type: AuthTokensResponseDto, description: 'Admin logged in successfully.' })
   @ApiUnauthorizedResponse({ description: 'Invalid credentials.' })
@@ -136,6 +145,7 @@ export class AuthController {
   }
 
   @Post('refresh')
+  @UseGuards(AuthThrottleGuard)
   @HttpCode(200)
   @ApiOkResponse({ type: AuthTokensResponseDto, description: 'Session refreshed successfully.' })
   @ApiUnauthorizedResponse({ description: 'Invalid refresh token.' })
@@ -144,6 +154,7 @@ export class AuthController {
   }
 
   @Post('password-reset')
+  @UseGuards(AuthThrottleGuard)
   @HttpCode(200)
   @ApiOkResponse({
     type: AuthMessageResponseDto,
@@ -155,6 +166,7 @@ export class AuthController {
   }
 
   @Post('resend-confirmation')
+  @UseGuards(AuthThrottleGuard)
   @HttpCode(200)
   @ApiOkResponse({
     type: AuthMessageResponseDto,
@@ -166,6 +178,7 @@ export class AuthController {
   }
 
   @Post('update-password')
+  @UseGuards(AuthThrottleGuard)
   @HttpCode(200)
   @ApiOkResponse({
     type: AuthMessageResponseDto,
