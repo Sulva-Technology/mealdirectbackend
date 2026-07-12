@@ -72,6 +72,12 @@ services:
         sync: false
       - key: SUPABASE_JWT_SECRET
         sync: false
+      # Required by production env validation (env.ts superRefine); the cron boots the
+      # full AppModule + parseEnvironment(), so a missing value crashes the job on start.
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
       - key: INTERNAL_OPERATIONS_TOKEN
         sync: false
   - type: cron
@@ -95,6 +101,12 @@ services:
         sync: false
       - key: SUPABASE_JWT_SECRET
         sync: false
+      # Required by production env validation (env.ts superRefine); the cron boots the
+      # full AppModule + parseEnvironment(), so a missing value crashes the job on start.
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
       - key: INTERNAL_OPERATIONS_TOKEN
         sync: false
   - type: cron
@@ -117,6 +129,12 @@ services:
       - key: SUPABASE_JWT_ISSUER
         sync: false
       - key: SUPABASE_JWT_SECRET
+        sync: false
+      # Required by production env validation (env.ts superRefine); the cron boots the
+      # full AppModule + parseEnvironment(), so a missing value crashes the job on start.
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: RESEND_API_KEY
         sync: false
       - key: INTERNAL_OPERATIONS_TOKEN
         sync: false
