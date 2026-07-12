@@ -269,7 +269,7 @@ export class OrdersRepository implements OrdersRepositoryContract {
           when o.delivery_code is null then null
           else jsonb_build_object(
             'code', o.delivery_code,
-            'instruction', ${deliveryHandoffInstruction}
+            'instruction', ${deliveryHandoffInstruction}::text
           )
         end as "deliveryHandoff"
       from public.orders o
@@ -368,7 +368,7 @@ export class OrdersRepository implements OrdersRepositoryContract {
           when o.delivery_code is null then null
           else jsonb_build_object(
             'code', o.delivery_code,
-            'instruction', ${deliveryHandoffInstruction}
+            'instruction', ${deliveryHandoffInstruction}::text
           )
         end as "deliveryHandoff"
       from public.orders o
