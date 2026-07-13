@@ -250,12 +250,26 @@ describe('VendorsService', () => {
     });
 
     it('maps an unknown campus (foreign key violation) to a bad request', async () => {
-      const fkViolation = Object.assign(new Error('fk violation'), { code: '23503' });
+      const fkViolation = Object.assign(new Error('fk violation'), {
+        code: '23503',
+        constraint: 'vendors_campus_id_fkey'
+      });
       vi.mocked(repository.onboardVendor).mockRejectedValue(fkViolation);
 
       await expect(service.onboardVendor(onboardActor, input)).rejects.toBeInstanceOf(
         BadRequestException
       );
+      expect(auth.setUserAppMetadata).not.toHaveBeenCalled();
+    });
+
+    it('does not mislabel a non-campus foreign key violation as a bad campus', async () => {
+      const fkViolation = Object.assign(new Error('fk violation'), {
+        code: '23503',
+        constraint: 'vendor_users_user_id_fkey'
+      });
+      vi.mocked(repository.onboardVendor).mockRejectedValue(fkViolation);
+
+      await expect(service.onboardVendor(onboardActor, input)).rejects.toBe(fkViolation);
       expect(auth.setUserAppMetadata).not.toHaveBeenCalled();
     });
   });
