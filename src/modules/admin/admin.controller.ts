@@ -50,6 +50,7 @@ import {
   AdminEscalationQueryDto,
   AdminEscalationResolveDto,
   AdminInventoryAdjustmentDto,
+  AdminInventorySetTotalDto,
   AdminInventoryIdParamDto,
   AdminInventoryQueryDto,
   AdminMarkPaidDto,
@@ -466,6 +467,17 @@ export class AdminController {
   ): Promise<SuccessEnvelope<AdminRecord | undefined>> {
     return createSuccessEnvelope(
       await this.admin.adjustInventory(actor, params.inventoryId, input)
+    );
+  }
+
+  @Patch('inventory/:inventoryId')
+  async setInventoryTotal(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Param() params: AdminInventoryIdParamDto,
+    @Body() input: AdminInventorySetTotalDto
+  ): Promise<SuccessEnvelope<AdminRecord>> {
+    return createSuccessEnvelope(
+      await this.admin.setInventoryTotal(actor, params.inventoryId, input)
     );
   }
 

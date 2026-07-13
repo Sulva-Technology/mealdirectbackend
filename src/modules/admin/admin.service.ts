@@ -32,6 +32,7 @@ import type {
   AdminEscalationQueryDto,
   AdminEscalationResolveDto,
   AdminInventoryAdjustmentDto,
+  AdminInventorySetTotalDto,
   AdminInventoryQueryDto,
   AdminMarkPaidDto,
   AdminModerateReviewDto,
@@ -434,6 +435,30 @@ export class AdminService {
   ): Promise<AdminRecord | undefined> {
     this.assertAdmin(actor);
     return this.repository.adjustInventory(inventoryId, input.delta, input.reason, actor.userId);
+  }
+
+  async setInventoryTotal(
+    actor: AuthenticatedActor,
+    inventoryId: string,
+    input: AdminInventorySetTotalDto
+  ): Promise<AdminRecord> {
+    const campusId = this.campusScope(actor);
+    const row = this.requireRecord(
+      await this.repository.getInventoryRow(inventoryId, campusId),
+      'Inventory row was not found.'
+    );
+
+    // remaining = total + adjusted - reserved - sold; keep it from going negative.
+    const adjusted = Number(row.quantityAdjusted ?? 0);
+    const committed = Number(row.quantityReserved ?? 0) + Number(row.quantitySold ?? 0);
+    if (input.quantityTotal + adjusted < committed) {
+      throw badRequest('Total cannot be lower than reserved plus sold quantity.');
+    }
+
+    return this.requireRecord(
+      await this.repository.setInventoryTotal(inventoryId, input.quantityTotal, campusId),
+      'Inventory row was not found.'
+    );
   }
 
   listEscalations(

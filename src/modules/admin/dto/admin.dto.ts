@@ -405,6 +405,13 @@ export class AdminInventoryAdjustmentDto {
   reason!: string;
 }
 
+export class AdminInventorySetTotalDto {
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  quantityTotal!: number;
+}
+
 export class AdminSettlementGenerationDto {
   @IsIn(beneficiaryTypes)
   beneficiaryType!: (typeof beneficiaryTypes)[number];

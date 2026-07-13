@@ -623,6 +623,42 @@ export class AdminRepository {
     return result.rows;
   }
 
+  async getInventoryRow(inventoryId: string, campusId?: string): Promise<AdminRecord | undefined> {
+    const result = await sql<AdminRecord>`
+      select inv.id::text as "id", mi.vendor_id::text as "vendorId", v.campus_id::text as "campusId",
+        mi.name as "menuItemName", inv.service_date::text as "serviceDate", inv.delivery_slot_id::text as "deliverySlotId",
+        inv.quantity_total as "quantityTotal", inv.quantity_reserved as "quantityReserved",
+        inv.quantity_sold as "quantitySold", inv.quantity_adjusted as "quantityAdjusted",
+        (inv.quantity_total + inv.quantity_adjusted - inv.quantity_reserved - inv.quantity_sold) as "remainingQuantity"
+      from public.menu_item_inventory inv
+      join public.menu_items mi on mi.id = inv.menu_item_id
+      join public.vendors v on v.id = mi.vendor_id
+      where inv.id = ${inventoryId}::uuid
+        and (${campusId ?? null}::uuid is null or v.campus_id = ${campusId ?? null}::uuid)
+      limit 1
+    `.execute(this.database.db);
+    return result.rows[0];
+  }
+
+  async setInventoryTotal(
+    inventoryId: string,
+    quantityTotal: number,
+    campusId?: string
+  ): Promise<AdminRecord | undefined> {
+    await sql`
+      update public.menu_item_inventory inv
+      set quantity_total = ${quantityTotal},
+          version = version + 1,
+          updated_at = now()
+      from public.menu_items mi
+      join public.vendors v on v.id = mi.vendor_id
+      where inv.menu_item_id = mi.id
+        and inv.id = ${inventoryId}::uuid
+        and (${campusId ?? null}::uuid is null or v.campus_id = ${campusId ?? null}::uuid)
+    `.execute(this.database.db);
+    return this.getInventoryRow(inventoryId, campusId);
+  }
+
   async adjustInventory(
     inventoryId: string,
     delta: number,
