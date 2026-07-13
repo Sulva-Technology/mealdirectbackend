@@ -30,6 +30,7 @@ export type VendorOnboardInput = {
 export type VendorOnboardRepositoryInput = VendorOnboardInput & {
   slug: string;
   userId: string;
+  userEmail?: string | null;
   autoApprove: boolean;
 };
 

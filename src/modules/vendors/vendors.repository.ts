@@ -92,6 +92,15 @@ export class VendorsRepository implements VendorsRepositoryContract {
         throw new Error('Vendor insert did not return a row.');
       }
 
+      // Guarantee the profile row that vendor_users.user_id references, rather
+      // than depending on the on_auth_user_created trigger having populated it.
+      // Idempotent: an existing profile is left untouched.
+      await sql`
+        insert into public.profiles (id, email, last_seen_at)
+        values (${input.userId}::uuid, ${input.userEmail ?? null}::extensions.citext, now())
+        on conflict (id) do nothing
+      `.execute(trx);
+
       await sql`
         insert into public.vendor_users (vendor_id, user_id, role)
         values (${vendorId}::uuid, ${input.userId}::uuid, 'owner'::public.vendor_user_role)

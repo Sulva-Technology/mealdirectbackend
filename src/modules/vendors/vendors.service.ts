@@ -64,6 +64,12 @@ function postgresErrorCode(error: unknown): string | undefined {
     : undefined;
 }
 
+function postgresConstraint(error: unknown): string | undefined {
+  return typeof error === 'object' && error !== null
+    ? (error as { constraint?: string }).constraint
+    : undefined;
+}
+
 function slugify(value: string): string {
   return value
     .toLowerCase()
@@ -267,13 +273,20 @@ export class VendorsService {
           ...(phone === undefined ? {} : { phone }),
           slug,
           userId: actor.userId,
+          userEmail: actor.email ?? null,
           autoApprove: VENDOR_AUTO_APPROVE
         });
       } catch (error) {
         const code = postgresErrorCode(error);
         if (code === '23503') {
-          // foreign key violation — campus_id does not exist
-          throw badRequest('Campus was not found.');
+          // Foreign key violation. Only the campus_id FK is user-correctable;
+          // any other FK (e.g. the profiles link) is an internal fault we must
+          // not mislabel as a bad campus.
+          const constraint = postgresConstraint(error);
+          if (constraint === undefined || constraint.includes('campus')) {
+            throw badRequest('Campus was not found.');
+          }
+          throw error;
         }
         if (code === '23505' && attempt < 3) {
           // unique (campus_id, slug) collision — retry with a suffixed slug

@@ -130,6 +130,16 @@ export class VendorInvitationsRepository {
           and expires_at > now()
         limit 1
       ),
+      profile as (
+        -- Guarantee the profile row the vendor_users FK depends on, rather than
+        -- racing the on_auth_user_created trigger. All data-modifying CTEs run to
+        -- completion before the statement's FK checks fire, so this satisfies
+        -- vendor_users_user_id_fkey even though it can't be referenced by "linked".
+        insert into public.profiles (id, email, last_seen_at)
+        select ${input.userId}::uuid, ${input.email}::extensions.citext, now()
+        from invite
+        on conflict (id) do nothing
+      ),
       linked as (
         insert into public.vendor_users (vendor_id, user_id, role)
         select vendor_id, ${input.userId}::uuid, role
