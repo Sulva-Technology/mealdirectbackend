@@ -1,14 +1,5 @@
 import { Type } from 'class-transformer';
-import {
-  IsIn,
-  IsInt,
-  IsOptional,
-  IsString,
-  Max,
-  MaxLength,
-  Min,
-  MinLength
-} from 'class-validator';
+import { IsIn, IsInt, IsOptional, IsString, Max, MaxLength, Min, MinLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsDatabaseUuid } from '../../../common/validation.js';
 import type { PaymentStatus } from '../payments.types.js';
@@ -28,11 +19,12 @@ export class InitiateRefundDto {
   @Min(1)
   amountKobo!: number;
 
-  @ApiProperty({ maxLength: 80, minLength: 1, type: String })
+  @ApiPropertyOptional({ maxLength: 80, minLength: 1, type: String })
+  @IsOptional()
   @IsString()
   @MinLength(1)
   @MaxLength(80)
-  reasonCode!: string;
+  reasonCode?: string;
 
   @ApiPropertyOptional({ maxLength: 500, type: String })
   @IsOptional()
@@ -40,6 +32,14 @@ export class InitiateRefundDto {
   @MinLength(1)
   @MaxLength(500)
   reasonText?: string;
+
+  /** Plain-language reason accepted from the admin UI; used when reasonCode is absent. */
+  @ApiPropertyOptional({ maxLength: 500, type: String })
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(500)
+  reason?: string;
 }
 
 export class ForcePaymentPaidDto {
@@ -48,6 +48,23 @@ export class ForcePaymentPaidDto {
   @MinLength(3)
   @MaxLength(500)
   reason!: string;
+}
+
+export class PaymentReviewDto {
+  @ApiPropertyOptional({ maxLength: 2000, type: String })
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(2000)
+  note?: string;
+}
+
+export class PaymentNoteDto {
+  @ApiProperty({ maxLength: 2000, type: String })
+  @IsString()
+  @MinLength(1)
+  @MaxLength(2000)
+  note!: string;
 }
 
 export class PaystackInitializationDto {

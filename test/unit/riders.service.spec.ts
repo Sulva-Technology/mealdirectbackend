@@ -184,6 +184,7 @@ type MockRidersRepository = {
 function createRepository(): MockRidersRepository {
   return {
     acceptAssignment: vi.fn().mockResolvedValue({ ...assignment, status: 'accepted' }),
+    declineAssignment: vi.fn().mockResolvedValue({ ...assignment, status: 'cancelled' }),
     assertRiderAccess: vi.fn().mockResolvedValue(true),
     createOrderIssue: vi.fn().mockResolvedValue(issue),
     findAssignedOrderById: vi.fn().mockResolvedValue(order),
@@ -205,9 +206,7 @@ function createRepository(): MockRidersRepository {
       .fn()
       .mockResolvedValue({ orderId: order.id, matchCount: 1 }),
     getDeliveryCodeLock: vi.fn().mockResolvedValue(null),
-    registerDeliveryCodeFailure: vi
-      .fn()
-      .mockResolvedValue({ failedCount: 1, lockedUntil: null }),
+    registerDeliveryCodeFailure: vi.fn().mockResolvedValue({ failedCount: 1, lockedUntil: null }),
     resetDeliveryCodeAttempts: vi.fn().mockResolvedValue(undefined),
     updateRiderProfile: vi.fn().mockResolvedValue(profile),
     upsertPayoutAccount: vi.fn().mockResolvedValue(payoutAccount),
@@ -475,7 +474,11 @@ describe('RidersService', () => {
         bankCode: ' 058 ',
         bankName: ' Test Bank '
       })
-    ).resolves.toEqual({ ...payoutAccount, verificationStatus: 'unverified', payoutMode: 'manual' });
+    ).resolves.toEqual({
+      ...payoutAccount,
+      verificationStatus: 'unverified',
+      payoutMode: 'manual'
+    });
 
     expect(paystack.createTransferRecipient).toHaveBeenCalledWith({
       name: 'Ada Rider',

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { AuthenticatedActor } from '../../src/modules/auth/actor-context.js';
 import type { AuditService } from '../../src/common/audit/audit.service.js';
+import type { SupportNotesService } from '../../src/common/support-notes/support-notes.service.js';
 import { PaymentsService } from '../../src/modules/payments/payments.service.js';
 import type {
   PaystackClientContract,
@@ -133,7 +134,18 @@ describe('PaymentsService', () => {
     repository = createRepository();
     paystack = createPaystack();
     audit = { record: vi.fn().mockResolvedValue(undefined) } as unknown as AuditService;
-    service = new PaymentsService(repository, paystack, audit);
+    const supportNotes = {
+      add: vi.fn().mockResolvedValue({
+        id: 'note-1',
+        subjectType: 'payment',
+        subjectId: 'payment-1',
+        authorId: 'admin-1',
+        body: 'note',
+        createdAt: new Date().toISOString()
+      }),
+      list: vi.fn().mockResolvedValue([])
+    } as unknown as SupportNotesService;
+    service = new PaymentsService(repository, paystack, audit, supportNotes);
   });
 
   it('initializes Paystack using the stored payment amount and reference', async () => {

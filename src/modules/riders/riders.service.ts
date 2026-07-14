@@ -370,6 +370,47 @@ export class RidersService {
     };
   }
 
+  /**
+   * Rider turns down an assignment. The assignment is cancelled, the batch reopens
+   * (closed) for admin re-assignment, and the decline is audited with the reason so
+   * ops can follow up from the admin panel.
+   */
+  async declineAssignment(
+    actor: AuthenticatedActor,
+    assignmentId: string,
+    reason?: string
+  ): Promise<RiderAssignmentDetail> {
+    const profile = await this.resolveRiderProfile(actor, { requireActiveVerified: true });
+    const existing = await this.repository.findAssignmentById(profile.id, assignmentId);
+    if (existing === undefined) {
+      throw notFound('Assignment was not found.');
+    }
+    if (existing.status !== 'assigned' && existing.status !== 'accepted') {
+      throw badRequest('Assignment cannot be declined from its current status.');
+    }
+
+    const assignment = await this.repository.declineAssignment(profile.id, assignmentId);
+    if (assignment === undefined) {
+      throw notFound('Assignment was not found.');
+    }
+
+    await this.audit.record({
+      actorUserId: actor.userId,
+      actorType: actorTypeForRole(actor.role),
+      action: 'assignment.declined',
+      entityType: 'delivery_assignment',
+      entityId: assignmentId,
+      before: { status: existing.status },
+      after: { status: assignment.status },
+      metadata: { batchId: existing.batchId, ...(reason === undefined ? {} : { reason }) }
+    });
+
+    return {
+      ...assignment,
+      orders: await this.repository.findAssignmentOrders(assignment.batchId)
+    };
+  }
+
   async markAssignmentPickedUp(
     actor: AuthenticatedActor,
     assignmentId: string
@@ -416,17 +457,12 @@ export class RidersService {
   // Rider confirms delivery by entering the customer's 4-digit code. No order id is
   // supplied: the code alone resolves to the rider's one matching out-for-delivery
   // order. Guarded by a per-rider brute-force lock (see register_delivery_code_failure).
-  async confirmDeliveryByCode(
-    actor: AuthenticatedActor,
-    code: string
-  ): Promise<RiderOrderDetail> {
+  async confirmDeliveryByCode(actor: AuthenticatedActor, code: string): Promise<RiderOrderDetail> {
     const profile = await this.resolveRiderProfile(actor, { requireActiveVerified: true });
 
     const lockedUntil = await this.repository.getDeliveryCodeLock(profile.id);
     if (lockedUntil !== null) {
-      throw tooManyRequests(
-        `Too many incorrect codes. Try again after ${lockedUntil}.`
-      );
+      throw tooManyRequests(`Too many incorrect codes. Try again after ${lockedUntil}.`);
     }
 
     const lookup = await this.repository.findActiveOrderIdByDeliveryCode(profile.id, code);
@@ -440,9 +476,7 @@ export class RidersService {
     if (lookup.orderId === null) {
       const attempt = await this.repository.registerDeliveryCodeFailure(profile.id);
       if (attempt.lockedUntil !== null) {
-        throw tooManyRequests(
-          `Too many incorrect codes. Try again after ${attempt.lockedUntil}.`
-        );
+        throw tooManyRequests(`Too many incorrect codes. Try again after ${attempt.lockedUntil}.`);
       }
       throw notFound('No active delivery matches that code.');
     }

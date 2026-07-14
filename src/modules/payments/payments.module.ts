@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { AuditService } from '../../common/audit/audit.service.js';
+import { SupportNotesService } from '../../common/support-notes/support-notes.service.js';
 import { AuthModule } from '../auth/auth.module.js';
 import { CustomerPaymentsController, AdminPaymentsController } from './payments.controller.js';
 import { AdminHealthController } from './admin-health.controller.js';
@@ -32,6 +33,7 @@ import { ReconciliationService } from './reconciliation.service.js';
   ],
   providers: [
     AuditService,
+    SupportNotesService,
     PaystackClient,
     PaymentsRepository,
     PaymentsService,

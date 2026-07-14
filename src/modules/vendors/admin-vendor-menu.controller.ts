@@ -106,9 +106,7 @@ export class AdminVendorMenuController {
     @Param() params: AdminMenuVendorParamDto,
     @Body() input: CreateMenuItemDto
   ): Promise<SuccessEnvelope<MenuItemRecord>> {
-    return createSuccessEnvelope(
-      await this.vendors.adminCreateMenuItem(params.vendorId, input)
-    );
+    return createSuccessEnvelope(await this.vendors.adminCreateMenuItem(params.vendorId, input));
   }
 
   @Get('menu-items/:itemId')

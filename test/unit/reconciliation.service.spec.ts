@@ -44,9 +44,7 @@ const issue: ReconciliationIssueRecord = {
 function createRepository(): ReconciliationRepository {
   return {
     scan: vi.fn().mockResolvedValue(3),
-    listIssues: vi
-      .fn()
-      .mockResolvedValue({ items: [issue], hasMore: false, limit: 20 }),
+    listIssues: vi.fn().mockResolvedValue({ items: [issue], hasMore: false, limit: 20 }),
     findIssueById: vi.fn().mockResolvedValue(issue),
     listNotes: vi.fn().mockResolvedValue([]),
     addNote: vi.fn().mockResolvedValue({

@@ -101,11 +101,7 @@ describe('ProfilesService', () => {
 
   beforeEach(() => {
     repository = createRepository();
-    service = new ProfilesService(
-      repository,
-      createMediaServiceMock(),
-      createStorageServiceMock()
-    );
+    service = new ProfilesService(repository, createMediaServiceMock(), createStorageServiceMock());
   });
 
   it('returns a role-aware current-user session from profile memberships', async () => {

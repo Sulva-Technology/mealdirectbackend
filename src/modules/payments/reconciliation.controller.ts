@@ -1,4 +1,14 @@
-import { Body, Controller, Get, HttpCode, Inject, Param, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Inject,
+  Param,
+  Post,
+  Query,
+  UseGuards
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiForbiddenResponse,
@@ -44,7 +54,9 @@ import type {
 @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @RequireRoles('campus_admin', 'super_admin')
 export class ReconciliationController {
-  constructor(@Inject(ReconciliationService) private readonly reconciliation: ReconciliationService) {}
+  constructor(
+    @Inject(ReconciliationService) private readonly reconciliation: ReconciliationService
+  ) {}
 
   @Post('scan')
   @HttpCode(200)

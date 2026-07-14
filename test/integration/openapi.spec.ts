@@ -175,7 +175,9 @@ describe('OpenAPI contract foundation', () => {
     expect(
       document.paths['/v1/admin/vendors/{vendorId}/menu-items/{itemId}/deactivate']?.post
     ).toBeDefined();
-    expect(document.paths['/v1/admin/vendors/{vendorId}/menu-items']?.post?.requestBody).toBeDefined();
+    expect(
+      document.paths['/v1/admin/vendors/{vendorId}/menu-items']?.post?.requestBody
+    ).toBeDefined();
     expect(
       document.paths['/v1/admin/vendors/{vendorId}/menu-items/{itemId}']?.patch?.requestBody
     ).toBeDefined();

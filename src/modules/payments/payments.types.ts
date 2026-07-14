@@ -32,7 +32,28 @@ export type PaymentRecord = PaymentInitializationRecord & {
   verifiedAt: string | null;
 };
 
-export type AdminPaymentRecord = Omit<PaymentRecord, 'providerPayload'>;
+/**
+ * Admin payment rows also carry the field names the mealadmin UI renders
+ * (paymentReference, customerName, vendorDisplayName, amountExpectedKobo, …)
+ * alongside the legacy names so existing consumers keep working.
+ */
+export type AdminPaymentRecord = Omit<PaymentRecord, 'providerPayload'> & {
+  paymentReference?: string;
+  paystackReference?: string | null;
+  customerName?: string | null;
+  customerPhone?: string | null;
+  vendorId?: string | null;
+  vendorDisplayName?: string | null;
+  campusName?: string | null;
+  amountExpectedKobo?: number;
+  amountPaidKobo?: number | null;
+  webhookReceived?: boolean;
+  verificationStatus?: 'verified' | 'unverified';
+  refundStatus?: RefundStatus | 'none';
+  requiresAdminReview?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+};
 
 export type AdminPaymentListFilter = {
   status?: PaymentStatus;
@@ -50,6 +71,13 @@ export type AdminPaymentListResult = {
   nextCursor?: string;
 };
 
+export type AdminPaymentNote = {
+  id: string;
+  authorAdminId: string | null;
+  note: string;
+  createdAt: string;
+};
+
 export type AdminPaymentDetail = AdminPaymentRecord & {
   webhookReceived: boolean;
   webhookCount: number;
@@ -57,6 +85,7 @@ export type AdminPaymentDetail = AdminPaymentRecord & {
   refundStatus: RefundStatus | 'none';
   refundedAmountKobo: number;
   settlementImpactKobo: number;
+  adminNotes?: AdminPaymentNote[];
 };
 
 export type PaymentTimelineEvent = {

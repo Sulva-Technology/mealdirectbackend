@@ -181,10 +181,9 @@ export class PaystackClient implements PaystackClientContract {
   }
 
   async fetchTransferRecipient(recipientCode: string): Promise<PaystackRecipientDetails> {
-    const envelope = await this.request(
-      `/transferrecipient/${encodeURIComponent(recipientCode)}`,
-      { method: 'GET' }
-    );
+    const envelope = await this.request(`/transferrecipient/${encodeURIComponent(recipientCode)}`, {
+      method: 'GET'
+    });
 
     if (!isRecord(envelope.data) || !isRecord(envelope.data.details)) {
       throw badGateway('Paystack recipient lookup returned an invalid response.');

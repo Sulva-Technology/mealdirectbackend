@@ -156,7 +156,9 @@ function createRepository(): VendorsRepositoryContract {
     replaceMenuItemAvailability: vi.fn().mockResolvedValue([]),
     regenerateInventoryHorizon: vi.fn().mockResolvedValue(undefined),
     getStoreAvailability: vi.fn().mockResolvedValue(undefined),
-    upsertStoreAvailability: vi.fn().mockImplementation((_id: string, state) => Promise.resolve(state))
+    upsertStoreAvailability: vi
+      .fn()
+      .mockImplementation((_id: string, state) => Promise.resolve(state))
   };
 }
 
@@ -478,8 +480,8 @@ describe('VendorsService', () => {
       maxOrdersPerDay: null,
       unavailableDates: []
     });
-    const [, persisted] = (repository.upsertStoreAvailability as ReturnType<typeof vi.fn>).mock
-      .calls[0] ?? [];
+    const [, persisted] =
+      (repository.upsertStoreAvailability as ReturnType<typeof vi.fn>).mock.calls[0] ?? [];
     expect(persisted.cutoffTime).toBe('21:00:00');
   });
 

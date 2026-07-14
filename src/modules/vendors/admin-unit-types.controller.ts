@@ -59,7 +59,10 @@ export class AdminUnitTypesController {
 
   @Patch(':id')
   @ApiParam({ format: 'uuid', name: 'id', type: String })
-  @ApiOkResponse({ description: 'Updated unit type (code is immutable).', type: UnitTypeEnvelopeDto })
+  @ApiOkResponse({
+    description: 'Updated unit type (code is immutable).',
+    type: UnitTypeEnvelopeDto
+  })
   @ApiBadRequestResponse({ description: 'Invalid unit type input.' })
   @ApiNotFoundResponse({ description: 'Unit type was not found.' })
   @ApiBody({ type: UpdateUnitTypeDto })

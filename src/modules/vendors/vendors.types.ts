@@ -244,7 +244,10 @@ export type VendorsRepositoryContract = {
     input: UpsertMenuCategoryInput
   ) => Promise<MenuCategoryRecord>;
   findMenuCategoryOwner: (categoryId: string) => Promise<string | undefined>;
-  listVendorSoupOptions: (vendorId: string, activeOnly: boolean) => Promise<VendorSoupOptionRecord[]>;
+  listVendorSoupOptions: (
+    vendorId: string,
+    activeOnly: boolean
+  ) => Promise<VendorSoupOptionRecord[]>;
   createVendorSoupOption: (
     vendorId: string,
     input: CreateVendorSoupOptionInput
@@ -257,10 +260,7 @@ export type VendorsRepositoryContract = {
   listUnitTypes: () => Promise<UnitTypeRecord[]>;
   listAllUnitTypes: () => Promise<UnitTypeRecord[]>;
   createUnitType: (input: CreateUnitTypeInput) => Promise<UnitTypeRecord>;
-  updateUnitType: (
-    id: string,
-    input: UpdateUnitTypeInput
-  ) => Promise<UnitTypeRecord | undefined>;
+  updateUnitType: (id: string, input: UpdateUnitTypeInput) => Promise<UnitTypeRecord | undefined>;
   listMenuItems: (vendorId: string) => Promise<MenuItemRecord[]>;
   findMenuItemById: (vendorId: string, menuItemId: string) => Promise<MenuItemRecord | undefined>;
   upsertMenuItem: (

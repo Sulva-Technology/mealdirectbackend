@@ -103,7 +103,8 @@ function dbRowToWebhookEvent(r: {
     paymentReference: r.providerReference,
     orderId: r.orderId,
     signatureVerified: r.signatureValid,
-    processingStatus: r.processingError != null ? 'failed' : r.processedAt != null ? 'processed' : 'pending',
+    processingStatus:
+      r.processingError != null ? 'failed' : r.processedAt != null ? 'processed' : 'pending',
     receivedAt: r.receivedAt,
     processedAt: r.processedAt,
     failureReason: r.processingError,
@@ -253,7 +254,9 @@ export class AdminWebhooksController {
     }
 
     // Strip customer PII from payload for safe summary (drop 'data' field which has raw Paystack data)
-    const { data: _data, ...safeSummary } = r.payload as Record<string, unknown> & { data?: unknown };
+    const { data: _data, ...safeSummary } = r.payload as Record<string, unknown> & {
+      data?: unknown;
+    };
 
     return createSuccessEnvelope({
       ...dbRowToWebhookEvent({ ...r, orderId: null }),

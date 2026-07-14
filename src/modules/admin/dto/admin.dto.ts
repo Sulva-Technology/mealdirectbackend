@@ -412,6 +412,31 @@ export class AdminInventorySetTotalDto {
   quantityTotal!: number;
 }
 
+export class AdminSupportNoteDto {
+  @Transform(({ value }) => trimString(value))
+  @IsString()
+  @MinLength(1)
+  @MaxLength(2000)
+  note!: string;
+}
+
+export class AdminSupportEscalationDto {
+  @Transform(({ value }) => trimString(value))
+  @IsString()
+  @MinLength(1)
+  @MaxLength(2000)
+  reason!: string;
+}
+
+export class AdminResolveUserIssuesDto {
+  @ApiPropertyOptional({ maxLength: 2000, type: String })
+  @IsOptional()
+  @Transform(({ value }) => trimString(value))
+  @IsString()
+  @MaxLength(2000)
+  note?: string;
+}
+
 export class AdminSettlementGenerationDto {
   @IsIn(beneficiaryTypes)
   beneficiaryType!: (typeof beneficiaryTypes)[number];

@@ -112,8 +112,7 @@ export class SupabaseAuthService {
     if (admin === undefined) {
       throw new BadRequestException({
         code: ErrorCodes.AUTH_FAILED,
-        message:
-          'Server is not configured to delete users (SUPABASE_SERVICE_ROLE_KEY missing).'
+        message: 'Server is not configured to delete users (SUPABASE_SERVICE_ROLE_KEY missing).'
       });
     }
 
@@ -682,8 +681,7 @@ export class SupabaseAuthService {
     if (admin === undefined) {
       throw new BadRequestException({
         code: ErrorCodes.AUTH_FAILED,
-        message:
-          'Server is not configured to update passwords (SUPABASE_SERVICE_ROLE_KEY missing).'
+        message: 'Server is not configured to update passwords (SUPABASE_SERVICE_ROLE_KEY missing).'
       });
     }
 

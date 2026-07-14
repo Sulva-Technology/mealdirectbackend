@@ -270,6 +270,15 @@ export class RiderAssignmentIdParamDto {
   assignmentId!: string;
 }
 
+export class RiderDeclineAssignmentDto {
+  @ApiPropertyOptional({ maxLength: 500, type: String })
+  @IsOptional()
+  @Transform(({ value }) => trimString(value))
+  @IsString()
+  @MaxLength(500)
+  reason?: string;
+}
+
 export class RiderOrderIdParamDto {
   @ApiProperty({ format: 'uuid', type: String })
   @IsDatabaseUuid()

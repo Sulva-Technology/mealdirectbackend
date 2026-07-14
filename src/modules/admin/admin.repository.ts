@@ -442,7 +442,9 @@ export class AdminRepository {
       await sql`delete from public.riders where user_id = ${userId}::uuid`.execute(trx);
 
       await sql`delete from public.admin_memberships where user_id = ${userId}::uuid`.execute(trx);
-      const deleted = await sql`delete from public.profiles where id = ${userId}::uuid`.execute(trx);
+      const deleted = await sql`delete from public.profiles where id = ${userId}::uuid`.execute(
+        trx
+      );
       return (deleted.numAffectedRows ?? 0n) > 0n;
     });
   }
@@ -683,11 +685,12 @@ export class AdminRepository {
   ): Promise<AdminListResult> {
     const limit = query.limit ?? 20;
     const result = await sql<AdminRecord>`
-      select e.id::text as "id", e.order_id::text as "orderId", o.campus_id::text as "campusId",
+      select e.id::text as "id", e.order_id::text as "orderId", e.user_id::text as "userId",
+        o.campus_id::text as "campusId",
         e.opened_by::text as "openedBy", e.category, e.description, e.status::text as "status",
         e.assigned_admin_id::text as "assignedAdminId", e.opened_at::text as "openedAt"
       from public.escalations e
-      join public.orders o on o.id = e.order_id
+      left join public.orders o on o.id = e.order_id
       where (${campusId ?? query.campusId ?? null}::uuid is null or o.campus_id = ${campusId ?? query.campusId ?? null}::uuid)
         and (${query.status ?? null}::public.escalation_status is null or e.status = ${query.status ?? null}::public.escalation_status)
         and (${query.category ?? null}::text is null or e.category = ${query.category ?? null}::text)
@@ -703,12 +706,13 @@ export class AdminRepository {
 
   async getEscalation(id: string, campusId?: string): Promise<AdminRecord | undefined> {
     const result = await sql<AdminRecord>`
-      select e.id::text as "id", e.order_id::text as "orderId", o.campus_id::text as "campusId",
+      select e.id::text as "id", e.order_id::text as "orderId", e.user_id::text as "userId",
+        o.campus_id::text as "campusId",
         e.category, e.description, e.status::text as "status", e.resolution,
         e.assigned_admin_id::text as "assignedAdminId", e.refund_id::text as "refundId",
         e.opened_at::text as "openedAt", e.resolved_at::text as "resolvedAt"
       from public.escalations e
-      join public.orders o on o.id = e.order_id
+      left join public.orders o on o.id = e.order_id
       where e.id = ${id}::uuid
         and (${campusId ?? null}::uuid is null or o.campus_id = ${campusId ?? null}::uuid)
       limit 1
@@ -731,6 +735,58 @@ export class AdminRepository {
       where id = ${id}::uuid
     `.execute(this.database.db);
     return this.getEscalation(id);
+  }
+
+  async createOrderEscalation(
+    orderId: string,
+    openedBy: string,
+    reason: string
+  ): Promise<AdminRecord | undefined> {
+    const result = await sql<AdminRecord>`
+      insert into public.escalations (order_id, opened_by, category, description)
+      values (${orderId}::uuid, ${openedBy}::uuid, 'admin_support', ${reason})
+      returning id::text as "id", order_id::text as "orderId", category, description,
+        status::text as "status", opened_at::text as "openedAt"
+    `.execute(this.database.db);
+    return result.rows[0];
+  }
+
+  async createUserEscalation(
+    userId: string,
+    openedBy: string,
+    reason: string
+  ): Promise<AdminRecord | undefined> {
+    const result = await sql<AdminRecord>`
+      insert into public.escalations (user_id, opened_by, category, description)
+      values (${userId}::uuid, ${openedBy}::uuid, 'admin_customer_issue', ${reason})
+      returning id::text as "id", user_id::text as "userId", category, description,
+        status::text as "status", opened_at::text as "openedAt"
+    `.execute(this.database.db);
+    return result.rows[0];
+  }
+
+  /**
+   * Resolves every open escalation where the user is the subject — either an
+   * order-less customer issue (user_id) or an escalation the user opened themselves.
+   */
+  async resolveUserEscalations(
+    userId: string,
+    resolvedBy: string,
+    note?: string
+  ): Promise<AdminRecord[]> {
+    const result = await sql<AdminRecord>`
+      update public.escalations
+      set status = 'resolved',
+          resolution = coalesce(${note ?? null}, resolution, 'Resolved by admin.'),
+          assigned_admin_id = coalesce(assigned_admin_id, ${resolvedBy}::uuid),
+          resolved_at = now(),
+          updated_at = now()
+      where (user_id = ${userId}::uuid or opened_by = ${userId}::uuid)
+        and status in ('open', 'investigating')
+      returning id::text as "id", order_id::text as "orderId", user_id::text as "userId",
+        category, status::text as "status", resolution, resolved_at::text as "resolvedAt"
+    `.execute(this.database.db);
+    return result.rows;
   }
 
   async listSettlements(

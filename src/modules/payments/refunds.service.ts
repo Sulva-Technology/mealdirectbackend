@@ -103,7 +103,11 @@ export class RefundsService {
   async resolveRefund(
     actor: AuthenticatedActor,
     refundId: string,
-    input: { status: 'succeeded' | 'failed' | 'cancelled'; resolutionNote?: string; failureReason?: string }
+    input: {
+      status: 'succeeded' | 'failed' | 'cancelled';
+      resolutionNote?: string;
+      failureReason?: string;
+    }
   ): Promise<AdminRefundRecord> {
     const refund = await this.requireRefund(actor, refundId);
     if (refund.status === 'succeeded') {
@@ -138,6 +142,56 @@ export class RefundsService {
     });
 
     return updated;
+  }
+
+  /**
+   * Push an approved refund to Paystack. This is the money-moving step that follows
+   * approve; the amount may be lowered (partial refund) but never raised above the
+   * approved amount.
+   */
+  async initiateApprovedRefund(
+    actor: AuthenticatedActor,
+    refundId: string,
+    input: { amountKobo: number; reason: string }
+  ): Promise<AdminRefundRecord> {
+    const refund = await this.requireRefund(actor, refundId);
+    if (refund.status !== 'approved') {
+      throw badRequest('Only approved refunds can be initiated.');
+    }
+    if (input.amountKobo > refund.amountKobo) {
+      throw badRequest('Refund amount cannot exceed the approved amount.');
+    }
+
+    const providerRefund = await this.paystack.createRefund({
+      amountKobo: input.amountKobo,
+      transaction: refund.providerTransactionId ?? refund.providerReference ?? '',
+      reasonText: input.reason
+    });
+
+    const status = mapRefundStatus(providerRefund.status);
+    await this.repository.applyProviderRetry(
+      refundId,
+      providerRefund.id.toString(),
+      providerRefund.providerPayload,
+      status
+    );
+
+    await this.audit.record({
+      actorUserId: actor.userId,
+      actorType: actorTypeForRole(actor.role),
+      action: 'refund.initiate',
+      entityType: 'refund',
+      entityId: refundId,
+      ...(refund.campusId === null ? {} : { campusId: refund.campusId }),
+      metadata: {
+        status,
+        amountKobo: input.amountKobo,
+        reason: input.reason,
+        providerRefundReference: providerRefund.id.toString()
+      }
+    });
+
+    return this.requireRefund(actor, refundId);
   }
 
   /**

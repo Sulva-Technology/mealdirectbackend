@@ -97,7 +97,8 @@ export class OrdersController {
   @RequireRoles('customer')
   @ApiBody({ type: CreateOrderDto })
   @ApiCreatedResponse({
-    description: 'Order was created idempotently, inventory was reserved, and hand-off code returned.',
+    description:
+      'Order was created idempotently, inventory was reserved, and hand-off code returned.',
     type: CreatedOrderDto
   })
   async createOrder(

@@ -171,22 +171,48 @@ export class PaymentsRepository implements PaymentsRepositoryContract {
         o.order_number as "orderNumber",
         o.customer_id::text as "customerId",
         pr.email::text as "customerEmail",
+        pr.display_name as "customerName",
+        pr.phone_number as "customerPhone",
+        o.vendor_id::text as "vendorId",
+        v.display_name as "vendorDisplayName",
         o.campus_id::text as "campusId",
+        c.name as "campusName",
         o.order_status::text as "orderStatus",
         o.total_kobo as "orderTotalKobo",
         p.provider_reference as "providerReference",
+        p.provider_reference as "paymentReference",
+        p.provider_transaction_id as "paystackReference",
         p.status::text as "paymentStatus",
         p.expected_amount_kobo as "expectedAmountKobo",
+        p.expected_amount_kobo as "amountExpectedKobo",
         p.paid_amount_kobo as "paidAmountKobo",
+        p.paid_amount_kobo as "amountPaidKobo",
         p.provider_transaction_id as "providerTransactionId",
         p.currency,
         p.initialized_at::text as "initializedAt",
         p.verified_at::text as "verifiedAt",
         p.paid_at::text as "paidAt",
-        p.created_at::text as "createdAt"
+        (exists (
+          select 1 from public.payment_events pe
+          where pe.provider_reference = p.provider_reference
+        )) as "webhookReceived",
+        (case when p.verified_at is not null then 'verified' else 'unverified' end) as "verificationStatus",
+        coalesce((
+          select rf.status::text from public.refunds rf
+          where rf.payment_id = p.id
+          order by rf.requested_at desc limit 1
+        ), 'none') as "refundStatus",
+        (exists (
+          select 1 from public.payment_reconciliation_issues pri
+          where pri.payment_id = p.id and pri.status = 'open'
+        )) as "requiresAdminReview",
+        p.created_at::text as "createdAt",
+        p.updated_at::text as "updatedAt"
       from public.payments p
       join public.orders o on o.id = p.order_id
       join public.profiles pr on pr.id = o.customer_id
+      join public.vendors v on v.id = o.vendor_id
+      join public.campuses c on c.id = o.campus_id
       where (${campusId ?? null}::uuid is null or o.campus_id = ${campusId ?? null}::uuid)
         and (${filter.status ?? null}::public.payment_status is null
              or p.status = ${filter.status ?? null}::public.payment_status)
@@ -207,11 +233,8 @@ export class PaymentsRepository implements PaymentsRepositoryContract {
 
     const rows = result.rows;
     const hasMore = rows.length > pagination.limit;
-    const items = rows.slice(0, pagination.limit).map(({ createdAt, ...rest }) => {
-      void createdAt;
-      return rest;
-    });
-    const lastRow = rows.slice(0, pagination.limit).at(-1);
+    const items = rows.slice(0, pagination.limit);
+    const lastRow = items.at(-1);
 
     return {
       items,
@@ -234,18 +257,33 @@ export class PaymentsRepository implements PaymentsRepositoryContract {
         o.order_number as "orderNumber",
         o.customer_id::text as "customerId",
         pr.email::text as "customerEmail",
+        pr.display_name as "customerName",
+        pr.phone_number as "customerPhone",
+        o.vendor_id::text as "vendorId",
+        (select vd.display_name from public.vendors vd where vd.id = o.vendor_id) as "vendorDisplayName",
         o.campus_id::text as "campusId",
+        (select cm.name from public.campuses cm where cm.id = o.campus_id) as "campusName",
         o.order_status::text as "orderStatus",
         o.total_kobo as "orderTotalKobo",
         p.provider_reference as "providerReference",
+        p.provider_reference as "paymentReference",
+        p.provider_transaction_id as "paystackReference",
         p.status::text as "paymentStatus",
         p.expected_amount_kobo as "expectedAmountKobo",
+        p.expected_amount_kobo as "amountExpectedKobo",
         p.paid_amount_kobo as "paidAmountKobo",
+        p.paid_amount_kobo as "amountPaidKobo",
         p.provider_transaction_id as "providerTransactionId",
         p.currency,
         p.initialized_at::text as "initializedAt",
         p.verified_at::text as "verifiedAt",
         p.paid_at::text as "paidAt",
+        p.created_at::text as "createdAt",
+        p.updated_at::text as "updatedAt",
+        (exists (
+          select 1 from public.payment_reconciliation_issues pri
+          where pri.payment_id = p.id and pri.status = 'open'
+        )) as "requiresAdminReview",
         (exists (
           select 1 from public.payment_events pe
           where pe.provider_reference = p.provider_reference

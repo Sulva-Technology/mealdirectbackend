@@ -204,7 +204,8 @@ export class OrderSummaryDto {
   discountKobo!: number;
 
   @ApiProperty({
-    description: 'Large-order surcharge (1.5% + ₦100) charged on this order. Included in totalKobo.',
+    description:
+      'Large-order surcharge (1.5% + ₦100) charged on this order. Included in totalKobo.',
     type: Number
   })
   largeOrderSurchargeKobo!: number;

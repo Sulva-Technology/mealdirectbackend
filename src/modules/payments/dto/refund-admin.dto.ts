@@ -41,6 +41,36 @@ export class AdminRefundListQueryDto {
   status?: RefundStatus;
 }
 
+export class RefundInitiateDto {
+  @ApiProperty({ minimum: 1, type: Number })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  amountKobo!: number;
+
+  @ApiProperty({ maxLength: 500, type: String })
+  @IsString()
+  @MinLength(1)
+  @MaxLength(500)
+  reason!: string;
+}
+
+export class RefundManualResolveDto {
+  @ApiProperty({ maxLength: 1000, type: String })
+  @IsString()
+  @MinLength(1)
+  @MaxLength(1000)
+  note!: string;
+}
+
+export class RefundNoteDto {
+  @ApiProperty({ maxLength: 2000, type: String })
+  @IsString()
+  @MinLength(1)
+  @MaxLength(2000)
+  note!: string;
+}
+
 export class RefundResolutionDto {
   @ApiProperty({ enum: resolutionStatuses })
   @IsIn(resolutionStatuses)

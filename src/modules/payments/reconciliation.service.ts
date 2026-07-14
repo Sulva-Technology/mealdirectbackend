@@ -124,7 +124,10 @@ export class ReconciliationService {
     issueId: string
   ): Promise<PaymentReconciliationResponse> {
     const issue = await this.requireIssue(actor, issueId);
-    if (issue.issueType !== 'webhook_processing_failed' && issue.issueType !== 'paid_order_pending') {
+    if (
+      issue.issueType !== 'webhook_processing_failed' &&
+      issue.issueType !== 'paid_order_pending'
+    ) {
       throw badRequest('Only failed-webhook or paid-but-pending issues can be retried.');
     }
     if (issue.paymentId === null) {

@@ -1992,6 +1992,31 @@ paths:
         '403': *a38
       security: *a39
       tags: *a40
+  /v1/admin/payments/{paymentId}/force-paid:
+    post:
+      operationId: AdminPaymentsController_forcePaid
+      parameters:
+        - name: paymentId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: Manually marks a payment successful without Paystack verification
+            (money confirmed out-of-band). Recovers an expired order to paid.
+            Requires a reason; audited.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentReconciliationEnvelopeDto'
+        '400':
+          description: Payment is already successful or cannot be resolved.
+        '401': *a37
+        '403': *a38
+      security: *a39
+      tags: *a40
   /v1/admin/payments/{paymentId}/refunds:
     post:
       operationId: AdminPaymentsController_initiateRefund
@@ -2009,6 +2034,62 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RefundEnvelopeDto'
+        '401': *a37
+        '403': *a38
+      security: *a39
+      tags: *a40
+  /v1/admin/payments/{paymentId}/verify:
+    post:
+      operationId: AdminPaymentsController_verifyPayment
+      parameters:
+        - name: paymentId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: Verifies the payment against Paystack and reconciles local state
+            (alias of reconcile, used by the admin UI).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentReconciliationEnvelopeDto'
+        '401': *a37
+        '403': *a38
+      security: *a39
+      tags: *a40
+  /v1/admin/payments/{paymentId}/review:
+    post:
+      operationId: AdminPaymentsController_reviewPayment
+      parameters:
+        - name: paymentId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: Marks the payment as reviewed by an admin; audited.
+        '401': *a37
+        '403': *a38
+      security: *a39
+      tags: *a40
+  /v1/admin/payments/{paymentId}/notes:
+    post:
+      operationId: AdminPaymentsController_addNote
+      parameters:
+        - name: paymentId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: Appends an internal admin note to the payment.
         '401': *a37
         '403': *a38
       security: *a39
@@ -2344,6 +2425,66 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AdminRefundEnvelopeDto'
+        '401': *a53
+        '403': *a54
+      security: *a55
+      tags: *a56
+  /v1/admin/refunds/{refundId}/initiate:
+    post:
+      operationId: RefundsController_initiateRefund
+      parameters:
+        - name: refundId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: Pushes an approved refund to Paystack (money-moving step).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminRefundEnvelopeDto'
+        '401': *a53
+        '403': *a54
+      security: *a55
+      tags: *a56
+  /v1/admin/refunds/{refundId}/mark-manually-resolved:
+    post:
+      operationId: RefundsController_markManuallyResolved
+      parameters:
+        - name: refundId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: Marks a refund as manually resolved (settled out-of-band). Records
+            the note and audits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminRefundEnvelopeDto'
+        '401': *a53
+        '403': *a54
+      security: *a55
+      tags: *a56
+  /v1/admin/refunds/{refundId}/notes:
+    post:
+      operationId: RefundsController_addNote
+      parameters:
+        - name: refundId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: Appends an internal admin note to the refund.
         '401': *a53
         '403': *a54
       security: *a55
@@ -2814,6 +2955,27 @@ paths:
         '403': *a68
       security: *a69
       tags: *a70
+  /v1/rider/assignments/{assignmentId}/decline:
+    post:
+      operationId: RidersController_declineAssignment
+      parameters:
+        - name: assignmentId
+          required: true
+          in: path
+          schema:
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: Assignment declined; the batch reopens for admin re-assignment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiderAssignmentDetailEnvelopeDto'
+        '401': *a67
+        '403': *a68
+      security: *a69
+      tags: *a70
   /v1/rider/assignments/{assignmentId}/picked-up:
     post:
       operationId: RidersController_markAssignmentPickedUp
@@ -3235,6 +3397,28 @@ paths:
         '403': *a81
       security: *a82
       tags: *a83
+  /v1/admin/orders/{orderId}/notes:
+    post:
+      operationId: AdminController_addOrderNote
+      parameters: []
+      responses:
+        '201':
+          description: ''
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
+  /v1/admin/orders/{orderId}/escalations:
+    post:
+      operationId: AdminController_escalateOrder
+      parameters: []
+      responses:
+        '201':
+          description: ''
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/batches:
     get:
       operationId: AdminController_listBatches
@@ -3583,6 +3767,17 @@ paths:
         '403': *a81
       security: *a82
       tags: *a83
+  /v1/admin/inventory/{inventoryId}:
+    patch:
+      operationId: AdminController_setInventoryTotal
+      parameters: []
+      responses:
+        '200':
+          description: ''
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
   /v1/admin/escalations:
     get:
       operationId: AdminController_listEscalations
@@ -3797,6 +3992,39 @@ paths:
   /v1/admin/users/{userId}/activate:
     post:
       operationId: AdminController_activateUser
+      parameters: []
+      responses:
+        '200':
+          description: ''
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
+  /v1/admin/users/{userId}/notes:
+    post:
+      operationId: AdminController_addUserNote
+      parameters: []
+      responses:
+        '201':
+          description: ''
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
+  /v1/admin/users/{userId}/escalations:
+    post:
+      operationId: AdminController_escalateUser
+      parameters: []
+      responses:
+        '201':
+          description: ''
+        '401': *a80
+        '403': *a81
+      security: *a82
+      tags: *a83
+  /v1/admin/users/{userId}/issues/resolve:
+    post:
+      operationId: AdminController_resolveUserIssues
       parameters: []
       responses:
         '200':

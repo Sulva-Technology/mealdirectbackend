@@ -34,9 +34,7 @@ import type {
   RidersRepositoryContract
 } from './riders.types.js';
 
-function decodeRiderTransferCursor(
-  cursor: string
-): { createdAt: string; id: string } | undefined {
+function decodeRiderTransferCursor(cursor: string): { createdAt: string; id: string } | undefined {
   try {
     const payload = decodeCursor(cursor);
     if (typeof payload.createdAt === 'string' && typeof payload.id === 'string') {
@@ -455,6 +453,38 @@ export class RidersRepository implements RidersRepositoryContract {
     if (result.rows[0] === undefined) {
       return this.findAssignmentById(riderId, assignmentId);
     }
+
+    return this.findAssignmentById(riderId, assignmentId);
+  }
+
+  async declineAssignment(
+    riderId: string,
+    assignmentId: string
+  ): Promise<RiderAssignmentSummary | undefined> {
+    const assignment = await this.findAssignmentById(riderId, assignmentId);
+    if (assignment === undefined) return undefined;
+
+    await this.database.db.transaction().execute(async (trx) => {
+      const cancelled = await sql<{ id: string }>`
+        update public.delivery_assignments
+        set status = 'cancelled'
+        where rider_id = ${riderId}::uuid
+          and id = ${assignmentId}::uuid
+          and status in ('assigned', 'accepted')
+        returning id::text as "id"
+      `.execute(trx);
+
+      // Reopen the batch for re-assignment only when the decline actually landed.
+      if (cancelled.rows[0] !== undefined) {
+        await sql`
+          update public.delivery_batches
+          set status = 'closed',
+              updated_at = now()
+          where id = ${assignment.batchId}::uuid
+            and status = 'assigned'
+        `.execute(trx);
+      }
+    });
 
     return this.findAssignmentById(riderId, assignmentId);
   }

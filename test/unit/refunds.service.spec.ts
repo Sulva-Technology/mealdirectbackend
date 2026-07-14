@@ -135,7 +135,9 @@ describe('RefundsService', () => {
 
   it('404s an unknown refund', async () => {
     vi.mocked(repository.findRefundById).mockResolvedValue(undefined);
-    await expect(service.getRefund(superAdmin, refund.id)).rejects.toBeInstanceOf(NotFoundException);
+    await expect(service.getRefund(superAdmin, refund.id)).rejects.toBeInstanceOf(
+      NotFoundException
+    );
   });
 
   it('only approves/rejects requested refunds', async () => {

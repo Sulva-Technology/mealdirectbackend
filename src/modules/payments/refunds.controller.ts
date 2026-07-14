@@ -1,4 +1,14 @@
-import { Body, Controller, Get, HttpCode, Inject, Param, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Inject,
+  Param,
+  Post,
+  Query,
+  UseGuards
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiForbiddenResponse,
@@ -22,10 +32,15 @@ import {
   AdminRefundListEnvelopeDto,
   AdminRefundListQueryDto,
   RefundIdParamDto,
+  RefundInitiateDto,
+  RefundManualResolveDto,
+  RefundNoteDto,
   RefundResolutionDto
 } from './dto/refund-admin.dto.js';
 import { RefundsService } from './refunds.service.js';
 import type { AdminRefundRecord } from './refunds.types.js';
+import { SupportNotesService } from '../../common/support-notes/support-notes.service.js';
+import type { SupportNoteRecord } from '../../common/support-notes/support-notes.service.js';
 
 @ApiTags('admin-refunds')
 @ApiBearerAuth('supabaseAuth')
@@ -35,7 +50,10 @@ import type { AdminRefundRecord } from './refunds.types.js';
 @UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
 @RequireRoles('campus_admin', 'super_admin')
 export class RefundsController {
-  constructor(@Inject(RefundsService) private readonly refunds: RefundsService) {}
+  constructor(
+    @Inject(RefundsService) private readonly refunds: RefundsService,
+    @Inject(SupportNotesService) private readonly notes: SupportNotesService
+  ) {}
 
   @Get()
   @ApiOkResponse({
@@ -75,7 +93,10 @@ export class RefundsController {
   @HttpCode(200)
   @RequirePermission('refunds:manage')
   @ApiParam({ format: 'uuid', name: 'refundId', type: String })
-  @ApiOkResponse({ description: 'Retries a failed refund against Paystack.', type: AdminRefundEnvelopeDto })
+  @ApiOkResponse({
+    description: 'Retries a failed refund against Paystack.',
+    type: AdminRefundEnvelopeDto
+  })
   async retryRefund(
     @CurrentActor() actor: AuthenticatedActor,
     @Param() params: RefundIdParamDto
@@ -87,7 +108,10 @@ export class RefundsController {
   @HttpCode(200)
   @RequirePermission('refunds:manage')
   @ApiParam({ format: 'uuid', name: 'refundId', type: String })
-  @ApiOkResponse({ description: 'Records a manual refund resolution.', type: AdminRefundEnvelopeDto })
+  @ApiOkResponse({
+    description: 'Records a manual refund resolution.',
+    type: AdminRefundEnvelopeDto
+  })
   async resolveRefund(
     @CurrentActor() actor: AuthenticatedActor,
     @Param() params: RefundIdParamDto,
@@ -102,6 +126,64 @@ export class RefundsController {
     );
   }
 
+  @Post(':refundId/initiate')
+  @HttpCode(200)
+  @RequirePermission('refunds:manage')
+  @ApiParam({ format: 'uuid', name: 'refundId', type: String })
+  @ApiOkResponse({
+    description: 'Pushes an approved refund to Paystack (money-moving step).',
+    type: AdminRefundEnvelopeDto
+  })
+  async initiateRefund(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Param() params: RefundIdParamDto,
+    @Body() input: RefundInitiateDto
+  ): Promise<SuccessEnvelope<AdminRefundRecord>> {
+    return createSuccessEnvelope(
+      await this.refunds.initiateApprovedRefund(actor, params.refundId, {
+        amountKobo: input.amountKobo,
+        reason: input.reason
+      })
+    );
+  }
+
+  @Post(':refundId/mark-manually-resolved')
+  @HttpCode(200)
+  @RequirePermission('refunds:manage')
+  @ApiParam({ format: 'uuid', name: 'refundId', type: String })
+  @ApiOkResponse({
+    description:
+      'Marks a refund as manually resolved (settled out-of-band). Records the note and audits.',
+    type: AdminRefundEnvelopeDto
+  })
+  async markManuallyResolved(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Param() params: RefundIdParamDto,
+    @Body() input: RefundManualResolveDto
+  ): Promise<SuccessEnvelope<AdminRefundRecord>> {
+    return createSuccessEnvelope(
+      await this.refunds.resolveRefund(actor, params.refundId, {
+        status: 'succeeded',
+        resolutionNote: input.note
+      })
+    );
+  }
+
+  @Post(':refundId/notes')
+  @HttpCode(201)
+  @ApiParam({ format: 'uuid', name: 'refundId', type: String })
+  @ApiOkResponse({ description: 'Appends an internal admin note to the refund.' })
+  async addNote(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Param() params: RefundIdParamDto,
+    @Body() input: RefundNoteDto
+  ): Promise<SuccessEnvelope<SupportNoteRecord>> {
+    await this.refunds.getRefund(actor, params.refundId);
+    return createSuccessEnvelope(
+      await this.notes.add('refund', params.refundId, actor.userId, input.note)
+    );
+  }
+
   @Post(':refundId/approve')
   @HttpCode(200)
   @RequirePermission('refunds:manage')
@@ -111,7 +193,9 @@ export class RefundsController {
     @CurrentActor() actor: AuthenticatedActor,
     @Param() params: RefundIdParamDto
   ): Promise<SuccessEnvelope<AdminRefundRecord>> {
-    return createSuccessEnvelope(await this.refunds.decideRefund(actor, params.refundId, 'approve'));
+    return createSuccessEnvelope(
+      await this.refunds.decideRefund(actor, params.refundId, 'approve')
+    );
   }
 
   @Post(':refundId/reject')

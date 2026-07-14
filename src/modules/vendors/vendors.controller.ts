@@ -513,7 +513,8 @@ export class VendorsController {
 
   @Patch('availability/state')
   @ApiOkResponse({
-    description: 'Updated storefront availability state. cutoffTime is admin-controlled and ignored.',
+    description:
+      'Updated storefront availability state. cutoffTime is admin-controlled and ignored.',
     type: StoreAvailabilityStateEnvelopeDto
   })
   @ApiBadRequestResponse({ description: 'Invalid storefront availability input.' })

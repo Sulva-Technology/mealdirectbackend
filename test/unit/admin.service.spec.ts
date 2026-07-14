@@ -45,20 +45,20 @@ function repositoryMock(): AdminRepository {
 }
 
 function invitationsMock(): VendorInvitationsRepository {
-  createInvitationMock = vi.fn<
-    (input: CreateVendorInvitationInput) => Promise<VendorInvitationRecord | undefined>
-  >().mockResolvedValue({
-    acceptedAt: null,
-    acceptedByUserId: null,
-    createdAt: '2026-06-29T09:00:00.000Z',
-    createdByAdminId: '33333333-3333-4333-8333-333333333333',
-    email: 'owner@example.com',
-    expiresAt: '2026-06-30T09:00:00.000Z',
-    id: '99999999-9999-4999-8999-999999999999',
-    revokedAt: null,
-    role: 'staff',
-    vendorId: '55555555-5555-4555-8555-555555555555'
-  });
+  createInvitationMock = vi
+    .fn<(input: CreateVendorInvitationInput) => Promise<VendorInvitationRecord | undefined>>()
+    .mockResolvedValue({
+      acceptedAt: null,
+      acceptedByUserId: null,
+      createdAt: '2026-06-29T09:00:00.000Z',
+      createdByAdminId: '33333333-3333-4333-8333-333333333333',
+      email: 'owner@example.com',
+      expiresAt: '2026-06-30T09:00:00.000Z',
+      id: '99999999-9999-4999-8999-999999999999',
+      revokedAt: null,
+      role: 'staff',
+      vendorId: '55555555-5555-4555-8555-555555555555'
+    });
   return {
     create: createInvitationMock
   } as unknown as VendorInvitationsRepository;

@@ -9,6 +9,7 @@ import {
 import { createHash, randomBytes } from 'node:crypto';
 
 import { AuditService, actorTypeForRole } from '../../common/audit/audit.service.js';
+import { SupportNotesService } from '../../common/support-notes/support-notes.service.js';
 import { ErrorCodes } from '../../common/errors/error-codes.js';
 import { EnvService } from '../../config/env.service.js';
 import type { CursorPage, CursorPaginationInput } from '../../common/api/pagination.js';
@@ -91,7 +92,10 @@ export class AdminService {
     private readonly audit?: AuditService,
     @Optional()
     @Inject(ChatService)
-    private readonly chat?: ChatService
+    private readonly chat?: ChatService,
+    @Optional()
+    @Inject(SupportNotesService)
+    private readonly supportNotes?: SupportNotesService
   ) {}
 
   /**
@@ -459,6 +463,103 @@ export class AdminService {
       await this.repository.setInventoryTotal(inventoryId, input.quantityTotal, campusId),
       'Inventory row was not found.'
     );
+  }
+
+  private requireSupportNotes(): SupportNotesService {
+    if (this.supportNotes === undefined) {
+      throw badRequest('Support notes are not configured.');
+    }
+    return this.supportNotes;
+  }
+
+  /** Appends an internal admin note to an order. */
+  async addOrderNote(
+    actor: AuthenticatedActor,
+    orderId: string,
+    note: string
+  ): Promise<AdminRecord> {
+    await this.getOrder(actor, orderId);
+    return (await this.requireSupportNotes().add(
+      'order',
+      orderId,
+      actor.userId,
+      note
+    )) as unknown as AdminRecord;
+  }
+
+  /** Opens an escalation on an order on behalf of an admin (support workflow). */
+  async escalateOrder(
+    actor: AuthenticatedActor,
+    orderId: string,
+    reason: string
+  ): Promise<AdminRecord> {
+    const order = await this.getOrder(actor, orderId);
+    const record = this.requireRecord(
+      await this.repository.createOrderEscalation(orderId, actor.userId, reason),
+      'Order was not found.'
+    );
+    await this.audit?.record({
+      actorUserId: actor.userId,
+      actorType: actorTypeForRole(actor.role),
+      action: 'order.escalated',
+      entityType: 'order',
+      entityId: orderId,
+      ...(typeof order.campusId === 'string' ? { campusId: order.campusId } : {}),
+      metadata: { reason }
+    });
+    return record;
+  }
+
+  /** Appends an internal admin note to a user. */
+  async addUserNote(actor: AuthenticatedActor, userId: string, note: string): Promise<AdminRecord> {
+    await this.getUser(actor, userId);
+    return (await this.requireSupportNotes().add(
+      'user',
+      userId,
+      actor.userId,
+      note
+    )) as unknown as AdminRecord;
+  }
+
+  /** Opens an order-less customer-issue escalation about a user. */
+  async escalateUser(
+    actor: AuthenticatedActor,
+    userId: string,
+    reason: string
+  ): Promise<AdminRecord> {
+    await this.getUser(actor, userId);
+    const record = this.requireRecord(
+      await this.repository.createUserEscalation(userId, actor.userId, reason),
+      'User was not found.'
+    );
+    await this.audit?.record({
+      actorUserId: actor.userId,
+      actorType: actorTypeForRole(actor.role),
+      action: 'user.issue_escalated',
+      entityType: 'user',
+      entityId: userId,
+      metadata: { reason }
+    });
+    return record;
+  }
+
+  /** Resolves all open escalations where the user is the subject. */
+  async resolveUserIssues(
+    actor: AuthenticatedActor,
+    userId: string,
+    note?: string
+  ): Promise<AdminRecord[]> {
+    await this.getUser(actor, userId);
+    const resolved = await this.repository.resolveUserEscalations(userId, actor.userId, note);
+    await this.audit?.record({
+      actorUserId: actor.userId,
+      actorType: actorTypeForRole(actor.role),
+      action: 'user.issues_resolved',
+      entityType: 'user',
+      entityId: userId,
+      metadata: { resolvedCount: resolved.length, ...(note === undefined ? {} : { note }) }
+    });
+    return resolved;
   }
 
   listEscalations(

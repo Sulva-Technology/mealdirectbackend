@@ -108,7 +108,10 @@ describe('SupabaseAuthService', () => {
     resendMock = vi.fn().mockResolvedValue({ data: {}, error: null });
     getUserMock = vi
       .fn()
-      .mockResolvedValue({ data: { user: { id: userId, email: 'person@example.com' } }, error: null });
+      .mockResolvedValue({
+        data: { user: { id: userId, email: 'person@example.com' } },
+        error: null
+      });
     updateUserByIdMock = vi.fn().mockResolvedValue({ data: { user: { id: userId } }, error: null });
     vi.mocked(createClient).mockReturnValue(authClient() as never);
     grants = grantsMock();
@@ -283,7 +286,9 @@ describe('SupabaseAuthService', () => {
 
   it('backfills a missing role from an active grant after a password reset', async () => {
     getUserMock.mockResolvedValue({
-      data: { user: { id: userId, email: 'person@example.com', app_metadata: {}, user_metadata: {} } },
+      data: {
+        user: { id: userId, email: 'person@example.com', app_metadata: {}, user_metadata: {} }
+      },
       error: null
     });
     vi.mocked(grants.findVendorGrantForUser).mockResolvedValue({ vendorId });

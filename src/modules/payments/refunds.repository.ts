@@ -96,7 +96,10 @@ export class RefundsRepository {
     };
   }
 
-  async findRefundById(refundId: string, campusId?: string): Promise<AdminRefundRecord | undefined> {
+  async findRefundById(
+    refundId: string,
+    campusId?: string
+  ): Promise<AdminRefundRecord | undefined> {
     const result = await sql<AdminRefundRecord>`
       select ${refundColumns}
       ${refundJoins}

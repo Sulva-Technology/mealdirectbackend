@@ -37,10 +37,13 @@ import {
   ForcePaymentPaidDto,
   InitiateRefundDto,
   PaymentIdParamDto,
+  PaymentNoteDto,
   PaymentReconciliationEnvelopeDto,
+  PaymentReviewDto,
   PaystackInitializationEnvelopeDto,
   RefundEnvelopeDto
 } from './dto/payment.dto.js';
+import type { SupportNoteRecord } from '../../common/support-notes/support-notes.service.js';
 import { PaymentsService } from './payments.service.js';
 import type {
   AdminPaymentDetail,
@@ -205,8 +208,62 @@ export class AdminPaymentsController {
     @Param() params: PaymentIdParamDto,
     @Body() input: InitiateRefundDto
   ): Promise<SuccessEnvelope<RefundRecord>> {
+    // The admin UI sends a plain-language `reason`; map it onto the structured fields.
+    const refundInput = {
+      amountKobo: input.amountKobo,
+      reasonCode: input.reasonCode ?? 'admin_manual',
+      ...((input.reasonText ?? input.reason)
+        ? { reasonText: input.reasonText ?? input.reason }
+        : {})
+    };
     return createSuccessEnvelope(
-      await this.payments.initiateRefund(actor, params.paymentId, input)
+      await this.payments.initiateRefund(actor, params.paymentId, refundInput)
+    );
+  }
+
+  @Post(':paymentId/verify')
+  @HttpCode(200)
+  @RequirePermission('payments:verify')
+  @ApiParam({ format: 'uuid', name: 'paymentId', type: String })
+  @ApiOkResponse({
+    description:
+      'Verifies the payment against Paystack and reconciles local state (alias of reconcile, used by the admin UI).',
+    type: PaymentReconciliationEnvelopeDto
+  })
+  async verifyPayment(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Param() params: PaymentIdParamDto
+  ): Promise<SuccessEnvelope<PaymentReconciliationResponse>> {
+    return createSuccessEnvelope(
+      await this.payments.reconcilePaystackPayment(actor, params.paymentId)
+    );
+  }
+
+  @Post(':paymentId/review')
+  @HttpCode(200)
+  @ApiParam({ format: 'uuid', name: 'paymentId', type: String })
+  @ApiOkResponse({ description: 'Marks the payment as reviewed by an admin; audited.' })
+  async reviewPayment(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Param() params: PaymentIdParamDto,
+    @Body() input: PaymentReviewDto
+  ): Promise<SuccessEnvelope<AdminPaymentDetail>> {
+    return createSuccessEnvelope(
+      await this.payments.reviewPayment(actor, params.paymentId, input.note)
+    );
+  }
+
+  @Post(':paymentId/notes')
+  @HttpCode(201)
+  @ApiParam({ format: 'uuid', name: 'paymentId', type: String })
+  @ApiOkResponse({ description: 'Appends an internal admin note to the payment.' })
+  async addNote(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Param() params: PaymentIdParamDto,
+    @Body() input: PaymentNoteDto
+  ): Promise<SuccessEnvelope<SupportNoteRecord>> {
+    return createSuccessEnvelope(
+      await this.payments.addAdminNote(actor, params.paymentId, input.note)
     );
   }
 }

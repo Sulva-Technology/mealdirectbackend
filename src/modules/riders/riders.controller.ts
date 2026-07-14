@@ -39,6 +39,7 @@ import {
   RiderAvailabilityDto,
   RiderAssignmentDetailEnvelopeDto,
   RiderAssignmentIdParamDto,
+  RiderDeclineAssignmentDto,
   RiderAssignmentListEnvelopeDto,
   RiderAssignmentListQueryDto,
   RiderEarningsEnvelopeDto,
@@ -225,6 +226,23 @@ export class RidersController {
     @Param() params: RiderAssignmentIdParamDto
   ): Promise<SuccessEnvelope<RiderAssignmentDetail>> {
     return createSuccessEnvelope(await this.riders.acceptAssignment(actor, params.assignmentId));
+  }
+
+  @Post('assignments/:assignmentId/decline')
+  @HttpCode(200)
+  @ApiParam({ format: 'uuid', name: 'assignmentId', type: String })
+  @ApiOkResponse({
+    description: 'Assignment declined; the batch reopens for admin re-assignment.',
+    type: RiderAssignmentDetailEnvelopeDto
+  })
+  async declineAssignment(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Param() params: RiderAssignmentIdParamDto,
+    @Body() input: RiderDeclineAssignmentDto
+  ): Promise<SuccessEnvelope<RiderAssignmentDetail>> {
+    return createSuccessEnvelope(
+      await this.riders.declineAssignment(actor, params.assignmentId, input.reason)
+    );
   }
 
   @Post('assignments/:assignmentId/picked-up')

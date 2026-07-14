@@ -93,7 +93,10 @@ function calculateLargeOrderSurcharge(
     return { largeOrderSurchargeCents: 0, exceedsLargeOrderThreshold: false };
   }
 
-  const thresholdCents = assertIntegerCents(input.largeOrderThresholdCents, 'largeOrderThresholdCents');
+  const thresholdCents = assertIntegerCents(
+    input.largeOrderThresholdCents,
+    'largeOrderThresholdCents'
+  );
   if (preSurchargeTotalCents <= thresholdCents) {
     return { largeOrderSurchargeCents: 0, exceedsLargeOrderThreshold: false };
   }

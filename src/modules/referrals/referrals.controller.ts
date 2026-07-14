@@ -26,7 +26,9 @@ export class ReferralsController {
   constructor(@Inject(ReferralsService) private readonly referrals: ReferralsService) {}
 
   @Get('me')
-  @ApiOkResponse({ description: 'The current user referral code and how many users they referred.' })
+  @ApiOkResponse({
+    description: 'The current user referral code and how many users they referred.'
+  })
   async me(@CurrentActor() actor: AuthenticatedActor): Promise<SuccessEnvelope<MyReferral>> {
     return createSuccessEnvelope(await this.referrals.getMyReferral(actor));
   }

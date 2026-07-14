@@ -264,6 +264,10 @@ export type RidersRepositoryContract = {
     riderId: string,
     assignmentId: string
   ) => Promise<RiderAssignmentSummary | undefined>;
+  declineAssignment: (
+    riderId: string,
+    assignmentId: string
+  ) => Promise<RiderAssignmentSummary | undefined>;
   markAssignmentPickedUp: (
     riderId: string,
     assignmentId: string
@@ -279,10 +283,7 @@ export type RidersRepositoryContract = {
     actorUserId: string
   ) => Promise<OrderStatus>;
   assignDeliveryCode: (riderId: string, orderId: string) => Promise<string>;
-  findActiveOrderIdByDeliveryCode: (
-    riderId: string,
-    code: string
-  ) => Promise<DeliveryCodeLookup>;
+  findActiveOrderIdByDeliveryCode: (riderId: string, code: string) => Promise<DeliveryCodeLookup>;
   getDeliveryCodeLock: (riderId: string) => Promise<string | null>;
   registerDeliveryCodeFailure: (riderId: string) => Promise<DeliveryCodeAttemptState>;
   resetDeliveryCodeAttempts: (riderId: string) => Promise<void>;

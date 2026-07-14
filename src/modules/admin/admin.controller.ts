@@ -52,6 +52,9 @@ import {
   AdminInventoryAdjustmentDto,
   AdminInventorySetTotalDto,
   AdminInventoryIdParamDto,
+  AdminResolveUserIssuesDto,
+  AdminSupportEscalationDto,
+  AdminSupportNoteDto,
   AdminInventoryQueryDto,
   AdminMarkPaidDto,
   AdminModerateReviewDto,
@@ -152,6 +155,28 @@ export class AdminController {
     @Body() input: AdminStatusTransitionDto
   ): Promise<SuccessEnvelope<AdminRecord>> {
     return createSuccessEnvelope(await this.admin.transitionOrder(actor, params.orderId, input));
+  }
+
+  @Post('orders/:orderId/notes')
+  @HttpCode(201)
+  async addOrderNote(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Param() params: AdminOrderIdParamDto,
+    @Body() input: AdminSupportNoteDto
+  ): Promise<SuccessEnvelope<AdminRecord>> {
+    return createSuccessEnvelope(await this.admin.addOrderNote(actor, params.orderId, input.note));
+  }
+
+  @Post('orders/:orderId/escalations')
+  @HttpCode(201)
+  async escalateOrder(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Param() params: AdminOrderIdParamDto,
+    @Body() input: AdminSupportEscalationDto
+  ): Promise<SuccessEnvelope<AdminRecord>> {
+    return createSuccessEnvelope(
+      await this.admin.escalateOrder(actor, params.orderId, input.reason)
+    );
   }
 
   @Get('batches')
@@ -593,7 +618,8 @@ export class AdminController {
   @Get('settlements/:id/payout-account')
   @RequirePermission('settlements:manage')
   @ApiOkResponse({
-    description: "Beneficiary bank account for a settlement, fetched from Paystack for manual payout."
+    description:
+      'Beneficiary bank account for a settlement, fetched from Paystack for manual payout.'
   })
   async getSettlementPayoutAccount(
     @Param() params: UuidIdParamDto
@@ -676,6 +702,37 @@ export class AdminController {
     @Param() params: AdminUserIdParamDto
   ): Promise<SuccessEnvelope<AdminRecord>> {
     return createSuccessEnvelope(await this.admin.setUserStatus(actor, params.userId, 'active'));
+  }
+
+  @Post('users/:userId/notes')
+  @HttpCode(201)
+  async addUserNote(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Param() params: AdminUserIdParamDto,
+    @Body() input: AdminSupportNoteDto
+  ): Promise<SuccessEnvelope<AdminRecord>> {
+    return createSuccessEnvelope(await this.admin.addUserNote(actor, params.userId, input.note));
+  }
+
+  @Post('users/:userId/escalations')
+  @HttpCode(201)
+  async escalateUser(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Param() params: AdminUserIdParamDto,
+    @Body() input: AdminSupportEscalationDto
+  ): Promise<SuccessEnvelope<AdminRecord>> {
+    return createSuccessEnvelope(await this.admin.escalateUser(actor, params.userId, input.reason));
+  }
+
+  @Post('users/:userId/issues/resolve')
+  @HttpCode(200)
+  async resolveUserIssues(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Param() params: AdminUserIdParamDto,
+    @Body() input: AdminResolveUserIssuesDto
+  ): Promise<ListEnvelope<AdminRecord>> {
+    const items = await this.admin.resolveUserIssues(actor, params.userId, input.note);
+    return createListEnvelope(items, { hasMore: false, limit: items.length });
   }
 
   @Get('admin-memberships')

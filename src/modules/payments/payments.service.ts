@@ -10,6 +10,8 @@ import {
 import { ErrorCodes } from '../../common/errors/error-codes.js';
 import { normalizeCursorPagination } from '../../common/api/pagination.js';
 import { AuditService, actorTypeForRole } from '../../common/audit/audit.service.js';
+import { SupportNotesService } from '../../common/support-notes/support-notes.service.js';
+import type { SupportNoteRecord } from '../../common/support-notes/support-notes.service.js';
 import type { AuthenticatedActor } from '../auth/actor-context.js';
 import { PaystackClient } from './paystack.client.js';
 import { PaymentsRepository } from './payments.repository.js';
@@ -62,8 +64,41 @@ export class PaymentsService {
   constructor(
     @Inject(PaymentsRepository) private readonly repository: PaymentsRepositoryContract,
     @Inject(PaystackClient) private readonly paystack: PaystackClientContract,
-    @Inject(AuditService) private readonly audit: AuditService
+    @Inject(AuditService) private readonly audit: AuditService,
+    @Inject(SupportNotesService) private readonly supportNotes: SupportNotesService
   ) {}
+
+  /** Marks a payment as reviewed by an admin. Recorded as an audit entry plus an optional note. */
+  async reviewPayment(
+    actor: AuthenticatedActor,
+    paymentId: string,
+    note?: string
+  ): Promise<AdminPaymentDetail> {
+    const payment = await this.getAdminPayment(actor, paymentId);
+    await this.audit.record({
+      actorUserId: actor.userId,
+      actorType: actorTypeForRole(actor.role),
+      action: 'payment.reviewed',
+      entityType: 'payment',
+      entityId: paymentId,
+      campusId: payment.campusId,
+      ...(note === undefined ? {} : { metadata: { note } })
+    });
+    if (note !== undefined) {
+      await this.supportNotes.add('payment', paymentId, actor.userId, note);
+    }
+    return this.getAdminPaymentDetail(actor, paymentId);
+  }
+
+  /** Appends an internal admin note to a payment. */
+  async addAdminNote(
+    actor: AuthenticatedActor,
+    paymentId: string,
+    note: string
+  ): Promise<SupportNoteRecord> {
+    await this.getAdminPayment(actor, paymentId);
+    return this.supportNotes.add('payment', paymentId, actor.userId, note);
+  }
 
   /**
    * Fallback for when no public webhook reaches us (local/test, or a missed webhook):
@@ -232,7 +267,16 @@ export class PaymentsService {
     if (detail === undefined) {
       throw notFound('Payment was not found.');
     }
-    return detail;
+    const notes = await this.supportNotes.list('payment', paymentId);
+    return {
+      ...detail,
+      adminNotes: notes.map((n) => ({
+        id: n.id,
+        authorAdminId: n.authorId,
+        note: n.body,
+        createdAt: n.createdAt
+      }))
+    };
   }
 
   async getAdminPaymentTimeline(

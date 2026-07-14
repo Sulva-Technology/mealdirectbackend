@@ -925,10 +925,7 @@ export class VendorsService {
     return this.signItem(item);
   }
 
-  async adminCreateMenuItem(
-    vendorId: string,
-    input: UpsertMenuItemInput
-  ): Promise<MenuItemRecord> {
+  async adminCreateMenuItem(vendorId: string, input: UpsertMenuItemInput): Promise<MenuItemRecord> {
     await this.assertVendorExists(vendorId);
     await this.assertCategoryBelongsToVendor(vendorId, input.categoryId);
 
