@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { HandlerRegistry } from '../../src/worker/handler-registry.js';
+import { HandlerRegistry, NOTIFICATION_EVENT_PREFIXES } from '../../src/worker/handler-registry.js';
 import { OutboxProcessor } from '../../src/worker/outbox-processor.js';
 import type { OutboxEvent, OutboxRepositoryContract } from '../../src/worker/outbox.repository.js';
 
@@ -50,6 +50,27 @@ describe('OutboxProcessor.drainOnce', () => {
 
     expect(fail).toHaveBeenCalledWith('evt-1', expect.stringContaining('boom'), 5);
     expect(complete).not.toHaveBeenCalled();
+  });
+
+  it('routes every notification-bearing event family to a dispatch handler', () => {
+    const registry = new HandlerRegistry();
+    const handler = vi.fn();
+    for (const prefix of NOTIFICATION_EVENT_PREFIXES) {
+      registry.registerPrefix(prefix, handler);
+    }
+
+    // One representative event per family that materializes notification rows.
+    // A missing prefix here silently completes outbox events without ever
+    // sending push/email (that is how rider push broke).
+    for (const eventType of [
+      'order.accepted',
+      'payment.confirmed',
+      'settlement.paid',
+      'batch_chat.message_posted',
+      'rider.assignment'
+    ]) {
+      expect(registry.handlersFor(eventType), eventType).toContain(handler);
+    }
   });
 
   it('completes events with no registered handler (no-op)', async () => {

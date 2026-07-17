@@ -2,6 +2,18 @@ import type { OutboxEvent } from './outbox.repository.js';
 
 export type OutboxHandler = (event: OutboxEvent) => Promise<void>;
 
+// Every outbox event family that materializes notification rows must be listed
+// here so the dispatch handler runs for it. Events with no handler are completed
+// as silent no-ops, so a missing prefix means notifications appear in-app but
+// push/email are never sent (this is exactly how rider.assignment push broke).
+export const NOTIFICATION_EVENT_PREFIXES = [
+  'order.',
+  'payment.',
+  'settlement.',
+  'batch_chat.',
+  'rider.'
+] as const;
+
 export class HandlerRegistry {
   private readonly handlers = new Map<string, OutboxHandler[]>();
   private readonly prefixHandlers: { prefix: string; handler: OutboxHandler }[] = [];

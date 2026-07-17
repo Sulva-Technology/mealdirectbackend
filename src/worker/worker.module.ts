@@ -7,7 +7,7 @@ import { DatabaseModule } from '../database/database.module.js';
 import { DeviceTokensRepository } from '../modules/notifications/device-tokens.repository.js';
 import { EmailChannel } from '../notifications/channels/email.channel.js';
 import { PushChannel } from '../notifications/channels/push.channel.js';
-import { HandlerRegistry } from './handler-registry.js';
+import { HandlerRegistry, NOTIFICATION_EVENT_PREFIXES } from './handler-registry.js';
 import { AutoDispatchHandler } from './handlers/auto-dispatch.handler.js';
 import { DispatchReadsRepository } from './handlers/dispatch-reads.repository.js';
 import { NotificationDispatchHandler } from './handlers/notification-dispatch.handler.js';
@@ -57,7 +57,7 @@ import { createEmailTransport, createPushSender } from './transports.js';
         autoDispatch: AutoDispatchHandler
       ): HandlerRegistry => {
         const registry = new HandlerRegistry();
-        for (const prefix of ['order.', 'payment.', 'settlement.', 'batch_chat.']) {
+        for (const prefix of NOTIFICATION_EVENT_PREFIXES) {
           registry.registerPrefix(prefix, dispatch.handle);
         }
         registry.register('order.ready', autoDispatch.handle);
