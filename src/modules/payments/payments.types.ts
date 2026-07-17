@@ -216,6 +216,7 @@ export type PaymentsRepositoryContract = {
     paymentId: string,
     providerPayload: Record<string, unknown>
   ) => Promise<PaymentRecord>;
+  extendReservationWindow: (orderId: string, minutes: number) => Promise<void>;
   listAdminPaymentsPaged: (
     filter: AdminPaymentListFilter,
     pagination: { cursor?: string; limit: number },

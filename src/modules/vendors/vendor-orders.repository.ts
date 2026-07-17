@@ -59,7 +59,12 @@ export class VendorOrdersRepository {
         o.updated_at::text as "updatedAt",
         o.paid_at::text as "paidAt",
         o.delivered_at::text as "deliveredAt",
-        o.confirmed_at::text as "confirmedAt"
+        o.confirmed_at::text as "confirmedAt",
+        coalesce((
+          select string_agg(oi.quantity || '× ' || oi.item_name, ', ' order by oi.created_at)
+          from public.order_items oi
+          where oi.order_id = o.id
+        ), '') as "itemsSummary"
       from public.orders o
       join public.vendors v on v.id = o.vendor_id
       join public.delivery_slots ds on ds.id = o.delivery_slot_id
@@ -109,7 +114,12 @@ export class VendorOrdersRepository {
         o.updated_at::text as "updatedAt",
         o.paid_at::text as "paidAt",
         o.delivered_at::text as "deliveredAt",
-        o.confirmed_at::text as "confirmedAt"
+        o.confirmed_at::text as "confirmedAt",
+        coalesce((
+          select string_agg(oi.quantity || '× ' || oi.item_name, ', ' order by oi.created_at)
+          from public.order_items oi
+          where oi.order_id = o.id
+        ), '') as "itemsSummary"
       from public.orders o
       join public.vendors v on v.id = o.vendor_id
       join public.delivery_slots ds on ds.id = o.delivery_slot_id

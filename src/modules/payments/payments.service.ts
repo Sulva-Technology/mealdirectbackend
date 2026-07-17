@@ -57,6 +57,11 @@ function describeError(error: unknown): string {
   return error instanceof Error ? error.message : 'unknown error';
 }
 
+// How long an inventory reservation is held once the customer enters Paystack checkout.
+// Must comfortably exceed Paystack's own checkout session so an order can never expire
+// while the customer is still paying.
+const PAYMENT_WINDOW_MINUTES = 30;
+
 @Injectable()
 export class PaymentsService {
   private readonly logger = new Logger(PaymentsService.name);
@@ -230,6 +235,9 @@ export class PaymentsService {
     });
 
     await this.repository.markPaymentInitializationPayload(payment.id, initialized.providerPayload);
+    // The customer is now inside the Paystack checkout; hold the inventory reservation for
+    // the full payment window so the order cannot expire mid-payment.
+    await this.repository.extendReservationWindow(payment.orderId, PAYMENT_WINDOW_MINUTES);
 
     return {
       accessCode: initialized.accessCode,

@@ -74,6 +74,7 @@ function createRepository(): PaymentsRepositoryContract {
     findCustomerInitializationPayment: vi.fn().mockResolvedValue(payment),
     findStuckPaystackPayments: vi.fn().mockResolvedValue([payment]),
     markPaymentInitializationPayload: vi.fn().mockResolvedValue(paymentRecord),
+    extendReservationWindow: vi.fn().mockResolvedValue(undefined),
     listAdminPaymentsPaged: vi
       .fn()
       .mockResolvedValue({ items: [paymentRecord], hasMore: false, limit: 20 }),

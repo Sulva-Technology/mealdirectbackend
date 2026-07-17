@@ -17,7 +17,10 @@ services:
       - key: DATABASE_SSL
         value: true
       - key: DATABASE_SSL_REJECT_UNAUTHORIZED
-        value: false
+        value: true
+      # PEM CA for the Supabase pooler cert chain so verification can stay on.
+      - key: DATABASE_SSL_CA
+        sync: false
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_JWT_ISSUER
@@ -65,7 +68,10 @@ services:
       - key: DATABASE_SSL
         value: true
       - key: DATABASE_SSL_REJECT_UNAUTHORIZED
-        value: false
+        value: true
+      # PEM CA for the Supabase pooler cert chain so verification can stay on.
+      - key: DATABASE_SSL_CA
+        sync: false
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_JWT_ISSUER
@@ -94,7 +100,10 @@ services:
       - key: DATABASE_SSL
         value: true
       - key: DATABASE_SSL_REJECT_UNAUTHORIZED
-        value: false
+        value: true
+      # PEM CA for the Supabase pooler cert chain so verification can stay on.
+      - key: DATABASE_SSL_CA
+        sync: false
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_JWT_ISSUER
@@ -123,7 +132,10 @@ services:
       - key: DATABASE_SSL
         value: true
       - key: DATABASE_SSL_REJECT_UNAUTHORIZED
-        value: false
+        value: true
+      # PEM CA for the Supabase pooler cert chain so verification can stay on.
+      - key: DATABASE_SSL_CA
+        sync: false
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_JWT_ISSUER

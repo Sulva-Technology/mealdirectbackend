@@ -52,6 +52,9 @@ const envSchema = z
     DATABASE_URL: z.url(),
     DATABASE_SSL: booleanFromString.default(false),
     DATABASE_SSL_REJECT_UNAUTHORIZED: booleanFromString.default(true),
+    // PEM CA bundle ("\n" escapes allowed) for verifying the database server cert
+    // when it is not signed by a CA in Node's trust store (e.g. Supabase pooler).
+    DATABASE_SSL_CA: z.string().min(1).optional(),
     DATABASE_POOL_MAX: z.coerce.number().int().positive().default(10),
     SUPABASE_URL: z.url(),
     SUPABASE_JWT_ISSUER: z.url(),

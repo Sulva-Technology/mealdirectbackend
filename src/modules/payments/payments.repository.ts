@@ -158,6 +158,23 @@ export class PaymentsRepository implements PaymentsRepositoryContract {
     return payment;
   }
 
+  async extendReservationWindow(orderId: string, minutes: number): Promise<void> {
+    // Only ever pushes the window forward (greatest), and only while the order is still
+    // awaiting payment. Holding inventory past the slot cutoff is safe: nobody else can
+    // order the slot after cutoff, and mark_verified_payment_successful auto-recovers
+    // late captures anyway.
+    await sql`
+      update public.orders
+      set inventory_reservation_expires_at = greatest(
+            inventory_reservation_expires_at,
+            now() + make_interval(mins => ${minutes})
+          ),
+          updated_at = now()
+      where id = ${orderId}::uuid
+        and order_status = 'pending_payment'::public.order_status
+    `.execute(this.database.db);
+  }
+
   async listAdminPaymentsPaged(
     filter: AdminPaymentListFilter,
     pagination: { cursor?: string; limit: number },

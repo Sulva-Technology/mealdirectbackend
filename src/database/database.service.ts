@@ -8,6 +8,7 @@ import type { DatabaseSchema } from './database.types.js';
 type DatabaseSslConfigInput = {
   DATABASE_SSL: boolean;
   DATABASE_SSL_REJECT_UNAUTHORIZED: boolean;
+  DATABASE_SSL_CA?: string | undefined;
 };
 
 type DatabasePoolConfigInput = DatabaseSslConfigInput & {
@@ -19,13 +20,19 @@ const connectionStringSslParams = ['ssl', 'sslmode', 'sslcert', 'sslkey', 'sslro
 
 export function createPostgresSslConfig(
   config: DatabaseSslConfigInput
-): false | { rejectUnauthorized: boolean } {
+): false | { rejectUnauthorized: boolean; ca?: string } {
   if (!config.DATABASE_SSL) {
     return false;
   }
 
+  // Supabase's pooler certs are issued under Supabase's own CA, which is not in
+  // Node's trust store. Providing the CA (PEM, "\n" escapes allowed) lets us keep
+  // rejectUnauthorized: true instead of disabling verification.
+  const ca = config.DATABASE_SSL_CA?.replace(/\\n/g, '\n');
+
   return {
-    rejectUnauthorized: config.DATABASE_SSL_REJECT_UNAUTHORIZED
+    rejectUnauthorized: config.DATABASE_SSL_REJECT_UNAUTHORIZED,
+    ...(ca === undefined || ca.length === 0 ? {} : { ca })
   };
 }
 
@@ -44,7 +51,7 @@ function withoutConnectionStringSslParams(connectionString: string): string {
 function applyExplicitSslConfig(
   poolConfig: PoolConfig,
   config: DatabasePoolConfigInput,
-  ssl: false | { rejectUnauthorized: boolean }
+  ssl: false | { rejectUnauthorized: boolean; ca?: string }
 ): void {
   poolConfig.connectionString = withoutConnectionStringSslParams(config.DATABASE_URL);
   poolConfig.ssl = ssl;

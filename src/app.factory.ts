@@ -77,7 +77,9 @@ export async function createApp(options: CreateAppOptions = {}): Promise<NestFas
   const env = options.env;
   const adapter = new FastifyAdapter({
     bodyLimit: env?.BODY_LIMIT_BYTES ?? 1_048_576,
-    trustProxy: true,
+    // Trust exactly one hop (Render's edge proxy). `true` would trust the whole
+    // X-Forwarded-For chain, letting clients spoof their IP past rate limiting.
+    trustProxy: 1,
     logger: false,
     // FCM device tokens (~160 chars) are passed as a path param on
     // DELETE /me/device-tokens/:token; fastify's default maxParamLength of 100
