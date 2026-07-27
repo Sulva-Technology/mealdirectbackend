@@ -20,9 +20,16 @@ create trigger platform_settings_set_updated_at
 before update on public.platform_settings
 for each row execute function public.set_updated_at();
 
+-- Sensitive operator configuration: keep private like other admin-only finance tables
+-- (payment_reconciliation_issues, rider_payout_accounts, vendor_invitations,
+-- admin_support_notes). RLS is enabled with no anon/authenticated grants or policies,
+-- so only the privileged application role (which bypasses RLS) can read or write.
+alter table public.platform_settings enable row level security;
+
 -- Read an integer setting, falling back to p_default when the key is absent or is
--- not a JSON number. Callers pass the same default the application would use so a
--- missing row can never change pricing behaviour.
+-- not usable as an integer. Callers pass the same default the application would use
+-- so a missing or malformed row can never change pricing behaviour. Fractional JSON
+-- numbers round via the numeric cast rather than raising.
 create or replace function public.platform_setting_int(p_key text, p_default integer)
 returns integer
 language sql
@@ -32,7 +39,7 @@ set search_path = public
 as $$
   select coalesce(
     (
-      select case when jsonb_typeof(s.value) = 'number' then (s.value #>> '{}')::integer end
+      select case when jsonb_typeof(s.value) = 'number' then (s.value #>> '{}')::numeric::integer end
       from public.platform_settings s
       where s.key = p_key
     ),
@@ -40,7 +47,7 @@ as $$
   );
 $$;
 
-comment on function public.platform_setting_int(text, integer) is 'Reads an integer platform setting, returning p_default when the key is missing or not a JSON number.';
+comment on function public.platform_setting_int(text, integer) is 'Reads an integer platform setting, rounding fractional JSON numbers and returning p_default when the key is missing or not a JSON number.';
 
 insert into public.platform_settings (key, value, description)
 values
