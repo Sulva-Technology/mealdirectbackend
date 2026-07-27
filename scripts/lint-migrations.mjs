@@ -30,7 +30,7 @@ for (const file of readdirSync(migrationsDir).filter((name) => name.endsWith('.s
     );
   }
 
-  if (!/comment on (table|column|function|view)/i.test(sql)) {
+  if (!/comment on (table|column|function|view|type)/i.test(sql)) {
     failures.push(
       `${file}: add comments for tables, columns, functions, views, or non-obvious constraints`
     );

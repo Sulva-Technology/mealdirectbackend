@@ -9,4 +9,7 @@ alter type public.payment_provider add value if not exists 'wallet';
 alter type public.payment_reconciliation_issue_type add value if not exists 'wallet_balance_drift';
 alter type public.payment_reconciliation_issue_type add value if not exists 'wallet_balance_cap_exceeded';
 
+comment on type public.payment_provider is 'Funding source recorded on a payments row: Paystack checkout or the customer wallet balance.';
+comment on type public.payment_reconciliation_issue_type is 'Taxonomy of finance-ops discrepancies surfaced in the admin dashboard, spanning Paystack-versus-local payment mismatches and wallet ledger integrity problems.';
+
 commit;
