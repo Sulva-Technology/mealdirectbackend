@@ -401,7 +401,15 @@ git commit -m "feat(fee): charge ₦300 base plus ₦100 point surcharge at orde
 
 **Files:**
 - Create: `supabase/migrations/20260728000500_resolve_delivery_shares.sql`
-- Test: `supabase/tests/079_resolve_delivery_shares_test.sql`
+- Test: `supabase/tests/database/104_resolve_delivery_shares_test.sql`
+
+> **CRITICAL blocker (found during implementation): the `protect_order_financial_history` trigger.**
+> It rejects any post-payment change to `platform_delivery_share_kobo` / `fulfiller_delivery_share_kobo`,
+> so the resolver's UPDATE at `delivered` is blocked. This migration must ALSO `create or replace`
+> `protect_order_financial_history` to drop those two split columns from its guarded set (keep
+> `order_number`, `food_subtotal_kobo`, `delivery_fee_kobo`, `discount_kobo`, `total_kobo`, `currency`
+> guarded). Do NOT re-create the trigger, only the function. The internal split is resolved at delivery
+> by design and is no longer a payment-time snapshot; the customer-paid amounts stay immutable.
 
 - [ ] **Step 1: Write the failing test** (cover the four rider-mode outcomes, the two vendor-delivery outcomes, point delivery, and the residual/invariant)
 

@@ -181,6 +181,14 @@ Computes and persists, in one place:
   self-delivery) [+ self-delivery rider portion in `vendor_delivery` mode]
 - `platform_delivery_share_kobo` — residual = `delivery_fee_kobo - rider - vendor`
 
+**Financial-history trigger must be relaxed.** `protect_order_financial_history` (BEFORE UPDATE on
+`orders`) currently rejects any post-payment change to `platform_delivery_share_kobo` /
+`fulfiller_delivery_share_kobo`, so the resolver — which rewrites `platform_delivery_share_kobo` at
+`delivered` — would be blocked. The trigger is amended to drop those two split columns from its
+guarded set. The customer-paid snapshot (`food_subtotal_kobo`, `delivery_fee_kobo`, `discount_kobo`,
+`total_kobo`, `currency`) and `order_number` stay immutable after payment; only the internal
+delivery-fee *split*, which v2 resolves at delivery by design, becomes mutable at that transition.
+
 ### Settlements
 
 - Rider daily settlement sums `rider_delivery_share_kobo` (was `fulfiller_delivery_share_kobo`) over
