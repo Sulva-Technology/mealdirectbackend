@@ -42,8 +42,13 @@ export class ReconciliationService {
 
   async scan(actor: AuthenticatedActor): Promise<{ detected: number }> {
     this.assertAdmin(actor);
-    const detected = await this.repository.scan(900, 3600);
-    return { detected };
+    // Two independent invariants: the Paystack-vs-local payment sweep, and the wallet
+    // cache-vs-ledger assertion. Both file rows into payment_reconciliation_issues.
+    const [payments, walletDrift] = await Promise.all([
+      this.repository.scan(900, 3600),
+      this.repository.detectWalletBalanceDrift()
+    ]);
+    return { detected: payments + walletDrift };
   }
 
   async listIssues(

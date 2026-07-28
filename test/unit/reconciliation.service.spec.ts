@@ -44,6 +44,7 @@ const issue: ReconciliationIssueRecord = {
 function createRepository(): ReconciliationRepository {
   return {
     scan: vi.fn().mockResolvedValue(3),
+    detectWalletBalanceDrift: vi.fn().mockResolvedValue(0),
     listIssues: vi.fn().mockResolvedValue({ items: [issue], hasMore: false, limit: 20 }),
     findIssueById: vi.fn().mockResolvedValue(issue),
     listNotes: vi.fn().mockResolvedValue([]),
@@ -88,6 +89,13 @@ describe('ReconciliationService', () => {
   it('scans and reports detected count for admins', async () => {
     await expect(service.scan(superAdmin)).resolves.toEqual({ detected: 3 });
     expect(repository.scan).toHaveBeenCalledWith(900, 3600);
+  });
+
+  it('adds wallet balance drift to the detected count', async () => {
+    vi.mocked(repository.detectWalletBalanceDrift).mockResolvedValue(2);
+
+    await expect(service.scan(superAdmin)).resolves.toEqual({ detected: 5 });
+    expect(repository.detectWalletBalanceDrift).toHaveBeenCalledTimes(1);
   });
 
   it('returns issue detail with notes', async () => {

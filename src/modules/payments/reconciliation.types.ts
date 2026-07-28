@@ -6,7 +6,9 @@ export type ReconciliationIssueType =
   | 'duplicate_success'
   | 'amount_mismatch'
   | 'currency_mismatch'
-  | 'refund_stuck';
+  | 'refund_stuck'
+  | 'wallet_balance_drift'
+  | 'wallet_balance_cap_exceeded';
 
 export type ReconciliationIssueStatus = 'open' | 'investigating' | 'resolved' | 'ignored';
 
