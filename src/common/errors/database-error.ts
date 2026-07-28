@@ -2,13 +2,15 @@ import {
   BadRequestException,
   ConflictException,
   HttpException,
+  HttpStatus,
   NotFoundException
 } from '@nestjs/common';
 import { DatabaseError } from 'pg';
 
+import { parseWalletShortfall, walletInsufficientBalanceSqlState } from '../../domain/wallet.js';
 import { ErrorCodes } from './error-codes.js';
 
-type DatabaseErrorMapping = (message: string) => HttpException;
+type DatabaseErrorMapping = (message: string, detail?: string) => HttpException;
 
 // Postgres SQLSTATE → HTTP. Business rules in plpgsql functions raise with
 // `using errcode = '23514'`; raises without an explicit errcode default to
@@ -25,7 +27,20 @@ const sqlStateMappings: Readonly<Record<string, DatabaseErrorMapping>> = {
   // not_null_violation.
   '23502': (message) => new BadRequestException({ code: ErrorCodes.VALIDATION_FAILED, message }),
   // no_data_found — explicit `raise no_data_found` in plpgsql.
-  P0002: (message) => new NotFoundException({ code: ErrorCodes.NOT_FOUND, message })
+  P0002: (message) => new NotFoundException({ code: ErrorCodes.NOT_FOUND, message }),
+  // Wallet balance short of the order total. Payment Required is the honest status:
+  // nothing is wrong with the request, the customer just needs to top up.
+  [walletInsufficientBalanceSqlState]: (message, detail) => {
+    const shortfall = parseWalletShortfall(detail);
+    return new HttpException(
+      {
+        code: ErrorCodes.WALLET_INSUFFICIENT_BALANCE,
+        message,
+        ...(shortfall === undefined ? {} : { details: shortfall })
+      },
+      HttpStatus.PAYMENT_REQUIRED
+    );
+  }
 };
 
 /**
@@ -44,5 +59,5 @@ export function mapDatabaseError(exception: unknown): HttpException | undefined 
     return undefined;
   }
 
-  return mapping(exception.message);
+  return mapping(exception.message, exception.detail);
 }

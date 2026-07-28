@@ -7,7 +7,8 @@ export const ErrorCodes = {
   FORBIDDEN: 'FORBIDDEN',
   DATABASE_UNAVAILABLE: 'DATABASE_UNAVAILABLE',
   RATE_LIMITED: 'RATE_LIMITED',
-  AUTH_FAILED: 'AUTH_FAILED'
+  AUTH_FAILED: 'AUTH_FAILED',
+  WALLET_INSUFFICIENT_BALANCE: 'WALLET_INSUFFICIENT_BALANCE'
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
