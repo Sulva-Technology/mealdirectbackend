@@ -186,10 +186,11 @@ alter table public.orders add constraint orders_money_non_negative check (
   and total_kobo >= 0
 );
 
--- when all three resolved shares are present they must sum to the fee
+-- Newly resolved orders must have shares that sum to the fee. Scoped by delivered_on_time
+-- (set by the resolution function, NOT by the backfill) so historical rows whose per-zone
+-- delivery_fee != 15000 with pinned 7500/7500 shares are exempt and the migration cannot abort.
 alter table public.orders add constraint orders_resolved_shares_balance check (
-  rider_delivery_share_kobo is null
-  or vendor_delivery_share_kobo is null
+  delivered_on_time is null
   or (rider_delivery_share_kobo + vendor_delivery_share_kobo + platform_delivery_share_kobo = delivery_fee_kobo)
 );
 
@@ -203,7 +204,8 @@ where o.order_status in ('delivered', 'confirmed', 'administratively_completed',
 commit;
 ```
 
-> The `orders_resolved_shares_balance` check uses `platform_delivery_share_kobo` (not-null, defaulted 7500 historically), so once rider+vendor are set the platform column must already hold the residual — which the resolution function in Task 5 writes atomically. Historical rows: 7500 + 7500 + (already-stored) 7500 residual? No — historical `delivery_fee_kobo` is 15000 and platform stored 7500, so after backfill rider(7500)+vendor(0)+platform(7500)=15000 for rider-mode, and 0+7500+7500=15000 for vendor-mode. Balanced. ✔
+> **Schema-drift note (confirmed during implementation):** the live `orders_money_non_negative` was already relaxed twice after `20260612000400` and now also carries `service_fee_kobo >= 0`; the live `orders_total_formula` includes `service_fee_kobo` and `large_order_surcharge_kobo`. Read the CURRENT constraint text before rewriting and preserve every existing `>= 0` guard.
+> **Why `delivered_on_time` scopes the balance check:** historical orders keep pinned 7500/7500 shares, but since the delivery fee went per-zone a historical row can have `delivery_fee_kobo != 15000`, so those shares do NOT sum to the fee. The backfill sets only rider/vendor and leaves `delivered_on_time` null, so those rows are exempt and the migration cannot abort. The resolution function (Task 5) sets `delivered_on_time` together with all three balanced shares, so the invariant is enforced on every new order.
 
 - [ ] **Step 4: Run test, expect pass.**
 

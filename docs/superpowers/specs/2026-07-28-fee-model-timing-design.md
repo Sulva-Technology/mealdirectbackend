@@ -120,9 +120,18 @@ classroom — rather than a general zone drop.
 
 ### Constraints to relax / replace
 
-- `orders_money_non_negative`: drop the `= 15000 / = 7500 / = 7500` pins. Keep all
-  `>= 0` checks. Add: when the shares are resolved (non-null), their sum equals `delivery_fee_kobo`.
-- `orders_total_formula`: unchanged (still `total = food + delivery_fee - discount`).
+- `orders_money_non_negative`: drop the `= 15000 / = 7500 / = 7500` pins. Keep all existing `>= 0`
+  checks (as of implementation the live constraint also carries `service_fee_kobo >= 0`, added by a
+  later migration — preserve it) and add `>= 0` guards for the two new nullable share columns.
+- New `orders_resolved_shares_balance`: `delivered_on_time is null OR (rider + vendor + platform =
+  delivery_fee_kobo)`. **Scoped by `delivered_on_time`, not by the shares being null** — the
+  resolution function (below) sets `delivered_on_time` together with the balanced shares, while the
+  historical backfill sets only rider/vendor and leaves `delivered_on_time` null. This exempts
+  historical rows (whose pinned 7500/7500 need not sum to a per-zone `delivery_fee_kobo`) so the
+  migration can never abort, while enforcing the invariant on every newly resolved order.
+- `orders_total_formula`: unchanged in intent (`total = food + delivery_fee ± other fees - discount`;
+  the live formula also includes `service_fee_kobo` and `large_order_surcharge_kobo` — the higher
+  `delivery_fee_kobo` flows through it automatically).
 - `delivery_batches_earnings_formula` (`delivery_earnings_kobo = order_count * 7500`): relax to
   `delivery_earnings_kobo >= 0`. The batch's rider earnings become the **sum of the batch's
   per-order `rider_delivery_share_kobo`**, not a flat multiple.
@@ -194,8 +203,10 @@ One-time backfill of the new columns for already-terminal rows:
 - `point_delivery` = false; `ready_at`/`ready_on_time`/`delivered_on_time`/`rider_confirmed_ready`
   = null/unknown for history.
 
-The resolved-share sum check applies only to rows resolved under the new logic; historical rows are
-already balanced (7500 + 7500 = 15000), so they satisfy it too.
+The resolved-share sum check applies only to rows resolved under the new logic (guarded on
+`delivered_on_time is not null`); historical backfilled rows leave `delivered_on_time` null and are
+therefore exempt — necessary because a historical order delivered to a higher-fee zone kept its
+pinned 7500/7500 shares that do not sum to that fee.
 
 ## Error handling
 
