@@ -35,3 +35,62 @@ describe('mapPaystackEvent', () => {
     expect(event).toMatchObject({ type: 'IGNORED', reason: 'UNMAPPED_EVENT' });
   });
 });
+
+describe('dedicated virtual account top-ups', () => {
+  it('maps a dedicated_nuban charge.success to a wallet top-up', () => {
+    const event = mapPaystackEvent({
+      event: 'charge.success',
+      data: {
+        id: 987654,
+        reference: 'PSTK-TRF-9001',
+        amount: 1000000,
+        currency: 'NGN',
+        authorization: {
+          channel: 'dedicated_nuban',
+          receiver_bank_account_number: '9900001111',
+          sender_name: 'ADA LOVELACE'
+        }
+      }
+    });
+
+    expect(event).toEqual({
+      type: 'WALLET_TOPUP_SUCCEEDED',
+      providerReference: 'PSTK-TRF-9001',
+      amountKobo: 1000000,
+      accountNumber: '9900001111',
+      senderName: 'ADA LOVELACE',
+      currency: 'NGN'
+    });
+  });
+
+  it('still maps an ordinary card charge.success to a payment', () => {
+    const event = mapPaystackEvent({
+      event: 'charge.success',
+      data: {
+        reference: 'MD-0104',
+        amount: 45000,
+        currency: 'NGN',
+        authorization: { channel: 'card' }
+      }
+    });
+
+    expect(event.type).toBe('PAYMENT_SUCCEEDED');
+  });
+
+  it('reads the account number from the data root when Paystack puts it there', () => {
+    const event = mapPaystackEvent({
+      event: 'charge.success',
+      data: {
+        reference: 'PSTK-TRF-9002',
+        amount: 500000,
+        authorization: { channel: 'dedicated_nuban' },
+        receiver_bank_account_number: '9900002222'
+      }
+    });
+
+    expect(event).toMatchObject({
+      type: 'WALLET_TOPUP_SUCCEEDED',
+      accountNumber: '9900002222'
+    });
+  });
+});

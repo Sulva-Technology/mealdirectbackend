@@ -6,6 +6,12 @@ export type PaystackWebhookEvent = {
     amount?: number;
     currency?: string;
     status?: string;
+    receiver_bank_account_number?: string;
+    authorization?: {
+      channel?: string;
+      receiver_bank_account_number?: string;
+      sender_name?: string;
+    };
   };
 };
 
@@ -32,6 +38,14 @@ export type PaymentDomainEvent =
       status: 'success' | 'failed' | 'reversed';
     }
   | {
+      type: 'WALLET_TOPUP_SUCCEEDED';
+      providerReference: string;
+      amountKobo: number;
+      accountNumber?: string;
+      senderName?: string;
+      currency?: string;
+    }
+  | {
       type: 'IGNORED';
       reason: 'UNMAPPED_EVENT' | 'MISSING_REFERENCE';
       providerEvent: string;
@@ -44,6 +58,27 @@ export function mapPaystackEvent(input: PaystackWebhookEvent): PaymentDomainEven
       type: 'IGNORED',
       reason: 'MISSING_REFERENCE',
       providerEvent: input.event
+    };
+  }
+
+  // Money landing on a customer dedicated virtual account. This must be decided before the
+  // ordinary charge.success branch: a top-up has no order, so the order-reference lookup
+  // downstream would file a spurious provider_success_not_local issue for every top-up.
+  if (
+    input.event === 'charge.success' &&
+    input.data?.authorization?.channel === 'dedicated_nuban'
+  ) {
+    const accountNumber =
+      input.data.authorization.receiver_bank_account_number ??
+      input.data.receiver_bank_account_number;
+    const senderName = input.data.authorization.sender_name;
+    return {
+      type: 'WALLET_TOPUP_SUCCEEDED',
+      providerReference: reference,
+      amountKobo: input.data.amount ?? 0,
+      ...(accountNumber === undefined ? {} : { accountNumber }),
+      ...(senderName === undefined ? {} : { senderName }),
+      ...(input.data.currency === undefined ? {} : { currency: input.data.currency })
     };
   }
 

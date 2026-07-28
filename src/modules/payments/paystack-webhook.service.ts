@@ -124,6 +124,10 @@ export class PaystackWebhookService {
         await this.reconcileTransfer(trx, payload, event.providerReference, event.status);
       }
 
+      if (event.type === 'WALLET_TOPUP_SUCCEEDED') {
+        await this.creditWalletTopup(trx, payload, event);
+      }
+
       return {
         status: 'accepted',
         eventType: event.type,
@@ -243,6 +247,49 @@ export class PaystackWebhookService {
         ${JSON.stringify(payload)}::jsonb
       )
     `.execute(trx);
+  }
+
+  /**
+   * Credit an inbound transfer to the wallet behind the receiving account number. Crediting is
+   * idempotent on the Paystack reference inside credit_wallet_topup, so a redelivered webhook
+   * is a no-op. A transfer we cannot attribute to any wallet is money we hold with nowhere to
+   * put it, so it is filed as a critical issue rather than silently dropped.
+   */
+  private async creditWalletTopup(
+    trx: Kysely<DatabaseSchema>,
+    payload: PaystackWebhookEvent,
+    event: Extract<
+      Exclude<ReturnType<typeof mapPaystackEvent>, { type: 'IGNORED' }>,
+      { type: 'WALLET_TOPUP_SUCCEEDED' }
+    >
+  ): Promise<void> {
+    if (event.accountNumber === undefined) {
+      await this.recordIssue(
+        trx,
+        `wallet_topup_unattributable:${event.providerReference}`,
+        'provider_success_not_local',
+        'critical',
+        null,
+        null,
+        event.providerReference,
+        { reason: 'dedicated_nuban charge carried no receiver account number' }
+      );
+      return;
+    }
+
+    const credited = await sql<{ entryId: string | null }>`
+      select public.credit_wallet_topup(
+        ${event.providerReference},
+        ${event.accountNumber},
+        null::uuid,
+        ${event.amountKobo}::integer,
+        ${event.senderName ?? null},
+        ${JSON.stringify(payload)}::jsonb
+      )::text as "entryId"
+    `.execute(trx);
+
+    // A null entry id means the reference was already credited — an ordinary redelivery.
+    void credited;
   }
 
   private async recordProcessingFailure(providerReference: string, error: unknown): Promise<void> {
