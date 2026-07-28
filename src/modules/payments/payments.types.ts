@@ -226,10 +226,13 @@ export type PaystackClientContract = {
   ) => Promise<PaystackDedicatedAccountResult>;
 };
 
+export type RefundDestination = 'wallet' | 'paystack';
+
 export type RefundInput = {
   amountKobo: number;
   reasonCode: string;
   reasonText?: string;
+  destination?: RefundDestination;
 };
 
 export type PaymentsRepositoryContract = {
@@ -284,6 +287,12 @@ export type PaymentsRepositoryContract = {
     providerPayload: Record<string, unknown>,
     status: RefundStatus
   ) => Promise<RefundRecord>;
+  creditRefundToWallet: (
+    orderId: string,
+    amountKobo: number,
+    reason: string,
+    actorUserId: string
+  ) => Promise<string>;
 };
 
 export type PaymentInitializationResponse = {

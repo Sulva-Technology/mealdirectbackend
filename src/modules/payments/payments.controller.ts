@@ -214,7 +214,8 @@ export class AdminPaymentsController {
       reasonCode: input.reasonCode ?? 'admin_manual',
       ...((input.reasonText ?? input.reason)
         ? { reasonText: input.reasonText ?? input.reason }
-        : {})
+        : {}),
+      ...(input.destination === undefined ? {} : { destination: input.destination })
     };
     return createSuccessEnvelope(
       await this.payments.initiateRefund(actor, params.paymentId, refundInput)

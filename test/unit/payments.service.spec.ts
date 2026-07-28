@@ -86,7 +86,8 @@ function createRepository(): PaymentsRepositoryContract {
     forcePaymentPaidManual: vi.fn().mockResolvedValue(payment.orderId),
     getRefundedAmountKobo: vi.fn().mockResolvedValue(0),
     createRefundRequest: vi.fn().mockResolvedValue(refund),
-    updateRefundProviderPayload: vi.fn().mockResolvedValue(refund)
+    updateRefundProviderPayload: vi.fn().mockResolvedValue(refund),
+    creditRefundToWallet: vi.fn().mockResolvedValue('ledger-1')
   };
 }
 
@@ -387,5 +388,51 @@ describe('PaymentsService', () => {
         reasonText: 'Too high'
       })
     ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  describe('refund destination', () => {
+    beforeEach(() => {
+      vi.mocked(repository.findAdminPaymentById).mockResolvedValue({
+        ...paymentRecord,
+        paidAmountKobo: payment.expectedAmountKobo,
+        paymentStatus: 'successful',
+        providerTransactionId: '4099260516'
+      });
+    });
+
+    it('credits the wallet by default and does not call Paystack', async () => {
+      await service.initiateRefund(superAdmin, payment.id, {
+        amountKobo: 45000,
+        reasonCode: 'customer_request'
+      });
+
+      expect(repository.creditRefundToWallet).toHaveBeenCalledWith(
+        payment.orderId,
+        45000,
+        expect.any(String),
+        superAdmin.userId
+      );
+      expect(paystack.createRefund).not.toHaveBeenCalled();
+    });
+
+    it('uses Paystack when the admin explicitly asks for a card refund', async () => {
+      await service.initiateRefund(superAdmin, payment.id, {
+        amountKobo: 45000,
+        reasonCode: 'chargeback_defence',
+        destination: 'paystack'
+      });
+
+      expect(paystack.createRefund).toHaveBeenCalledTimes(1);
+      expect(repository.creditRefundToWallet).not.toHaveBeenCalled();
+    });
+
+    it('still refuses to refund more than the refundable balance', async () => {
+      await expect(
+        service.initiateRefund(superAdmin, payment.id, {
+          amountKobo: 99_999_999,
+          reasonCode: 'customer_request'
+        })
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
   });
 });

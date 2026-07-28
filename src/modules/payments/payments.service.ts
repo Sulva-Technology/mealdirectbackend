@@ -406,6 +406,25 @@ export class PaymentsService {
     }
 
     const refund = await this.repository.createRefundRequest(payment.id, input, actor.userId);
+
+    // Wallet is the default destination: instant, no Paystack refund fee, no 3–10 day wait.
+    // The card path stays reachable for disputes and chargeback handling.
+    if ((input.destination ?? 'wallet') === 'wallet') {
+      const ledgerEntryId = await this.repository.creditRefundToWallet(
+        payment.orderId,
+        input.amountKobo,
+        input.reasonText ?? input.reasonCode,
+        actor.userId
+      );
+
+      return this.repository.updateRefundProviderPayload(
+        refund.id,
+        ledgerEntryId,
+        { destination: 'wallet', walletLedgerEntryId: ledgerEntryId },
+        'succeeded'
+      );
+    }
+
     const providerRefund = await this.paystack.createRefund({
       amountKobo: input.amountKobo,
       transaction: payment.providerTransactionId ?? payment.providerReference,

@@ -12,6 +12,8 @@ export class PaymentIdParamDto {
   paymentId!: string;
 }
 
+const refundDestinations = ['wallet', 'paystack'] as const;
+
 export class InitiateRefundDto {
   @ApiProperty({ minimum: 1, type: Number })
   @Type(() => Number)
@@ -40,6 +42,17 @@ export class InitiateRefundDto {
   @MinLength(1)
   @MaxLength(500)
   reason?: string;
+
+  @ApiPropertyOptional({
+    default: 'wallet',
+    description:
+      "Where the money goes. 'wallet' (default) credits the customer balance instantly. 'paystack' issues a real card refund — use for disputes and chargeback defence.",
+    enum: refundDestinations,
+    type: String
+  })
+  @IsOptional()
+  @IsIn(refundDestinations)
+  destination?: (typeof refundDestinations)[number];
 }
 
 export class ForcePaymentPaidDto {
