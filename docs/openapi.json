@@ -2161,6 +2161,9 @@
             "content": {
               "application/json": { "schema": { "$ref": "#/components/schemas/CreatedOrderDto" } }
             }
+          },
+          "402": {
+            "description": "Wallet balance is short of the order total. The body carries details.shortfallKobo; the order is not created and no inventory is held."
           }
         },
         "security": [{ "supabaseAuth": [] }],
@@ -2985,6 +2988,149 @@
         },
         "security": [{ "supabaseAuth": [] }],
         "tags": ["admin-refunds"]
+      }
+    },
+    "/v1/wallet": {
+      "get": {
+        "operationId": "WalletsController_getWallet",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Wallet balance, advisory limits and the dedicated account when provisioned.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/WalletEnvelopeDto" } }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Only customers hold wallets." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["wallet"]
+      }
+    },
+    "/v1/wallet/ledger": {
+      "get": {
+        "operationId": "WalletsController_listLedger",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Keyset-paginated wallet movements, newest first.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WalletLedgerListEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Only customers hold wallets." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["wallet"]
+      }
+    },
+    "/v1/wallet/dedicated-account": {
+      "post": {
+        "operationId": "WalletsController_requestDedicatedAccount",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Idempotently provisions or retries the customer dedicated bank account.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DedicatedAccountEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Only customers hold wallets." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["wallet"]
+      }
+    },
+    "/v1/admin/wallets": {
+      "get": {
+        "operationId": "AdminWalletsController_listWallets",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Wallets, over-cap balances first." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role and the wallets:manage permission are required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-wallets"]
+      }
+    },
+    "/v1/admin/wallets/{walletId}/ledger": {
+      "get": {
+        "operationId": "AdminWalletsController_listLedger",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Ledger for one wallet.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WalletLedgerListEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role and the wallets:manage permission are required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-wallets"]
+      }
+    },
+    "/v1/admin/wallets/{walletId}/adjust": {
+      "post": {
+        "operationId": "AdminWalletsController_adjustWallet",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Signed manual adjustment. Requires a reason and is audited." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role and the wallets:manage permission are required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-wallets"]
+      }
+    },
+    "/v1/admin/wallets/{walletId}/freeze": {
+      "post": {
+        "operationId": "AdminWalletsController_freezeWallet",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Freezes or unfreezes a wallet." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role and the wallets:manage permission are required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-wallets"]
+      }
+    },
+    "/v1/admin/settings": {
+      "get": {
+        "operationId": "AdminSettingsController_listSettings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "All platform settings. Wallet limits today, fee splits in slice B."
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role and the admin:manage permission are required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-settings"]
+      },
+      "patch": {
+        "operationId": "AdminSettingsController_updateSetting",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Updates one editable platform setting. Audited." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role and the admin:manage permission are required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-settings"]
       }
     },
     "/v1/promotions/validate": {
@@ -6485,6 +6631,11 @@
             "type": "boolean",
             "description": "Set true to acknowledge and accept the large-order surcharge (1.5% + ₦100) required for order totals above the standard ₦2490 cap. Orders over the cap are rejected unless this is true."
           },
+          "paymentMethod": {
+            "type": "string",
+            "description": "Funding source. 'wallet' debits the balance and creates the order already paid; 'paystack' (the default) creates a pending-payment order and returns a checkout link. A wallet order with too little balance is rejected with 402 WALLET_INSUFFICIENT_BALANCE.",
+            "enum": ["wallet", "paystack"]
+          },
           "items": {
             "minItems": 1,
             "type": "array",
@@ -6971,6 +7122,96 @@
       "AdminRefundEnvelopeDto": {
         "type": "object",
         "properties": { "data": { "$ref": "#/components/schemas/AdminRefundRecordDto" } },
+        "required": ["data"]
+      },
+      "DedicatedAccountDto": {
+        "type": "object",
+        "properties": {
+          "accountNumber": { "type": "string", "example": "9900001111" },
+          "accountName": { "type": "string", "example": "MEALDIRECT / ADA LOVELACE" },
+          "bankName": { "type": "string", "example": "Wema Bank" },
+          "bankSlug": { "type": "string", "example": "wema-bank" },
+          "status": { "type": "string", "enum": ["pending", "active", "failed", "deactivated"] }
+        },
+        "required": ["accountNumber", "accountName", "bankName", "bankSlug", "status"]
+      },
+      "WalletDto": {
+        "type": "object",
+        "properties": {
+          "balanceKobo": {
+            "type": "number",
+            "description": "Spendable balance in kobo.",
+            "example": 250000
+          },
+          "currency": { "type": "string", "example": "NGN" },
+          "status": { "type": "string", "enum": ["active", "frozen"] },
+          "minTopupKobo": {
+            "type": "number",
+            "description": "Advisory minimum top-up in kobo. UI guidance only — an inbound transfer below this is still credited in full.",
+            "example": 50000
+          },
+          "maxBalanceKobo": {
+            "type": "number",
+            "description": "Advisory maximum balance in kobo. A credit crossing it is still applied and raises an admin flag.",
+            "example": 5000000
+          },
+          "dedicatedAccount": {
+            "description": "The customer dedicated bank account, or null while WALLET_DVA_ENABLED is off or provisioning is pending.",
+            "nullable": true,
+            "type": "object",
+            "allOf": [{ "$ref": "#/components/schemas/DedicatedAccountDto" }]
+          }
+        },
+        "required": ["balanceKobo", "currency", "status", "minTopupKobo", "maxBalanceKobo"]
+      },
+      "WalletEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/WalletDto" } },
+        "required": ["data"]
+      },
+      "WalletLedgerEntryDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "entryType": {
+            "type": "string",
+            "enum": ["topup", "order_payment", "order_refund", "adjustment", "reversal"]
+          },
+          "amountKobo": {
+            "type": "number",
+            "description": "Signed movement in kobo: credits positive, debits negative.",
+            "example": -45000
+          },
+          "balanceAfterKobo": { "type": "number", "example": 205000 },
+          "orderId": { "type": "string", "format": "uuid", "nullable": true },
+          "orderNumber": { "type": "string", "example": "MD-0104", "nullable": true },
+          "providerReference": { "type": "string", "nullable": true },
+          "reason": { "type": "string", "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["id", "entryType", "amountKobo", "balanceAfterKobo", "createdAt"]
+      },
+      "WalletLedgerListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/WalletLedgerEntryDto" }
+          },
+          "pagination": {
+            "type": "object",
+            "example": {
+              "hasMore": true,
+              "limit": 20,
+              "nextCursor": "eyJ0cyI6IjIwMjYtMDctMjciLCJpZCI6Ii4uLiJ9"
+            }
+          }
+        },
+        "required": ["data", "pagination"]
+      },
+      "DedicatedAccountEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/DedicatedAccountDto" } },
         "required": ["data"]
       },
       "BatchSummaryDto": {

@@ -30,6 +30,8 @@ Do not commit real values. Store staging and production values only in platform 
 | `PAYSTACK_BASE_URL`                | all                 | no     | Paystack API base URL; must be `https://api.paystack.co` in production             |
 | `PAYSTACK_SECRET_KEY`              | staging, production | yes    | Paystack secret key                                                                |
 | `PAYSTACK_WEBHOOK_INBOX_MODE`      | all                 | no     | `database` outside test                                                            |
+| `WALLET_DVA_ENABLED`               | all                 | no     | Enables Paystack dedicated virtual account provisioning; keep `false` until Paystack enables DVA on the account (wallets still work, funded by checkout link) |
+| `WALLET_DVA_PROVIDER`              | all                 | no     | DVA provider slug; `test-bank` in Paystack test mode, `wema-bank` or `titan-paystack` live |
 | `INTERNAL_OPERATIONS_TOKEN`        | staging, production | yes    | Temporary operations endpoint token                                                |
 | `FCM_PROJECT_ID`                   | staging, production | yes    | Firebase project ID for FCM push delivery                                          |
 | `FCM_CLIENT_EMAIL`                 | staging, production | yes    | Firebase service-account client email for FCM                                      |

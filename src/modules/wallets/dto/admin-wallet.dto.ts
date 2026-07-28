@@ -1,6 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsBoolean, IsIn, IsInt, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import {
+  IsBoolean,
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  MaxLength,
+  MinLength
+} from 'class-validator';
 
 import { CursorPaginationQueryDto } from '../../../common/dto/api-contract.dto.js';
 import { IsDatabaseUuid } from '../../../common/validation.js';
@@ -38,7 +46,8 @@ export class WalletAdjustDto {
 
 export class WalletFreezeDto {
   @ApiProperty({
-    description: 'True freezes the wallet (no order payments, credits still land). False unfreezes.',
+    description:
+      'True freezes the wallet (no order payments, credits still land). False unfreezes.',
     type: Boolean
   })
   @IsBoolean()
@@ -58,7 +67,11 @@ export class PlatformSettingUpdateDto {
   @IsIn(editableSettingKeys)
   key!: (typeof editableSettingKeys)[number];
 
-  @ApiProperty({ description: 'Non-negative whole number of kobo.', example: 5000000, type: Number })
+  @ApiProperty({
+    description: 'Non-negative whole number of kobo.',
+    example: 5000000,
+    type: Number
+  })
   @Type(() => Number)
   @IsInt()
   value!: number;

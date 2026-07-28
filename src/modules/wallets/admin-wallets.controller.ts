@@ -34,11 +34,7 @@ import {
   WalletIdParamDto
 } from './dto/admin-wallet.dto.js';
 import { WalletLedgerListEnvelopeDto } from './dto/wallet.dto.js';
-import type {
-  AdminWalletRecord,
-  WalletLedgerEntryRecord,
-  WalletRecord
-} from './wallets.types.js';
+import type { AdminWalletRecord, WalletLedgerEntryRecord, WalletRecord } from './wallets.types.js';
 
 @ApiTags('admin-wallets')
 @ApiBearerAuth('supabaseAuth')

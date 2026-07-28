@@ -1,4 +1,4 @@
-import { ForbiddenException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { EnvService } from '../../src/config/env.service.js';
@@ -90,9 +90,9 @@ describe('WalletsService', () => {
   it('rejects dedicated-account provisioning while the DVA flag is off', async () => {
     const service = new WalletsService(repository, settings, createEnv(false));
 
-    await expect(service.requestDedicatedAccount(customer)).rejects.toMatchObject({
-      response: expect.objectContaining({ code: 'VALIDATION_FAILED' })
-    });
+    await expect(service.requestDedicatedAccount(customer)).rejects.toBeInstanceOf(
+      BadRequestException
+    );
   });
 
   it('returns the existing account without re-queueing when one is already active', async () => {

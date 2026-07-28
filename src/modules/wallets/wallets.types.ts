@@ -1,8 +1,4 @@
-import type {
-  DedicatedAccountStatus,
-  WalletEntryType,
-  WalletStatus
-} from '../../domain/wallet.js';
+import type { DedicatedAccountStatus, WalletEntryType, WalletStatus } from '../../domain/wallet.js';
 
 export type DedicatedAccountRecord = {
   accountNumber: string;

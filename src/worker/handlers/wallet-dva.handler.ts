@@ -61,7 +61,7 @@ export class WalletDvaHandler {
     }
 
     const owner = await this.reads.findWalletOwner(walletId);
-    if (owner === undefined || owner.email === null) {
+    if (owner?.email == null) {
       // No owner or no email: nothing Paystack can be told. Completing the event is correct —
       // retrying cannot change the outcome, and POST /wallet/dedicated-account can retry later.
       return;

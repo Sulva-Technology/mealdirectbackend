@@ -41,9 +41,7 @@ export class WalletReadsRepository {
     return result.rows[0];
   }
 
-  async findDedicatedAccount(
-    walletId: string
-  ): Promise<{ status: DedicatedAccountStatus } | null> {
+  async findDedicatedAccount(walletId: string): Promise<{ status: DedicatedAccountStatus } | null> {
     const result = await sql<{ status: DedicatedAccountStatus }>`
       select status::text as "status"
       from public.wallet_dedicated_accounts
