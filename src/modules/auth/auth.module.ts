@@ -11,6 +11,7 @@ import { RolesGuard } from './roles.guard.js';
 import { SupabaseAuthService } from './supabase-auth.service.js';
 import { SupabaseJwtService } from './supabase-jwt.service.js';
 import { VendorInvitationsRepository } from './vendor-invitations.repository.js';
+import { WalletsRepository } from '../wallets/wallets.repository.js';
 
 @Module({
   imports: [DatabaseModule],
@@ -24,7 +25,10 @@ import { VendorInvitationsRepository } from './vendor-invitations.repository.js'
     AuthRoleGrantsRepository,
     SupabaseJwtService,
     SupabaseAuthService,
-    VendorInvitationsRepository
+    VendorInvitationsRepository,
+    // Provided directly (not via WalletsModule, which imports AuthModule) so signup can
+    // provision a customer wallet without creating a module-level import cycle.
+    WalletsRepository
   ],
   exports: [
     JwtAuthGuard,
