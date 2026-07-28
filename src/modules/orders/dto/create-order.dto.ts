@@ -17,6 +17,7 @@ import {
 } from 'class-validator';
 
 const deliveryModes = ['vendor_delivery', 'meal_direct_rider'] as const;
+const paymentMethods = ['wallet', 'paystack'] as const;
 
 function trimString(value: unknown): unknown {
   return typeof value === 'string' ? value.trim() : value;
@@ -120,6 +121,16 @@ export class CreateOrderDto {
   @IsOptional()
   @IsBoolean()
   acceptLargeOrderSurcharge?: boolean;
+
+  @ApiPropertyOptional({
+    description:
+      "Funding source. 'wallet' debits the balance and creates the order already paid; 'paystack' (the default) creates a pending-payment order and returns a checkout link. A wallet order with too little balance is rejected with 402 WALLET_INSUFFICIENT_BALANCE.",
+    enum: paymentMethods,
+    type: String
+  })
+  @IsOptional()
+  @IsIn(paymentMethods)
+  paymentMethod?: (typeof paymentMethods)[number];
 
   @ApiProperty({ isArray: true, minItems: 1, type: () => CreateOrderItemDto })
   @IsArray()

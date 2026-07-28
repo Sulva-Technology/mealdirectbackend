@@ -16,6 +16,7 @@ import {
   ApiBody,
   ApiCreatedResponse,
   ApiOkResponse,
+  ApiResponse,
   ApiTags
 } from '@nestjs/swagger';
 
@@ -100,6 +101,11 @@ export class OrdersController {
     description:
       'Order was created idempotently, inventory was reserved, and hand-off code returned.',
     type: CreatedOrderDto
+  })
+  @ApiResponse({
+    status: 402,
+    description:
+      'Wallet balance is short of the order total. The body carries details.shortfallKobo; the order is not created and no inventory is held.'
   })
   async createOrder(
     @CurrentActor() actor: AuthenticatedActor,

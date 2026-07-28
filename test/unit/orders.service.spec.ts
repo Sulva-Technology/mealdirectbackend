@@ -138,6 +138,14 @@ function createRepository(): OrdersRepositoryContract {
           'Give this code to the rider only after you receive your order. The rider will ask for it to confirm delivery.'
       }
     }),
+    createWalletOrder: vi.fn().mockResolvedValue({
+      orderId: orderDetail.id,
+      deliveryHandoff: {
+        code: '1234',
+        instruction:
+          'Give this code to the rider only after you receive your order. The rider will ask for it to confirm delivery.'
+      }
+    }),
     findLocationType: vi.fn().mockResolvedValue('department'),
     findCustomerOrderById: vi.fn().mockResolvedValue(orderDetail),
     findPaymentStatus: vi.fn().mockResolvedValue({
@@ -451,6 +459,40 @@ describe('OrdersService', () => {
   it('confirms delivery through the database function wrapper', async () => {
     await expect(service.confirmDelivery(customer, orderDetail.id)).resolves.toEqual({
       confirmationId: '99999999-9999-4999-8999-999999999999'
+    });
+  });
+
+  describe('wallet checkout', () => {
+    it('routes to the wallet RPC when paymentMethod is wallet', async () => {
+      const input: CreateOrderDto = { ...orderInput, paymentMethod: 'wallet' };
+
+      await service.createOrder(customer, input, 'idem-wallet-1');
+
+      expect(repository.createWalletOrder).toHaveBeenCalledTimes(1);
+      expect(repository.createOrder).not.toHaveBeenCalled();
+    });
+
+    it('keeps the existing pending-payment path as the default', async () => {
+      await service.createOrder(customer, orderInput, 'idem-card-1');
+
+      expect(repository.createOrder).toHaveBeenCalledTimes(1);
+      expect(repository.createWalletOrder).not.toHaveBeenCalled();
+    });
+
+    it('applies the same large-order guard to wallet orders', async () => {
+      // Subtotal 500000 + delivery 15000 = 515000 kobo, above the 249000 cap, surcharge
+      // not accepted — the guard must reject before either repository path is called.
+      service = new OrdersService(
+        repository,
+        createEnv({ MAX_ORDER_TOTAL_KOBO: 249000 }),
+        createPayments()
+      );
+      const input: CreateOrderDto = { ...orderInput, paymentMethod: 'wallet' };
+
+      await expect(service.createOrder(customer, input, 'idem-wallet-2')).rejects.toBeInstanceOf(
+        BadRequestException
+      );
+      expect(repository.createWalletOrder).not.toHaveBeenCalled();
     });
   });
 });

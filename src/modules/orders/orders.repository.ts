@@ -108,6 +108,60 @@ export class OrdersRepository implements OrdersRepositoryContract {
     });
   }
 
+  async createWalletOrder(
+    customerId: string,
+    input: CreateOrderDto,
+    idempotencyKey: string,
+    requestHash: string,
+    serviceFeeKobo: number,
+    maxOrderTotalKobo: number,
+    largeOrderSurcharge: LargeOrderSurchargeConfig
+  ): Promise<CreatedOrder> {
+    const items = input.items.map((item) => ({
+      menu_item_id: item.menuItemId,
+      quantity: item.quantity,
+      customization: item.customization ?? {},
+      soup_option_id: item.soupOptionId ?? null
+    }));
+
+    return this.database.db.transaction().execute(async (trx) => {
+      const result = await sql<CreateOrderResult>`
+        select public.create_paid_order_from_wallet(
+          ${customerId}::uuid,
+          ${input.campusId}::uuid,
+          ${input.vendorId}::uuid,
+          ${input.serviceDate}::date,
+          ${input.deliverySlotId}::uuid,
+          ${input.locationId}::uuid,
+          ${input.deliveryMode ?? null}::public.delivery_mode,
+          ${JSON.stringify(items)}::jsonb,
+          ${idempotencyKey},
+          ${requestHash},
+          ${input.promotionCode ?? null},
+          ${input.specialInstructions ?? null},
+          ${serviceFeeKobo}::integer,
+          ${maxOrderTotalKobo}::integer,
+          ${largeOrderSurcharge.surchargeBps}::integer,
+          ${largeOrderSurcharge.surchargeFlatKobo}::integer,
+          ${largeOrderSurcharge.accepted}::boolean
+        ) as order_id
+      `.execute(trx);
+
+      const orderId = result.rows[0]?.order_id;
+      if (orderId === undefined) {
+        throw new Error('Wallet order creation did not return an order ID.');
+      }
+
+      const deliveryCode = await this.ensureOrderDeliveryMetadata(
+        orderId,
+        normalizeRoomNumber(input.roomNumber),
+        trx
+      );
+
+      return { orderId, deliveryHandoff: buildDeliveryHandoff(deliveryCode) };
+    });
+  }
+
   private async ensureOrderDeliveryMetadata(
     orderId: string,
     roomNumber: string | null,

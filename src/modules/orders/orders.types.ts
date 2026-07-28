@@ -160,6 +160,15 @@ export type OrdersRepositoryContract = {
     maxOrderTotalKobo: number,
     largeOrderSurcharge: LargeOrderSurchargeConfig
   ) => Promise<CreatedOrder>;
+  createWalletOrder: (
+    customerId: string,
+    input: CreateOrderDto,
+    idempotencyKey: string,
+    requestHash: string,
+    serviceFeeKobo: number,
+    maxOrderTotalKobo: number,
+    largeOrderSurcharge: LargeOrderSurchargeConfig
+  ) => Promise<CreatedOrder>;
   quoteOrder: (input: CreateOrderDto) => Promise<OrderQuoteItem[]>;
   findLocationType: (locationId: string) => Promise<'department' | 'hostel' | undefined>;
   findZoneDeliveryFeeKobo: (locationId: string) => Promise<number | null>;
