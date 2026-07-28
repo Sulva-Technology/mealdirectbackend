@@ -239,7 +239,9 @@ function createPaystack() {
       providerPayload: {}
     }),
     fetchTransferRecipient: vi.fn(),
-    initiateTransfer: vi.fn()
+    initiateTransfer: vi.fn(),
+    createCustomer: vi.fn(),
+    createDedicatedAccount: vi.fn()
   };
 }
 

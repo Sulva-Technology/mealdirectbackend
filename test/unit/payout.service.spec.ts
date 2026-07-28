@@ -60,7 +60,9 @@ function makePaystack(): PaystackClientContract {
       transferCode: 'TRF_1',
       status: 'pending',
       providerPayload: {}
-    })
+    }),
+    createCustomer: vi.fn(),
+    createDedicatedAccount: vi.fn()
   };
 }
 

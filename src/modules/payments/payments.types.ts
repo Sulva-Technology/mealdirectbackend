@@ -188,6 +188,31 @@ export type PaystackTransferResult = {
   providerPayload: Record<string, unknown>;
 };
 
+export type PaystackCustomerInput = {
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+};
+
+export type PaystackCustomerResult = {
+  customerCode: string;
+  providerPayload: Record<string, unknown>;
+};
+
+export type PaystackDedicatedAccountInput = {
+  customerCode: string;
+  preferredBank?: string;
+};
+
+export type PaystackDedicatedAccountResult = {
+  accountNumber: string;
+  accountName: string;
+  bankName: string;
+  bankSlug: string;
+  providerPayload: Record<string, unknown>;
+};
+
 export type PaystackClientContract = {
   initializeTransaction: (input: PaystackInitializeInput) => Promise<PaystackInitializeResult>;
   verifyTransaction: (reference: string) => Promise<PaystackVerifyResult>;
@@ -195,6 +220,10 @@ export type PaystackClientContract = {
   createTransferRecipient: (input: PaystackRecipientInput) => Promise<PaystackRecipientResult>;
   fetchTransferRecipient: (recipientCode: string) => Promise<PaystackRecipientDetails>;
   initiateTransfer: (input: PaystackTransferInput) => Promise<PaystackTransferResult>;
+  createCustomer: (input: PaystackCustomerInput) => Promise<PaystackCustomerResult>;
+  createDedicatedAccount: (
+    input: PaystackDedicatedAccountInput
+  ) => Promise<PaystackDedicatedAccountResult>;
 };
 
 export type RefundInput = {

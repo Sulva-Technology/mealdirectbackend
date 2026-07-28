@@ -4,6 +4,10 @@ import { ErrorCodes } from '../../common/errors/error-codes.js';
 import { EnvService } from '../../config/env.service.js';
 import type {
   PaystackClientContract,
+  PaystackCustomerInput,
+  PaystackCustomerResult,
+  PaystackDedicatedAccountInput,
+  PaystackDedicatedAccountResult,
   PaystackInitializeInput,
   PaystackInitializeResult,
   PaystackRecipientDetails,
@@ -230,6 +234,66 @@ export class PaystackClient implements PaystackClientContract {
     }
 
     return { providerPayload: this.providerPayload(envelope), status, transferCode };
+  }
+
+  async createCustomer(input: PaystackCustomerInput): Promise<PaystackCustomerResult> {
+    const envelope = await this.request('/customer', {
+      method: 'POST',
+      body: JSON.stringify({
+        email: input.email,
+        ...(input.firstName === undefined ? {} : { first_name: input.firstName }),
+        ...(input.lastName === undefined ? {} : { last_name: input.lastName }),
+        ...(input.phone === undefined ? {} : { phone: input.phone })
+      })
+    });
+
+    if (!isRecord(envelope.data)) {
+      throw badGateway('Paystack customer creation returned an invalid response.');
+    }
+
+    const customerCode = stringFrom(envelope.data.customer_code);
+    if (customerCode === undefined) {
+      throw badGateway('Paystack customer creation response was missing the customer code.');
+    }
+
+    return { customerCode, providerPayload: this.providerPayload(envelope) };
+  }
+
+  async createDedicatedAccount(
+    input: PaystackDedicatedAccountInput
+  ): Promise<PaystackDedicatedAccountResult> {
+    const preferredBank = input.preferredBank ?? this.env.get('WALLET_DVA_PROVIDER');
+    const envelope = await this.request('/dedicated_account', {
+      method: 'POST',
+      body: JSON.stringify({ customer: input.customerCode, preferred_bank: preferredBank })
+    });
+
+    if (!isRecord(envelope.data)) {
+      throw badGateway('Paystack dedicated account creation returned an invalid response.');
+    }
+
+    const bank = isRecord(envelope.data.bank) ? envelope.data.bank : {};
+    const accountNumber = stringFrom(envelope.data.account_number);
+    const accountName = stringFrom(envelope.data.account_name);
+    const bankName = stringFrom(bank.name);
+    const bankSlug = stringFrom(bank.slug);
+
+    if (
+      accountNumber === undefined ||
+      accountName === undefined ||
+      bankName === undefined ||
+      bankSlug === undefined
+    ) {
+      throw badGateway('Paystack dedicated account response was missing bank details.');
+    }
+
+    return {
+      accountNumber,
+      accountName,
+      bankName,
+      bankSlug,
+      providerPayload: this.providerPayload(envelope)
+    };
   }
 
   private async request(path: string, init: RequestInit): Promise<PaystackEnvelope> {
