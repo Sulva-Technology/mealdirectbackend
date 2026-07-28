@@ -37,13 +37,16 @@ alter table public.orders add constraint orders_money_non_negative check (
   and total_kobo >= 0
 );
 
--- Once the rider and vendor shares are resolved, the three delivery shares must reconstruct the
--- delivery fee exactly (the platform share is the residual). Null-guarded so unresolved orders,
--- which have null rider/vendor shares, are unconstrained. platform_delivery_share_kobo is NOT NULL
--- (default 7500), so it never nulls the sum.
+-- Once an order is resolved by the v2 resolution logic, the three delivery shares must
+-- reconstruct the delivery fee exactly (the platform share is the residual). Keyed on
+-- delivered_on_time, which resolve_order_delivery_shares (Task 5) sets together with all three
+-- balanced shares: the constraint is enforced exactly on newly-resolved orders. The historical
+-- backfill below sets only rider/vendor shares and leaves delivered_on_time null, so backfilled
+-- rows are exempt regardless of their delivery_fee (pilot rows pinned 7500/7500 shares that never
+-- summed to a per-zone fee != 15000). platform_delivery_share_kobo is NOT NULL (default 7500), so
+-- once delivered_on_time is set the sum is never nulled.
 alter table public.orders add constraint orders_resolved_shares_balance check (
-  rider_delivery_share_kobo is null
-  or vendor_delivery_share_kobo is null
+  delivered_on_time is null
   or (rider_delivery_share_kobo + vendor_delivery_share_kobo + platform_delivery_share_kobo = delivery_fee_kobo)
 );
 

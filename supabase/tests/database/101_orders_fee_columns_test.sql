@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(9);
+select plan(10);
 
 -- 1-7: the seven new resolved-share / readiness / timeliness columns exist.
 select has_column('public', 'orders', 'point_delivery', 'orders has point_delivery column');
@@ -39,15 +39,15 @@ select lives_ok(
   'a delivered order with a 30000 delivery fee inserts (flat-15000 pin removed)'
 );
 
--- 9: resolved shares that do not sum to delivery_fee_kobo are rejected by
--- orders_resolved_shares_balance with SQLSTATE 23514. Here 10000 + 10000 + 5000 = 25000 != 30000.
--- total_formula and money-non-negative both pass, so the balance check is the sole violation.
-select throws_ok(
+-- 9: a resolved order (delivered_on_time set) whose three shares sum to delivery_fee_kobo
+-- passes the balance check. 10000 + 5000 + 15000 = 30000.
+select lives_ok(
   $$ insert into public.orders (
        id, order_number, customer_id, campus_id, vendor_id, service_date,
        delivery_slot_id, location_id, zone_id, order_status, delivery_mode,
        food_subtotal_kobo, delivery_fee_kobo, discount_kobo, total_kobo,
-       platform_delivery_share_kobo, rider_delivery_share_kobo, vendor_delivery_share_kobo, delivered_at
+       platform_delivery_share_kobo, rider_delivery_share_kobo, vendor_delivery_share_kobo,
+       delivered_on_time, delivered_at
      ) values (
        'cccccccc-cccc-cccc-cccc-cccccccc0102', 'MD-TEST-FEE-101B',
        'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1',
@@ -59,7 +59,34 @@ select throws_ok(
        '21111111-1111-1111-1111-111111111111',
        'delivered', 'meal_direct_rider',
        100000, 30000, 0, 130000,
-       5000, 10000, 10000, now()
+       15000, 10000, 5000, true, now()
+     ) $$,
+  'a resolved order whose shares sum to the delivery fee passes the balance check'
+);
+
+-- 10: a resolved order (delivered_on_time set) whose shares do NOT sum to delivery_fee_kobo is
+-- rejected by orders_resolved_shares_balance with SQLSTATE 23514. 10000 + 10000 + 5000 = 25000 != 30000.
+-- total_formula and money-non-negative both pass, so the balance check is the sole violation.
+-- delivered_on_time = true is required for the constraint to be in force.
+select throws_ok(
+  $$ insert into public.orders (
+       id, order_number, customer_id, campus_id, vendor_id, service_date,
+       delivery_slot_id, location_id, zone_id, order_status, delivery_mode,
+       food_subtotal_kobo, delivery_fee_kobo, discount_kobo, total_kobo,
+       platform_delivery_share_kobo, rider_delivery_share_kobo, vendor_delivery_share_kobo,
+       delivered_on_time, delivered_at
+     ) values (
+       'cccccccc-cccc-cccc-cccc-cccccccc0103', 'MD-TEST-FEE-101C',
+       'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1',
+       '11111111-1111-1111-1111-111111111111',
+       '31111111-1111-1111-1111-111111111111',
+       current_date + 1,
+       '51111111-1111-1111-1111-111111111113',
+       '22111111-1111-1111-1111-111111111111',
+       '21111111-1111-1111-1111-111111111111',
+       'delivered', 'meal_direct_rider',
+       100000, 30000, 0, 130000,
+       5000, 10000, 10000, true, now()
      ) $$,
   '23514',
   null::text,
