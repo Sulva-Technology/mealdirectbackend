@@ -5,8 +5,8 @@ set search_path = public, extensions;
 
 select plan(3);
 
--- Fixture A: an order inserted at 'preparing' (so preparing -> ready is a legal transition and
--- the pending-payment insert-cutoff trigger does not fire). Reuses seed FK rows
+-- Fixture A: an order inserted at 'paid' (so paid -> ready is the legal collapsed vendor transition
+-- and the pending-payment insert-cutoff trigger does not fire). Reuses seed FK rows
 -- (customer/campus/vendor/slot/location/zone from MD-SEED-PENDING), same set Task 2's test used.
 -- total_kobo = food(100000) + delivery(30000) + service_fee(0) + surcharge(0) - discount(0) = 130000.
 insert into public.orders (
@@ -22,7 +22,7 @@ insert into public.orders (
   '51111111-1111-1111-1111-111111111113',
   '22111111-1111-1111-1111-111111111111',
   '21111111-1111-1111-1111-111111111111',
-  'preparing', 'meal_direct_rider',
+  'paid', 'meal_direct_rider',
   100000, 30000, 0, 130000
 );
 
