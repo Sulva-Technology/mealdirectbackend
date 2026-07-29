@@ -234,6 +234,54 @@ export class OrderSummaryDto {
   @ApiPropertyOptional({
     nullable: true,
     type: String,
+    description: 'When the vendor marked the food ready. Null until the order reaches ready.'
+  })
+  readyAt!: string | null;
+
+  @ApiProperty({
+    type: Boolean,
+    description: 'Customer opted into delivery to a specific point (hostel room / classroom).'
+  })
+  pointDelivery!: boolean;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    type: Number,
+    description: 'Resolved rider delivery share. Null until the order is delivered.'
+  })
+  riderDeliveryShareKobo!: number | null;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    type: Number,
+    description: 'Resolved vendor delivery share. Null until the order is delivered.'
+  })
+  vendorDeliveryShareKobo!: number | null;
+
+  @ApiProperty({
+    type: Number,
+    description:
+      'Resolved platform residual (delivery fee minus rider/vendor shares). Only meaningful once deliveredOnTime is set.'
+  })
+  platformDeliveryShareKobo!: number;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    type: Boolean,
+    description: 'Whether the vendor marked the food ready on time. Null until delivered.'
+  })
+  readyOnTime!: boolean | null;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    type: Boolean,
+    description: 'Whether the order was delivered on time. Null until delivered.'
+  })
+  deliveredOnTime!: boolean | null;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    type: String,
     description: 'Delivery hand-off code to read to the rider after receiving the order.'
   })
   deliveryCode?: string | null;

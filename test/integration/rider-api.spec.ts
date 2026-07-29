@@ -114,7 +114,14 @@ const order: RiderOrderDetail = {
   updatedAt: '2026-06-15T09:00:00.000Z',
   vendorDisplayName: assignment.vendorDisplayName,
   vendorId: assignment.vendorId,
-  zoneName: assignment.zoneName
+  zoneName: assignment.zoneName,
+  readyAt: null,
+  pointDelivery: false,
+  riderDeliveryShareKobo: null,
+  vendorDeliveryShareKobo: null,
+  platformDeliveryShareKobo: 15000,
+  readyOnTime: null,
+  deliveredOnTime: null
 };
 
 const assignmentDetail: RiderAssignmentDetail = {

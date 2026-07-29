@@ -60,6 +60,13 @@ export class VendorOrdersRepository {
         o.paid_at::text as "paidAt",
         o.delivered_at::text as "deliveredAt",
         o.confirmed_at::text as "confirmedAt",
+        o.ready_at::text as "readyAt",
+        o.point_delivery as "pointDelivery",
+        o.rider_delivery_share_kobo as "riderDeliveryShareKobo",
+        o.vendor_delivery_share_kobo as "vendorDeliveryShareKobo",
+        o.platform_delivery_share_kobo as "platformDeliveryShareKobo",
+        o.ready_on_time as "readyOnTime",
+        o.delivered_on_time as "deliveredOnTime",
         coalesce((
           select string_agg(oi.quantity || '× ' || oi.item_name, ', ' order by oi.created_at)
           from public.order_items oi
@@ -115,6 +122,13 @@ export class VendorOrdersRepository {
         o.paid_at::text as "paidAt",
         o.delivered_at::text as "deliveredAt",
         o.confirmed_at::text as "confirmedAt",
+        o.ready_at::text as "readyAt",
+        o.point_delivery as "pointDelivery",
+        o.rider_delivery_share_kobo as "riderDeliveryShareKobo",
+        o.vendor_delivery_share_kobo as "vendorDeliveryShareKobo",
+        o.platform_delivery_share_kobo as "platformDeliveryShareKobo",
+        o.ready_on_time as "readyOnTime",
+        o.delivered_on_time as "deliveredOnTime",
         coalesce((
           select string_agg(oi.quantity || '× ' || oi.item_name, ', ' order by oi.created_at)
           from public.order_items oi

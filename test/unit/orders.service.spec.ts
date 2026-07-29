@@ -121,8 +121,31 @@ const orderDetail: OrderDetail = {
   paidAt: null,
   deliveredAt: null,
   confirmedAt: null,
+  readyAt: null,
+  pointDelivery: false,
+  riderDeliveryShareKobo: null,
+  vendorDeliveryShareKobo: null,
+  platformDeliveryShareKobo: 15000,
+  readyOnTime: null,
+  deliveredOnTime: null,
   items: [],
   latestPayment: null
+};
+
+// Delivered order carrying the resolved delivery split + punctuality flags Task 5 sets at
+// delivery. Proves the service surfaces these fields untouched through order reads — the type
+// no longer compiles without them (orders.types.ts OrderSummary) and the resolved values must
+// reach the caller unchanged.
+const deliveredOrderDetail: OrderDetail = {
+  ...orderDetail,
+  orderStatus: 'delivered',
+  readyAt: '2026-06-15T11:50:00.000Z',
+  pointDelivery: false,
+  riderDeliveryShareKobo: 10000,
+  vendorDeliveryShareKobo: 5000,
+  platformDeliveryShareKobo: 15000,
+  readyOnTime: true,
+  deliveredOnTime: true
 };
 
 function createRepository(): OrdersRepositoryContract {
@@ -476,6 +499,22 @@ describe('OrdersService', () => {
     vi.mocked(repository.findCustomerOrderById).mockResolvedValue(undefined);
     await expect(service.getCustomerOrder(customer, orderDetail.id)).rejects.toBeInstanceOf(
       NotFoundException
+    );
+  });
+
+  it('surfaces resolved delivery shares and punctuality flags on order reads', async () => {
+    vi.mocked(repository.findCustomerOrderById).mockResolvedValue(deliveredOrderDetail);
+
+    await expect(service.getCustomerOrder(customer, deliveredOrderDetail.id)).resolves.toEqual(
+      expect.objectContaining({
+        riderDeliveryShareKobo: 10000,
+        vendorDeliveryShareKobo: 5000,
+        platformDeliveryShareKobo: 15000,
+        readyOnTime: true,
+        deliveredOnTime: true,
+        pointDelivery: false,
+        readyAt: '2026-06-15T11:50:00.000Z'
+      })
     );
   });
 

@@ -53,6 +53,13 @@ const mockOrder: OrderDetail = {
   paidAt: '2026-06-15T08:05:00.000Z',
   deliveredAt: null,
   confirmedAt: null,
+  readyAt: null,
+  pointDelivery: false,
+  riderDeliveryShareKobo: null,
+  vendorDeliveryShareKobo: null,
+  platformDeliveryShareKobo: 15000,
+  readyOnTime: null,
+  deliveredOnTime: null,
   items: [],
   latestPayment: null
 };

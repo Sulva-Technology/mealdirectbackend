@@ -555,6 +555,13 @@ export class RidersRepository implements RidersRepositoryContract {
         o.paid_at::text as "paidAt",
         o.delivered_at::text as "deliveredAt",
         o.confirmed_at::text as "confirmedAt",
+        o.ready_at::text as "readyAt",
+        o.point_delivery as "pointDelivery",
+        o.rider_delivery_share_kobo as "riderDeliveryShareKobo",
+        o.vendor_delivery_share_kobo as "vendorDeliveryShareKobo",
+        o.platform_delivery_share_kobo as "platformDeliveryShareKobo",
+        o.ready_on_time as "readyOnTime",
+        o.delivered_on_time as "deliveredOnTime",
         o.delivery_code as "deliveryCode",
         da.id::text as "assignmentId",
         da.batch_id::text as "batchId",
@@ -968,7 +975,14 @@ export class RidersRepository implements RidersRepositoryContract {
         o.updated_at::text as "updatedAt",
         o.paid_at::text as "paidAt",
         o.delivered_at::text as "deliveredAt",
-        o.confirmed_at::text as "confirmedAt"
+        o.confirmed_at::text as "confirmedAt",
+        o.ready_at::text as "readyAt",
+        o.point_delivery as "pointDelivery",
+        o.rider_delivery_share_kobo as "riderDeliveryShareKobo",
+        o.vendor_delivery_share_kobo as "vendorDeliveryShareKobo",
+        o.platform_delivery_share_kobo as "platformDeliveryShareKobo",
+        o.ready_on_time as "readyOnTime",
+        o.delivered_on_time as "deliveredOnTime"
       from public.orders o
       join public.delivery_batch_orders dbo on dbo.order_id = o.id
       join public.vendors v on v.id = o.vendor_id
