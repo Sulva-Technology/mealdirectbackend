@@ -339,7 +339,8 @@ describe('RidersService', () => {
       riderId,
       orderId,
       'out_for_delivery',
-      userId
+      userId,
+      true
     );
     expect(repository.assignDeliveryCode).toHaveBeenCalledWith(riderId, orderId);
 
@@ -349,6 +350,19 @@ describe('RidersService', () => {
         description: 'Customer did not answer.'
       })
     ).resolves.toEqual(issue);
+  });
+
+  it('forwards the rider pickup confirmation flag when marking an order out for delivery', async () => {
+    await expect(
+      service.markOrderOutForDelivery(actor, orderId, { foodWasReady: false })
+    ).resolves.toEqual(order);
+    expect(repository.transitionAssignedOrderStatus).toHaveBeenCalledWith(
+      riderId,
+      orderId,
+      'out_for_delivery',
+      userId,
+      false
+    );
   });
 
   it('confirms delivery by code and resets the attempt counter', async () => {

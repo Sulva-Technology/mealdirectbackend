@@ -586,20 +586,33 @@ export class RidersRepository implements RidersRepositoryContract {
     riderId: string,
     orderId: string,
     toStatus: OrderStatus,
-    actorUserId: string
+    actorUserId: string,
+    foodWasReady?: boolean
   ): Promise<OrderStatus> {
     const order = await this.findAssignedOrderById(riderId, orderId);
     if (order === undefined) {
       throw new Error('Order was not found for this rider.');
     }
 
-    const result = await sql<{ order_status: OrderStatus }>`
-      select public.transition_order_status(
-        ${orderId}::uuid,
-        ${toStatus}::public.order_status,
-        ${actorUserId}::uuid
-      ) as order_status
-    `.execute(this.database.db);
+    // Only the out_for_delivery pickup path passes foodWasReady; every other transition
+    // omits it entirely so the DB function's own default (true) applies unchanged.
+    const result =
+      foodWasReady === undefined
+        ? await sql<{ order_status: OrderStatus }>`
+            select public.transition_order_status(
+              ${orderId}::uuid,
+              ${toStatus}::public.order_status,
+              ${actorUserId}::uuid
+            ) as order_status
+          `.execute(this.database.db)
+        : await sql<{ order_status: OrderStatus }>`
+            select public.transition_order_status(
+              ${orderId}::uuid,
+              ${toStatus}::public.order_status,
+              ${actorUserId}::uuid,
+              p_food_was_ready => ${foodWasReady}::boolean
+            ) as order_status
+          `.execute(this.database.db);
 
     const status = result.rows[0]?.order_status;
     if (status === undefined) {

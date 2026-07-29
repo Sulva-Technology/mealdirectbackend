@@ -280,7 +280,8 @@ export type RidersRepositoryContract = {
     riderId: string,
     orderId: string,
     toStatus: OrderStatus,
-    actorUserId: string
+    actorUserId: string,
+    foodWasReady?: boolean
   ) => Promise<OrderStatus>;
   assignDeliveryCode: (riderId: string, orderId: string) => Promise<string>;
   findActiveOrderIdByDeliveryCode: (riderId: string, code: string) => Promise<DeliveryCodeLookup>;

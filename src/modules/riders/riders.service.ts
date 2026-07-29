@@ -23,6 +23,7 @@ import type {
   OnboardRiderDto,
   RiderAssignmentListQueryDto,
   RiderEarningsQueryDto,
+  RiderOutForDeliveryDto,
   RiderProfileUpdateDto,
   UpsertRiderPayoutAccountDto,
   RiderSettlementListQueryDto
@@ -441,10 +442,18 @@ export class RidersService {
 
   async markOrderOutForDelivery(
     actor: AuthenticatedActor,
-    orderId: string
+    orderId: string,
+    input?: RiderOutForDeliveryDto
   ): Promise<RiderOrderDetail> {
     const profile = await this.resolveRiderProfile(actor, { requireActiveVerified: true });
-    await this.transitionOrderForProfile(profile.id, orderId, 'out_for_delivery', actor.userId);
+    const foodWasReady = input?.foodWasReady ?? true;
+    await this.transitionOrderForProfile(
+      profile.id,
+      orderId,
+      'out_for_delivery',
+      actor.userId,
+      foodWasReady
+    );
     // The customer reads this code to the rider on hand-off to confirm delivery.
     await this.repository.assignDeliveryCode(profile.id, orderId);
     return this.requireAssignedOrder(profile.id, orderId);
@@ -556,7 +565,8 @@ export class RidersService {
     profileId: string,
     orderId: string,
     toStatus: OrderStatus,
-    actorUserId: string
+    actorUserId: string,
+    foodWasReady?: boolean
   ): Promise<void> {
     const before = await this.repository.findAssignedOrderById(profileId, orderId);
     if (before === undefined) {
@@ -564,12 +574,24 @@ export class RidersService {
     }
 
     try {
-      await this.repository.transitionAssignedOrderStatus(
-        profileId,
-        orderId,
-        toStatus,
-        actorUserId
-      );
+      // foodWasReady is only ever set by the out_for_delivery pickup path; every other
+      // caller omits it so the repository forwards the transition without that arg.
+      if (foodWasReady === undefined) {
+        await this.repository.transitionAssignedOrderStatus(
+          profileId,
+          orderId,
+          toStatus,
+          actorUserId
+        );
+      } else {
+        await this.repository.transitionAssignedOrderStatus(
+          profileId,
+          orderId,
+          toStatus,
+          actorUserId,
+          foodWasReady
+        );
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Order status transition failed.';
       throw badRequest(message);

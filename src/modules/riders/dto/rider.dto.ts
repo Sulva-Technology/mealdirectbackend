@@ -285,6 +285,17 @@ export class RiderOrderIdParamDto {
   orderId!: string;
 }
 
+export class RiderOutForDeliveryDto {
+  @ApiPropertyOptional({
+    default: true,
+    description: 'Whether the food was actually ready when the rider picked it up. Feeds the vendor cooking bonus.',
+    type: Boolean
+  })
+  @IsOptional()
+  @IsBoolean()
+  foodWasReady?: boolean;
+}
+
 export class RiderSettlementIdParamDto {
   @ApiProperty({ format: 'uuid', type: String })
   @IsDatabaseUuid()
