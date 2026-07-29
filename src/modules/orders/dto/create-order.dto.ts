@@ -133,7 +133,8 @@ export class CreateOrderDto {
   paymentMethod?: (typeof paymentMethods)[number];
 
   @ApiPropertyOptional({
-    description: 'Deliver to a specific point (hostel room / classroom). Adds the point surcharge.'
+    description: 'Deliver to a specific point (hostel room / classroom). Adds the point surcharge.',
+    type: Boolean
   })
   @IsOptional()
   @IsBoolean()

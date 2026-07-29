@@ -3162,6 +3162,12 @@ paths:
           schema:
             format: uuid
             type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RiderOutForDeliveryDto'
       responses:
         '200':
           description: Order marked out for delivery.
@@ -5758,6 +5764,36 @@ components:
         confirmedAt:
           type: string
           nullable: true
+        readyAt:
+          type: string
+          nullable: true
+          description: When the vendor marked the food ready. Null until the order reaches
+            ready.
+        pointDelivery:
+          type: boolean
+          description: Customer opted into delivery to a specific point (hostel room /
+            classroom).
+        riderDeliveryShareKobo:
+          type: number
+          nullable: true
+          description: Resolved rider delivery share. Null until the order is delivered.
+        vendorDeliveryShareKobo:
+          type: number
+          nullable: true
+          description: Resolved vendor delivery share. Null until the order is delivered.
+        platformDeliveryShareKobo:
+          type: number
+          description: Resolved platform residual (delivery fee minus rider/vendor
+            shares). Only meaningful once deliveredOnTime is set.
+        readyOnTime:
+          type: boolean
+          nullable: true
+          description: Whether the vendor marked the food ready on time. Null until
+            delivered.
+        deliveredOnTime:
+          type: boolean
+          nullable: true
+          description: Whether the order was delivered on time. Null until delivered.
         deliveryCode:
           type: string
           nullable: true
@@ -5798,6 +5834,8 @@ components:
         - currency
         - createdAt
         - updatedAt
+        - pointDelivery
+        - platformDeliveryShareKobo
     VendorOrderListEnvelopeDto:
       type: object
       properties:
@@ -5965,6 +6003,36 @@ components:
         confirmedAt:
           type: string
           nullable: true
+        readyAt:
+          type: string
+          nullable: true
+          description: When the vendor marked the food ready. Null until the order reaches
+            ready.
+        pointDelivery:
+          type: boolean
+          description: Customer opted into delivery to a specific point (hostel room /
+            classroom).
+        riderDeliveryShareKobo:
+          type: number
+          nullable: true
+          description: Resolved rider delivery share. Null until the order is delivered.
+        vendorDeliveryShareKobo:
+          type: number
+          nullable: true
+          description: Resolved vendor delivery share. Null until the order is delivered.
+        platformDeliveryShareKobo:
+          type: number
+          description: Resolved platform residual (delivery fee minus rider/vendor
+            shares). Only meaningful once deliveredOnTime is set.
+        readyOnTime:
+          type: boolean
+          nullable: true
+          description: Whether the vendor marked the food ready on time. Null until
+            delivered.
+        deliveredOnTime:
+          type: boolean
+          nullable: true
+          description: Whether the order was delivered on time. Null until delivered.
         deliveryCode:
           type: string
           nullable: true
@@ -6014,6 +6082,8 @@ components:
         - currency
         - createdAt
         - updatedAt
+        - pointDelivery
+        - platformDeliveryShareKobo
         - items
     VendorOrderDetailEnvelopeDto:
       type: object
@@ -6448,6 +6518,10 @@ components:
           enum:
             - wallet
             - paystack
+        pointDelivery:
+          type: boolean
+          description: Deliver to a specific point (hostel room / classroom). Adds the
+            point surcharge.
         items:
           minItems: 1
           type: array
@@ -7941,6 +8015,36 @@ components:
         confirmedAt:
           type: string
           nullable: true
+        readyAt:
+          type: string
+          nullable: true
+          description: When the vendor marked the food ready. Null until the order reaches
+            ready.
+        pointDelivery:
+          type: boolean
+          description: Customer opted into delivery to a specific point (hostel room /
+            classroom).
+        riderDeliveryShareKobo:
+          type: number
+          nullable: true
+          description: Resolved rider delivery share. Null until the order is delivered.
+        vendorDeliveryShareKobo:
+          type: number
+          nullable: true
+          description: Resolved vendor delivery share. Null until the order is delivered.
+        platformDeliveryShareKobo:
+          type: number
+          description: Resolved platform residual (delivery fee minus rider/vendor
+            shares). Only meaningful once deliveredOnTime is set.
+        readyOnTime:
+          type: boolean
+          nullable: true
+          description: Whether the vendor marked the food ready on time. Null until
+            delivered.
+        deliveredOnTime:
+          type: boolean
+          nullable: true
+          description: Whether the order was delivered on time. Null until delivered.
         deliveryCode:
           type: string
           nullable: true
@@ -8001,6 +8105,8 @@ components:
         - currency
         - createdAt
         - updatedAt
+        - pointDelivery
+        - platformDeliveryShareKobo
         - items
         - assignmentId
         - assignmentStatus
@@ -8012,6 +8118,14 @@ components:
           $ref: '#/components/schemas/RiderOrderDetailDto'
       required:
         - data
+    RiderOutForDeliveryDto:
+      type: object
+      properties:
+        foodWasReady:
+          type: boolean
+          default: true
+          description: Whether the food was actually ready when the rider picked it up.
+            Feeds the vendor cooking bonus.
     RiderIssueDto:
       type: object
       properties:
