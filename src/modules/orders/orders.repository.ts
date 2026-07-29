@@ -89,7 +89,8 @@ export class OrdersRepository implements OrdersRepositoryContract {
           ${maxOrderTotalKobo}::integer,
           ${largeOrderSurcharge.surchargeBps}::integer,
           ${largeOrderSurcharge.surchargeFlatKobo}::integer,
-          ${largeOrderSurcharge.accepted}::boolean
+          ${largeOrderSurcharge.accepted}::boolean,
+          ${input.pointDelivery ?? false}::boolean
         ) as order_id
       `.execute(trx);
 
@@ -143,7 +144,8 @@ export class OrdersRepository implements OrdersRepositoryContract {
           ${maxOrderTotalKobo}::integer,
           ${largeOrderSurcharge.surchargeBps}::integer,
           ${largeOrderSurcharge.surchargeFlatKobo}::integer,
-          ${largeOrderSurcharge.accepted}::boolean
+          ${largeOrderSurcharge.accepted}::boolean,
+          ${input.pointDelivery ?? false}::boolean
         ) as order_id
       `.execute(trx);
 

@@ -431,6 +431,29 @@ describe('OrdersService', () => {
     );
   });
 
+  it('forwards pointDelivery to the repository when the customer opts into point delivery', async () => {
+    const input: CreateOrderDto = { ...orderInput, pointDelivery: true };
+
+    await service.createOrder(customer, input, 'order-key');
+
+    expect(repository.createOrder).toHaveBeenCalledWith(
+      customer.userId,
+      input,
+      'order-key',
+      expect.any(String),
+      0,
+      100_000_000,
+      defaultSurchargeConfig
+    );
+    expect(vi.mocked(repository.createOrder).mock.calls[0]?.[1].pointDelivery).toBe(true);
+  });
+
+  it('leaves pointDelivery undefined on the repository call when the customer omits it', async () => {
+    await service.createOrder(customer, orderInput, 'order-key');
+
+    expect(vi.mocked(repository.createOrder).mock.calls[0]?.[1].pointDelivery).toBeUndefined();
+  });
+
   it('rejects quote items that are unavailable for the requested slot', async () => {
     vi.mocked(repository.quoteOrder).mockResolvedValue([]);
 

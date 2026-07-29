@@ -132,6 +132,13 @@ export class CreateOrderDto {
   @IsIn(paymentMethods)
   paymentMethod?: (typeof paymentMethods)[number];
 
+  @ApiPropertyOptional({
+    description: 'Deliver to a specific point (hostel room / classroom). Adds the point surcharge.'
+  })
+  @IsOptional()
+  @IsBoolean()
+  pointDelivery?: boolean;
+
   @ApiProperty({ isArray: true, minItems: 1, type: () => CreateOrderItemDto })
   @IsArray()
   @ArrayMinSize(1)
