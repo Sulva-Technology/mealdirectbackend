@@ -142,4 +142,58 @@ describe('AdminWalletsService', () => {
       BadRequestException
     );
   });
+
+  it('rejects a rider on-time share that exceeds the delivery base fee', async () => {
+    const service = new AdminWalletsService(repository, settings, audit);
+
+    await expect(
+      service.updateSetting(admin, 'share_rider_ontime_kobo', 999_999)
+    ).rejects.toThrow(/exceed|residual|invalid/i);
+  });
+
+  it('rejects a negative fee amount', async () => {
+    const service = new AdminWalletsService(repository, settings, audit);
+
+    await expect(
+      service.updateSetting(admin, 'fee_delivery_base_kobo', -1)
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('rejects a non-positive vendor ready lead time', async () => {
+    const service = new AdminWalletsService(repository, settings, audit);
+
+    await expect(
+      service.updateSetting(admin, 'vendor_ready_lead_minutes', 0)
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('accepts a valid fee share within the residual guard', async () => {
+    settings.upsertSetting = vi.fn().mockResolvedValue({
+      key: 'share_vendor_ontime_kobo',
+      value: 5000,
+      description: null,
+      updatedBy: admin.userId,
+      updatedAt: '2026-07-28T00:00:00.000Z'
+    });
+    const service = new AdminWalletsService(repository, settings, audit);
+
+    await expect(
+      service.updateSetting(admin, 'share_vendor_ontime_kobo', 5000)
+    ).resolves.toMatchObject({ value: 5000 });
+  });
+
+  it('still updates a non-fee key without the residual guard interfering', async () => {
+    settings.upsertSetting = vi.fn().mockResolvedValue({
+      key: 'wallet_min_topup_kobo',
+      value: 60_000,
+      description: null,
+      updatedBy: admin.userId,
+      updatedAt: '2026-07-28T00:00:00.000Z'
+    });
+    const service = new AdminWalletsService(repository, settings, audit);
+
+    await expect(
+      service.updateSetting(admin, 'wallet_min_topup_kobo', 60_000)
+    ).resolves.toMatchObject({ value: 60_000 });
+  });
 });

@@ -60,7 +60,17 @@ export class WalletFreezeDto {
   reason?: string;
 }
 
-const editableSettingKeys = ['wallet_min_topup_kobo', 'wallet_max_balance_kobo'] as const;
+const editableSettingKeys = [
+  'wallet_min_topup_kobo',
+  'wallet_max_balance_kobo',
+  'fee_delivery_base_kobo',
+  'fee_point_surcharge_kobo',
+  'share_rider_ontime_kobo',
+  'share_rider_late_kobo',
+  'share_vendor_ontime_kobo',
+  'share_point_rider_kobo',
+  'vendor_ready_lead_minutes'
+] as const;
 
 export class PlatformSettingUpdateDto {
   @ApiProperty({ enum: editableSettingKeys, type: String })
