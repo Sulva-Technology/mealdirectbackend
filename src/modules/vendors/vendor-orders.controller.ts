@@ -67,54 +67,6 @@ export class VendorOrdersController {
     return createSuccessEnvelope(await this.ordersService.getOrder(actor, params.orderId));
   }
 
-  @Post(':orderId/accept')
-  @HttpCode(200)
-  @ApiParam({ format: 'uuid', name: 'orderId', type: String })
-  @ApiOkResponse({
-    description: 'Order accepted by the vendor.',
-    type: VendorOrderDetailEnvelopeDto
-  })
-  @ApiNotFoundResponse({ description: 'Order not found for this vendor.' })
-  @ApiBadRequestResponse({ description: 'Invalid order transition.' })
-  async acceptOrder(
-    @CurrentActor() actor: AuthenticatedActor,
-    @Param() params: VendorOrderIdParamDto
-  ): Promise<SuccessEnvelope<OrderDetail>> {
-    return createSuccessEnvelope(await this.ordersService.acceptOrder(actor, params.orderId));
-  }
-
-  @Post(':orderId/prepare')
-  @HttpCode(200)
-  @ApiParam({ format: 'uuid', name: 'orderId', type: String })
-  @ApiOkResponse({
-    description: 'Order preparation started by the vendor.',
-    type: VendorOrderDetailEnvelopeDto
-  })
-  @ApiNotFoundResponse({ description: 'Order not found for this vendor.' })
-  @ApiBadRequestResponse({ description: 'Invalid order transition.' })
-  async prepareOrder(
-    @CurrentActor() actor: AuthenticatedActor,
-    @Param() params: VendorOrderIdParamDto
-  ): Promise<SuccessEnvelope<OrderDetail>> {
-    return createSuccessEnvelope(await this.ordersService.prepareOrder(actor, params.orderId));
-  }
-
-  @Post(':orderId/preparing')
-  @HttpCode(200)
-  @ApiParam({ format: 'uuid', name: 'orderId', type: String })
-  @ApiOkResponse({
-    description: 'Order preparation started by the vendor.',
-    type: VendorOrderDetailEnvelopeDto
-  })
-  @ApiNotFoundResponse({ description: 'Order not found for this vendor.' })
-  @ApiBadRequestResponse({ description: 'Invalid order transition.' })
-  async preparingOrder(
-    @CurrentActor() actor: AuthenticatedActor,
-    @Param() params: VendorOrderIdParamDto
-  ): Promise<SuccessEnvelope<OrderDetail>> {
-    return createSuccessEnvelope(await this.ordersService.prepareOrder(actor, params.orderId));
-  }
-
   @Post(':orderId/ready')
   @HttpCode(200)
   @ApiParam({ format: 'uuid', name: 'orderId', type: String })

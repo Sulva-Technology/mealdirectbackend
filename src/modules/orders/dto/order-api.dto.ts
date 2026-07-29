@@ -3,16 +3,13 @@ import { IsIn, IsOptional } from 'class-validator';
 import { IsDatabaseUuid } from '../../../common/validation.js';
 
 const orderStatuses = [
-  'accepted',
   'administratively_completed',
   'cancelled',
-  'confirmed',
   'delivered',
   'expired',
   'out_for_delivery',
   'paid',
   'pending_payment',
-  'preparing',
   'ready',
   'refunded'
 ] as const;
@@ -394,11 +391,6 @@ export class OrderPaymentStatusDto {
   payment!: PaymentSnapshotDto | null;
 }
 
-export class DeliveryConfirmationDto {
-  @ApiProperty({ format: 'uuid', type: String })
-  confirmationId!: string;
-}
-
 export class OrderQuoteEnvelopeDto {
   @ApiProperty({ type: () => OrderQuoteDto })
   data!: OrderQuoteDto;
@@ -424,7 +416,3 @@ export class OrderPaymentStatusEnvelopeDto {
   data!: OrderPaymentStatusDto;
 }
 
-export class DeliveryConfirmationEnvelopeDto {
-  @ApiProperty({ type: () => DeliveryConfirmationDto })
-  data!: DeliveryConfirmationDto;
-}

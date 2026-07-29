@@ -39,7 +39,6 @@ const requiredFunctions = [
   'mark_verified_payment_successful',
   'add_paid_order_to_batch',
   'transition_order_status',
-  'confirm_delivery',
   'open_escalation',
   'create_notification_for_outbox_event',
   'notification_topic_enabled',

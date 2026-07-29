@@ -32,7 +32,6 @@ import type { AuthenticatedActor } from '../auth/actor-context.js';
 import { CreateOrderDto } from './dto/create-order.dto.js';
 import {
   CreatedOrderDto,
-  DeliveryConfirmationEnvelopeDto,
   OrderDetailEnvelopeDto,
   OrderIdParamDto,
   OrderListEnvelopeDto,
@@ -126,19 +125,6 @@ export class OrdersController {
     @Param() params: OrderIdParamDto
   ): Promise<SuccessEnvelope<OrderPaymentStatus>> {
     return createSuccessEnvelope(await this.orders.getPaymentStatus(actor, params.orderId));
-  }
-
-  @Post(':orderId/confirm-delivery')
-  @RequireRoles('customer')
-  @ApiOkResponse({
-    description: 'Customer delivery confirmation.',
-    type: DeliveryConfirmationEnvelopeDto
-  })
-  async confirmDelivery(
-    @CurrentActor() actor: AuthenticatedActor,
-    @Param() params: OrderIdParamDto
-  ): Promise<SuccessEnvelope<{ confirmationId: string }>> {
-    return createSuccessEnvelope(await this.orders.confirmDelivery(actor, params.orderId));
   }
 
   @Get(':orderId')

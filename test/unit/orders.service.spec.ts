@@ -150,9 +150,6 @@ const deliveredOrderDetail: OrderDetail = {
 
 function createRepository(): OrdersRepositoryContract {
   return {
-    confirmDelivery: vi
-      .fn()
-      .mockResolvedValue({ confirmationId: '99999999-9999-4999-8999-999999999999' }),
     createOrder: vi.fn().mockResolvedValue({
       orderId: orderDetail.id,
       deliveryHandoff: {
@@ -516,12 +513,6 @@ describe('OrdersService', () => {
         readyAt: '2026-06-15T11:50:00.000Z'
       })
     );
-  });
-
-  it('confirms delivery through the database function wrapper', async () => {
-    await expect(service.confirmDelivery(customer, orderDetail.id)).resolves.toEqual({
-      confirmationId: '99999999-9999-4999-8999-999999999999'
-    });
   });
 
   describe('wallet checkout', () => {

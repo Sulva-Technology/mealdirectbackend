@@ -87,7 +87,7 @@ describe('OpenAPI contract foundation', () => {
     expect(document.paths['/v1/orders']?.get).toBeDefined();
     expect(document.paths['/v1/orders/{orderId}']?.get).toBeDefined();
     expect(document.paths['/v1/orders/{orderId}/payment-status']?.get).toBeDefined();
-    expect(document.paths['/v1/orders/{orderId}/confirm-delivery']?.post).toBeDefined();
+    expect(document.paths['/v1/orders/{orderId}/confirm-delivery']).toBeUndefined();
   });
 
   it('documents payment initialization, reconciliation, and refund endpoints', () => {
@@ -198,7 +198,9 @@ describe('OpenAPI contract foundation', () => {
   it('documents vendor settlement and review endpoints', () => {
     const document = createOpenApiDocument(app);
 
-    expect(document.paths['/v1/vendor/orders/{orderId}/preparing']?.post).toBeDefined();
+    expect(document.paths['/v1/vendor/orders/{orderId}/ready']?.post).toBeDefined();
+    expect(document.paths['/v1/vendor/orders/{orderId}/accept']).toBeUndefined();
+    expect(document.paths['/v1/vendor/orders/{orderId}/preparing']).toBeUndefined();
     expect(document.paths['/v1/vendor/batches/{batchId}/ready-for-pickup']?.post).toBeDefined();
     expect(document.paths['/v1/vendor/settlements']?.get).toBeDefined();
     expect(document.paths['/v1/vendor/settlements/{id}']?.get).toBeDefined();

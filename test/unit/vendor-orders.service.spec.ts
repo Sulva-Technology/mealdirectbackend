@@ -71,7 +71,7 @@ function createMockRepository(): MockVendorOrdersRepository {
     assertVendorAccess: vi.fn().mockResolvedValue(true),
     listVendorOrders: vi.fn().mockResolvedValue([orderSummary]),
     findVendorOrderById: vi.fn().mockResolvedValue(orderDetail),
-    transitionOrderStatus: vi.fn().mockResolvedValue('accepted')
+    transitionOrderStatus: vi.fn().mockResolvedValue('ready')
   };
 }
 
@@ -117,21 +117,7 @@ describe('VendorOrdersService', () => {
     await expect(service.getOrder(actor, orderId)).rejects.toBeInstanceOf(NotFoundException);
   });
 
-  it('transitions order to accepted status', async () => {
-    const result = await service.acceptOrder(actor, orderId);
-
-    expect(repository.transitionOrderStatus).toHaveBeenCalledWith(orderId, 'accepted', userId);
-    expect(result).toEqual(orderDetail);
-  });
-
-  it('transitions order to preparing status', async () => {
-    const result = await service.prepareOrder(actor, orderId);
-
-    expect(repository.transitionOrderStatus).toHaveBeenCalledWith(orderId, 'preparing', userId);
-    expect(result).toEqual(orderDetail);
-  });
-
-  it('transitions order to ready status', async () => {
+  it('marks an order ready via the single vendor transition', async () => {
     const result = await service.readyOrder(actor, orderId);
 
     expect(repository.transitionOrderStatus).toHaveBeenCalledWith(orderId, 'ready', userId);

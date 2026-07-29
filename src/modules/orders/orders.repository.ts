@@ -24,10 +24,6 @@ type CreateOrderResult = {
   order_id: string;
 };
 
-type ConfirmationResult = {
-  confirmation_id: string;
-};
-
 type DatabaseExecutor = Kysely<DatabaseSchema> | Transaction<DatabaseSchema>;
 
 export function hashOrderRequest(input: unknown): string {
@@ -377,22 +373,6 @@ export class OrdersRepository implements OrdersRepositoryContract {
       orderStatus: order.orderStatus,
       payment: await this.findLatestPayment(orderId)
     };
-  }
-
-  async confirmDelivery(customerId: string, orderId: string): Promise<{ confirmationId: string }> {
-    const result = await sql<ConfirmationResult>`
-      select public.confirm_delivery(
-        ${orderId}::uuid,
-        ${customerId}::uuid,
-        '{}'::jsonb
-      ) as confirmation_id
-    `.execute(this.database.db);
-
-    const confirmationId = result.rows[0]?.confirmation_id;
-    if (confirmationId === undefined) {
-      throw new Error('Delivery confirmation did not return an ID.');
-    }
-    return { confirmationId };
   }
 
   private listCustomerOrderBase(customerId: string, orderId: string) {

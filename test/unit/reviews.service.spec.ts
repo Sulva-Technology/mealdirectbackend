@@ -25,7 +25,7 @@ const rider: AuthenticatedActor = {
 const eligibility: ReviewEligibility = {
   deliveryBatchId: '44444444-4444-4444-8444-444444444444',
   orderId: '55555555-5555-4555-8555-555555555555',
-  orderStatus: 'confirmed',
+  orderStatus: 'delivered',
   vendorId: '66666666-6666-4666-8666-666666666666'
 };
 
@@ -91,7 +91,7 @@ describe('ReviewsService', () => {
     service = new ReviewsService(repository);
   });
 
-  it('creates a review for a confirmed customer-owned order', async () => {
+  it('creates a review for a delivered customer-owned order', async () => {
     await expect(
       service.createReview(customer, eligibility.orderId, {
         comment: 'Very good.',
@@ -123,10 +123,10 @@ describe('ReviewsService', () => {
     expect(repository.createCustomerReview).not.toHaveBeenCalled();
   });
 
-  it('rejects unconfirmed orders and missing orders', async () => {
+  it('rejects orders that are not yet delivered and missing orders', async () => {
     vi.mocked(repository.findCustomerReviewEligibility).mockResolvedValueOnce({
       ...eligibility,
-      orderStatus: 'delivered'
+      orderStatus: 'out_for_delivery'
     });
 
     await expect(

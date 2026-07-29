@@ -194,14 +194,6 @@ export class OrdersService {
     return status;
   }
 
-  async confirmDelivery(
-    actor: AuthenticatedActor,
-    orderId: string
-  ): Promise<{ confirmationId: string }> {
-    customerOnly(actor);
-    return this.repository.confirmDelivery(actor.userId, orderId);
-  }
-
   private assertAllItemsQuoted(
     input: CreateOrderDto,
     quotedItems: readonly OrderQuoteItem[]

@@ -1242,81 +1242,6 @@ paths:
           description: Order not found for this vendor.
       security: *a20
       tags: *a21
-  /v1/vendor/orders/{orderId}/accept:
-    post:
-      operationId: VendorOrdersController_acceptOrder
-      parameters:
-        - name: orderId
-          required: true
-          in: path
-          schema:
-            format: uuid
-            type: string
-      responses:
-        '200':
-          description: Order accepted by the vendor.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/VendorOrderDetailEnvelopeDto'
-        '400':
-          description: Invalid order transition.
-        '401': *a18
-        '403': *a19
-        '404':
-          description: Order not found for this vendor.
-      security: *a20
-      tags: *a21
-  /v1/vendor/orders/{orderId}/prepare:
-    post:
-      operationId: VendorOrdersController_prepareOrder
-      parameters:
-        - name: orderId
-          required: true
-          in: path
-          schema:
-            format: uuid
-            type: string
-      responses:
-        '200':
-          description: Order preparation started by the vendor.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/VendorOrderDetailEnvelopeDto'
-        '400':
-          description: Invalid order transition.
-        '401': *a18
-        '403': *a19
-        '404':
-          description: Order not found for this vendor.
-      security: *a20
-      tags: *a21
-  /v1/vendor/orders/{orderId}/preparing:
-    post:
-      operationId: VendorOrdersController_preparingOrder
-      parameters:
-        - name: orderId
-          required: true
-          in: path
-          schema:
-            format: uuid
-            type: string
-      responses:
-        '200':
-          description: Order preparation started by the vendor.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/VendorOrderDetailEnvelopeDto'
-        '400':
-          description: Invalid order transition.
-        '401': *a18
-        '403': *a19
-        '404':
-          description: Order not found for this vendor.
-      security: *a20
-      tags: *a21
   /v1/vendor/orders/{orderId}/ready:
     post:
       operationId: VendorOrdersController_readyOrder
@@ -1846,19 +1771,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OrderPaymentStatusEnvelopeDto'
-      security: *a35
-      tags: *a36
-  /v1/orders/{orderId}/confirm-delivery:
-    post:
-      operationId: OrdersController_confirmDelivery
-      parameters: []
-      responses:
-        '200':
-          description: Customer delivery confirmation.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DeliveryConfirmationEnvelopeDto'
       security: *a35
       tags: *a36
   /v1/orders/{orderId}:
@@ -5714,16 +5626,13 @@ components:
         orderStatus:
           type: string
           enum: &a109
-            - accepted
             - administratively_completed
             - cancelled
-            - confirmed
             - delivered
             - expired
             - out_for_delivery
             - paid
             - pending_payment
-            - preparing
             - ready
             - refunded
         deliveryMode:
@@ -6656,21 +6565,6 @@ components:
       properties:
         data:
           $ref: '#/components/schemas/OrderPaymentStatusDto'
-      required:
-        - data
-    DeliveryConfirmationDto:
-      type: object
-      properties:
-        confirmationId:
-          type: string
-          format: uuid
-      required:
-        - confirmationId
-    DeliveryConfirmationEnvelopeDto:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/DeliveryConfirmationDto'
       required:
         - data
     OrderDetailEnvelopeDto:

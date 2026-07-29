@@ -19,7 +19,7 @@ import type {
   VendorReviewRecord
 } from './reviews.types.js';
 
-const reviewableStatuses = new Set(['administratively_completed', 'confirmed']);
+const reviewableStatuses = new Set(['administratively_completed', 'delivered']);
 
 function forbidden(message: string): ForbiddenException {
   return new ForbiddenException({

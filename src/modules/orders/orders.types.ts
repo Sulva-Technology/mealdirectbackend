@@ -1,16 +1,13 @@
 import type { CreateOrderDto } from './dto/create-order.dto.js';
 
 export type OrderStatus =
-  | 'accepted'
   | 'administratively_completed'
   | 'cancelled'
-  | 'confirmed'
   | 'delivered'
   | 'expired'
   | 'out_for_delivery'
   | 'paid'
   | 'pending_payment'
-  | 'preparing'
   | 'ready'
   | 'refunded';
 
@@ -196,5 +193,4 @@ export type OrdersRepositoryContract = {
     customerId: string,
     orderId: string
   ) => Promise<OrderPaymentStatus | undefined>;
-  confirmDelivery: (customerId: string, orderId: string) => Promise<{ confirmationId: string }>;
 };

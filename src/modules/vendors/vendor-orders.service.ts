@@ -55,14 +55,6 @@ export class VendorOrdersService {
     return order;
   }
 
-  async acceptOrder(actor: AuthenticatedActor, orderId: string): Promise<OrderDetail> {
-    return this.transitionOrder(actor, orderId, 'accepted');
-  }
-
-  async prepareOrder(actor: AuthenticatedActor, orderId: string): Promise<OrderDetail> {
-    return this.transitionOrder(actor, orderId, 'preparing');
-  }
-
   async readyOrder(actor: AuthenticatedActor, orderId: string): Promise<OrderDetail> {
     return this.transitionOrder(actor, orderId, 'ready');
   }
