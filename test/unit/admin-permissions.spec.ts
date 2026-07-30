@@ -155,3 +155,30 @@ describe('wallets:manage', () => {
     expect(resolveAdminPermissions([], 'super_admin').has('wallets:manage')).toBe(true);
   });
 });
+
+describe('payouts:manage', () => {
+  it('is granted to finance and campus admins', () => {
+    expect(resolveAdminPermissions(['finance_admin'], 'campus_admin').has('payouts:manage')).toBe(
+      true
+    );
+    expect(resolveAdminPermissions(['campus_admin'], 'campus_admin').has('payouts:manage')).toBe(
+      true
+    );
+  });
+
+  it('is granted to super admins by coarse role alone', () => {
+    expect(resolveAdminPermissions([], 'super_admin').has('payouts:manage')).toBe(true);
+  });
+
+  it('is withheld from operations, support, and readonly admins', () => {
+    expect(
+      resolveAdminPermissions(['operations_admin'], 'campus_admin').has('payouts:manage')
+    ).toBe(false);
+    expect(resolveAdminPermissions(['support_admin'], 'campus_admin').has('payouts:manage')).toBe(
+      false
+    );
+    expect(resolveAdminPermissions(['readonly_admin'], 'campus_admin').has('payouts:manage')).toBe(
+      false
+    );
+  });
+});

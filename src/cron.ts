@@ -7,6 +7,7 @@ import { AppModule } from './app.module.js';
 import { JsonLogger } from './common/logging/json-logger.service.js';
 import { DatabaseService } from './database/database.service.js';
 import { PaymentsService } from './modules/payments/payments.service.js';
+import { PayoutService } from './modules/settlements/payout.service.js';
 import {
   EnvironmentValidationError,
   loadEnvironmentFiles,
@@ -18,7 +19,9 @@ const cronJobs = [
   'close-batches-at-cutoff',
   'generate-inventory-horizon',
   'reconcile-pending-payments',
-  'reconcile-wallet-balances'
+  'reconcile-wallet-balances',
+  'run-payouts',
+  'reconcile-payout-transfers'
 ] as const;
 type CronJob = (typeof cronJobs)[number];
 
@@ -67,6 +70,14 @@ async function runCronJob(job: CronJob): Promise<void> {
         { message: 'Reconciled wallet balances', job, detected: result.rows[0]?.detected ?? 0 },
         'Cron'
       );
+    }
+    if (job === 'run-payouts') {
+      const result = await app.get(PayoutService).runPayouts();
+      logger.log({ message: 'Ran payouts', job, ...result }, 'Cron');
+    }
+    if (job === 'reconcile-payout-transfers') {
+      const result = await app.get(PayoutService).reconcilePendingPayouts();
+      logger.log({ message: 'Reconciled payout transfers', job, ...result }, 'Cron');
     }
 
     logger.log({ message: 'Cron job completed', job }, 'Cron');

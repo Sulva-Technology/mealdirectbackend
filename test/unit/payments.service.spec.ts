@@ -123,6 +123,7 @@ function createPaystack(): PaystackClientContract {
       status: 'pending',
       transferCode: 'TRF_test'
     }),
+    fetchTransfer: vi.fn(),
     createCustomer: vi.fn(),
     createDedicatedAccount: vi.fn()
   };

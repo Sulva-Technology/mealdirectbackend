@@ -4675,6 +4675,60 @@
         "tags": ["admin"]
       }
     },
+    "/v1/admin/payout-accounts/vendor/{vendorId}/review": {
+      "patch": {
+        "operationId": "AdminController_reviewVendorPayoutAccount",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Set the admin review status of a vendor payout account." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/payout-accounts/rider/{riderId}/review": {
+      "patch": {
+        "operationId": "AdminController_reviewRiderPayoutAccount",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Set the admin review status of a rider payout account." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/payout-transfers": {
+      "get": {
+        "operationId": "AdminController_listPayoutTransfers",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Keyset-paginated payout transfers; filter by status or needs_admin."
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/payout-transfers/{id}": {
+      "get": {
+        "operationId": "AdminController_getPayoutTransfer",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "A single payout transfer with its derived needs_admin flag." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
     "/v1/admin/settlements/{id}/adjustments": {
       "post": {
         "operationId": "AdminController_adjustSettlement",

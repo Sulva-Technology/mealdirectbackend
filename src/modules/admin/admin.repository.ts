@@ -38,6 +38,36 @@ export type UserDeletionSnapshot = {
 export class AdminRepository {
   constructor(@Inject(DatabaseService) private readonly database: DatabaseService) {}
 
+  async reviewVendorPayoutAccount(
+    vendorId: string,
+    status: 'approved' | 'rejected' | 'pending',
+    failureReason: string | undefined
+  ): Promise<{ id: string; adminReviewStatus: string } | undefined> {
+    const result = await sql<{ id: string; adminReviewStatus: string }>`
+      update public.vendor_payout_accounts
+        set admin_review_status = ${status},
+            failure_reason = ${failureReason ?? null}
+      where vendor_id = ${vendorId}::uuid and active
+      returning id::text as "id", admin_review_status as "adminReviewStatus"
+    `.execute(this.database.db);
+    return result.rows[0];
+  }
+
+  async reviewRiderPayoutAccount(
+    riderId: string,
+    status: 'approved' | 'rejected' | 'pending',
+    failureReason: string | undefined
+  ): Promise<{ id: string; adminReviewStatus: string } | undefined> {
+    const result = await sql<{ id: string; adminReviewStatus: string }>`
+      update public.rider_payout_accounts
+        set admin_review_status = ${status},
+            failure_reason = ${failureReason ?? null}
+      where rider_id = ${riderId}::uuid and active
+      returning id::text as "id", admin_review_status as "adminReviewStatus"
+    `.execute(this.database.db);
+    return result.rows[0];
+  }
+
   async listOrders(query: AdminOrderListQueryDto, campusId?: string): Promise<AdminListResult> {
     const limit = query.limit ?? 20;
     const result = await sql<AdminRecord>`

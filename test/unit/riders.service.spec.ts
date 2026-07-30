@@ -247,6 +247,7 @@ function createPaystack() {
     }),
     fetchTransferRecipient: vi.fn(),
     initiateTransfer: vi.fn(),
+    fetchTransfer: vi.fn(),
     createCustomer: vi.fn(),
     createDedicatedAccount: vi.fn()
   };

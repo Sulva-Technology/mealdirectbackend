@@ -8,6 +8,7 @@ import type {
   PaystackCustomerResult,
   PaystackDedicatedAccountInput,
   PaystackDedicatedAccountResult,
+  PaystackFetchTransferResult,
   PaystackInitializeInput,
   PaystackInitializeResult,
   PaystackRecipientDetails,
@@ -234,6 +235,24 @@ export class PaystackClient implements PaystackClientContract {
     }
 
     return { providerPayload: this.providerPayload(envelope), status, transferCode };
+  }
+
+  async fetchTransfer(referenceOrCode: string): Promise<PaystackFetchTransferResult> {
+    const envelope = await this.request(
+      `/transfer/verify/${encodeURIComponent(referenceOrCode)}`,
+      { method: 'GET' }
+    );
+
+    if (!isRecord(envelope.data)) {
+      throw badGateway('Paystack transfer verification returned an invalid response.');
+    }
+
+    const status = stringFrom(envelope.data.status);
+    if (status === undefined) {
+      throw badGateway('Paystack transfer verification response was missing a status.');
+    }
+
+    return { providerPayload: this.providerPayload(envelope), status };
   }
 
   async createCustomer(input: PaystackCustomerInput): Promise<PaystackCustomerResult> {

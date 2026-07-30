@@ -99,6 +99,51 @@ export class AdminService {
   ) {}
 
   /**
+   * Set the admin review status of a vendor or rider payout account. Only an approved account
+   * is picked up by the automated pay-run, so this is the human gate on outbound money.
+   * Audited via AuditService.
+   */
+  async reviewPayoutAccount(
+    actor: AuthenticatedActor,
+    beneficiary: 'vendor' | 'rider',
+    beneficiaryId: string,
+    input: { status: 'approved' | 'rejected' | 'pending'; failureReason?: string }
+  ): Promise<{ id: string; adminReviewStatus: string }> {
+    const updated =
+      beneficiary === 'vendor'
+        ? await this.repository.reviewVendorPayoutAccount(
+            beneficiaryId,
+            input.status,
+            input.failureReason
+          )
+        : await this.repository.reviewRiderPayoutAccount(
+            beneficiaryId,
+            input.status,
+            input.failureReason
+          );
+
+    if (updated === undefined) {
+      throw notFound(`No active ${beneficiary} payout account was found to review.`);
+    }
+
+    await this.audit?.record({
+      actorUserId: actor.userId,
+      actorType: actorTypeForRole(actor.role),
+      action: 'payout_account.review',
+      entityType: `${beneficiary}_payout_account`,
+      entityId: updated.id,
+      after: { adminReviewStatus: updated.adminReviewStatus },
+      metadata: {
+        beneficiaryId,
+        status: input.status,
+        ...(input.failureReason === undefined ? {} : { failureReason: input.failureReason })
+      }
+    });
+
+    return updated;
+  }
+
+  /**
    * Remove a user (any type). Super admin only; an admin cannot delete their own account.
    * A user with no append-only history is hard-deleted (profile + Auth user gone). A user
    * with history cannot be hard-deleted (append-only guard) and is instead anonymized (PII

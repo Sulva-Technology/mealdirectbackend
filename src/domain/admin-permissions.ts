@@ -19,6 +19,7 @@ export const adminPermissions = [
   'refunds:manage',
   'wallets:manage',
   'settlements:manage',
+  'payouts:manage',
   'reconciliation:manage',
   'vendors:manage',
   'riders:manage',
@@ -39,6 +40,7 @@ const adminRolePermissions: Record<AdminMembershipRole, AdminPermission[]> = {
     'refunds:manage',
     'wallets:manage',
     'settlements:manage',
+    'payouts:manage',
     'reconciliation:manage',
     'vendors:manage',
     'riders:manage',
@@ -50,6 +52,7 @@ const adminRolePermissions: Record<AdminMembershipRole, AdminPermission[]> = {
     'refunds:manage',
     'wallets:manage',
     'settlements:manage',
+    'payouts:manage',
     'reconciliation:manage'
   ],
   operations_admin: ['read', 'vendors:manage', 'riders:manage'],

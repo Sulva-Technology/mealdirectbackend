@@ -188,6 +188,11 @@ export type PaystackTransferResult = {
   providerPayload: Record<string, unknown>;
 };
 
+export type PaystackFetchTransferResult = {
+  status: string;
+  providerPayload: Record<string, unknown>;
+};
+
 export type PaystackCustomerInput = {
   email: string;
   firstName?: string;
@@ -220,6 +225,7 @@ export type PaystackClientContract = {
   createTransferRecipient: (input: PaystackRecipientInput) => Promise<PaystackRecipientResult>;
   fetchTransferRecipient: (recipientCode: string) => Promise<PaystackRecipientDetails>;
   initiateTransfer: (input: PaystackTransferInput) => Promise<PaystackTransferResult>;
+  fetchTransfer: (referenceOrCode: string) => Promise<PaystackFetchTransferResult>;
   createCustomer: (input: PaystackCustomerInput) => Promise<PaystackCustomerResult>;
   createDedicatedAccount: (
     input: PaystackDedicatedAccountInput
