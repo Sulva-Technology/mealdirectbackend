@@ -151,6 +151,14 @@ describe('AdminWalletsService', () => {
     ).rejects.toThrow(/exceed|residual|invalid/i);
   });
 
+  it('rejects a point-rider share that exceeds the point surcharge', async () => {
+    const service = new AdminWalletsService(repository, settings, audit);
+
+    await expect(
+      service.updateSetting(admin, 'share_point_rider_kobo', 999_999)
+    ).rejects.toThrow(/point|exceed|residual|invalid/i);
+  });
+
   it('rejects a negative fee amount', async () => {
     const service = new AdminWalletsService(repository, settings, audit);
 

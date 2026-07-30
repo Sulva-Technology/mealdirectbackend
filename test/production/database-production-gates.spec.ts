@@ -111,7 +111,11 @@ describe('production database gates', () => {
       'delivery_assignments',
       'escalations',
       'notifications',
-      'notification_preferences'
+      'notification_preferences',
+      'platform_settings',
+      'wallets',
+      'wallet_ledger_entries',
+      'wallet_dedicated_accounts'
     ];
 
     const result = await pool.query<{ relname: string; relrowsecurity: boolean }>(

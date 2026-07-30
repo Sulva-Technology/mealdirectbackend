@@ -46,6 +46,8 @@ const feeSettingKeys = new Set([
 const defaultFeeDeliveryBaseKobo = 30_000;
 const defaultShareRiderOntimeKobo = 10_000;
 const defaultShareVendorOntimeKobo = 5_000;
+const defaultFeePointSurchargeKobo = 10_000;
+const defaultSharePointRiderKobo = 5_000;
 
 function badRequest(message: string): BadRequestException {
   return new BadRequestException({ code: ErrorCodes.VALIDATION_FAILED, message });
@@ -190,10 +192,15 @@ export class AdminWalletsService {
 
   /**
    * Fee-config keys must be non-negative whole kobo amounts (vendor_ready_lead_minutes must be
-   * strictly positive), and the two delivery-fee shares the platform pays out
-   * (share_rider_ontime_kobo, share_vendor_ontime_kobo) may never together exceed the base
-   * delivery fee the customer is charged (fee_delivery_base_kobo) — otherwise the platform's
-   * residual on a delivery goes negative.
+   * strictly positive). Two independent residual invariants keep the platform's share on any
+   * delivery non-negative (resolve_order_delivery_shares makes the platform the residual and
+   * raises 23000 — which, on the delivered transition, aborts the delivery — if it would go
+   * negative):
+   *   1) the two base shares the platform pays out (share_rider_ontime_kobo +
+   *      share_vendor_ontime_kobo) may never exceed the base fee (fee_delivery_base_kobo);
+   *   2) the point-delivery rider share (share_point_rider_kobo) may never exceed the point
+   *      surcharge the customer is charged (fee_point_surcharge_kobo), since a point order's
+   *      residual is (base leg) + (fee_point_surcharge_kobo - share_point_rider_kobo).
    */
   private assertFeeConfigValid(
     key: string,
@@ -210,7 +217,9 @@ export class AdminWalletsService {
     const residualKeys = new Set([
       'fee_delivery_base_kobo',
       'share_rider_ontime_kobo',
-      'share_vendor_ontime_kobo'
+      'share_vendor_ontime_kobo',
+      'fee_point_surcharge_kobo',
+      'share_point_rider_kobo'
     ]);
     if (!residualKeys.has(key)) {
       return;
@@ -221,23 +230,27 @@ export class AdminWalletsService {
       return typeof found?.value === 'number' ? found.value : fallback;
     };
 
-    const base =
-      key === 'fee_delivery_base_kobo'
-        ? value
-        : currentValue('fee_delivery_base_kobo', defaultFeeDeliveryBaseKobo);
-    const riderOntime =
-      key === 'share_rider_ontime_kobo'
-        ? value
-        : currentValue('share_rider_ontime_kobo', defaultShareRiderOntimeKobo);
-    const vendorOntime =
-      key === 'share_vendor_ontime_kobo'
-        ? value
-        : currentValue('share_vendor_ontime_kobo', defaultShareVendorOntimeKobo);
+    const resolved = (settingKey: string, fallback: number): number =>
+      key === settingKey ? value : currentValue(settingKey, fallback);
+
+    const base = resolved('fee_delivery_base_kobo', defaultFeeDeliveryBaseKobo);
+    const riderOntime = resolved('share_rider_ontime_kobo', defaultShareRiderOntimeKobo);
+    const vendorOntime = resolved('share_vendor_ontime_kobo', defaultShareVendorOntimeKobo);
 
     if (riderOntime + vendorOntime > base) {
       throw invalidFeeSetting(
         `share_rider_ontime_kobo (${riderOntime}) + share_vendor_ontime_kobo (${vendorOntime}) ` +
           `would exceed fee_delivery_base_kobo (${base}), leaving the platform a negative residual.`
+      );
+    }
+
+    const pointSurcharge = resolved('fee_point_surcharge_kobo', defaultFeePointSurchargeKobo);
+    const pointRider = resolved('share_point_rider_kobo', defaultSharePointRiderKobo);
+
+    if (pointRider > pointSurcharge) {
+      throw invalidFeeSetting(
+        `share_point_rider_kobo (${pointRider}) would exceed fee_point_surcharge_kobo ` +
+          `(${pointSurcharge}), leaving the platform a negative residual on point deliveries.`
       );
     }
   }

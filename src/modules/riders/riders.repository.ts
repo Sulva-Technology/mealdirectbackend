@@ -793,16 +793,19 @@ export class RidersRepository implements RidersRepositoryContract {
         db.service_date::text as "serviceDate",
         db.vendor_id::text as "vendorId",
         v.display_name as "vendorDisplayName",
-        count(*) filter (where o.order_status in ('delivered', 'confirmed', 'administratively_completed'))::integer as "deliveredOrderCount",
-        count(*) filter (where o.order_status in ('confirmed', 'administratively_completed'))::integer as "confirmedOrderCount",
-        coalesce(sum(o.fulfiller_delivery_share_kobo) filter (
-          where o.order_status = 'delivered'
+        count(*) filter (where o.order_status in ('delivered', 'administratively_completed'))::integer as "deliveredOrderCount",
+        count(*) filter (
+          where o.order_status in ('delivered', 'administratively_completed') and s.status = 'paid'
+        )::integer as "confirmedOrderCount",
+        coalesce(sum(o.rider_delivery_share_kobo) filter (
+          where o.order_status in ('delivered', 'administratively_completed')
+            and s.status is distinct from 'paid'
         ), 0)::integer as "pendingAmountKobo",
-        coalesce(sum(o.fulfiller_delivery_share_kobo) filter (
-          where o.order_status in ('confirmed', 'administratively_completed')
+        coalesce(sum(o.rider_delivery_share_kobo) filter (
+          where o.order_status in ('delivered', 'administratively_completed') and s.status = 'paid'
         ), 0)::integer as "settledAmountKobo",
-        coalesce(sum(o.fulfiller_delivery_share_kobo) filter (
-          where o.order_status in ('delivered', 'confirmed', 'administratively_completed')
+        coalesce(sum(o.rider_delivery_share_kobo) filter (
+          where o.order_status in ('delivered', 'administratively_completed')
         ), 0)::integer as "totalAmountKobo",
         s.id::text as "settlementId",
         s.status::text as "settlementStatus"
