@@ -207,11 +207,11 @@ export class PayoutRepository implements PayoutRepositoryContract {
     const rows = await sql<PayoutTransferListItem>`
       with ranked as (
         select
-          pt.id::text as "id",
-          pt.settlement_id::text as "settlementId",
+          pt.id,
+          pt.settlement_id,
           pt.reference,
-          pt.amount_kobo as "amountKobo",
-          pt.provider_transfer_code as "providerTransferCode",
+          pt.amount_kobo,
+          pt.provider_transfer_code,
           pt.status,
           pt.attempt,
           pt.created_at,
@@ -222,22 +222,28 @@ export class PayoutRepository implements PayoutRepositoryContract {
             )
             and (
               select count(*) from public.payout_transfers f
-              where f.settlement_id = pt.settlement_id and f.status = 'failed'
+              where f.settlement_id = pt.settlement_id and f.status in ('failed', 'reversed')
             ) >= ${input.maxAttempts}
             and pt.attempt = (
               select max(a.attempt) from public.payout_transfers a
               where a.settlement_id = pt.settlement_id
             )
-          ) as "needsAdmin"
+          ) as needs_admin
         from public.payout_transfers pt
       )
       select
-        "id", "settlementId", reference, "amountKobo", "providerTransferCode",
-        status, attempt, "needsAdmin",
-        to_char(created_at, 'YYYY-MM-DD"T"HH24:MI:SS.MSOF') as "createdAt"
+        id::text as "id",
+        settlement_id::text as "settlementId",
+        reference,
+        amount_kobo as "amountKobo",
+        provider_transfer_code as "providerTransferCode",
+        status,
+        attempt,
+        needs_admin as "needsAdmin",
+        created_at::text as "createdAt"
       from ranked
       where (${statusFilter ?? null}::text is null or status = ${statusFilter ?? null})
-        and (${wantsNeedsAdmin} is false or "needsAdmin" is true)
+        and (${wantsNeedsAdmin} is false or needs_admin is true)
         and (
           ${cursor === undefined}
           or (created_at, id) < (${cursor?.ts ?? null}::timestamptz, ${cursor?.id ?? null}::uuid)
@@ -276,14 +282,14 @@ export class PayoutRepository implements PayoutRepositoryContract {
           )
           and (
             select count(*) from public.payout_transfers f
-            where f.settlement_id = pt.settlement_id and f.status = 'failed'
+            where f.settlement_id = pt.settlement_id and f.status in ('failed', 'reversed')
           ) >= public.platform_setting_int('payout_max_attempts', 3)
           and pt.attempt = (
             select max(a.attempt) from public.payout_transfers a
             where a.settlement_id = pt.settlement_id
           )
         ) as "needsAdmin",
-        to_char(pt.created_at, 'YYYY-MM-DD"T"HH24:MI:SS.MSOF') as "createdAt"
+        pt.created_at::text as "createdAt"
       from public.payout_transfers pt
       where pt.id = ${id}::uuid
       limit 1

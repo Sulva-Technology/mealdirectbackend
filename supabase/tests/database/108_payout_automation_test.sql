@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(6);
+select plan(7);
 
 select has_column('public', 'payout_transfers', 'attempt', 'payout_transfers has attempt');
 select col_has_check('public', 'vendor_payout_accounts', 'admin_review_status',
@@ -30,6 +30,17 @@ select ok(
     (select settlement_id from public.select_payable_settlements(24, 3, 100)),
   'approved + held + payable settlement is selected'
 );
+
+-- A draft (not yet admin-approved) settlement is NOT auto-paid.
+update public.settlements set status = 'draft'
+  where id = 'e1111111-1111-1111-1111-111111111111';
+select ok(
+  'e1111111-1111-1111-1111-111111111111'::uuid not in
+    (select settlement_id from public.select_payable_settlements(24, 3, 100)),
+  'draft settlement is excluded (settlement approval gate preserved)'
+);
+update public.settlements set status = 'approved'
+  where id = 'e1111111-1111-1111-1111-111111111111';
 
 -- A pending transfer excludes it (in-flight guard).
 insert into public.payout_transfers (settlement_id, reference, amount_kobo, status, attempt)

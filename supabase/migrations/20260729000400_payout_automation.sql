@@ -27,6 +27,9 @@ on conflict (key) do nothing;
 --    Nest job. Returns settlement ids ready for an automated transfer.
 --    SECURITY DEFINER + fixed search_path: the payout tables are RLS-locked; the privileged
 --    app role already bypasses RLS, and this keeps behaviour identical if ever called otherwise.
+--    No row locking here: the pay-run is a single Render cron, and double-send safety ultimately
+--    rests on the per-attempt reference (Paystack dedupes) + unique(settlement_id, attempt). If
+--    this is ever run concurrently, add `for update skip locked`.
 create or replace function public.select_payable_settlements(
   p_hold_hours integer,
   p_max_attempts integer,
@@ -41,7 +44,10 @@ as $$
   select s.id
   from public.settlements s
   where s.payable_kobo > 0
-    and s.status not in ('paid', 'cancelled')
+    -- Only admin-approved settlements are auto-paid. Draft settlements still await the
+    -- POST /admin/settlements/:id/approve gate (and may still be adjusted); paying them here
+    -- would bypass that control. 'paid'/'cancelled' are terminal and excluded implicitly.
+    and s.status = 'approved'
     and s.created_at <= now() - make_interval(hours => p_hold_hours)
     and exists (
       select 1 from public.vendor_payout_accounts vpa
@@ -61,10 +67,13 @@ as $$
       where pt.settlement_id = s.id
         and pt.status in ('pending', 'success')
     )
+    -- Count both failed and reversed attempts toward the cap. A reversed transfer means the
+    -- money bounced back, so it is retryable — but must be bounded, else a repeatedly reversed
+    -- settlement would be re-sent on every run forever.
     and (
       select count(*) from public.payout_transfers pt
       where pt.settlement_id = s.id
-        and pt.status = 'failed'
+        and pt.status in ('failed', 'reversed')
     ) < p_max_attempts
   order by s.created_at
   limit p_limit;
