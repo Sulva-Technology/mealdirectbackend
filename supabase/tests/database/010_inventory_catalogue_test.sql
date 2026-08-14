@@ -103,11 +103,14 @@ select is_empty(
   'morning-only vendor is excluded from night slot'
 );
 
+-- Lead time is the slot's own cutoff_minutes; derive it from the slot so this stays a test of
+-- the campus-timezone math rather than a hardcoded seed value.
 select ok(
   public.effective_ordering_cutoff_at(current_date + 1, '51111111-1111-1111-1111-111111111113')
   =
-  (((current_date + 1)::text || ' 12:00:00')::timestamp at time zone 'Africa/Lagos') - interval '60 minutes',
-  '60-minute cutoff is calculated in campus timezone'
+  (((current_date + 1)::text || ' 12:00:00')::timestamp at time zone 'Africa/Lagos')
+    - ((select cutoff_minutes from public.delivery_slots where id = '51111111-1111-1111-1111-111111111113')::text || ' minutes')::interval,
+  'ordering cutoff is the slot time minus its cutoff_minutes, in campus timezone'
 );
 
 select lives_ok(

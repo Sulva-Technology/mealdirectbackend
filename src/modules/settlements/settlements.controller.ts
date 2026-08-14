@@ -62,6 +62,6 @@ export class SettlementsController {
     @CurrentActor() actor: AuthenticatedActor,
     @Param('settlementId') settlementId: string
   ): Promise<PayoutTransferRecord> {
-    return this.payouts.payToSettlement(actor, settlementId);
+    return this.payouts.payToSettlement(settlementId, actor.userId);
   }
 }

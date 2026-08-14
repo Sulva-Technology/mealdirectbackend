@@ -125,7 +125,14 @@ const envSchema = z
     FCM_PROJECT_ID: optionalSecret,
     FCM_CLIENT_EMAIL: optionalSecret,
     FCM_PRIVATE_KEY: optionalSecret,
-    PAYOUTS_ENABLED: booleanFromString.default(false)
+    PAYOUTS_ENABLED: booleanFromString.default(false),
+    // Gates the Paystack dedicated-virtual-account path. DVA is not yet enabled on the
+    // MealDirect Paystack account; until support approves it this stays false, wallets
+    // exist with no account number, and top-ups are funded through a checkout link.
+    WALLET_DVA_ENABLED: booleanFromString.default(false),
+    // Paystack DVA provider for live traffic. 'test-bank' is the only provider that
+    // works in Paystack test mode.
+    WALLET_DVA_PROVIDER: z.string().min(1).default('test-bank')
   })
   .superRefine((env, context) => {
     if ((env.NODE_ENV === 'production' || env.NODE_ENV === 'staging') && !env.DATABASE_SSL) {

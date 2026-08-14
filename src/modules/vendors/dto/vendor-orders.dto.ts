@@ -6,16 +6,13 @@ import { OrderDetailDto, OrderSummaryDto } from '../../orders/dto/order-api.dto.
 import { IsDatabaseUuid } from '../../../common/validation.js';
 
 const orderStatuses = [
-  'accepted',
   'administratively_completed',
   'cancelled',
-  'confirmed',
   'delivered',
   'expired',
   'out_for_delivery',
   'paid',
   'pending_payment',
-  'preparing',
   'ready',
   'refunded'
 ] as const;

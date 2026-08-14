@@ -48,6 +48,7 @@ import {
   RiderOnboardEnvelopeDto,
   RiderOrderDetailEnvelopeDto,
   RiderOrderIdParamDto,
+  RiderOutForDeliveryDto,
   RiderPayoutAccountEnvelopeDto,
   RiderPayoutHistoryEnvelopeDto,
   RiderPayoutHistoryQueryDto,
@@ -282,11 +283,15 @@ export class RidersController {
     description: 'Order marked out for delivery.',
     type: RiderOrderDetailEnvelopeDto
   })
+  @ApiBody({ required: false, type: RiderOutForDeliveryDto })
   async markOrderOutForDelivery(
     @CurrentActor() actor: AuthenticatedActor,
-    @Param() params: RiderOrderIdParamDto
+    @Param() params: RiderOrderIdParamDto,
+    @Body() input: RiderOutForDeliveryDto
   ): Promise<SuccessEnvelope<RiderOrderDetail>> {
-    return createSuccessEnvelope(await this.riders.markOrderOutForDelivery(actor, params.orderId));
+    return createSuccessEnvelope(
+      await this.riders.markOrderOutForDelivery(actor, params.orderId, input)
+    );
   }
 
   @Post('orders/:orderId/delivered')

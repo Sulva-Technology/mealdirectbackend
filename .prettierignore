@@ -2,4 +2,7 @@ dist
 node_modules
 coverage
 supabase/types
+supabase/.temp
+supabase/.branches
 pnpm-lock.yaml
+docs/handbook

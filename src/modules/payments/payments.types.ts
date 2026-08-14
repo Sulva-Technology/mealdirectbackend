@@ -188,6 +188,36 @@ export type PaystackTransferResult = {
   providerPayload: Record<string, unknown>;
 };
 
+export type PaystackFetchTransferResult = {
+  status: string;
+  providerPayload: Record<string, unknown>;
+};
+
+export type PaystackCustomerInput = {
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+};
+
+export type PaystackCustomerResult = {
+  customerCode: string;
+  providerPayload: Record<string, unknown>;
+};
+
+export type PaystackDedicatedAccountInput = {
+  customerCode: string;
+  preferredBank?: string;
+};
+
+export type PaystackDedicatedAccountResult = {
+  accountNumber: string;
+  accountName: string;
+  bankName: string;
+  bankSlug: string;
+  providerPayload: Record<string, unknown>;
+};
+
 export type PaystackClientContract = {
   initializeTransaction: (input: PaystackInitializeInput) => Promise<PaystackInitializeResult>;
   verifyTransaction: (reference: string) => Promise<PaystackVerifyResult>;
@@ -195,12 +225,20 @@ export type PaystackClientContract = {
   createTransferRecipient: (input: PaystackRecipientInput) => Promise<PaystackRecipientResult>;
   fetchTransferRecipient: (recipientCode: string) => Promise<PaystackRecipientDetails>;
   initiateTransfer: (input: PaystackTransferInput) => Promise<PaystackTransferResult>;
+  fetchTransfer: (referenceOrCode: string) => Promise<PaystackFetchTransferResult>;
+  createCustomer: (input: PaystackCustomerInput) => Promise<PaystackCustomerResult>;
+  createDedicatedAccount: (
+    input: PaystackDedicatedAccountInput
+  ) => Promise<PaystackDedicatedAccountResult>;
 };
+
+export type RefundDestination = 'wallet' | 'paystack';
 
 export type RefundInput = {
   amountKobo: number;
   reasonCode: string;
   reasonText?: string;
+  destination?: RefundDestination;
 };
 
 export type PaymentsRepositoryContract = {
@@ -255,6 +293,12 @@ export type PaymentsRepositoryContract = {
     providerPayload: Record<string, unknown>,
     status: RefundStatus
   ) => Promise<RefundRecord>;
+  creditRefundToWallet: (
+    orderId: string,
+    amountKobo: number,
+    reason: string,
+    actorUserId: string
+  ) => Promise<string>;
 };
 
 export type PaymentInitializationResponse = {

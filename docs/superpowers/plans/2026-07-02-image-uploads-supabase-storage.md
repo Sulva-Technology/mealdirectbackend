@@ -39,6 +39,7 @@ Do the signing in the **service layer** after the repo fetch, batch-signing with
 `storage.from(bucket).createSignedUrls(paths, ttl)` to avoid N calls.
 
 Tradeoffs to accept/decide:
+
 - Signed URLs expire (pick TTL, e.g. 1h). Client must tolerate expiry / re-fetch.
 - Rotating URLs weaken client/CDN caching. Mitigation: longer TTL, or a stable
   `/media/{key}` redirect endpoint that 302s to a fresh signed URL.

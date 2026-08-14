@@ -39,7 +39,6 @@ const requiredFunctions = [
   'mark_verified_payment_successful',
   'add_paid_order_to_batch',
   'transition_order_status',
-  'confirm_delivery',
   'open_escalation',
   'create_notification_for_outbox_event',
   'notification_topic_enabled',
@@ -112,7 +111,11 @@ describe('production database gates', () => {
       'delivery_assignments',
       'escalations',
       'notifications',
-      'notification_preferences'
+      'notification_preferences',
+      'platform_settings',
+      'wallets',
+      'wallet_ledger_entries',
+      'wallet_dedicated_accounts'
     ];
 
     const result = await pool.query<{ relname: string; relrowsecurity: boolean }>(

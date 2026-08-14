@@ -38,8 +38,8 @@ select is(
 
 select is(
   (select count(*) from public.unit_types),
-  7::bigint,
-  'seven MVP unit types are seeded'
+  10::bigint,
+  'ten MVP unit types are seeded'
 );
 
 select cmp_ok(
@@ -59,9 +59,11 @@ select isnt_empty(
   'sample paid order is seeded'
 );
 
+-- v2 collapsed the order lifecycle (slice D); the seed no longer parks an order at the
+-- dropped 'preparing' state. It seeds a refunded order instead, which this now covers.
 select isnt_empty(
-  $$ select 1 from public.orders where order_status = 'preparing' $$,
-  'sample preparing order is seeded'
+  $$ select 1 from public.orders where order_status = 'refunded' $$,
+  'sample refunded order is seeded'
 );
 
 select isnt_empty(

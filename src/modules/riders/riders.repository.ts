@@ -555,6 +555,13 @@ export class RidersRepository implements RidersRepositoryContract {
         o.paid_at::text as "paidAt",
         o.delivered_at::text as "deliveredAt",
         o.confirmed_at::text as "confirmedAt",
+        o.ready_at::text as "readyAt",
+        o.point_delivery as "pointDelivery",
+        o.rider_delivery_share_kobo as "riderDeliveryShareKobo",
+        o.vendor_delivery_share_kobo as "vendorDeliveryShareKobo",
+        o.platform_delivery_share_kobo as "platformDeliveryShareKobo",
+        o.ready_on_time as "readyOnTime",
+        o.delivered_on_time as "deliveredOnTime",
         o.delivery_code as "deliveryCode",
         da.id::text as "assignmentId",
         da.batch_id::text as "batchId",
@@ -586,20 +593,33 @@ export class RidersRepository implements RidersRepositoryContract {
     riderId: string,
     orderId: string,
     toStatus: OrderStatus,
-    actorUserId: string
+    actorUserId: string,
+    foodWasReady?: boolean
   ): Promise<OrderStatus> {
     const order = await this.findAssignedOrderById(riderId, orderId);
     if (order === undefined) {
       throw new Error('Order was not found for this rider.');
     }
 
-    const result = await sql<{ order_status: OrderStatus }>`
-      select public.transition_order_status(
-        ${orderId}::uuid,
-        ${toStatus}::public.order_status,
-        ${actorUserId}::uuid
-      ) as order_status
-    `.execute(this.database.db);
+    // Only the out_for_delivery pickup path passes foodWasReady; every other transition
+    // omits it entirely so the DB function's own default (true) applies unchanged.
+    const result =
+      foodWasReady === undefined
+        ? await sql<{ order_status: OrderStatus }>`
+            select public.transition_order_status(
+              ${orderId}::uuid,
+              ${toStatus}::public.order_status,
+              ${actorUserId}::uuid
+            ) as order_status
+          `.execute(this.database.db)
+        : await sql<{ order_status: OrderStatus }>`
+            select public.transition_order_status(
+              ${orderId}::uuid,
+              ${toStatus}::public.order_status,
+              ${actorUserId}::uuid,
+              p_food_was_ready => ${foodWasReady}::boolean
+            ) as order_status
+          `.execute(this.database.db);
 
     const status = result.rows[0]?.order_status;
     if (status === undefined) {
@@ -773,16 +793,19 @@ export class RidersRepository implements RidersRepositoryContract {
         db.service_date::text as "serviceDate",
         db.vendor_id::text as "vendorId",
         v.display_name as "vendorDisplayName",
-        count(*) filter (where o.order_status in ('delivered', 'confirmed', 'administratively_completed'))::integer as "deliveredOrderCount",
-        count(*) filter (where o.order_status in ('confirmed', 'administratively_completed'))::integer as "confirmedOrderCount",
-        coalesce(sum(o.fulfiller_delivery_share_kobo) filter (
-          where o.order_status = 'delivered'
+        count(*) filter (where o.order_status in ('delivered', 'administratively_completed'))::integer as "deliveredOrderCount",
+        count(*) filter (
+          where o.order_status in ('delivered', 'administratively_completed') and s.status = 'paid'
+        )::integer as "confirmedOrderCount",
+        coalesce(sum(o.rider_delivery_share_kobo) filter (
+          where o.order_status in ('delivered', 'administratively_completed')
+            and s.status is distinct from 'paid'
         ), 0)::integer as "pendingAmountKobo",
-        coalesce(sum(o.fulfiller_delivery_share_kobo) filter (
-          where o.order_status in ('confirmed', 'administratively_completed')
+        coalesce(sum(o.rider_delivery_share_kobo) filter (
+          where o.order_status in ('delivered', 'administratively_completed') and s.status = 'paid'
         ), 0)::integer as "settledAmountKobo",
-        coalesce(sum(o.fulfiller_delivery_share_kobo) filter (
-          where o.order_status in ('delivered', 'confirmed', 'administratively_completed')
+        coalesce(sum(o.rider_delivery_share_kobo) filter (
+          where o.order_status in ('delivered', 'administratively_completed')
         ), 0)::integer as "totalAmountKobo",
         s.id::text as "settlementId",
         s.status::text as "settlementStatus"
@@ -955,7 +978,14 @@ export class RidersRepository implements RidersRepositoryContract {
         o.updated_at::text as "updatedAt",
         o.paid_at::text as "paidAt",
         o.delivered_at::text as "deliveredAt",
-        o.confirmed_at::text as "confirmedAt"
+        o.confirmed_at::text as "confirmedAt",
+        o.ready_at::text as "readyAt",
+        o.point_delivery as "pointDelivery",
+        o.rider_delivery_share_kobo as "riderDeliveryShareKobo",
+        o.vendor_delivery_share_kobo as "vendorDeliveryShareKobo",
+        o.platform_delivery_share_kobo as "platformDeliveryShareKobo",
+        o.ready_on_time as "readyOnTime",
+        o.delivered_on_time as "deliveredOnTime"
       from public.orders o
       join public.delivery_batch_orders dbo on dbo.order_id = o.id
       join public.vendors v on v.id = o.vendor_id

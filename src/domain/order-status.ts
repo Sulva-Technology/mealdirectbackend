@@ -4,12 +4,9 @@
 export const orderStatuses = [
   'pending_payment',
   'paid',
-  'accepted',
-  'preparing',
   'ready',
   'out_for_delivery',
   'delivered',
-  'confirmed',
   'administratively_completed',
   'cancelled',
   'expired',
@@ -20,13 +17,10 @@ export type OrderStatus = (typeof orderStatuses)[number];
 
 const allowedTransitions: Readonly<Record<OrderStatus, readonly OrderStatus[]>> = {
   pending_payment: ['paid', 'expired', 'cancelled'],
-  paid: ['accepted', 'cancelled', 'refunded'],
-  accepted: ['preparing', 'cancelled'],
-  preparing: ['ready', 'cancelled'],
+  paid: ['ready', 'cancelled', 'refunded'],
   ready: ['out_for_delivery', 'cancelled'],
   out_for_delivery: ['delivered', 'cancelled'],
-  delivered: ['confirmed', 'administratively_completed', 'refunded'],
-  confirmed: ['refunded'],
+  delivered: ['administratively_completed', 'refunded'],
   administratively_completed: ['refunded'],
   cancelled: [],
   expired: [],

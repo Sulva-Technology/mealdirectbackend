@@ -53,6 +53,14 @@ export class ReconciliationRepository {
     return result.rows[0]?.count ?? 0;
   }
 
+  async detectWalletBalanceDrift(): Promise<number> {
+    const result = await sql<{ detected: number }>`
+      select public.detect_wallet_balance_drift() as "detected"
+    `.execute(this.database.db);
+
+    return result.rows[0]?.detected ?? 0;
+  }
+
   async listIssues(
     filter: ReconciliationIssueListFilter,
     pagination: { cursor?: string; limit: number },

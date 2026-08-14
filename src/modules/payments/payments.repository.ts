@@ -556,4 +556,26 @@ export class PaymentsRepository implements PaymentsRepositoryContract {
     }
     return refund;
   }
+
+  async creditRefundToWallet(
+    orderId: string,
+    amountKobo: number,
+    reason: string,
+    actorUserId: string
+  ): Promise<string> {
+    const result = await sql<{ entryId: string }>`
+      select public.refund_order_to_wallet(
+        ${orderId}::uuid,
+        ${amountKobo}::integer,
+        ${reason},
+        ${actorUserId}::uuid
+      )::text as "entryId"
+    `.execute(this.database.db);
+
+    const entryId = result.rows[0]?.entryId;
+    if (entryId === undefined) {
+      throw new Error('Wallet refund did not return a ledger entry ID.');
+    }
+    return entryId;
+  }
 }

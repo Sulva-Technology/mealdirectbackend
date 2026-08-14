@@ -217,13 +217,13 @@ export class AdminProblemQueuesController {
         severity: r.severity,
         paymentReference: r.providerReference ?? 'N/A',
         orderId: r.orderId ?? 'N/A',
-        customerName: r.customerName ?? (detail['customerName'] as string | undefined) ?? null,
+        customerName: r.customerName ?? (detail.customerName as string | undefined) ?? null,
         customerEmail: r.customerEmail,
         amountKobo:
-          (detail['expectedAmountKobo'] as number | undefined) ??
-          (detail['webhookAmountKobo'] as number | undefined) ??
+          (detail.expectedAmountKobo as number | undefined) ??
+          (detail.webhookAmountKobo as number | undefined) ??
           0,
-        currency: (detail['currency'] as string | undefined) ?? 'NGN',
+        currency: (detail.currency as string | undefined) ?? 'NGN',
         issueAgeSeconds: Math.round(ageMs / 1000),
         suggestedAction: issueSuggestedAction(r.issueType),
         reviewedAt: r.reviewedAt

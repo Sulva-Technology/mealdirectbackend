@@ -1,16 +1,13 @@
 import type { CreateOrderDto } from './dto/create-order.dto.js';
 
 export type OrderStatus =
-  | 'accepted'
   | 'administratively_completed'
   | 'cancelled'
-  | 'confirmed'
   | 'delivered'
   | 'expired'
   | 'out_for_delivery'
   | 'paid'
   | 'pending_payment'
-  | 'preparing'
   | 'ready'
   | 'refunded';
 
@@ -126,6 +123,21 @@ export type OrderSummary = {
   paidAt: string | null;
   deliveredAt: string | null;
   confirmedAt: string | null;
+  // When the vendor marked the food ready (the -> ready transition). Null until then.
+  readyAt: string | null;
+  // Customer opted into delivery to a specific point (hostel room / classroom); adds the point
+  // surcharge. Always present (defaults false), unlike the resolved-at-delivery fields below.
+  pointDelivery: boolean;
+  // Resolved rider/vendor delivery shares and the platform residual, set by
+  // resolve_order_delivery_shares on the delivered transition. rider/vendor are null until then;
+  // platformDeliveryShareKobo carries a placeholder default before delivery and is only
+  // meaningful once deliveredOnTime is non-null.
+  riderDeliveryShareKobo: number | null;
+  vendorDeliveryShareKobo: number | null;
+  platformDeliveryShareKobo: number;
+  // Punctuality flags resolved at delivery: null until the order is delivered.
+  readyOnTime: boolean | null;
+  deliveredOnTime: boolean | null;
   // Hand-off code shown to the customer once the order is out for delivery; null otherwise.
   // Optional because most order queries do not select it.
   deliveryCode?: string | null;
@@ -160,6 +172,15 @@ export type OrdersRepositoryContract = {
     maxOrderTotalKobo: number,
     largeOrderSurcharge: LargeOrderSurchargeConfig
   ) => Promise<CreatedOrder>;
+  createWalletOrder: (
+    customerId: string,
+    input: CreateOrderDto,
+    idempotencyKey: string,
+    requestHash: string,
+    serviceFeeKobo: number,
+    maxOrderTotalKobo: number,
+    largeOrderSurcharge: LargeOrderSurchargeConfig
+  ) => Promise<CreatedOrder>;
   quoteOrder: (input: CreateOrderDto) => Promise<OrderQuoteItem[]>;
   findLocationType: (locationId: string) => Promise<'department' | 'hostel' | undefined>;
   findZoneDeliveryFeeKobo: (locationId: string) => Promise<number | null>;
@@ -172,5 +193,4 @@ export type OrdersRepositoryContract = {
     customerId: string,
     orderId: string
   ) => Promise<OrderPaymentStatus | undefined>;
-  confirmDelivery: (customerId: string, orderId: string) => Promise<{ confirmationId: string }>;
 };

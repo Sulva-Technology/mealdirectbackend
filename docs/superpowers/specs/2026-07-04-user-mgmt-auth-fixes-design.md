@@ -40,7 +40,7 @@ gate failed.
 `public.vendor_users where active` and, when a membership exists, syncs the user's
 `app_metadata` to `meal_direct_role: 'vendor'` (+ `vendor_id`) and refreshes the session.
 So a user added via "Add Vendor User" can already sign in to the vendor portal. (Note:
-this grant path *does* set app_metadata to vendor, which is what makes the vendor JWT
+this grant path _does_ set app_metadata to vendor, which is what makes the vendor JWT
 claim and vendor-scoped endpoints work; a user is single-role in the JWT by design.)
 
 The only remaining change for this item:
@@ -141,7 +141,7 @@ an actor in `order_status_history`, `audit_logs`, or `inventory_adjustments`.
 
 ### Repository — `AdminRepository.purgeUser(userId)` (pristine only)
 
-- One transaction. Deletes the user's *deletable* child rows (`notifications`,
+- One transaction. Deletes the user's _deletable_ child rows (`notifications`,
   `notification_preferences`, `device_tokens`, `referrals`, `campus_memberships`,
   `vendor_users`, `rider_payout_accounts`, `riders`, `admin_memberships`), detaches
   authored `vendor_invitations`, then deletes `profiles`. A pristine user has no order

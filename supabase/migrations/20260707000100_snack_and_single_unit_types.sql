@@ -14,4 +14,6 @@ values
   ('single', 'Single portion', false, false, 1)
 on conflict (code) do nothing;
 
+comment on table public.unit_types is 'Catalogue unit types. Flags drive fees and limits: counts_toward_spoon_limit (three-spoon cap), triggers_takeaway_fee (packaging/takeaway fee), max_quantity (per-line cap).';
+
 commit;

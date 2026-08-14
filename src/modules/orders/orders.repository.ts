@@ -24,10 +24,6 @@ type CreateOrderResult = {
   order_id: string;
 };
 
-type ConfirmationResult = {
-  confirmation_id: string;
-};
-
 type DatabaseExecutor = Kysely<DatabaseSchema> | Transaction<DatabaseSchema>;
 
 export function hashOrderRequest(input: unknown): string {
@@ -89,13 +85,69 @@ export class OrdersRepository implements OrdersRepositoryContract {
           ${maxOrderTotalKobo}::integer,
           ${largeOrderSurcharge.surchargeBps}::integer,
           ${largeOrderSurcharge.surchargeFlatKobo}::integer,
-          ${largeOrderSurcharge.accepted}::boolean
+          ${largeOrderSurcharge.accepted}::boolean,
+          ${input.pointDelivery ?? false}::boolean
         ) as order_id
       `.execute(trx);
 
       const orderId = result.rows[0]?.order_id;
       if (orderId === undefined) {
         throw new Error('Order creation did not return an order ID.');
+      }
+
+      const deliveryCode = await this.ensureOrderDeliveryMetadata(
+        orderId,
+        normalizeRoomNumber(input.roomNumber),
+        trx
+      );
+
+      return { orderId, deliveryHandoff: buildDeliveryHandoff(deliveryCode) };
+    });
+  }
+
+  async createWalletOrder(
+    customerId: string,
+    input: CreateOrderDto,
+    idempotencyKey: string,
+    requestHash: string,
+    serviceFeeKobo: number,
+    maxOrderTotalKobo: number,
+    largeOrderSurcharge: LargeOrderSurchargeConfig
+  ): Promise<CreatedOrder> {
+    const items = input.items.map((item) => ({
+      menu_item_id: item.menuItemId,
+      quantity: item.quantity,
+      customization: item.customization ?? {},
+      soup_option_id: item.soupOptionId ?? null
+    }));
+
+    return this.database.db.transaction().execute(async (trx) => {
+      const result = await sql<CreateOrderResult>`
+        select public.create_paid_order_from_wallet(
+          ${customerId}::uuid,
+          ${input.campusId}::uuid,
+          ${input.vendorId}::uuid,
+          ${input.serviceDate}::date,
+          ${input.deliverySlotId}::uuid,
+          ${input.locationId}::uuid,
+          ${input.deliveryMode ?? null}::public.delivery_mode,
+          ${JSON.stringify(items)}::jsonb,
+          ${idempotencyKey},
+          ${requestHash},
+          ${input.promotionCode ?? null},
+          ${input.specialInstructions ?? null},
+          ${serviceFeeKobo}::integer,
+          ${maxOrderTotalKobo}::integer,
+          ${largeOrderSurcharge.surchargeBps}::integer,
+          ${largeOrderSurcharge.surchargeFlatKobo}::integer,
+          ${largeOrderSurcharge.accepted}::boolean,
+          ${input.pointDelivery ?? false}::boolean
+        ) as order_id
+      `.execute(trx);
+
+      const orderId = result.rows[0]?.order_id;
+      if (orderId === undefined) {
+        throw new Error('Wallet order creation did not return an order ID.');
       }
 
       const deliveryCode = await this.ensureOrderDeliveryMetadata(
@@ -264,6 +316,13 @@ export class OrdersRepository implements OrdersRepositoryContract {
         o.paid_at::text as "paidAt",
         o.delivered_at::text as "deliveredAt",
         o.confirmed_at::text as "confirmedAt",
+        o.ready_at::text as "readyAt",
+        o.point_delivery as "pointDelivery",
+        o.rider_delivery_share_kobo as "riderDeliveryShareKobo",
+        o.vendor_delivery_share_kobo as "vendorDeliveryShareKobo",
+        o.platform_delivery_share_kobo as "platformDeliveryShareKobo",
+        o.ready_on_time as "readyOnTime",
+        o.delivered_on_time as "deliveredOnTime",
         o.delivery_code as "deliveryCode",
         case
           when o.delivery_code is null then null
@@ -316,22 +375,6 @@ export class OrdersRepository implements OrdersRepositoryContract {
     };
   }
 
-  async confirmDelivery(customerId: string, orderId: string): Promise<{ confirmationId: string }> {
-    const result = await sql<ConfirmationResult>`
-      select public.confirm_delivery(
-        ${orderId}::uuid,
-        ${customerId}::uuid,
-        '{}'::jsonb
-      ) as confirmation_id
-    `.execute(this.database.db);
-
-    const confirmationId = result.rows[0]?.confirmation_id;
-    if (confirmationId === undefined) {
-      throw new Error('Delivery confirmation did not return an ID.');
-    }
-    return { confirmationId };
-  }
-
   private listCustomerOrderBase(customerId: string, orderId: string) {
     return sql<OrderSummary>`
       select
@@ -362,6 +405,13 @@ export class OrdersRepository implements OrdersRepositoryContract {
         o.paid_at::text as "paidAt",
         o.delivered_at::text as "deliveredAt",
         o.confirmed_at::text as "confirmedAt",
+        o.ready_at::text as "readyAt",
+        o.point_delivery as "pointDelivery",
+        o.rider_delivery_share_kobo as "riderDeliveryShareKobo",
+        o.vendor_delivery_share_kobo as "vendorDeliveryShareKobo",
+        o.platform_delivery_share_kobo as "platformDeliveryShareKobo",
+        o.ready_on_time as "readyOnTime",
+        o.delivered_on_time as "deliveredOnTime",
         o.delivery_code as "deliveryCode",
         dbo.batch_id::text as "batchId",
         case

@@ -128,3 +128,57 @@ describe('PermissionsGuard', () => {
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
 });
+
+describe('wallets:manage', () => {
+  it('is granted to finance admins', () => {
+    expect(resolveAdminPermissions(['finance_admin'], 'campus_admin').has('wallets:manage')).toBe(
+      true
+    );
+  });
+
+  it('is granted to campus admins', () => {
+    expect(resolveAdminPermissions(['campus_admin'], 'campus_admin').has('wallets:manage')).toBe(
+      true
+    );
+  });
+
+  it('is withheld from support and readonly admins', () => {
+    expect(resolveAdminPermissions(['support_admin'], 'campus_admin').has('wallets:manage')).toBe(
+      false
+    );
+    expect(resolveAdminPermissions(['readonly_admin'], 'campus_admin').has('wallets:manage')).toBe(
+      false
+    );
+  });
+
+  it('is granted to super admins by coarse role alone', () => {
+    expect(resolveAdminPermissions([], 'super_admin').has('wallets:manage')).toBe(true);
+  });
+});
+
+describe('payouts:manage', () => {
+  it('is granted to finance and campus admins', () => {
+    expect(resolveAdminPermissions(['finance_admin'], 'campus_admin').has('payouts:manage')).toBe(
+      true
+    );
+    expect(resolveAdminPermissions(['campus_admin'], 'campus_admin').has('payouts:manage')).toBe(
+      true
+    );
+  });
+
+  it('is granted to super admins by coarse role alone', () => {
+    expect(resolveAdminPermissions([], 'super_admin').has('payouts:manage')).toBe(true);
+  });
+
+  it('is withheld from operations, support, and readonly admins', () => {
+    expect(
+      resolveAdminPermissions(['operations_admin'], 'campus_admin').has('payouts:manage')
+    ).toBe(false);
+    expect(resolveAdminPermissions(['support_admin'], 'campus_admin').has('payouts:manage')).toBe(
+      false
+    );
+    expect(resolveAdminPermissions(['readonly_admin'], 'campus_admin').has('payouts:manage')).toBe(
+      false
+    );
+  });
+});

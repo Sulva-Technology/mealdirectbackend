@@ -114,15 +114,11 @@ describe('orders API', () => {
 
   it('validates customer order object params before touching the database', async () => {
     const token = await signCustomerToken();
-    const endpoints = [
-      '/v1/orders/not-a-uuid',
-      '/v1/orders/not-a-uuid/payment-status',
-      '/v1/orders/not-a-uuid/confirm-delivery'
-    ];
+    const endpoints = ['/v1/orders/not-a-uuid', '/v1/orders/not-a-uuid/payment-status'];
 
     for (const url of endpoints) {
       const response = await app.inject({
-        method: url.endsWith('confirm-delivery') ? 'POST' : 'GET',
+        method: 'GET',
         url,
         headers: {
           authorization: `Bearer ${token}`

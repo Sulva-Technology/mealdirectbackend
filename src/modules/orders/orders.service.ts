@@ -70,6 +70,27 @@ export class OrdersService {
       });
     }
 
+    const surcharge = {
+      surchargeBps: this.env.get('LARGE_ORDER_SURCHARGE_BPS'),
+      surchargeFlatKobo: this.env.get('LARGE_ORDER_SURCHARGE_FLAT_KOBO'),
+      accepted
+    };
+
+    // Wallet orders are created already paid inside one transaction — no pending_payment,
+    // no reservation timer, no webhook. Everything before this point (quote, room number,
+    // large-order guard) is identical for both funding sources.
+    if (input.paymentMethod === 'wallet') {
+      return this.repository.createWalletOrder(
+        actor.userId,
+        input,
+        idempotencyKey,
+        hashOrderRequest(input),
+        serviceFeeKobo,
+        maxOrderTotalKobo,
+        surcharge
+      );
+    }
+
     return this.repository.createOrder(
       actor.userId,
       input,
@@ -77,11 +98,7 @@ export class OrdersService {
       hashOrderRequest(input),
       serviceFeeKobo,
       maxOrderTotalKobo,
-      {
-        surchargeBps: this.env.get('LARGE_ORDER_SURCHARGE_BPS'),
-        surchargeFlatKobo: this.env.get('LARGE_ORDER_SURCHARGE_FLAT_KOBO'),
-        accepted
-      }
+      surcharge
     );
   }
 
@@ -175,14 +192,6 @@ export class OrdersService {
       throw notFound('Order was not found.');
     }
     return status;
-  }
-
-  async confirmDelivery(
-    actor: AuthenticatedActor,
-    orderId: string
-  ): Promise<{ confirmationId: string }> {
-    customerOnly(actor);
-    return this.repository.confirmDelivery(actor.userId, orderId);
   }
 
   private assertAllItemsQuoted(

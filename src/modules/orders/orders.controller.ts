@@ -16,6 +16,7 @@ import {
   ApiBody,
   ApiCreatedResponse,
   ApiOkResponse,
+  ApiResponse,
   ApiTags
 } from '@nestjs/swagger';
 
@@ -31,7 +32,6 @@ import type { AuthenticatedActor } from '../auth/actor-context.js';
 import { CreateOrderDto } from './dto/create-order.dto.js';
 import {
   CreatedOrderDto,
-  DeliveryConfirmationEnvelopeDto,
   OrderDetailEnvelopeDto,
   OrderIdParamDto,
   OrderListEnvelopeDto,
@@ -101,6 +101,11 @@ export class OrdersController {
       'Order was created idempotently, inventory was reserved, and hand-off code returned.',
     type: CreatedOrderDto
   })
+  @ApiResponse({
+    status: 402,
+    description:
+      'Wallet balance is short of the order total. The body carries details.shortfallKobo; the order is not created and no inventory is held.'
+  })
   async createOrder(
     @CurrentActor() actor: AuthenticatedActor,
     @Headers('idempotency-key') idempotencyKey: string | string[] | undefined,
@@ -120,19 +125,6 @@ export class OrdersController {
     @Param() params: OrderIdParamDto
   ): Promise<SuccessEnvelope<OrderPaymentStatus>> {
     return createSuccessEnvelope(await this.orders.getPaymentStatus(actor, params.orderId));
-  }
-
-  @Post(':orderId/confirm-delivery')
-  @RequireRoles('customer')
-  @ApiOkResponse({
-    description: 'Customer delivery confirmation.',
-    type: DeliveryConfirmationEnvelopeDto
-  })
-  async confirmDelivery(
-    @CurrentActor() actor: AuthenticatedActor,
-    @Param() params: OrderIdParamDto
-  ): Promise<SuccessEnvelope<{ confirmationId: string }>> {
-    return createSuccessEnvelope(await this.orders.confirmDelivery(actor, params.orderId));
   }
 
   @Get(':orderId')

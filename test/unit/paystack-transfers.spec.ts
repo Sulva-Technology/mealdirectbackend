@@ -74,4 +74,15 @@ describe('PaystackClient transfers', () => {
       reference: 'settlement-1'
     });
   });
+
+  it('verifies a transfer via /transfer/verify/:reference', async () => {
+    const fetchMock = mockFetchOnce({ status: 'success', transfer_code: 'TRF_999' });
+
+    const result = await client.fetchTransfer('settlement-1-a1');
+
+    expect(result.status).toBe('success');
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('https://api.paystack.test/transfer/verify/settlement-1-a1');
+    expect(init.method).toBe('GET');
+  });
 });

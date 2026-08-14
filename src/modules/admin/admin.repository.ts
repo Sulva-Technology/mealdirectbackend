@@ -38,6 +38,36 @@ export type UserDeletionSnapshot = {
 export class AdminRepository {
   constructor(@Inject(DatabaseService) private readonly database: DatabaseService) {}
 
+  async reviewVendorPayoutAccount(
+    vendorId: string,
+    status: 'approved' | 'rejected' | 'pending',
+    failureReason: string | undefined
+  ): Promise<{ id: string; adminReviewStatus: string } | undefined> {
+    const result = await sql<{ id: string; adminReviewStatus: string }>`
+      update public.vendor_payout_accounts
+        set admin_review_status = ${status},
+            failure_reason = ${failureReason ?? null}
+      where vendor_id = ${vendorId}::uuid and active
+      returning id::text as "id", admin_review_status as "adminReviewStatus"
+    `.execute(this.database.db);
+    return result.rows[0];
+  }
+
+  async reviewRiderPayoutAccount(
+    riderId: string,
+    status: 'approved' | 'rejected' | 'pending',
+    failureReason: string | undefined
+  ): Promise<{ id: string; adminReviewStatus: string } | undefined> {
+    const result = await sql<{ id: string; adminReviewStatus: string }>`
+      update public.rider_payout_accounts
+        set admin_review_status = ${status},
+            failure_reason = ${failureReason ?? null}
+      where rider_id = ${riderId}::uuid and active
+      returning id::text as "id", admin_review_status as "adminReviewStatus"
+    `.execute(this.database.db);
+    return result.rows[0];
+  }
+
   async listOrders(query: AdminOrderListQueryDto, campusId?: string): Promise<AdminListResult> {
     const limit = query.limit ?? 20;
     const result = await sql<AdminRecord>`
@@ -1085,6 +1115,137 @@ export class AdminRepository {
         and (${query.dateTo ?? null}::date is null or o.service_date <= ${query.dateTo ?? null}::date)
     `.execute(this.database.db);
     return result.rows[0] ?? {};
+  }
+
+  // Rich analytics for the admin dashboard: top-selling items, peak order hours,
+  // daily revenue trend, and customer behaviour. All campus- and date-scoped like
+  // getAnalytics. "Counted" orders exclude unpaid/expired/cancelled/refunded so the
+  // figures reflect real, revenue-bearing demand.
+  async getAnalyticsInsights(
+    query: AdminAnalyticsQueryDto,
+    campusId?: string
+  ): Promise<AdminRecord> {
+    const scope = campusId ?? query.campusId ?? null;
+    const from = query.dateFrom ?? null;
+    const to = query.dateTo ?? null;
+    const db = this.database.db;
+
+    const [topItems, ordersByHour, revenueByDay, customers, topSpenders] = await Promise.all([
+      sql<AdminRecord>`
+        select
+          oi.menu_item_id::text as "menuItemId",
+          oi.item_name as "itemName",
+          sum(oi.quantity)::integer as "quantity",
+          coalesce(sum(oi.line_total_kobo), 0)::integer as "revenueKobo"
+        from public.order_items oi
+        join public.orders o on o.id = oi.order_id
+        where (${scope}::uuid is null or o.campus_id = ${scope}::uuid)
+          and (${from}::date is null or o.service_date >= ${from}::date)
+          and (${to}::date is null or o.service_date <= ${to}::date)
+          and o.order_status in ('paid','ready','out_for_delivery','delivered','administratively_completed')
+        group by oi.menu_item_id, oi.item_name
+        order by sum(oi.quantity) desc, sum(oi.line_total_kobo) desc
+        limit 10
+      `.execute(db),
+
+      // Peak times: bucket paid orders by local (Africa/Lagos) hour of payment.
+      sql<AdminRecord>`
+        select
+          extract(hour from (o.paid_at at time zone 'Africa/Lagos'))::integer as "hour",
+          count(*)::integer as "orders",
+          coalesce(sum(o.total_kobo), 0)::integer as "revenueKobo"
+        from public.orders o
+        where (${scope}::uuid is null or o.campus_id = ${scope}::uuid)
+          and (${from}::date is null or o.service_date >= ${from}::date)
+          and (${to}::date is null or o.service_date <= ${to}::date)
+          and o.order_status in ('paid','ready','out_for_delivery','delivered','administratively_completed')
+          and o.paid_at is not null
+        group by 1
+        order by 1
+      `.execute(db),
+
+      sql<AdminRecord>`
+        select
+          o.service_date::text as "day",
+          count(*)::integer as "orders",
+          coalesce(sum(o.total_kobo), 0)::integer as "revenueKobo"
+        from public.orders o
+        where (${scope}::uuid is null or o.campus_id = ${scope}::uuid)
+          and (${from}::date is null or o.service_date >= ${from}::date)
+          and (${to}::date is null or o.service_date <= ${to}::date)
+          and o.order_status in ('paid','ready','out_for_delivery','delivered','administratively_completed')
+        group by o.service_date
+        order by o.service_date
+      `.execute(db),
+
+      // New = customer whose first-ever counted order falls on/after the window start
+      // (when no dateFrom is given, the window is open-ended and everyone counts new).
+      sql<AdminRecord>`
+        with counted as (
+          select o.customer_id, o.total_kobo
+          from public.orders o
+          where (${scope}::uuid is null or o.campus_id = ${scope}::uuid)
+            and (${from}::date is null or o.service_date >= ${from}::date)
+            and (${to}::date is null or o.service_date <= ${to}::date)
+            and o.order_status in ('paid','ready','out_for_delivery','delivered','administratively_completed')
+        ),
+        firsts as (
+          select customer_id, min(service_date) as first_service_date
+          from public.orders
+          where (${scope}::uuid is null or campus_id = ${scope}::uuid)
+            and order_status in ('paid','ready','out_for_delivery','delivered','administratively_completed')
+          group by customer_id
+        ),
+        per_customer as (
+          select c.customer_id, count(*)::integer as orders, coalesce(sum(c.total_kobo),0)::integer as spend
+          from counted c group by c.customer_id
+        )
+        select
+          count(*)::integer as "totalCustomers",
+          count(*) filter (where pc.orders >= 2)::integer as "repeatCustomers",
+          count(*) filter (where ${from}::date is null or f.first_service_date >= ${from}::date)::integer as "newCustomers",
+          coalesce(round(avg(pc.spend))::integer, 0) as "avgSpendPerCustomerKobo",
+          coalesce(sum(pc.orders), 0)::integer as "totalOrders",
+          case when coalesce(sum(pc.orders),0) = 0 then 0
+               else coalesce(round(sum(pc.spend)::numeric / sum(pc.orders))::integer, 0) end as "avgOrderValueKobo"
+        from per_customer pc
+        join firsts f on f.customer_id = pc.customer_id
+      `.execute(db),
+
+      sql<AdminRecord>`
+        select
+          o.customer_id::text as "customerId",
+          p.email::text as "email",
+          coalesce(p.display_name, 'Customer') as "displayName",
+          count(*)::integer as "orders",
+          coalesce(sum(o.total_kobo), 0)::integer as "spendKobo"
+        from public.orders o
+        left join public.profiles p on p.id = o.customer_id
+        where (${scope}::uuid is null or o.campus_id = ${scope}::uuid)
+          and (${from}::date is null or o.service_date >= ${from}::date)
+          and (${to}::date is null or o.service_date <= ${to}::date)
+          and o.order_status in ('paid','ready','out_for_delivery','delivered','administratively_completed')
+        group by o.customer_id, p.email, p.display_name
+        order by sum(o.total_kobo) desc
+        limit 5
+      `.execute(db)
+    ]);
+
+    const customerRow: AdminRecord = customers.rows[0] ?? {};
+    const totalCustomers = Number(customerRow.totalCustomers ?? 0);
+    const repeatCustomers = Number(customerRow.repeatCustomers ?? 0);
+
+    return {
+      topItems: topItems.rows,
+      ordersByHour: ordersByHour.rows,
+      revenueByDay: revenueByDay.rows,
+      customers: {
+        ...customerRow,
+        returningCustomers: repeatCustomers,
+        repeatRate: totalCustomers === 0 ? 0 : Math.round((repeatCustomers / totalCustomers) * 100),
+        topSpenders: topSpenders.rows
+      }
+    };
   }
 
   async listAuditLogs(query: AdminAuditLogQueryDto, campusId?: string): Promise<AdminListResult> {

@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   Inject,
+  NotFoundException,
   Param,
   Patch,
   Post,
@@ -22,6 +23,7 @@ import {
 
 import { createListEnvelope, createSuccessEnvelope } from '../../common/api/response.js';
 import type { ListEnvelope, SuccessEnvelope } from '../../common/api/response.js';
+import { ErrorCodes } from '../../common/errors/error-codes.js';
 import type { AuthenticatedActor } from '../auth/actor-context.js';
 import { CurrentActor } from '../auth/current-actor.decorator.js';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
@@ -30,7 +32,13 @@ import { PermissionsGuard } from '../auth/permissions.guard.js';
 import { RequireRoles } from '../auth/roles.decorator.js';
 import { RolesGuard } from '../auth/roles.guard.js';
 import { PayoutService } from '../settlements/payout.service.js';
-import type { PayoutDestination, PayoutTransferRecord } from '../settlements/payout.types.js';
+import type {
+  PayoutDestination,
+  PayoutTransferListItem,
+  PayoutTransferRecord
+} from '../settlements/payout.types.js';
+import { PayoutAccountReviewDto } from './dto/payout-review.dto.js';
+import { PayoutTransferQueryDto } from './dto/payout-transfer-query.dto.js';
 import { SendChatMessageDto } from '../chat/dto/chat.dto.js';
 import type { ChatMessage, ChatParticipant } from '../chat/chat.types.js';
 import { AdminService } from './admin.service.js';
@@ -637,7 +645,71 @@ export class AdminController {
     @CurrentActor() actor: AuthenticatedActor,
     @Param() params: UuidIdParamDto
   ): Promise<SuccessEnvelope<PayoutTransferRecord>> {
-    return createSuccessEnvelope(await this.payouts.payToSettlement(actor, params.id));
+    return createSuccessEnvelope(await this.payouts.payToSettlement(params.id, actor.userId));
+  }
+
+  @Patch('payout-accounts/vendor/:vendorId/review')
+  @RequirePermission('payouts:manage')
+  @HttpCode(200)
+  @ApiOkResponse({ description: 'Set the admin review status of a vendor payout account.' })
+  async reviewVendorPayoutAccount(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Param() params: AdminVendorIdParamDto,
+    @Body() body: PayoutAccountReviewDto
+  ): Promise<SuccessEnvelope<{ id: string; adminReviewStatus: string }>> {
+    return createSuccessEnvelope(
+      await this.admin.reviewPayoutAccount(actor, 'vendor', params.vendorId, body)
+    );
+  }
+
+  @Patch('payout-accounts/rider/:riderId/review')
+  @RequirePermission('payouts:manage')
+  @HttpCode(200)
+  @ApiOkResponse({ description: 'Set the admin review status of a rider payout account.' })
+  async reviewRiderPayoutAccount(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Param() params: AdminRiderIdParamDto,
+    @Body() body: PayoutAccountReviewDto
+  ): Promise<SuccessEnvelope<{ id: string; adminReviewStatus: string }>> {
+    return createSuccessEnvelope(
+      await this.admin.reviewPayoutAccount(actor, 'rider', params.riderId, body)
+    );
+  }
+
+  @Get('payout-transfers')
+  @RequirePermission('payouts:manage')
+  @ApiOkResponse({
+    description: 'Keyset-paginated payout transfers; filter by status or needs_admin.'
+  })
+  async listPayoutTransfers(
+    @Query() query: PayoutTransferQueryDto
+  ): Promise<ListEnvelope<PayoutTransferListItem>> {
+    const page = await this.payouts.listTransfers({
+      limit: query.limit ?? 20,
+      ...(query.status === undefined ? {} : { status: query.status }),
+      ...(query.cursor === undefined ? {} : { cursor: query.cursor })
+    });
+    return createListEnvelope(page.items, {
+      hasMore: page.hasMore,
+      limit: page.limit,
+      ...(page.nextCursor === undefined ? {} : { nextCursor: page.nextCursor })
+    });
+  }
+
+  @Get('payout-transfers/:id')
+  @RequirePermission('payouts:manage')
+  @ApiOkResponse({ description: 'A single payout transfer with its derived needs_admin flag.' })
+  async getPayoutTransfer(
+    @Param() params: UuidIdParamDto
+  ): Promise<SuccessEnvelope<PayoutTransferListItem>> {
+    const transfer = await this.payouts.getTransfer(params.id);
+    if (transfer === undefined) {
+      throw new NotFoundException({
+        code: ErrorCodes.NOT_FOUND,
+        message: 'Payout transfer was not found.'
+      });
+    }
+    return createSuccessEnvelope(transfer);
   }
 
   @Post('settlements/:id/adjustments')
@@ -780,6 +852,18 @@ export class AdminController {
     @Query() query: AdminAnalyticsQueryDto
   ): Promise<SuccessEnvelope<AdminRecord>> {
     return createSuccessEnvelope(await this.admin.getAnalytics(actor, query));
+  }
+
+  @Get('analytics/insights')
+  @ApiOkResponse({
+    description:
+      'Top-selling items, peak order hours, daily revenue trend and customer behaviour. Campus- and date-scoped.'
+  })
+  async getAnalyticsInsights(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Query() query: AdminAnalyticsQueryDto
+  ): Promise<SuccessEnvelope<AdminRecord>> {
+    return createSuccessEnvelope(await this.admin.getAnalyticsInsights(actor, query));
   }
 
   @Get('audit-logs')

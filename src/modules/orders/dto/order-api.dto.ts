@@ -3,16 +3,13 @@ import { IsIn, IsOptional } from 'class-validator';
 import { IsDatabaseUuid } from '../../../common/validation.js';
 
 const orderStatuses = [
-  'accepted',
   'administratively_completed',
   'cancelled',
-  'confirmed',
   'delivered',
   'expired',
   'out_for_delivery',
   'paid',
   'pending_payment',
-  'preparing',
   'ready',
   'refunded'
 ] as const;
@@ -234,6 +231,54 @@ export class OrderSummaryDto {
   @ApiPropertyOptional({
     nullable: true,
     type: String,
+    description: 'When the vendor marked the food ready. Null until the order reaches ready.'
+  })
+  readyAt!: string | null;
+
+  @ApiProperty({
+    type: Boolean,
+    description: 'Customer opted into delivery to a specific point (hostel room / classroom).'
+  })
+  pointDelivery!: boolean;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    type: Number,
+    description: 'Resolved rider delivery share. Null until the order is delivered.'
+  })
+  riderDeliveryShareKobo!: number | null;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    type: Number,
+    description: 'Resolved vendor delivery share. Null until the order is delivered.'
+  })
+  vendorDeliveryShareKobo!: number | null;
+
+  @ApiProperty({
+    type: Number,
+    description:
+      'Resolved platform residual (delivery fee minus rider/vendor shares). Only meaningful once deliveredOnTime is set.'
+  })
+  platformDeliveryShareKobo!: number;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    type: Boolean,
+    description: 'Whether the vendor marked the food ready on time. Null until delivered.'
+  })
+  readyOnTime!: boolean | null;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    type: Boolean,
+    description: 'Whether the order was delivered on time. Null until delivered.'
+  })
+  deliveredOnTime!: boolean | null;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    type: String,
     description: 'Delivery hand-off code to read to the rider after receiving the order.'
   })
   deliveryCode?: string | null;
@@ -346,11 +391,6 @@ export class OrderPaymentStatusDto {
   payment!: PaymentSnapshotDto | null;
 }
 
-export class DeliveryConfirmationDto {
-  @ApiProperty({ format: 'uuid', type: String })
-  confirmationId!: string;
-}
-
 export class OrderQuoteEnvelopeDto {
   @ApiProperty({ type: () => OrderQuoteDto })
   data!: OrderQuoteDto;
@@ -374,9 +414,4 @@ export class OrderDetailEnvelopeDto {
 export class OrderPaymentStatusEnvelopeDto {
   @ApiProperty({ type: () => OrderPaymentStatusDto })
   data!: OrderPaymentStatusDto;
-}
-
-export class DeliveryConfirmationEnvelopeDto {
-  @ApiProperty({ type: () => DeliveryConfirmationDto })
-  data!: DeliveryConfirmationDto;
 }

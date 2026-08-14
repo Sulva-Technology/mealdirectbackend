@@ -15,7 +15,7 @@ Two related gaps in the catalogue/order model:
 
 2. **Single-portion + takeaway items.** Items like pepper soup are sold as a single
    portion in their own takeaway pack. Today the takeaway/service fee and the "max 3 spoon
-   units per takeaway" cap are the *same* switch — `unit_types.counts_toward_spoon_limit`.
+   units per takeaway" cap are the _same_ switch — `unit_types.counts_toward_spoon_limit`.
    Pepper soup needs the takeaway fee but is not a swallow (must not consume the 3-spoon
    cap) and must be capped at quantity 1. The two behaviours have to be split.
 
@@ -81,12 +81,12 @@ New migration recreating the function from the current 17-arg version
   `23514` ("item exceeds its maximum quantity per order").
 - **Soup validation:** if `requires_soup` then require `soup_option_id` present AND
   `exists (select 1 from vendor_soup_options where id = soup_option_id and vendor_id =
-  p_vendor_id and active)`; else raise `23514`. If NOT `requires_soup`, ignore/blank any
+p_vendor_id and active)`; else raise `23514`. If NOT `requires_soup`, ignore/blank any
   soup_option_id sent.
 - **Spoon cap** stays keyed on `counts_toward_spoon_limit` (unchanged).
 - Persist `soup_option_id` into `order_items` in the insert loop.
 
-Note: the takeaway/service *fee amount* is passed in as `p_service_fee_kobo`; it is decided
+Note: the takeaway/service _fee amount_ is passed in as `p_service_fee_kobo`; it is decided
 in TypeScript (see below), so the RPC needs no fee-trigger change — only the cap, max-qty,
 and soup logic.
 
@@ -107,7 +107,7 @@ and soup logic.
   ticket shows e.g. "Eba — Egusi". Mirror on vendor and rider order reads.
 - **Catalog read**: add `requiresSoup` to `MenuItem` (catalog.types + both queries in
   `catalog.repository.ts`). Expose the vendor's active soup list — add `soupOptions:
-  {id,name}[]` to `CatalogVendor` (populated in `findVendorById`/`listVendors` or a small
+{id,name}[]` to `CatalogVendor` (populated in `findVendorById`/`listVendors` or a small
   extra query in `getVendor`) so the client can render the picker.
 
 ## Vendor / admin surface
@@ -131,12 +131,14 @@ and soup logic.
 ## Testing
 
 TS unit (`test/unit`):
+
 - `orders.service` — takeaway fee now triggers off `triggersTakeawayFee`, not spoon flag:
   a takeaway-fee item that isn't a spoon item still charges the fee; a plain item doesn't.
 - `catalog.service` — menu items expose `requiresSoup`; vendor exposes `soupOptions`.
 - `vendors.service` — soup-option CRUD; unit-type create/update carries the new flags.
 
 pgTAP (`supabase/tests/database`):
+
 - Order rejected when a `requires_soup` item has no / invalid / inactive / wrong-vendor
   soup pick; accepted and `order_items.soup_option_id` persisted when valid.
 - Order rejected when quantity exceeds a unit type's `max_quantity`; accepted at the cap.

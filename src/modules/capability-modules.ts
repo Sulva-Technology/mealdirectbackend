@@ -17,6 +17,7 @@ import { ReviewsModule } from './reviews/reviews.module.js';
 import { RidersModule } from './riders/riders.module.js';
 import { SettlementsModule } from './settlements/settlements.module.js';
 import { VendorsModule } from './vendors/vendors.module.js';
+import { WalletsModule } from './wallets/wallets.module.js';
 
 export const capabilityModules = [
   AuthModule,
@@ -28,6 +29,7 @@ export const capabilityModules = [
   InventoryModule,
   OrdersModule,
   PaymentsModule,
+  WalletsModule,
   PromotionsModule,
   BatchesModule,
   ChatModule,

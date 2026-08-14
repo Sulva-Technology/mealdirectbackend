@@ -152,3 +152,115 @@ services:
         sync: false
       - key: PAYSTACK_SECRET_KEY
         sync: false
+
+  - type: cron
+    name: meal-direct-reconcile-wallet-balances
+    runtime: docker
+    schedule: '17 2 * * *'
+    dockerfilePath: ./Dockerfile
+    dockerCommand: node dist/cron.js reconcile-wallet-balances
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_SSL
+        value: true
+      - key: DATABASE_SSL_REJECT_UNAUTHORIZED
+        value: true
+      # PEM CA for the Supabase pooler cert chain so verification can stay on.
+      - key: DATABASE_SSL_CA
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_JWT_ISSUER
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      # Required by production env validation (env.ts superRefine); the cron boots the
+      # full AppModule + parseEnvironment(), so a missing value crashes the job on start.
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: INTERNAL_OPERATIONS_TOKEN
+        sync: false
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+
+  # Automated pay-run: selects eligible settlements and initiates Paystack transfers. Runs
+  # daily after settlement generation. Gated by PAYOUTS_ENABLED (no-op when off).
+  - type: cron
+    name: meal-direct-run-payouts
+    runtime: docker
+    schedule: '30 3 * * *'
+    dockerfilePath: ./Dockerfile
+    dockerCommand: node dist/cron.js run-payouts
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_SSL
+        value: true
+      - key: DATABASE_SSL_REJECT_UNAUTHORIZED
+        value: true
+      # PEM CA for the Supabase pooler cert chain so verification can stay on.
+      - key: DATABASE_SSL_CA
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_JWT_ISSUER
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      # Required by production env validation (env.ts superRefine); the cron boots the
+      # full AppModule + parseEnvironment(), so a missing value crashes the job on start.
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: INTERNAL_OPERATIONS_TOKEN
+        sync: false
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+      - key: PAYOUTS_ENABLED
+        value: true
+
+  # Active reconcile fallback for missed/late transfer webhooks — mirrors reconcile-payments.
+  - type: cron
+    name: meal-direct-reconcile-payout-transfers
+    runtime: docker
+    schedule: '*/15 * * * *'
+    dockerfilePath: ./Dockerfile
+    dockerCommand: node dist/cron.js reconcile-payout-transfers
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_SSL
+        value: true
+      - key: DATABASE_SSL_REJECT_UNAUTHORIZED
+        value: true
+      # PEM CA for the Supabase pooler cert chain so verification can stay on.
+      - key: DATABASE_SSL_CA
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_JWT_ISSUER
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      # Required by production env validation (env.ts superRefine); the cron boots the
+      # full AppModule + parseEnvironment(), so a missing value crashes the job on start.
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: INTERNAL_OPERATIONS_TOKEN
+        sync: false
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+      - key: PAYOUTS_ENABLED
+        value: true

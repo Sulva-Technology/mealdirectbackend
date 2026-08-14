@@ -53,6 +53,13 @@ const mockOrder: OrderDetail = {
   paidAt: '2026-06-15T08:05:00.000Z',
   deliveredAt: null,
   confirmedAt: null,
+  readyAt: null,
+  pointDelivery: false,
+  riderDeliveryShareKobo: null,
+  vendorDeliveryShareKobo: null,
+  platformDeliveryShareKobo: 15000,
+  readyOnTime: null,
+  deliveredOnTime: null,
   items: [],
   latestPayment: null
 };
@@ -76,14 +83,6 @@ describe('vendor orders API', () => {
     const endpoints = [
       { method: 'GET' as const, url: '/v1/vendor/orders' },
       { method: 'GET' as const, url: '/v1/vendor/orders/44444444-4444-4444-8444-444444444444' },
-      {
-        method: 'POST' as const,
-        url: '/v1/vendor/orders/44444444-4444-4444-8444-444444444444/accept'
-      },
-      {
-        method: 'POST' as const,
-        url: '/v1/vendor/orders/44444444-4444-4444-8444-444444444444/prepare'
-      },
       {
         method: 'POST' as const,
         url: '/v1/vendor/orders/44444444-4444-4444-8444-444444444444/ready'
@@ -170,18 +169,18 @@ describe('vendor orders API', () => {
     expect(json.data).toMatchObject({ id: mockOrder.id });
   });
 
-  it('accepts order successfully with valid token', async () => {
+  it('marks order ready successfully with valid token', async () => {
     const token = await signToken('vendor');
-    vi.spyOn(service, 'acceptOrder').mockResolvedValue({ ...mockOrder, orderStatus: 'accepted' });
+    vi.spyOn(service, 'readyOrder').mockResolvedValue({ ...mockOrder, orderStatus: 'ready' });
 
     const response = await app.inject({
       method: 'POST',
-      url: `/v1/vendor/orders/${mockOrder.id}/accept`,
+      url: `/v1/vendor/orders/${mockOrder.id}/ready`,
       headers: { authorization: `Bearer ${token}` }
     });
 
     expect(response.statusCode).toBe(200);
     const json = response.json<{ data: OrderDetail }>();
-    expect(json.data.orderStatus).toBe('accepted');
+    expect(json.data.orderStatus).toBe('ready');
   });
 });

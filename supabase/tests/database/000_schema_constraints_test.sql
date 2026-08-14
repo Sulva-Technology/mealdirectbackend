@@ -37,12 +37,14 @@ select throws_ok(
   'duplicate zone codes are rejected per campus'
 );
 
+-- The admin_memberships_role_scope check (RBAC slice) constrains only super_admin: it must
+-- be global (campus_id null). A super admin bound to a campus is rejected.
 select throws_ok(
-  $$ insert into public.admin_memberships (user_id, role)
-     values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa4', 'campus_admin') $$,
+  $$ insert into public.admin_memberships (user_id, role, campus_id)
+     values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa4', 'super_admin', '11111111-1111-1111-1111-111111111111') $$,
   '23514',
   null::text,
-  'campus admin requires a campus'
+  'a super admin cannot be scoped to a campus'
 );
 
 select lives_ok(

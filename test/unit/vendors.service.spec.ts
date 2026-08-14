@@ -178,7 +178,10 @@ function createPaystack(): PaystackClientContract {
       providerPayload: {}
     }),
     fetchTransferRecipient: vi.fn(),
-    initiateTransfer: vi.fn()
+    initiateTransfer: vi.fn(),
+    fetchTransfer: vi.fn(),
+    createCustomer: vi.fn(),
+    createDedicatedAccount: vi.fn()
   };
 }
 
@@ -480,9 +483,9 @@ describe('VendorsService', () => {
       maxOrdersPerDay: null,
       unavailableDates: []
     });
-    const [, persisted] =
-      (repository.upsertStoreAvailability as ReturnType<typeof vi.fn>).mock.calls[0] ?? [];
-    expect(persisted.cutoffTime).toBe('21:00:00');
+    const persisted = (repository.upsertStoreAvailability as ReturnType<typeof vi.fn>).mock
+      .calls[0]?.[1] as { cutoffTime: string } | undefined;
+    expect(persisted?.cutoffTime).toBe('21:00:00');
   });
 
   describe('image uploads', () => {

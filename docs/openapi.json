@@ -1494,93 +1494,6 @@
         "tags": ["vendor-orders"]
       }
     },
-    "/v1/vendor/orders/{orderId}/accept": {
-      "post": {
-        "operationId": "VendorOrdersController_acceptOrder",
-        "parameters": [
-          {
-            "name": "orderId",
-            "required": true,
-            "in": "path",
-            "schema": { "format": "uuid", "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Order accepted by the vendor.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/VendorOrderDetailEnvelopeDto" }
-              }
-            }
-          },
-          "400": { "description": "Invalid order transition." },
-          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
-          "403": { "description": "Vendor role and vendor membership are required." },
-          "404": { "description": "Order not found for this vendor." }
-        },
-        "security": [{ "supabaseAuth": [] }],
-        "tags": ["vendor-orders"]
-      }
-    },
-    "/v1/vendor/orders/{orderId}/prepare": {
-      "post": {
-        "operationId": "VendorOrdersController_prepareOrder",
-        "parameters": [
-          {
-            "name": "orderId",
-            "required": true,
-            "in": "path",
-            "schema": { "format": "uuid", "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Order preparation started by the vendor.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/VendorOrderDetailEnvelopeDto" }
-              }
-            }
-          },
-          "400": { "description": "Invalid order transition." },
-          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
-          "403": { "description": "Vendor role and vendor membership are required." },
-          "404": { "description": "Order not found for this vendor." }
-        },
-        "security": [{ "supabaseAuth": [] }],
-        "tags": ["vendor-orders"]
-      }
-    },
-    "/v1/vendor/orders/{orderId}/preparing": {
-      "post": {
-        "operationId": "VendorOrdersController_preparingOrder",
-        "parameters": [
-          {
-            "name": "orderId",
-            "required": true,
-            "in": "path",
-            "schema": { "format": "uuid", "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Order preparation started by the vendor.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/VendorOrderDetailEnvelopeDto" }
-              }
-            }
-          },
-          "400": { "description": "Invalid order transition." },
-          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
-          "403": { "description": "Vendor role and vendor membership are required." },
-          "404": { "description": "Order not found for this vendor." }
-        },
-        "security": [{ "supabaseAuth": [] }],
-        "tags": ["vendor-orders"]
-      }
-    },
     "/v1/vendor/orders/{orderId}/ready": {
       "post": {
         "operationId": "VendorOrdersController_readyOrder",
@@ -2161,6 +2074,9 @@
             "content": {
               "application/json": { "schema": { "$ref": "#/components/schemas/CreatedOrderDto" } }
             }
+          },
+          "402": {
+            "description": "Wallet balance is short of the order total. The body carries details.shortfallKobo; the order is not created and no inventory is held."
           }
         },
         "security": [{ "supabaseAuth": [] }],
@@ -2177,24 +2093,6 @@
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/OrderPaymentStatusEnvelopeDto" }
-              }
-            }
-          }
-        },
-        "security": [{ "supabaseAuth": [] }],
-        "tags": ["orders"]
-      }
-    },
-    "/v1/orders/{orderId}/confirm-delivery": {
-      "post": {
-        "operationId": "OrdersController_confirmDelivery",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Customer delivery confirmation.",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/DeliveryConfirmationEnvelopeDto" }
               }
             }
           }
@@ -2987,6 +2885,149 @@
         "tags": ["admin-refunds"]
       }
     },
+    "/v1/wallet": {
+      "get": {
+        "operationId": "WalletsController_getWallet",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Wallet balance, advisory limits and the dedicated account when provisioned.",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/WalletEnvelopeDto" } }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Only customers hold wallets." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["wallet"]
+      }
+    },
+    "/v1/wallet/ledger": {
+      "get": {
+        "operationId": "WalletsController_listLedger",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Keyset-paginated wallet movements, newest first.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WalletLedgerListEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Only customers hold wallets." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["wallet"]
+      }
+    },
+    "/v1/wallet/dedicated-account": {
+      "post": {
+        "operationId": "WalletsController_requestDedicatedAccount",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Idempotently provisions or retries the customer dedicated bank account.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DedicatedAccountEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Only customers hold wallets." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["wallet"]
+      }
+    },
+    "/v1/admin/wallets": {
+      "get": {
+        "operationId": "AdminWalletsController_listWallets",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Wallets, over-cap balances first." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role and the wallets:manage permission are required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-wallets"]
+      }
+    },
+    "/v1/admin/wallets/{walletId}/ledger": {
+      "get": {
+        "operationId": "AdminWalletsController_listLedger",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Ledger for one wallet.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WalletLedgerListEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role and the wallets:manage permission are required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-wallets"]
+      }
+    },
+    "/v1/admin/wallets/{walletId}/adjust": {
+      "post": {
+        "operationId": "AdminWalletsController_adjustWallet",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Signed manual adjustment. Requires a reason and is audited." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role and the wallets:manage permission are required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-wallets"]
+      }
+    },
+    "/v1/admin/wallets/{walletId}/freeze": {
+      "post": {
+        "operationId": "AdminWalletsController_freezeWallet",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Freezes or unfreezes a wallet." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role and the wallets:manage permission are required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-wallets"]
+      }
+    },
+    "/v1/admin/settings": {
+      "get": {
+        "operationId": "AdminSettingsController_listSettings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "All platform settings. Wallet limits today, fee splits in slice B."
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role and the admin:manage permission are required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-settings"]
+      },
+      "patch": {
+        "operationId": "AdminSettingsController_updateSetting",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Updates one editable platform setting. Audited." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role and the admin:manage permission are required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-settings"]
+      }
+    },
     "/v1/promotions/validate": {
       "post": {
         "operationId": "PromotionsController_validate",
@@ -3566,6 +3607,14 @@
             "schema": { "format": "uuid", "type": "string" }
           }
         ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RiderOutForDeliveryDto" }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Order marked out for delivery.",
@@ -4626,6 +4675,60 @@
         "tags": ["admin"]
       }
     },
+    "/v1/admin/payout-accounts/vendor/{vendorId}/review": {
+      "patch": {
+        "operationId": "AdminController_reviewVendorPayoutAccount",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Set the admin review status of a vendor payout account." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/payout-accounts/rider/{riderId}/review": {
+      "patch": {
+        "operationId": "AdminController_reviewRiderPayoutAccount",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Set the admin review status of a rider payout account." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/payout-transfers": {
+      "get": {
+        "operationId": "AdminController_listPayoutTransfers",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Keyset-paginated payout transfers; filter by status or needs_admin."
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/payout-transfers/{id}": {
+      "get": {
+        "operationId": "AdminController_getPayoutTransfer",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "A single payout transfer with its derived needs_admin flag." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
     "/v1/admin/settlements/{id}/adjustments": {
       "post": {
         "operationId": "AdminController_adjustSettlement",
@@ -4799,6 +4902,21 @@
         "parameters": [],
         "responses": {
           "200": { "description": "" },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/analytics/insights": {
+      "get": {
+        "operationId": "AdminController_getAnalyticsInsights",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Top-selling items, peak order hours, daily revenue trend and customer behaviour. Campus- and date-scoped."
+          },
           "401": { "description": "Missing, invalid, or expired Supabase JWT." },
           "403": { "description": "Admin role is required." }
         },
@@ -5934,16 +6052,13 @@
           "orderStatus": {
             "type": "string",
             "enum": [
-              "accepted",
               "administratively_completed",
               "cancelled",
-              "confirmed",
               "delivered",
               "expired",
               "out_for_delivery",
               "paid",
               "pending_payment",
-              "preparing",
               "ready",
               "refunded"
             ]
@@ -5970,6 +6085,39 @@
           "paidAt": { "type": "string", "nullable": true },
           "deliveredAt": { "type": "string", "nullable": true },
           "confirmedAt": { "type": "string", "nullable": true },
+          "readyAt": {
+            "type": "string",
+            "nullable": true,
+            "description": "When the vendor marked the food ready. Null until the order reaches ready."
+          },
+          "pointDelivery": {
+            "type": "boolean",
+            "description": "Customer opted into delivery to a specific point (hostel room / classroom)."
+          },
+          "riderDeliveryShareKobo": {
+            "type": "number",
+            "nullable": true,
+            "description": "Resolved rider delivery share. Null until the order is delivered."
+          },
+          "vendorDeliveryShareKobo": {
+            "type": "number",
+            "nullable": true,
+            "description": "Resolved vendor delivery share. Null until the order is delivered."
+          },
+          "platformDeliveryShareKobo": {
+            "type": "number",
+            "description": "Resolved platform residual (delivery fee minus rider/vendor shares). Only meaningful once deliveredOnTime is set."
+          },
+          "readyOnTime": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Whether the vendor marked the food ready on time. Null until delivered."
+          },
+          "deliveredOnTime": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Whether the order was delivered on time. Null until delivered."
+          },
           "deliveryCode": {
             "type": "string",
             "nullable": true,
@@ -6010,7 +6158,9 @@
           "totalKobo",
           "currency",
           "createdAt",
-          "updatedAt"
+          "updatedAt",
+          "pointDelivery",
+          "platformDeliveryShareKobo"
         ]
       },
       "VendorOrderListEnvelopeDto": {
@@ -6105,16 +6255,13 @@
           "orderStatus": {
             "type": "string",
             "enum": [
-              "accepted",
               "administratively_completed",
               "cancelled",
-              "confirmed",
               "delivered",
               "expired",
               "out_for_delivery",
               "paid",
               "pending_payment",
-              "preparing",
               "ready",
               "refunded"
             ]
@@ -6141,6 +6288,39 @@
           "paidAt": { "type": "string", "nullable": true },
           "deliveredAt": { "type": "string", "nullable": true },
           "confirmedAt": { "type": "string", "nullable": true },
+          "readyAt": {
+            "type": "string",
+            "nullable": true,
+            "description": "When the vendor marked the food ready. Null until the order reaches ready."
+          },
+          "pointDelivery": {
+            "type": "boolean",
+            "description": "Customer opted into delivery to a specific point (hostel room / classroom)."
+          },
+          "riderDeliveryShareKobo": {
+            "type": "number",
+            "nullable": true,
+            "description": "Resolved rider delivery share. Null until the order is delivered."
+          },
+          "vendorDeliveryShareKobo": {
+            "type": "number",
+            "nullable": true,
+            "description": "Resolved vendor delivery share. Null until the order is delivered."
+          },
+          "platformDeliveryShareKobo": {
+            "type": "number",
+            "description": "Resolved platform residual (delivery fee minus rider/vendor shares). Only meaningful once deliveredOnTime is set."
+          },
+          "readyOnTime": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Whether the vendor marked the food ready on time. Null until delivered."
+          },
+          "deliveredOnTime": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Whether the order was delivered on time. Null until delivered."
+          },
           "deliveryCode": {
             "type": "string",
             "nullable": true,
@@ -6188,6 +6368,8 @@
           "currency",
           "createdAt",
           "updatedAt",
+          "pointDelivery",
+          "platformDeliveryShareKobo",
           "items"
         ]
       },
@@ -6485,6 +6667,15 @@
             "type": "boolean",
             "description": "Set true to acknowledge and accept the large-order surcharge (1.5% + ₦100) required for order totals above the standard ₦2490 cap. Orders over the cap are rejected unless this is true."
           },
+          "paymentMethod": {
+            "type": "string",
+            "description": "Funding source. 'wallet' debits the balance and creates the order already paid; 'paystack' (the default) creates a pending-payment order and returns a checkout link. A wallet order with too little balance is rejected with 402 WALLET_INSUFFICIENT_BALANCE.",
+            "enum": ["wallet", "paystack"]
+          },
+          "pointDelivery": {
+            "type": "boolean",
+            "description": "Deliver to a specific point (hostel room / classroom). Adds the point surcharge."
+          },
           "items": {
             "minItems": 1,
             "type": "array",
@@ -6588,16 +6779,13 @@
           "orderStatus": {
             "type": "string",
             "enum": [
-              "accepted",
               "administratively_completed",
               "cancelled",
-              "confirmed",
               "delivered",
               "expired",
               "out_for_delivery",
               "paid",
               "pending_payment",
-              "preparing",
               "ready",
               "refunded"
             ]
@@ -6613,16 +6801,6 @@
       "OrderPaymentStatusEnvelopeDto": {
         "type": "object",
         "properties": { "data": { "$ref": "#/components/schemas/OrderPaymentStatusDto" } },
-        "required": ["data"]
-      },
-      "DeliveryConfirmationDto": {
-        "type": "object",
-        "properties": { "confirmationId": { "type": "string", "format": "uuid" } },
-        "required": ["confirmationId"]
-      },
-      "DeliveryConfirmationEnvelopeDto": {
-        "type": "object",
-        "properties": { "data": { "$ref": "#/components/schemas/DeliveryConfirmationDto" } },
         "required": ["data"]
       },
       "OrderDetailEnvelopeDto": {
@@ -6971,6 +7149,96 @@
       "AdminRefundEnvelopeDto": {
         "type": "object",
         "properties": { "data": { "$ref": "#/components/schemas/AdminRefundRecordDto" } },
+        "required": ["data"]
+      },
+      "DedicatedAccountDto": {
+        "type": "object",
+        "properties": {
+          "accountNumber": { "type": "string", "example": "9900001111" },
+          "accountName": { "type": "string", "example": "MEALDIRECT / ADA LOVELACE" },
+          "bankName": { "type": "string", "example": "Wema Bank" },
+          "bankSlug": { "type": "string", "example": "wema-bank" },
+          "status": { "type": "string", "enum": ["pending", "active", "failed", "deactivated"] }
+        },
+        "required": ["accountNumber", "accountName", "bankName", "bankSlug", "status"]
+      },
+      "WalletDto": {
+        "type": "object",
+        "properties": {
+          "balanceKobo": {
+            "type": "number",
+            "description": "Spendable balance in kobo.",
+            "example": 250000
+          },
+          "currency": { "type": "string", "example": "NGN" },
+          "status": { "type": "string", "enum": ["active", "frozen"] },
+          "minTopupKobo": {
+            "type": "number",
+            "description": "Advisory minimum top-up in kobo. UI guidance only — an inbound transfer below this is still credited in full.",
+            "example": 50000
+          },
+          "maxBalanceKobo": {
+            "type": "number",
+            "description": "Advisory maximum balance in kobo. A credit crossing it is still applied and raises an admin flag.",
+            "example": 5000000
+          },
+          "dedicatedAccount": {
+            "description": "The customer dedicated bank account, or null while WALLET_DVA_ENABLED is off or provisioning is pending.",
+            "nullable": true,
+            "type": "object",
+            "allOf": [{ "$ref": "#/components/schemas/DedicatedAccountDto" }]
+          }
+        },
+        "required": ["balanceKobo", "currency", "status", "minTopupKobo", "maxBalanceKobo"]
+      },
+      "WalletEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/WalletDto" } },
+        "required": ["data"]
+      },
+      "WalletLedgerEntryDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "entryType": {
+            "type": "string",
+            "enum": ["topup", "order_payment", "order_refund", "adjustment", "reversal"]
+          },
+          "amountKobo": {
+            "type": "number",
+            "description": "Signed movement in kobo: credits positive, debits negative.",
+            "example": -45000
+          },
+          "balanceAfterKobo": { "type": "number", "example": 205000 },
+          "orderId": { "type": "string", "format": "uuid", "nullable": true },
+          "orderNumber": { "type": "string", "example": "MD-0104", "nullable": true },
+          "providerReference": { "type": "string", "nullable": true },
+          "reason": { "type": "string", "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["id", "entryType", "amountKobo", "balanceAfterKobo", "createdAt"]
+      },
+      "WalletLedgerListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/WalletLedgerEntryDto" }
+          },
+          "pagination": {
+            "type": "object",
+            "example": {
+              "hasMore": true,
+              "limit": 20,
+              "nextCursor": "eyJ0cyI6IjIwMjYtMDctMjciLCJpZCI6Ii4uLiJ9"
+            }
+          }
+        },
+        "required": ["data", "pagination"]
+      },
+      "DedicatedAccountEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/DedicatedAccountDto" } },
         "required": ["data"]
       },
       "BatchSummaryDto": {
@@ -7394,16 +7662,13 @@
           "orderStatus": {
             "type": "string",
             "enum": [
-              "accepted",
               "administratively_completed",
               "cancelled",
-              "confirmed",
               "delivered",
               "expired",
               "out_for_delivery",
               "paid",
               "pending_payment",
-              "preparing",
               "ready",
               "refunded"
             ]
@@ -7430,6 +7695,39 @@
           "paidAt": { "type": "string", "nullable": true },
           "deliveredAt": { "type": "string", "nullable": true },
           "confirmedAt": { "type": "string", "nullable": true },
+          "readyAt": {
+            "type": "string",
+            "nullable": true,
+            "description": "When the vendor marked the food ready. Null until the order reaches ready."
+          },
+          "pointDelivery": {
+            "type": "boolean",
+            "description": "Customer opted into delivery to a specific point (hostel room / classroom)."
+          },
+          "riderDeliveryShareKobo": {
+            "type": "number",
+            "nullable": true,
+            "description": "Resolved rider delivery share. Null until the order is delivered."
+          },
+          "vendorDeliveryShareKobo": {
+            "type": "number",
+            "nullable": true,
+            "description": "Resolved vendor delivery share. Null until the order is delivered."
+          },
+          "platformDeliveryShareKobo": {
+            "type": "number",
+            "description": "Resolved platform residual (delivery fee minus rider/vendor shares). Only meaningful once deliveredOnTime is set."
+          },
+          "readyOnTime": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Whether the vendor marked the food ready on time. Null until delivered."
+          },
+          "deliveredOnTime": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Whether the order was delivered on time. Null until delivered."
+          },
           "deliveryCode": {
             "type": "string",
             "nullable": true,
@@ -7484,6 +7782,8 @@
           "currency",
           "createdAt",
           "updatedAt",
+          "pointDelivery",
+          "platformDeliveryShareKobo",
           "items",
           "assignmentId",
           "assignmentStatus",
@@ -7494,6 +7794,16 @@
         "type": "object",
         "properties": { "data": { "$ref": "#/components/schemas/RiderOrderDetailDto" } },
         "required": ["data"]
+      },
+      "RiderOutForDeliveryDto": {
+        "type": "object",
+        "properties": {
+          "foodWasReady": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether the food was actually ready when the rider picked it up. Feeds the vendor cooking bonus."
+          }
+        }
       },
       "RiderIssueDto": {
         "type": "object",

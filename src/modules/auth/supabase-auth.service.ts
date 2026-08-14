@@ -13,9 +13,37 @@ import { createHash } from 'node:crypto';
 import { ErrorCodes } from '../../common/errors/error-codes.js';
 import { EnvService } from '../../config/env.service.js';
 import type { ActorRole } from '../../domain/authorization.js';
+import { WalletsRepository } from '../wallets/wallets.repository.js';
 import { AuthRoleGrantsRepository } from './auth-role-grants.repository.js';
 import type { AuthPortal, AuthTokensResponseDto } from './dto/auth.dto.js';
 import { VendorInvitationsRepository } from './vendor-invitations.repository.js';
+
+type WalletProvisioner = { ensureWallet: (userId: string) => Promise<string> };
+
+const walletProvisioningLogger = new Logger('WalletProvisioning');
+
+/**
+ * Queue wallet + DVA provisioning for a brand-new customer. Vendors and riders hold no
+ * wallet — they are paid by Paystack transfer through payout.service.ts. Failure is
+ * swallowed and logged: a customer who cannot be given a wallet at signup still gets one
+ * lazily on their first GET /wallet, and a wallet problem must never block a signup.
+ */
+export async function provisionWalletForRole(
+  wallets: WalletProvisioner,
+  role: string,
+  userId: string
+): Promise<void> {
+  if (role !== 'customer') return;
+  try {
+    await wallets.ensureWallet(userId);
+  } catch (error) {
+    walletProvisioningLogger.warn(
+      `Failed to provision wallet for ${userId}: ${
+        error instanceof Error ? error.message : 'unknown error'
+      }`
+    );
+  }
+}
 
 type MealDirectUserMetadata = {
   meal_direct_role?: unknown;
@@ -51,7 +79,10 @@ export class SupabaseAuthService {
     private readonly invitations?: VendorInvitationsRepository,
     @Optional()
     @Inject(AuthRoleGrantsRepository)
-    private readonly roleGrants?: AuthRoleGrantsRepository
+    private readonly roleGrants?: AuthRoleGrantsRepository,
+    @Optional()
+    @Inject(WalletsRepository)
+    private readonly wallets?: WalletsRepository
   ) {}
 
   private getAdminClient() {
@@ -242,6 +273,10 @@ export class SupabaseAuthService {
           error instanceof Error ? error.stack : String(error)
         );
       }
+    }
+
+    if (this.wallets !== undefined) {
+      await provisionWalletForRole(this.wallets, role, user.id);
     }
 
     const appMetadata = (user.app_metadata ?? {}) as MealDirectUserMetadata;

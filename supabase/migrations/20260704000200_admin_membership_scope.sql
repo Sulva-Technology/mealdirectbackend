@@ -12,4 +12,6 @@ alter table public.admin_memberships
     (role <> 'super_admin')
   );
 
+comment on table public.admin_memberships is 'Admin role grants. admin_memberships_role_scope constrains only super_admin (must be global, campus_id null); every other role may be global or scoped to one campus.';
+
 commit;

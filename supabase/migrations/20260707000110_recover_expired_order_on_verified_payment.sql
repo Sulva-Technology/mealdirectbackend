@@ -62,7 +62,7 @@ begin
 
   v_from_status := v_order.order_status;
 
-  -- Money is real, but only awaiting-payment or expired orders can be resolved into a sale.
+  -- Payment already captured, but only awaiting-payment or expired orders can be resolved into a sale.
   -- Cancelled/refunded/already-progressed orders are left for finance review instead of being
   -- silently flipped to paid.
   if v_from_status not in ('pending_payment', 'expired') then

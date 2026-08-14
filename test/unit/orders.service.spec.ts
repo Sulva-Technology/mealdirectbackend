@@ -49,14 +49,14 @@ const rider: AuthenticatedActor = {
   role: 'rider'
 };
 
-const orderInput: CreateOrderDto = {
+const orderInput = {
   campusId: '33333333-3333-4333-8333-333333333333',
   deliverySlotId: '44444444-4444-4444-8444-444444444444',
   items: [{ menuItemId: '55555555-5555-4555-8555-555555555555', quantity: 2 }],
   locationId: '66666666-6666-4666-8666-666666666666',
   serviceDate: '2026-06-15',
   vendorId: '77777777-7777-4777-8777-777777777777'
-};
+} satisfies CreateOrderDto;
 
 const quoteItem: OrderQuoteItem = {
   menuItemId: orderInput.items[0]?.menuItemId ?? '',
@@ -121,16 +121,44 @@ const orderDetail: OrderDetail = {
   paidAt: null,
   deliveredAt: null,
   confirmedAt: null,
+  readyAt: null,
+  pointDelivery: false,
+  riderDeliveryShareKobo: null,
+  vendorDeliveryShareKobo: null,
+  platformDeliveryShareKobo: 15000,
+  readyOnTime: null,
+  deliveredOnTime: null,
   items: [],
   latestPayment: null
 };
 
+// Delivered order carrying the resolved delivery split + punctuality flags Task 5 sets at
+// delivery. Proves the service surfaces these fields untouched through order reads — the type
+// no longer compiles without them (orders.types.ts OrderSummary) and the resolved values must
+// reach the caller unchanged.
+const deliveredOrderDetail: OrderDetail = {
+  ...orderDetail,
+  orderStatus: 'delivered',
+  readyAt: '2026-06-15T11:50:00.000Z',
+  pointDelivery: false,
+  riderDeliveryShareKobo: 10000,
+  vendorDeliveryShareKobo: 5000,
+  platformDeliveryShareKobo: 15000,
+  readyOnTime: true,
+  deliveredOnTime: true
+};
+
 function createRepository(): OrdersRepositoryContract {
   return {
-    confirmDelivery: vi
-      .fn()
-      .mockResolvedValue({ confirmationId: '99999999-9999-4999-8999-999999999999' }),
     createOrder: vi.fn().mockResolvedValue({
+      orderId: orderDetail.id,
+      deliveryHandoff: {
+        code: '1234',
+        instruction:
+          'Give this code to the rider only after you receive your order. The rider will ask for it to confirm delivery.'
+      }
+    }),
+    createWalletOrder: vi.fn().mockResolvedValue({
       orderId: orderDetail.id,
       deliveryHandoff: {
         code: '1234',
@@ -423,6 +451,29 @@ describe('OrdersService', () => {
     );
   });
 
+  it('forwards pointDelivery to the repository when the customer opts into point delivery', async () => {
+    const input: CreateOrderDto = { ...orderInput, pointDelivery: true };
+
+    await service.createOrder(customer, input, 'order-key');
+
+    expect(repository.createOrder).toHaveBeenCalledWith(
+      customer.userId,
+      input,
+      'order-key',
+      expect.any(String),
+      0,
+      100_000_000,
+      defaultSurchargeConfig
+    );
+    expect(vi.mocked(repository.createOrder).mock.calls[0]?.[1].pointDelivery).toBe(true);
+  });
+
+  it('leaves pointDelivery undefined on the repository call when the customer omits it', async () => {
+    await service.createOrder(customer, orderInput, 'order-key');
+
+    expect(vi.mocked(repository.createOrder).mock.calls[0]?.[1].pointDelivery).toBeUndefined();
+  });
+
   it('rejects quote items that are unavailable for the requested slot', async () => {
     vi.mocked(repository.quoteOrder).mockResolvedValue([]);
 
@@ -448,9 +499,53 @@ describe('OrdersService', () => {
     );
   });
 
-  it('confirms delivery through the database function wrapper', async () => {
-    await expect(service.confirmDelivery(customer, orderDetail.id)).resolves.toEqual({
-      confirmationId: '99999999-9999-4999-8999-999999999999'
+  it('surfaces resolved delivery shares and punctuality flags on order reads', async () => {
+    vi.mocked(repository.findCustomerOrderById).mockResolvedValue(deliveredOrderDetail);
+
+    await expect(service.getCustomerOrder(customer, deliveredOrderDetail.id)).resolves.toEqual(
+      expect.objectContaining({
+        riderDeliveryShareKobo: 10000,
+        vendorDeliveryShareKobo: 5000,
+        platformDeliveryShareKobo: 15000,
+        readyOnTime: true,
+        deliveredOnTime: true,
+        pointDelivery: false,
+        readyAt: '2026-06-15T11:50:00.000Z'
+      })
+    );
+  });
+
+  describe('wallet checkout', () => {
+    it('routes to the wallet RPC when paymentMethod is wallet', async () => {
+      const input: CreateOrderDto = { ...orderInput, paymentMethod: 'wallet' };
+
+      await service.createOrder(customer, input, 'idem-wallet-1');
+
+      expect(repository.createWalletOrder).toHaveBeenCalledTimes(1);
+      expect(repository.createOrder).not.toHaveBeenCalled();
+    });
+
+    it('keeps the existing pending-payment path as the default', async () => {
+      await service.createOrder(customer, orderInput, 'idem-card-1');
+
+      expect(repository.createOrder).toHaveBeenCalledTimes(1);
+      expect(repository.createWalletOrder).not.toHaveBeenCalled();
+    });
+
+    it('applies the same large-order guard to wallet orders', async () => {
+      // Subtotal 500000 + delivery 15000 = 515000 kobo, above the 249000 cap, surcharge
+      // not accepted — the guard must reject before either repository path is called.
+      service = new OrdersService(
+        repository,
+        createEnv({ MAX_ORDER_TOTAL_KOBO: 249000 }),
+        createPayments()
+      );
+      const input: CreateOrderDto = { ...orderInput, paymentMethod: 'wallet' };
+
+      await expect(service.createOrder(customer, input, 'idem-wallet-2')).rejects.toBeInstanceOf(
+        BadRequestException
+      );
+      expect(repository.createWalletOrder).not.toHaveBeenCalled();
     });
   });
 });

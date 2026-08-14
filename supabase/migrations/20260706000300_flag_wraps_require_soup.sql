@@ -11,4 +11,6 @@ where ut.id = mi.unit_type_id
   and ut.code = 'wraps'
   and mi.requires_soup = false;
 
+comment on column public.menu_items.requires_soup is 'When true, ordering this item requires exactly one soup selection. Wraps/swallow items are bulk-flagged true; other items default false and vendors opt in per item.';
+
 commit;
