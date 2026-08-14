@@ -11,4 +11,6 @@ alter table public.orders add constraint orders_total_formula check (
   total_kobo = food_subtotal_kobo + delivery_fee_kobo + service_fee_kobo + large_order_surcharge_kobo - discount_kobo
 );
 
+comment on column public.orders.total_kobo is 'Order total in kobo, enforced by orders_total_formula: food_subtotal + delivery_fee + service_fee + large_order_surcharge - discount.';
+
 commit;

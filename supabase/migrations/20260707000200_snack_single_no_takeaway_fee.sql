@@ -30,4 +30,6 @@ where code = 'single'
     or counts_toward_spoon_limit is distinct from false
     or max_quantity is distinct from 1);
 
+comment on column public.unit_types.triggers_takeaway_fee is 'When true, an item of this unit type pulls the flat packaging/takeaway fee. False for snacks and single (no-fee) portions.';
+
 commit;

@@ -41,6 +41,7 @@ non-participants and closed batches.
 ## Data model (new)
 
 ### `batch_chat_participants`
+
 - `batch_id uuid`, `user_id uuid`, PK (`batch_id`, `user_id`)
 - `role text` — `rider` | `customer` | `vendor`
 - `label text` — pseudonym snapshot: rider→display name; customer→`Customer N`
@@ -49,12 +50,14 @@ non-participants and closed batches.
 - `joined_at timestamptz`
 
 Population:
+
 - Customer: trigger on `delivery_batch_orders` INSERT (order → `orders.customer_id`).
 - Rider: trigger on `delivery_assignments` INSERT/UPDATE when `rider_id` set.
 - Vendor: from batch `vendor_id`, `hidden = true`.
 - Backfill for existing batches in the migration.
 
 ### `batch_messages` (Realtime-published)
+
 - `id uuid`, `batch_id uuid`
 - `sender_user_id uuid`, `sender_label text`, `sender_role text`
 - `body text` (length-capped, non-blank)
@@ -62,6 +65,7 @@ Population:
 - Index (`batch_id`, `created_at desc`, `id desc`) for keyset history.
 
 ### `notification_preferences`
+
 - Add `batch_chat_enabled boolean not null default true`.
 - Extend `notification_topic_enabled`: `batch_chat.%` → `batch_chat_enabled`.
 

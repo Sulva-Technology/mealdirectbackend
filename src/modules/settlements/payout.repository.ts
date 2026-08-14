@@ -146,10 +146,7 @@ export class PayoutRepository implements PayoutRepositoryContract {
     return result.rows[0] ?? { holdHours: 24, maxAttempts: 3 };
   }
 
-  async selectPayableSettlements(
-    guardrails: PayoutGuardrails,
-    limit: number
-  ): Promise<string[]> {
+  async selectPayableSettlements(guardrails: PayoutGuardrails, limit: number): Promise<string[]> {
     const result = await sql<{ settlementId: string }>`
       select settlement_id::text as "settlementId"
       from public.select_payable_settlements(
@@ -165,7 +162,7 @@ export class PayoutRepository implements PayoutRepositoryContract {
   async listPendingTransfers(
     graceSeconds: number,
     limit: number
-  ): Promise<Array<{ id: string; reference: string }>> {
+  ): Promise<{ id: string; reference: string }[]> {
     const result = await sql<{ id: string; reference: string }>`
       select id::text as "id", reference
       from public.payout_transfers

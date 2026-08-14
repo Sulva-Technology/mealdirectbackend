@@ -106,12 +106,10 @@ describe('SupabaseAuthService', () => {
     refreshSessionMock = vi.fn();
     resetPasswordForEmailMock = vi.fn().mockResolvedValue({ data: {}, error: null });
     resendMock = vi.fn().mockResolvedValue({ data: {}, error: null });
-    getUserMock = vi
-      .fn()
-      .mockResolvedValue({
-        data: { user: { id: userId, email: 'person@example.com' } },
-        error: null
-      });
+    getUserMock = vi.fn().mockResolvedValue({
+      data: { user: { id: userId, email: 'person@example.com' } },
+      error: null
+    });
     updateUserByIdMock = vi.fn().mockResolvedValue({ data: { user: { id: userId } }, error: null });
     vi.mocked(createClient).mockReturnValue(authClient() as never);
     grants = grantsMock();

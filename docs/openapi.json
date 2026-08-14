@@ -4909,6 +4909,21 @@
         "tags": ["admin"]
       }
     },
+    "/v1/admin/analytics/insights": {
+      "get": {
+        "operationId": "AdminController_getAnalyticsInsights",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Top-selling items, peak order hours, daily revenue trend and customer behaviour. Campus- and date-scoped."
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
     "/v1/admin/audit-logs": {
       "get": {
         "operationId": "AdminController_listAuditLogs",

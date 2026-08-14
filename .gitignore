@@ -13,3 +13,6 @@ supabase/types/database.types.ts
 
 # Generated API docs build artifacts
 docs/api-docs/
+supabase/.temp/
+supabase/.branches/
+*.stackdump

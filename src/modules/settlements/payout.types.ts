@@ -71,7 +71,7 @@ export type PayoutRepositoryContract = {
   listPendingTransfers: (
     graceSeconds: number,
     limit: number
-  ) => Promise<Array<{ id: string; reference: string }>>;
+  ) => Promise<{ id: string; reference: string }[]>;
   applyReconcile: (
     reference: string,
     status: 'success' | 'failed' | 'reversed',

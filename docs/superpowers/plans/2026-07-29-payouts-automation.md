@@ -15,14 +15,17 @@
 ## File Structure
 
 **New migrations (apply after slice-D `20260729000200`):**
+
 - `supabase/migrations/20260729000300_vendor_payout_account_review.sql` — vendor account review columns.
 - `supabase/migrations/20260729000400_payout_automation.sql` — `payout_transfers.attempt` + unique swap, `select_payable_settlements`, seeded guardrail settings.
 
 **New pgTAP tests:**
+
 - `supabase/tests/database/107_vendor_payout_review_test.sql`
 - `supabase/tests/database/108_payout_automation_test.sql`
 
 **Modified TS (application):**
+
 - `src/modules/payments/payments.types.ts` — add `PaystackFetchTransferResult` + `fetchTransfer` to the contract.
 - `src/modules/payments/paystack.client.ts` — implement `fetchTransfer`.
 - `src/modules/settlements/payout.types.ts` — attempt-aware records + new repo contract methods.
@@ -43,6 +46,7 @@
 ## Task 1: Vendor payout-account review columns (migration + pgTAP)
 
 **Files:**
+
 - Create: `supabase/migrations/20260729000300_vendor_payout_account_review.sql`
 - Create: `supabase/tests/database/107_vendor_payout_review_test.sql`
 
@@ -122,6 +126,7 @@ git commit -m "feat(payouts): vendor payout-account admin review columns"
 ## Task 2: payout_transfers multi-attempt + select_payable_settlements + guardrails (migration + pgTAP)
 
 **Files:**
+
 - Create: `supabase/migrations/20260729000400_payout_automation.sql`
 - Create: `supabase/tests/database/108_payout_automation_test.sql`
 
@@ -293,6 +298,7 @@ git commit -m "feat(payouts): multi-attempt transfers, eligibility fn, guardrail
 ## Task 3: PaystackClient.fetchTransfer
 
 **Files:**
+
 - Modify: `src/modules/payments/payments.types.ts:185` (add result type) and `:216-227` (contract)
 - Modify: `src/modules/payments/paystack.client.ts` (implement)
 - Test: `test/unit/paystack-transfers.spec.ts`
@@ -302,16 +308,16 @@ git commit -m "feat(payouts): multi-attempt transfers, eligibility fn, guardrail
 Append to `test/unit/paystack-transfers.spec.ts` inside the `describe('PaystackClient transfers')` block:
 
 ```ts
-  it('verifies a transfer via /transfer/verify/:reference', async () => {
-    const fetchMock = mockFetchOnce({ status: 'success', transfer_code: 'TRF_999' });
+it('verifies a transfer via /transfer/verify/:reference', async () => {
+  const fetchMock = mockFetchOnce({ status: 'success', transfer_code: 'TRF_999' });
 
-    const result = await client.fetchTransfer('settlement-1-a1');
+  const result = await client.fetchTransfer('settlement-1-a1');
 
-    expect(result.status).toBe('success');
-    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-    expect(url).toBe('https://api.paystack.test/transfer/verify/settlement-1-a1');
-    expect(init.method).toBe('GET');
-  });
+  expect(result.status).toBe('success');
+  const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+  expect(url).toBe('https://api.paystack.test/transfer/verify/settlement-1-a1');
+  expect(init.method).toBe('GET');
+});
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -333,7 +339,7 @@ export type PaystackFetchTransferResult = {
 And in `PaystackClientContract` (after the `initiateTransfer` line):
 
 ```ts
-  fetchTransfer: (referenceOrCode: string) => Promise<PaystackFetchTransferResult>;
+fetchTransfer: (referenceOrCode: string) => Promise<PaystackFetchTransferResult>;
 ```
 
 - [ ] **Step 4: Implement in the client**
@@ -377,6 +383,7 @@ git commit -m "feat(payouts): PaystackClient.fetchTransfer for active reconcile"
 ## Task 4: Payout types + repository (attempts, selection, reconcile, listing)
 
 **Files:**
+
 - Modify: `src/modules/settlements/payout.types.ts`
 - Modify: `src/modules/settlements/payout.repository.ts`
 
@@ -612,10 +619,7 @@ export class PayoutRepository implements PayoutRepositoryContract {
     return result.rows[0] ?? { holdHours: 24, maxAttempts: 3 };
   }
 
-  async selectPayableSettlements(
-    guardrails: PayoutGuardrails,
-    limit: number
-  ): Promise<string[]> {
+  async selectPayableSettlements(guardrails: PayoutGuardrails, limit: number): Promise<string[]> {
     const result = await sql<{ settlementId: string }>`
       select settlement_id::text as "settlementId"
       from public.select_payable_settlements(
@@ -792,6 +796,7 @@ git commit -m "feat(payouts): attempt-aware payout repository + selection/reconc
 ## Task 5: PayoutService — attempt-aware pay, runPayouts, reconcilePendingPayouts
 
 **Files:**
+
 - Modify: `src/modules/settlements/payout.service.ts`
 - Modify: `src/modules/admin/admin.controller.ts` (the `paySettlement` call site only, this task)
 - Test: `test/unit/payout.service.spec.ts`
@@ -944,9 +949,11 @@ describe('PayoutService', () => {
   it('runPayouts initiates one transfer per selected settlement and counts failures', async () => {
     const repository = makeRepository(makeContext());
     repository.selectPayableSettlements = vi.fn().mockResolvedValue([settlementId, 'other-id']);
-    repository.findPayoutContext = vi.fn().mockImplementation((id: string) =>
-      Promise.resolve(id === 'other-id' ? makeContext({ recipientCode: null }) : makeContext())
-    );
+    repository.findPayoutContext = vi
+      .fn()
+      .mockImplementation((id: string) =>
+        Promise.resolve(id === 'other-id' ? makeContext({ recipientCode: null }) : makeContext())
+      );
     const service = new PayoutService(makeEnv(true), paystack, repository);
 
     const result = await service.runPayouts();
@@ -969,11 +976,9 @@ describe('PayoutService', () => {
     const result = await service.reconcilePendingPayouts();
 
     expect(paystack.fetchTransfer).toHaveBeenCalledWith(`${settlementId}-a1`);
-    expect(repository.applyReconcile).toHaveBeenCalledWith(
-      `${settlementId}-a1`,
-      'success',
-      { ok: true }
-    );
+    expect(repository.applyReconcile).toHaveBeenCalledWith(`${settlementId}-a1`, 'success', {
+      ok: true
+    });
     expect(result).toEqual({ scanned: 1, reconciled: 1 });
   });
 
@@ -982,9 +987,7 @@ describe('PayoutService', () => {
     repository.listPendingTransfers = vi
       .fn()
       .mockResolvedValue([{ id: 't1', reference: `${settlementId}-a1` }]);
-    paystack.fetchTransfer = vi
-      .fn()
-      .mockResolvedValue({ status: 'pending', providerPayload: {} });
+    paystack.fetchTransfer = vi.fn().mockResolvedValue({ status: 'pending', providerPayload: {} });
     const service = new PayoutService(makeEnv(true), paystack, repository);
 
     const result = await service.reconcilePendingPayouts();
@@ -1136,9 +1139,7 @@ export class PayoutService {
    * initiates one transfer each. Best-effort per settlement so one bad row never blocks the
    * rest. A no-op (never touching the database) when PAYOUTS_ENABLED is off.
    */
-  async runPayouts(
-    limit = 100
-  ): Promise<{ selected: number; initiated: number; failed: number }> {
+  async runPayouts(limit = 100): Promise<{ selected: number; initiated: number; failed: number }> {
     if (!this.env.get('PAYOUTS_ENABLED')) {
       this.logger.log('runPayouts skipped: PAYOUTS_ENABLED is off');
       return { selected: 0, initiated: 0, failed: 0 };
@@ -1213,7 +1214,7 @@ export class PayoutService {
 In `src/modules/admin/admin.controller.ts`, change the `paySettlement` body (line ~640) from `this.payouts.payToSettlement(actor, params.id)` to:
 
 ```ts
-    return createSuccessEnvelope(await this.payouts.payToSettlement(params.id, actor.userId));
+return createSuccessEnvelope(await this.payouts.payToSettlement(params.id, actor.userId));
 ```
 
 - [ ] **Step 5: Run tests + typecheck**
@@ -1238,6 +1239,7 @@ git commit -m "feat(payouts): runPayouts + active reconcile + per-attempt payToS
 ## Task 6: Register cron jobs
 
 **Files:**
+
 - Modify: `src/cron.ts`
 
 - [ ] **Step 1: Add the jobs to the union and dispatcher**
@@ -1265,14 +1267,14 @@ import { PayoutService } from './modules/settlements/payout.service.js';
 Add the two dispatch branches inside `runCronJob`, after the `reconcile-wallet-balances` block (line ~70):
 
 ```ts
-    if (job === 'run-payouts') {
-      const result = await app.get(PayoutService).runPayouts();
-      logger.log({ message: 'Ran payouts', job, ...result }, 'Cron');
-    }
-    if (job === 'reconcile-payout-transfers') {
-      const result = await app.get(PayoutService).reconcilePendingPayouts();
-      logger.log({ message: 'Reconciled payout transfers', job, ...result }, 'Cron');
-    }
+if (job === 'run-payouts') {
+  const result = await app.get(PayoutService).runPayouts();
+  logger.log({ message: 'Ran payouts', job, ...result }, 'Cron');
+}
+if (job === 'reconcile-payout-transfers') {
+  const result = await app.get(PayoutService).reconcilePendingPayouts();
+  logger.log({ message: 'Reconciled payout transfers', job, ...result }, 'Cron');
+}
 ```
 
 - [ ] **Step 2: Typecheck + smoke the parser**
@@ -1292,6 +1294,7 @@ git commit -m "feat(payouts): register run-payouts and reconcile-payout-transfer
 ## Task 7: RBAC permission `payouts:manage`
 
 **Files:**
+
 - Modify: `src/domain/admin-permissions.ts`
 - Test: `test/unit/admin-permissions.spec.ts`
 
@@ -1300,15 +1303,15 @@ git commit -m "feat(payouts): register run-payouts and reconcile-payout-transfer
 Add to `test/unit/admin-permissions.spec.ts` (mirror the existing assertions style for `wallets:manage`):
 
 ```ts
-  it('grants payouts:manage to finance_admin and super_admin but not operations_admin', () => {
-    expect(resolveAdminPermissions(['finance_admin'], 'campus_admin').has('payouts:manage')).toBe(
-      true
-    );
-    expect(resolveAdminPermissions([], 'super_admin').has('payouts:manage')).toBe(true);
-    expect(
-      resolveAdminPermissions(['operations_admin'], 'campus_admin').has('payouts:manage')
-    ).toBe(false);
-  });
+it('grants payouts:manage to finance_admin and super_admin but not operations_admin', () => {
+  expect(resolveAdminPermissions(['finance_admin'], 'campus_admin').has('payouts:manage')).toBe(
+    true
+  );
+  expect(resolveAdminPermissions([], 'super_admin').has('payouts:manage')).toBe(true);
+  expect(resolveAdminPermissions(['operations_admin'], 'campus_admin').has('payouts:manage')).toBe(
+    false
+  );
+});
 ```
 
 > Confirm the exact import of `resolveAdminPermissions` at the top of the spec matches the existing file; reuse it.
@@ -1371,6 +1374,7 @@ git commit -m "feat(payouts): add payouts:manage admin permission"
 ## Task 8: Admin payout-account review endpoints (vendor + rider)
 
 **Files:**
+
 - Create: `src/modules/admin/dto/payout-review.dto.ts`
 - Modify: `src/modules/admin/admin.repository.ts` (add `reviewVendorPayoutAccount`, `reviewRiderPayoutAccount`)
 - Modify: `src/modules/admin/admin.service.ts` (add `reviewPayoutAccount`)
@@ -1432,10 +1436,7 @@ function makeService(overrides: {
   const audit = { record } as unknown as ConstructorParameters<typeof AdminService>[number];
 
   // Construct with positional args matching AdminService's constructor; unused deps are stubs.
-  const service = new AdminService(
-    repository,
-    ...([].fill(undefined) as never[])
-  ) as AdminService;
+  const service = new AdminService(repository, ...([].fill(undefined) as never[])) as AdminService;
   // Inject audit onto the instance if AdminService takes it later in the arg list.
   (service as unknown as { audit: typeof audit }).audit = audit;
   return { service, record };
@@ -1455,7 +1456,10 @@ describe('AdminService.reviewPayoutAccount', () => {
 
     expect(reviewVendorPayoutAccount).toHaveBeenCalledWith('vendor-1', 'approved', undefined);
     expect(record).toHaveBeenCalledWith(
-      expect.objectContaining({ action: 'payout_account.review', entityType: 'vendor_payout_account' })
+      expect.objectContaining({
+        action: 'payout_account.review',
+        entityType: 'vendor_payout_account'
+      })
     );
   });
 });
@@ -1614,6 +1618,7 @@ git commit -m "feat(payouts): admin approve/reject payout accounts with audit"
 ## Task 9: Admin payout-transfer list + detail endpoints
 
 **Files:**
+
 - Create: `src/modules/admin/dto/payout-transfer-query.dto.ts`
 - Modify: `src/modules/admin/admin.service.ts` (add `listPayoutTransfers`, `getPayoutTransfer`)
 - Modify: `src/modules/admin/admin.controller.ts` (two GET routes)
@@ -1780,6 +1785,7 @@ git commit -m "feat(payouts): admin payout-transfer queue list + detail"
 ## Task 10: Render crons, flip checklist, OpenAPI, full green
 
 **Files:**
+
 - Modify: `render.yaml`
 - Modify: `docs/go-live-checklist.md`
 - Regenerate: `docs/openapi.yaml` / `docs/openapi.json`
@@ -1789,73 +1795,73 @@ git commit -m "feat(payouts): admin payout-transfer queue list + detail"
 In `render.yaml`, append two cron services after `meal-direct-reconcile-wallet-balances`, copying the env-var block from `meal-direct-reconcile-payments` verbatim (it already includes `PAYSTACK_SECRET_KEY`, `PAYOUTS_ENABLED` must be added):
 
 ```yaml
-  - type: cron
-    name: meal-direct-run-payouts
-    runtime: docker
-    schedule: '30 3 * * *'  # daily, after settlement generation
-    dockerfilePath: ./Dockerfile
-    dockerCommand: node dist/cron.js run-payouts
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: DATABASE_URL
-        sync: false
-      - key: DATABASE_SSL
-        value: true
-      - key: DATABASE_SSL_REJECT_UNAUTHORIZED
-        value: true
-      - key: DATABASE_SSL_CA
-        sync: false
-      - key: SUPABASE_URL
-        sync: false
-      - key: SUPABASE_JWT_ISSUER
-        sync: false
-      - key: SUPABASE_JWT_SECRET
-        sync: false
-      - key: SUPABASE_SERVICE_ROLE_KEY
-        sync: false
-      - key: RESEND_API_KEY
-        sync: false
-      - key: INTERNAL_OPERATIONS_TOKEN
-        sync: false
-      - key: PAYSTACK_SECRET_KEY
-        sync: false
-      - key: PAYOUTS_ENABLED
-        value: true
+- type: cron
+  name: meal-direct-run-payouts
+  runtime: docker
+  schedule: '30 3 * * *' # daily, after settlement generation
+  dockerfilePath: ./Dockerfile
+  dockerCommand: node dist/cron.js run-payouts
+  envVars:
+    - key: NODE_ENV
+      value: production
+    - key: DATABASE_URL
+      sync: false
+    - key: DATABASE_SSL
+      value: true
+    - key: DATABASE_SSL_REJECT_UNAUTHORIZED
+      value: true
+    - key: DATABASE_SSL_CA
+      sync: false
+    - key: SUPABASE_URL
+      sync: false
+    - key: SUPABASE_JWT_ISSUER
+      sync: false
+    - key: SUPABASE_JWT_SECRET
+      sync: false
+    - key: SUPABASE_SERVICE_ROLE_KEY
+      sync: false
+    - key: RESEND_API_KEY
+      sync: false
+    - key: INTERNAL_OPERATIONS_TOKEN
+      sync: false
+    - key: PAYSTACK_SECRET_KEY
+      sync: false
+    - key: PAYOUTS_ENABLED
+      value: true
 
-  - type: cron
-    name: meal-direct-reconcile-payout-transfers
-    runtime: docker
-    schedule: '*/15 * * * *'  # every 15 min, like payments
-    dockerfilePath: ./Dockerfile
-    dockerCommand: node dist/cron.js reconcile-payout-transfers
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: DATABASE_URL
-        sync: false
-      - key: DATABASE_SSL
-        value: true
-      - key: DATABASE_SSL_REJECT_UNAUTHORIZED
-        value: true
-      - key: DATABASE_SSL_CA
-        sync: false
-      - key: SUPABASE_URL
-        sync: false
-      - key: SUPABASE_JWT_ISSUER
-        sync: false
-      - key: SUPABASE_JWT_SECRET
-        sync: false
-      - key: SUPABASE_SERVICE_ROLE_KEY
-        sync: false
-      - key: RESEND_API_KEY
-        sync: false
-      - key: INTERNAL_OPERATIONS_TOKEN
-        sync: false
-      - key: PAYSTACK_SECRET_KEY
-        sync: false
-      - key: PAYOUTS_ENABLED
-        value: true
+- type: cron
+  name: meal-direct-reconcile-payout-transfers
+  runtime: docker
+  schedule: '*/15 * * * *' # every 15 min, like payments
+  dockerfilePath: ./Dockerfile
+  dockerCommand: node dist/cron.js reconcile-payout-transfers
+  envVars:
+    - key: NODE_ENV
+      value: production
+    - key: DATABASE_URL
+      sync: false
+    - key: DATABASE_SSL
+      value: true
+    - key: DATABASE_SSL_REJECT_UNAUTHORIZED
+      value: true
+    - key: DATABASE_SSL_CA
+      sync: false
+    - key: SUPABASE_URL
+      sync: false
+    - key: SUPABASE_JWT_ISSUER
+      sync: false
+    - key: SUPABASE_JWT_SECRET
+      sync: false
+    - key: SUPABASE_SERVICE_ROLE_KEY
+      sync: false
+    - key: RESEND_API_KEY
+      sync: false
+    - key: INTERNAL_OPERATIONS_TOKEN
+      sync: false
+    - key: PAYSTACK_SECRET_KEY
+      sync: false
+    - key: PAYOUTS_ENABLED
+      value: true
 ```
 
 - [ ] **Step 2: Document the flip checklist**
@@ -1884,6 +1890,7 @@ git commit -m "chore(payouts): render crons, flip checklist, openapi"
 ## Task 11: Database CI + types regen (Docker host)
 
 **Files:**
+
 - Regenerate: `src/database/database.types.ts`
 
 - [ ] **Step 1: Run the DB suite on Docker**
@@ -1917,6 +1924,7 @@ Use the `superpowers:finishing-a-development-branch` skill to choose merge/PR/cl
 ## Self-Review
 
 **Spec coverage:**
+
 - Gap 1 (no automated trigger) → Task 5 `runPayouts` + Task 6 cron + Task 10 Render.
 - Gap 2 (no active reconcile) → Task 3 `fetchTransfer` + Task 5 `reconcilePendingPayouts` + Task 6/10 cron.
 - Gap 3 (no retry) → Task 2 `attempt` + unique swap; Task 4 next-attempt/per-attempt insert; Task 5 per-attempt reference.

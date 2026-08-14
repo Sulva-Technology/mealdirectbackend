@@ -12,7 +12,7 @@ whose timing logic keys on `ready` / `out_for_delivery` / `delivered` — all re
 Reduce the order lifecycle to the four customer-visible states **`paid`, `ready`,
 `out_for_delivery`, `delivered`** (plus the pre-payment and terminal states), and — the operational
 driver — **cut the vendor from three taps per order (accept → prepare → ready) to one (ready)**
-across a busy service day. This is a *real* collapse of the state machine, not a display relabel:
+across a busy service day. This is a _real_ collapse of the state machine, not a display relabel:
 the intermediate states stop existing operationally, not just visually.
 
 ## Decision: Option B (real collapse), not a display mapping
@@ -20,7 +20,7 @@ the intermediate states stop existing operationally, not just visually.
 Brainstorm considered two options:
 
 - **Option A — display mapping only.** Keep the 12-status machine; map to 4 states at the customer
-  read boundary. *Rejected:* it does nothing for the real pain — the vendor still taps three times
+  read boundary. _Rejected:_ it does nothing for the real pain — the vendor still taps three times
   per order. The point of this slice is to remove vendor work, which a display layer cannot do.
 - **Option B — real collapse (chosen).** The vendor's path becomes `paid → ready` directly;
   `accepted`, `preparing` and `confirmed` are removed from the operational flow.
@@ -29,7 +29,7 @@ Brainstorm considered two options:
 
 1. **Vendor pre-ready step: none.** `paid → ready` in one action. There is no `accept`/`preparing`
    step. Rejecting an order remains `paid → cancelled` (refund). The "new orders" worklist is simply
-   *paid and not-yet-ready*. (Chosen over keeping a single `accept` acknowledgment.)
+   _paid and not-yet-ready_. (Chosen over keeping a single `accept` acknowledgment.)
 2. **Customer confirm-receipt removed.** `delivered` becomes the terminal happy-path state. The
    `confirmed` status and the customer `POST /orders/:orderId/confirm-delivery` action are removed.
    **⚠ Flagged for sign-off** — this is a customer-facing behavior removal. It is safe because:
@@ -37,7 +37,7 @@ Brainstorm considered two options:
      `produce_vendor_daily_settlement` gate on `in ('delivered','confirmed','administratively_completed')`),
      so **no payout depends on `confirmed`**.
    - `confirmed` today gates only **reviews** (`reviewableStatuses = {confirmed,
-     administratively_completed}`). Re-gate reviews on `delivered` and the review flow is preserved,
+administratively_completed}`). Re-gate reviews on `delivered` and the review flow is preserved,
      just available one step earlier.
 
 ## Collapse strategy: soft-drop foundation, hard-drop optional
@@ -50,7 +50,7 @@ and default that references it. That is the single most invasive migration in v2
 operational outcome:
 
 - The `order_status` enum **keeps** all twelve values in the DB (the three are harmless and become
-  unreachable — nothing can transition *into* them, and no live row holds them after the data
+  unreachable — nothing can transition _into_ them, and no live row holds them after the data
   migration).
 - `transition_order_status` is rewired so `paid → ready` is the only vendor path and `delivered` is
   terminal.
@@ -79,14 +79,14 @@ pending_payment ─▶ paid ─▶ ready ─▶ out_for_delivery ─▶ delivere
 
 New transition matrix (replaces the current one in `transition_order_status` and its app mirror):
 
-| From | To |
-|---|---|
-| `pending_payment` | `paid`, `expired`, `cancelled` |
-| `paid` | `ready`, `cancelled`, `refunded` |
-| `ready` | `out_for_delivery`, `cancelled` |
-| `out_for_delivery` | `delivered`, `cancelled` |
-| `delivered` | `administratively_completed`, `refunded` |
-| `administratively_completed` | `refunded` |
+| From                         | To                                       |
+| ---------------------------- | ---------------------------------------- |
+| `pending_payment`            | `paid`, `expired`, `cancelled`           |
+| `paid`                       | `ready`, `cancelled`, `refunded`         |
+| `ready`                      | `out_for_delivery`, `cancelled`          |
+| `out_for_delivery`           | `delivered`, `cancelled`                 |
+| `delivered`                  | `administratively_completed`, `refunded` |
+| `administratively_completed` | `refunded`                               |
 
 Removed rows: `paid → accepted`, `accepted → preparing`, `preparing → ready`,
 `delivered → confirmed`, `confirmed → refunded`.
@@ -134,7 +134,7 @@ stamping is dropped (no `accepted` state); `confirmed_at` is now stamped only on
 - `src/modules/vendors/vendor-orders.service.ts` — remove `acceptOrder`, `prepareOrder`; keep
   `readyOrder`.
 - `src/modules/reviews/reviews.service.ts` — `reviewableStatuses = {delivered,
-  administratively_completed}`.
+administratively_completed}`.
 - `src/modules/admin/dto/admin.dto.ts` — drop the three from the admin status-filter enum.
 - **No customer-facing runtime mapper is needed.** Because the collapse is real at the data layer
   (dead states unreachable + in-flight rows migrated), customer reads already return only
@@ -147,7 +147,7 @@ stamping is dropped (no `accepted` state); `confirmed_at` is now stamped only on
 - Reviews specs — update eligibility to `delivered`.
 - `src/domain` order-status unit tests — new matrix.
 - `supabase/seed.sql` — `MD-SEED-PREPARING` → seed at `paid` (or drop); `MD-SEED-CONFIRMED` →
-  `delivered`. (The `delivery_assignments … 'accepted'` row is the *assignment* enum — leave it.)
+  `delivered`. (The `delivery_assignments … 'accepted'` row is the _assignment_ enum — leave it.)
 - **pgTAP:** `102_ready_at_pickup_confirm_test.sql` inserts a fixture at `'preparing'` to test
   `preparing → ready` — change to insert at `'paid'` and test `paid → ready`.
   `105_settlement_resolved_shares_test.sql` inserts at `'accepted'` — change to `'paid'`.

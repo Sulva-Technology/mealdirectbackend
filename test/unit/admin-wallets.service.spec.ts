@@ -146,25 +146,25 @@ describe('AdminWalletsService', () => {
   it('rejects a rider on-time share that exceeds the delivery base fee', async () => {
     const service = new AdminWalletsService(repository, settings, audit);
 
-    await expect(
-      service.updateSetting(admin, 'share_rider_ontime_kobo', 999_999)
-    ).rejects.toThrow(/exceed|residual|invalid/i);
+    await expect(service.updateSetting(admin, 'share_rider_ontime_kobo', 999_999)).rejects.toThrow(
+      /exceed|residual|invalid/i
+    );
   });
 
   it('rejects a point-rider share that exceeds the point surcharge', async () => {
     const service = new AdminWalletsService(repository, settings, audit);
 
-    await expect(
-      service.updateSetting(admin, 'share_point_rider_kobo', 999_999)
-    ).rejects.toThrow(/point|exceed|residual|invalid/i);
+    await expect(service.updateSetting(admin, 'share_point_rider_kobo', 999_999)).rejects.toThrow(
+      /point|exceed|residual|invalid/i
+    );
   });
 
   it('rejects a negative fee amount', async () => {
     const service = new AdminWalletsService(repository, settings, audit);
 
-    await expect(
-      service.updateSetting(admin, 'fee_delivery_base_kobo', -1)
-    ).rejects.toBeInstanceOf(BadRequestException);
+    await expect(service.updateSetting(admin, 'fee_delivery_base_kobo', -1)).rejects.toBeInstanceOf(
+      BadRequestException
+    );
   });
 
   it('rejects a non-positive vendor ready lead time', async () => {

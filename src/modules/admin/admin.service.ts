@@ -524,12 +524,7 @@ export class AdminService {
     note: string
   ): Promise<AdminRecord> {
     await this.getOrder(actor, orderId);
-    return (await this.requireSupportNotes().add(
-      'order',
-      orderId,
-      actor.userId,
-      note
-    )) as unknown as AdminRecord;
+    return await this.requireSupportNotes().add('order', orderId, actor.userId, note);
   }
 
   /** Opens an escalation on an order on behalf of an admin (support workflow). */
@@ -558,12 +553,7 @@ export class AdminService {
   /** Appends an internal admin note to a user. */
   async addUserNote(actor: AuthenticatedActor, userId: string, note: string): Promise<AdminRecord> {
     await this.getUser(actor, userId);
-    return (await this.requireSupportNotes().add(
-      'user',
-      userId,
-      actor.userId,
-      note
-    )) as unknown as AdminRecord;
+    return await this.requireSupportNotes().add('user', userId, actor.userId, note);
   }
 
   /** Opens an order-less customer-issue escalation about a user. */
@@ -808,6 +798,13 @@ export class AdminService {
 
   getAnalytics(actor: AuthenticatedActor, query: AdminAnalyticsQueryDto): Promise<AdminRecord> {
     return this.repository.getAnalytics(query, this.campusScope(actor, query.campusId));
+  }
+
+  getAnalyticsInsights(
+    actor: AuthenticatedActor,
+    query: AdminAnalyticsQueryDto
+  ): Promise<AdminRecord> {
+    return this.repository.getAnalyticsInsights(query, this.campusScope(actor, query.campusId));
   }
 
   listAuditLogs(actor: AuthenticatedActor, query: AdminAuditLogQueryDto): Promise<AdminListResult> {

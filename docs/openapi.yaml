@@ -4181,6 +4181,18 @@ paths:
         '403': *a93
       security: *a94
       tags: *a95
+  /v1/admin/analytics/insights:
+    get:
+      operationId: AdminController_getAnalyticsInsights
+      parameters: []
+      responses:
+        '200':
+          description: Top-selling items, peak order hours, daily revenue trend and
+            customer behaviour. Campus- and date-scoped.
+        '401': *a92
+        '403': *a93
+      security: *a94
+      tags: *a95
   /v1/admin/audit-logs:
     get:
       operationId: AdminController_listAuditLogs

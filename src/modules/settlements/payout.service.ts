@@ -131,9 +131,7 @@ export class PayoutService {
    * initiates one transfer each. Best-effort per settlement so one bad row never blocks the
    * rest. A no-op (never touching the database) when PAYOUTS_ENABLED is off.
    */
-  async runPayouts(
-    limit = 100
-  ): Promise<{ selected: number; initiated: number; failed: number }> {
+  async runPayouts(limit = 100): Promise<{ selected: number; initiated: number; failed: number }> {
     if (!this.env.get('PAYOUTS_ENABLED')) {
       this.logger.log('runPayouts skipped: PAYOUTS_ENABLED is off');
       return { selected: 0, initiated: 0, failed: 0 };

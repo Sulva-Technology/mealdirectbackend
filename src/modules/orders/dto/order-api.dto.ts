@@ -415,4 +415,3 @@ export class OrderPaymentStatusEnvelopeDto {
   @ApiProperty({ type: () => OrderPaymentStatusDto })
   data!: OrderPaymentStatusDto;
 }
-

@@ -8,8 +8,11 @@ select plan(4);
 insert into public.outbox_events (id, event_type, aggregate_type, aggregate_id, payload)
 values ('00000000-0000-0000-0000-0000000000aa', 'test.event', 'order', gen_random_uuid(), '{}'::jsonb);
 
+-- The seed ships its own available outbox rows, so scope the count to our event: a batch
+-- claim leases it exactly once (it still leases the seeded rows too, which is harmless here).
 select is(
-  (select count(*)::int from public.claim_outbox_batch('w1', 10)),
+  (select count(*)::int from public.claim_outbox_batch('w1', 10)
+   where id = '00000000-0000-0000-0000-0000000000aa'),
   1, 'claim_outbox_batch leases the available event'
 );
 select ok(

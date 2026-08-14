@@ -239,8 +239,8 @@ export class AdminWalletsService {
 
     if (riderOntime + vendorOntime > base) {
       throw invalidFeeSetting(
-        `share_rider_ontime_kobo (${riderOntime}) + share_vendor_ontime_kobo (${vendorOntime}) ` +
-          `would exceed fee_delivery_base_kobo (${base}), leaving the platform a negative residual.`
+        `share_rider_ontime_kobo (${String(riderOntime)}) + share_vendor_ontime_kobo (${String(vendorOntime)}) ` +
+          `would exceed fee_delivery_base_kobo (${String(base)}), leaving the platform a negative residual.`
       );
     }
 
@@ -249,8 +249,8 @@ export class AdminWalletsService {
 
     if (pointRider > pointSurcharge) {
       throw invalidFeeSetting(
-        `share_point_rider_kobo (${pointRider}) would exceed fee_point_surcharge_kobo ` +
-          `(${pointSurcharge}), leaving the platform a negative residual on point deliveries.`
+        `share_point_rider_kobo (${String(pointRider)}) would exceed fee_point_surcharge_kobo ` +
+          `(${String(pointSurcharge)}), leaving the platform a negative residual on point deliveries.`
       );
     }
   }

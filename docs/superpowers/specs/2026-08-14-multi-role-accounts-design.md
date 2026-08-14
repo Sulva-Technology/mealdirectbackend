@@ -33,12 +33,12 @@ Root cause for all four: **role is a single assigned value rather than a derived
 
 An account's roles are derived, never assigned:
 
-| Role | Source of truth |
-| --- | --- |
-| `customer` | every account, unconditionally |
-| `rider` | a `public.riders` row for the `user_id` (pending vs. verified remains a separate state) |
-| `vendor` | a `vendor_users` grant |
-| `campus_admin` / `super_admin` | an active `admin_memberships` row |
+| Role                           | Source of truth                                                                         |
+| ------------------------------ | --------------------------------------------------------------------------------------- |
+| `customer`                     | every account, unconditionally                                                          |
+| `rider`                        | a `public.riders` row for the `user_id` (pending vs. verified remains a separate state) |
+| `vendor`                       | a `vendor_users` grant                                                                  |
+| `campus_admin` / `super_admin` | an active `admin_memberships` row                                                       |
 
 On sign-in, on session-refresh-after-metadata-sync, and after any grant mutation, the backend
 recomputes the **entire** set and writes it to `app_metadata`:
@@ -70,7 +70,7 @@ signal but stops being load-bearing.
 ### 2. Guards — any held role satisfies the route
 
 `AuthenticatedActor` gains `roles: ActorRole[]`. The existing `role` field stays and now means
-*the effective role for this request*.
+_the effective role for this request_.
 
 - `SupabaseJwtService.toActor` reads `meal_direct_roles` when present, else falls back to the
   single `meal_direct_role` (wrapped in a one-element array), else `['customer']`.

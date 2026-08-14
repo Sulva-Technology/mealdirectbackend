@@ -18,20 +18,21 @@
 
 ## New transition matrix (used by Tasks 1 and 6 — keep identical)
 
-| From | To |
-|---|---|
-| `pending_payment` | `paid`, `expired`, `cancelled` |
-| `paid` | `ready`, `cancelled`, `refunded` |
-| `ready` | `out_for_delivery`, `cancelled` |
-| `out_for_delivery` | `delivered`, `cancelled` |
-| `delivered` | `administratively_completed`, `refunded` |
-| `administratively_completed` | `refunded` |
+| From                         | To                                       |
+| ---------------------------- | ---------------------------------------- |
+| `pending_payment`            | `paid`, `expired`, `cancelled`           |
+| `paid`                       | `ready`, `cancelled`, `refunded`         |
+| `ready`                      | `out_for_delivery`, `cancelled`          |
+| `out_for_delivery`           | `delivered`, `cancelled`                 |
+| `delivered`                  | `administratively_completed`, `refunded` |
+| `administratively_completed` | `refunded`                               |
 
 ---
 
 ### Task 1: Collapse the domain status mirror
 
 **Files:**
+
 - Modify: `src/domain/order-status.ts`
 - Test: `test/unit/order-status.spec.ts` (create if absent)
 
@@ -120,6 +121,7 @@ git commit -m "feat(status): collapse domain order-status mirror to four live st
 ### Task 2: Narrow the OrderStatus type unions and status enums in DTOs
 
 **Files:**
+
 - Modify: `src/modules/orders/orders.types.ts:3-15` (`OrderStatus` union)
 - Modify: `src/modules/orders/dto/order-api.dto.ts` (status enum ~lines 5-16; `confirmedAt` field ~line 232)
 - Modify: `src/modules/admin/dto/admin.dto.ts` (status enum ~lines 18-28)
@@ -166,6 +168,7 @@ git commit -m "feat(status): drop accepted/preparing/confirmed from status types
 ### Task 3: Remove vendor accept/prepare endpoints; keep ready
 
 **Files:**
+
 - Modify: `src/modules/vendors/vendor-orders.controller.ts` (remove `accept`, `prepare`, `preparing` handlers, lines ~70-116)
 - Modify: `src/modules/vendors/vendor-orders.service.ts` (remove `acceptOrder`, `prepareOrder`, lines ~58-64)
 - Test: `test/unit/vendor-orders.service.spec.ts` (remove accept/prepare cases, lines ~118-131)
@@ -207,6 +210,7 @@ git commit -m "feat(status): vendor marks ready directly, remove accept/prepare 
 ### Task 4: Remove the customer confirm-delivery action
 
 **Files:**
+
 - Modify: `src/modules/orders/orders.controller.ts` (remove `confirmDelivery` handler, lines ~131-142; drop `DeliveryConfirmationEnvelopeDto` import)
 - Modify: `src/modules/orders/orders.service.ts` (remove `confirmDelivery`, lines ~197-203)
 - Modify: `src/modules/orders/orders.repository.ts` (remove `confirmDelivery` method + its RPC call)
@@ -244,6 +248,7 @@ git commit -m "feat(status): remove customer confirm-delivery; delivered is term
 ### Task 5: Re-gate reviews on `delivered`
 
 **Files:**
+
 - Modify: `src/modules/reviews/reviews.service.ts:22` (`reviewableStatuses`)
 - Test: `test/unit/reviews.service.spec.ts` (or wherever reviews eligibility is tested)
 
@@ -288,6 +293,7 @@ git commit -m "feat(status): reviews become eligible at delivered instead of con
 ### Task 6: Migration — rewrite `transition_order_status` and drop the confirm RPC
 
 **Files:**
+
 - Create: `supabase/migrations/20260729000100_collapse_order_status_transitions.sql`
 
 - [ ] **Step 1: Write the migration**
@@ -341,6 +347,7 @@ git commit -m "feat(status): rewire transition_order_status to paid->ready, deli
 ### Task 7: Migration — migrate in-flight rows and re-gate reviews in the DB
 
 **Files:**
+
 - Create: `supabase/migrations/20260729000200_collapse_order_status_data_and_reviews.sql`
 
 - [ ] **Step 1: Confirm the DB review gates**
@@ -388,6 +395,7 @@ git commit -m "feat(status): migrate in-flight rows and re-gate reviews on deliv
 ### Task 8: Update pgTAP fixtures and add collapse coverage
 
 **Files:**
+
 - Modify: `supabase/tests/database/102_ready_at_pickup_confirm_test.sql` (fixture at `'preparing'` → `'paid'`)
 - Modify: `supabase/tests/database/105_settlement_resolved_shares_test.sql` (fixture at `'accepted'` → `'paid'`)
 - Create: `supabase/tests/database/106_order_status_collapse_test.sql`
@@ -443,6 +451,7 @@ git commit -m "test(status): pgTAP for the collapsed transition matrix and revie
 ### Task 9: Update seed data
 
 **Files:**
+
 - Modify: `supabase/seed.sql` (`MD-SEED-PREPARING` line ~288; `MD-SEED-CONFIRMED` line ~290)
 
 - [ ] **Step 1: Edit seeds**

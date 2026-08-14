@@ -55,4 +55,6 @@ begin
   end loop;
 end $$;
 
+comment on table public.order_status_history is 'Append-only audit of order status transitions (from_status -> to_status with actor and reason), including one-off repair transitions such as expired -> paid.';
+
 commit;

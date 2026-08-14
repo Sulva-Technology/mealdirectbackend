@@ -854,6 +854,18 @@ export class AdminController {
     return createSuccessEnvelope(await this.admin.getAnalytics(actor, query));
   }
 
+  @Get('analytics/insights')
+  @ApiOkResponse({
+    description:
+      'Top-selling items, peak order hours, daily revenue trend and customer behaviour. Campus- and date-scoped.'
+  })
+  async getAnalyticsInsights(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Query() query: AdminAnalyticsQueryDto
+  ): Promise<SuccessEnvelope<AdminRecord>> {
+    return createSuccessEnvelope(await this.admin.getAnalyticsInsights(actor, query));
+  }
+
   @Get('audit-logs')
   async listAuditLogs(
     @CurrentActor() actor: AuthenticatedActor,

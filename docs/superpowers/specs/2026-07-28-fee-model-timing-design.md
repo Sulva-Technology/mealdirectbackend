@@ -22,12 +22,12 @@ the numbers below are the seeded defaults.
 
 ### Customer-facing delivery fee
 
-| | Amount | Source |
-|---|---|---|
-| Base delivery fee | ₦300 (30000) | `fee_delivery_base_kobo` |
-| Point-delivery surcharge | +₦100 (10000) | `fee_point_surcharge_kobo` |
-| **Total (standard)** | **₦300** | |
-| **Total (point delivery)** | **₦400** | |
+|                            | Amount        | Source                     |
+| -------------------------- | ------------- | -------------------------- |
+| Base delivery fee          | ₦300 (30000)  | `fee_delivery_base_kobo`   |
+| Point-delivery surcharge   | +₦100 (10000) | `fee_point_surcharge_kobo` |
+| **Total (standard)**       | **₦300**      |                            |
+| **Total (point delivery)** | **₦400**      |                            |
 
 `total_kobo = food_subtotal_kobo + delivery_fee_kobo - discount_kobo` is unchanged;
 `delivery_fee_kobo` is now `base (+ surcharge if point)` instead of a flat 15000.
@@ -37,12 +37,12 @@ the numbers below are the seeded defaults.
 Every share is resolved **at the `delivered` transition**, when `ready_at`, `delivered_at`, the
 slot target time, the point flag and the rider's "was ready" confirmation are all known.
 
-| Party | On time | Missed | Config key |
-|---|---|---|---|
-| **Rider** (delivery) | ₦100 (10000) | ₦50 (5000) — forfeits ₦50 | `share_rider_ontime_kobo`, `share_rider_late_kobo` |
-| **Vendor** (cooking) | ₦50 (5000) | ₦0 — forfeits ₦50 | `share_vendor_ontime_kobo` |
-| **Point surcharge → rider** | ₦50 (5000) | ₦50 — *not* timing-gated (paid for the extra distance on any successful delivery) | `share_point_rider_kobo` |
-| **Platform** | remainder | remainder **+ all forfeits** | derived, never stored as config |
+| Party                       | On time      | Missed                                                                            | Config key                                         |
+| --------------------------- | ------------ | --------------------------------------------------------------------------------- | -------------------------------------------------- |
+| **Rider** (delivery)        | ₦100 (10000) | ₦50 (5000) — forfeits ₦50                                                         | `share_rider_ontime_kobo`, `share_rider_late_kobo` |
+| **Vendor** (cooking)        | ₦50 (5000)   | ₦0 — forfeits ₦50                                                                 | `share_vendor_ontime_kobo`                         |
+| **Point surcharge → rider** | ₦50 (5000)   | ₦50 — _not_ timing-gated (paid for the extra distance on any successful delivery) | `share_point_rider_kobo`                           |
+| **Platform**                | remainder    | remainder **+ all forfeits**                                                      | derived, never stored as config                    |
 
 **Platform is the residual.** It is never a fixed number:
 
@@ -105,18 +105,18 @@ classroom — rather than a general zone drop.
 
 ### `orders` — new / changed columns
 
-| Column | Change | Notes |
-|---|---|---|
-| `delivery_fee_kobo` | constraint relaxed | was pinned `= 15000`; now `>= 0`. New orders: base (+surcharge). |
-| `point_delivery` | **new** `boolean not null default false` | customer choice |
-| `ready_at` | **new** `timestamptz` | set on `-> ready` transition, mirroring `delivered_at` |
-| `rider_confirmed_ready` | **new** `boolean` | captured at pickup; null until then |
-| `platform_delivery_share_kobo` | repurposed | now the **resolved** variable platform residual, set at `delivered`; null until then |
-| `rider_delivery_share_kobo` | **new** `integer` | resolved at `delivered`; null until then |
-| `vendor_delivery_share_kobo` | **new** `integer` | resolved at `delivered` (cooking [+ self-delivery]); null until then |
-| `delivered_on_time` | **new** `boolean` | audit/analytics of the resolution |
-| `ready_on_time` | **new** `boolean` | audit/analytics of the resolution |
-| `fulfiller_delivery_share_kobo` | **retained** | kept for historical rows and the backfill mapping; no longer written by new orders |
+| Column                          | Change                                   | Notes                                                                                |
+| ------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------ |
+| `delivery_fee_kobo`             | constraint relaxed                       | was pinned `= 15000`; now `>= 0`. New orders: base (+surcharge).                     |
+| `point_delivery`                | **new** `boolean not null default false` | customer choice                                                                      |
+| `ready_at`                      | **new** `timestamptz`                    | set on `-> ready` transition, mirroring `delivered_at`                               |
+| `rider_confirmed_ready`         | **new** `boolean`                        | captured at pickup; null until then                                                  |
+| `platform_delivery_share_kobo`  | repurposed                               | now the **resolved** variable platform residual, set at `delivered`; null until then |
+| `rider_delivery_share_kobo`     | **new** `integer`                        | resolved at `delivered`; null until then                                             |
+| `vendor_delivery_share_kobo`    | **new** `integer`                        | resolved at `delivered` (cooking [+ self-delivery]); null until then                 |
+| `delivered_on_time`             | **new** `boolean`                        | audit/analytics of the resolution                                                    |
+| `ready_on_time`                 | **new** `boolean`                        | audit/analytics of the resolution                                                    |
+| `fulfiller_delivery_share_kobo` | **retained**                             | kept for historical rows and the backfill mapping; no longer written by new orders   |
 
 ### Constraints to relax / replace
 
@@ -124,7 +124,7 @@ classroom — rather than a general zone drop.
   checks (as of implementation the live constraint also carries `service_fee_kobo >= 0`, added by a
   later migration — preserve it) and add `>= 0` guards for the two new nullable share columns.
 - New `orders_resolved_shares_balance`: `delivered_on_time is null OR (rider + vendor + platform =
-  delivery_fee_kobo)`. **Scoped by `delivered_on_time`, not by the shares being null** — the
+delivery_fee_kobo)`. **Scoped by `delivered_on_time`, not by the shares being null** — the
   resolution function (below) sets `delivered_on_time` together with the balanced shares, while the
   historical backfill sets only rider/vendor and leaves `delivered_on_time` null. This exempts
   historical rows (whose pinned 7500/7500 need not sum to a per-zone `delivery_fee_kobo`) so the
@@ -187,7 +187,7 @@ Computes and persists, in one place:
 `delivered` — would be blocked. The trigger is amended to drop those two split columns from its
 guarded set. The customer-paid snapshot (`food_subtotal_kobo`, `delivery_fee_kobo`, `discount_kobo`,
 `total_kobo`, `currency`) and `order_number` stay immutable after payment; only the internal
-delivery-fee *split*, which v2 resolves at delivery by design, becomes mutable at that transition.
+delivery-fee _split_, which v2 resolves at delivery by design, becomes mutable at that transition.
 
 ### Settlements
 
@@ -204,9 +204,9 @@ One-time backfill of the new columns for already-terminal rows:
 
 - `delivery_fee_kobo` stays 15000 (constraint now permits it — it only requires `>= 0`).
 - `rider_delivery_share_kobo` = `fulfiller_delivery_share_kobo` where `delivery_mode =
-  'meal_direct_rider'`, else 0.
+'meal_direct_rider'`, else 0.
 - `vendor_delivery_share_kobo` = `fulfiller_delivery_share_kobo` where `delivery_mode =
-  'vendor_delivery'`, else 0.
+'vendor_delivery'`, else 0.
 - `platform_delivery_share_kobo` keeps its stored 7500 (already the residual for old rows).
 - `point_delivery` = false; `ready_at`/`ready_on_time`/`delivered_on_time`/`rider_confirmed_ready`
   = null/unknown for history.

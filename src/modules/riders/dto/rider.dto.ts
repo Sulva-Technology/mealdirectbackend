@@ -288,7 +288,8 @@ export class RiderOrderIdParamDto {
 export class RiderOutForDeliveryDto {
   @ApiPropertyOptional({
     default: true,
-    description: 'Whether the food was actually ready when the rider picked it up. Feeds the vendor cooking bonus.',
+    description:
+      'Whether the food was actually ready when the rider picked it up. Feeds the vendor cooking bonus.',
     type: Boolean
   })
   @IsOptional()

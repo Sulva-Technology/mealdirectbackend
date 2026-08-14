@@ -141,9 +141,11 @@ describe('PayoutService', () => {
   it('runPayouts initiates one transfer per selected settlement and counts failures', async () => {
     const repository = makeRepository(makeContext());
     repository.selectPayableSettlements = vi.fn().mockResolvedValue([settlementId, 'other-id']);
-    repository.findPayoutContext = vi.fn().mockImplementation((id: string) =>
-      Promise.resolve(id === 'other-id' ? makeContext({ recipientCode: null }) : makeContext())
-    );
+    repository.findPayoutContext = vi
+      .fn()
+      .mockImplementation((id: string) =>
+        Promise.resolve(id === 'other-id' ? makeContext({ recipientCode: null }) : makeContext())
+      );
     const service = new PayoutService(makeEnv(true), paystack, repository);
 
     const result = await service.runPayouts();
@@ -188,12 +190,8 @@ describe('PayoutService', () => {
 
   it('passes the configured maxAttempts into listTransfers', async () => {
     const repository = makeRepository(makeContext());
-    repository.getPayoutGuardrails = vi
-      .fn()
-      .mockResolvedValue({ holdHours: 24, maxAttempts: 5 });
-    repository.listTransfers = vi
-      .fn()
-      .mockResolvedValue({ items: [], hasMore: false, limit: 20 });
+    repository.getPayoutGuardrails = vi.fn().mockResolvedValue({ holdHours: 24, maxAttempts: 5 });
+    repository.listTransfers = vi.fn().mockResolvedValue({ items: [], hasMore: false, limit: 20 });
     const service = new PayoutService(makeEnv(true), paystack, repository);
 
     await service.listTransfers({ status: 'failed', limit: 20 });

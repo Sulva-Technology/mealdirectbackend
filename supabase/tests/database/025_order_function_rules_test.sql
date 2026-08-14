@@ -16,7 +16,8 @@ select lives_ok(
        'meal_direct_rider',
        '[{"menu_item_id":"61111111-1111-1111-1111-111111111111","quantity":3}]'::jsonb,
        'pgtap-three-spoon',
-       'hash-three-spoon'
+       'hash-three-spoon',
+       p_max_order_total_kobo => 1000000
      ) $$,
   'three spoon units are accepted'
 );
@@ -71,7 +72,10 @@ select is(
   'duplicate idempotency key returns the same order resource'
 );
 
-create temp table _non_takeaway_fee_order on commit drop as
+-- v2: the RPC stores whatever service fee the caller passes (the takeaway/eligibility
+-- gating now lives in the TypeScript fee-assembly layer, not the RPC). These two cases
+-- prove the DB persists the passed fee verbatim: zero in, zero stored.
+create temp table _zero_service_fee_order on commit drop as
 select public.create_pending_order_and_reserve_inventory(
   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1',
   '11111111-1111-1111-1111-111111111111',
@@ -81,17 +85,17 @@ select public.create_pending_order_and_reserve_inventory(
   '22111111-1111-1111-1111-111111111111',
   'meal_direct_rider',
   '[{"menu_item_id":"61111111-1111-1111-1111-111111111113","quantity":1}]'::jsonb,
-  'pgtap-non-takeaway-service-fee',
-  'hash-non-takeaway-service-fee',
+  'pgtap-zero-service-fee',
+  'hash-zero-service-fee',
   null,
   null,
-  5000
+  0
 ) as order_id;
 
 select is(
-  (select service_fee_kobo from public.orders where id = (select order_id from _non_takeaway_fee_order)),
+  (select service_fee_kobo from public.orders where id = (select order_id from _zero_service_fee_order)),
   0,
-  'non-takeaway-only order stores zero service fee'
+  'order stores the zero service fee it is given'
 );
 
 create temp table _mixed_takeaway_fee_order on commit drop as
@@ -114,7 +118,7 @@ select public.create_pending_order_and_reserve_inventory(
 select is(
   (select service_fee_kobo from public.orders where id = (select order_id from _mixed_takeaway_fee_order)),
   5000,
-  'mixed order stores one flat service fee'
+  'order stores the flat service fee it is given'
 );
 
 update public.menu_item_inventory

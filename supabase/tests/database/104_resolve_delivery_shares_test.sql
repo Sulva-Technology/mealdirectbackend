@@ -3,7 +3,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(10);
+select plan(11);
 
 -- Unit tests for resolve_order_delivery_shares, driven with fully controlled inputs so timing is
 -- deterministic and never depends on the wall clock. Fixtures reuse the same seed FK rows tests

@@ -19,6 +19,7 @@
 ## File Structure
 
 **Migrations (create, in order):**
+
 - `supabase/migrations/20260728000100_fee_settings.sql` — seed the seven fee keys.
 - `supabase/migrations/20260728000200_orders_fee_columns.sql` — new order columns, relaxed constraints, historical backfill.
 - `supabase/migrations/20260728000300_ready_at_and_pickup_confirm.sql` — set `ready_at` on ready, add `p_food_was_ready` to the transition, store `rider_confirmed_ready`.
@@ -27,6 +28,7 @@
 - `supabase/migrations/20260728000600_settlement_resolved_shares.sql` — settlements + batch earnings read resolved columns; relax `delivery_batches_earnings_formula`.
 
 **pgTAP (create, one per migration):**
+
 - `supabase/tests/075_fee_settings_test.sql`
 - `supabase/tests/076_orders_fee_columns_test.sql`
 - `supabase/tests/077_ready_at_pickup_confirm_test.sql`
@@ -35,6 +37,7 @@
 - `supabase/tests/080_settlement_resolved_shares_test.sql`
 
 **NestJS (modify):**
+
 - `src/modules/wallets/admin-wallets.service.ts` (or wherever `updateSetting` lives) — fee-config validation guard.
 - `src/modules/orders/dto/*.ts` + `orders.service.ts`/`orders.repository.ts` — `pointDelivery` on create.
 - `src/modules/riders/dto/*.ts` + `riders.service.ts`/`riders.repository.ts` — `foodWasReady` on the out-for-delivery call.
@@ -47,6 +50,7 @@
 ## Task 1: Seed fee settings
 
 **Files:**
+
 - Create: `supabase/migrations/20260728000100_fee_settings.sql`
 - Test: `supabase/tests/075_fee_settings_test.sql`
 
@@ -107,6 +111,7 @@ git commit -m "feat(fee): seed configurable delivery-fee split settings"
 ## Task 2: Order fee columns, relaxed constraints, historical backfill
 
 **Files:**
+
 - Create: `supabase/migrations/20260728000200_orders_fee_columns.sql`
 - Test: `supabase/tests/076_orders_fee_columns_test.sql`
 
@@ -221,6 +226,7 @@ git commit -m "feat(fee): add resolved-share order columns, relax fee constraint
 ## Task 3: `ready_at` on ready; rider pickup confirmation
 
 **Files:**
+
 - Create: `supabase/migrations/20260728000300_ready_at_and_pickup_confirm.sql`
 - Test: `supabase/tests/077_ready_at_pickup_confirm_test.sql`
 - Reference: `supabase/migrations/20260619000900_emit_order_lifecycle_events.sql` (current `transition_order_status`)
@@ -329,6 +335,7 @@ git commit -m "feat(fee): stamp ready_at and capture rider pickup confirmation"
 ## Task 4: Order-create fee assembly (₦300 + point surcharge)
 
 **Files:**
+
 - Create: `supabase/migrations/20260728000400_order_create_fee_assembly.sql`
 - Test: `supabase/tests/078_order_create_fee_test.sql`
 - Reference: `supabase/migrations/20260706000200_order_soup_and_max_quantity.sql` (current `create_pending_order_and_reserve_inventory`), `supabase/migrations/20260727000300_create_paid_order_from_wallet.sql`
@@ -400,6 +407,7 @@ git commit -m "feat(fee): charge ₦300 base plus ₦100 point surcharge at orde
 ## Task 5: Resolve the three shares at delivery
 
 **Files:**
+
 - Create: `supabase/migrations/20260728000500_resolve_delivery_shares.sql`
 - Test: `supabase/tests/database/104_resolve_delivery_shares_test.sql`
 
@@ -561,6 +569,7 @@ git commit -m "feat(fee): resolve rider/vendor/platform split at delivery with p
 ## Task 6: Settlements & batch earnings read resolved shares
 
 **Files:**
+
 - Create: `supabase/migrations/20260728000600_settlement_resolved_shares.sql`
 - Test: `supabase/tests/080_settlement_resolved_shares_test.sql`
 - Reference: `supabase/migrations/20260612000400_orders_payments_batches_settlements.sql` (`produce_vendor_daily_settlement`, `produce_rider_daily_settlement`, `calculate_delivery_earnings`, `finalize_delivery_batch`, `delivery_batches_earnings_formula`)
@@ -654,6 +663,7 @@ git commit -m "feat(fee): pay settlements and batch earnings from resolved deliv
 ## Task 7: Settings-update validation guard (Nest)
 
 **Files:**
+
 - Modify: `src/modules/wallets/admin-wallets.service.ts` (the `updateSetting` method) — confirm exact location first with `grep -rn "async updateSetting" src/modules/wallets`.
 - Test: colocated `*.spec.ts` for that service (follow the existing wallet service spec).
 
@@ -662,20 +672,20 @@ git commit -m "feat(fee): pay settlements and batch earnings from resolved deliv
 ```ts
 // in admin-wallets.service.spec.ts (or wherever updateSetting is tested)
 it('rejects a fee config whose shares exceed the base', async () => {
-  await expect(
-    service.updateSetting(actor, 'share_rider_ontime_kobo', 999_999),
-  ).rejects.toThrow(/exceed|residual|invalid/i);
+  await expect(service.updateSetting(actor, 'share_rider_ontime_kobo', 999_999)).rejects.toThrow(
+    /exceed|residual|invalid/i
+  );
 });
 
 it('rejects a negative fee setting', async () => {
-  await expect(
-    service.updateSetting(actor, 'fee_delivery_base_kobo', -1),
-  ).rejects.toThrow(/negative|invalid/i);
+  await expect(service.updateSetting(actor, 'fee_delivery_base_kobo', -1)).rejects.toThrow(
+    /negative|invalid/i
+  );
 });
 
 it('accepts the seeded defaults', async () => {
   await expect(
-    service.updateSetting(actor, 'share_vendor_ontime_kobo', 5_000),
+    service.updateSetting(actor, 'share_vendor_ontime_kobo', 5_000)
   ).resolves.toBeDefined();
 });
 ```
@@ -729,6 +739,7 @@ git commit -m "feat(fee): validate fee settings so the platform residual can nev
 ## Task 8: `pointDelivery` on order creation (Nest)
 
 **Files:**
+
 - Modify: `src/modules/orders/dto/*create*.ts` (create-order DTO), `orders.service.ts`, `orders.repository.ts`.
 - Test: orders service/controller spec.
 
@@ -769,6 +780,7 @@ git commit -m "feat(fee): accept pointDelivery on order creation and pass it to 
 ## Task 9: `foodWasReady` on the rider pickup call (Nest)
 
 **Files:**
+
 - Modify: `src/modules/riders/riders.service.ts:447` (the `out_for_delivery` transition), `riders.repository.ts:585` (`transitionAssignedOrderStatus`), rider pickup DTO/controller.
 - Test: riders service spec.
 
@@ -778,7 +790,9 @@ git commit -m "feat(fee): accept pointDelivery on order creation and pass it to 
 it('forwards foodWasReady=false to the transition RPC on pickup', async () => {
   const spy = vi.spyOn(repository, 'transitionAssignedOrderStatus');
   await service.markOutForDelivery(actor, orderId, { foodWasReady: false });
-  expect(spy).toHaveBeenCalledWith(expect.objectContaining({ status: 'out_for_delivery', foodWasReady: false }));
+  expect(spy).toHaveBeenCalledWith(
+    expect.objectContaining({ status: 'out_for_delivery', foodWasReady: false })
+  );
 });
 ```
 
@@ -800,6 +814,7 @@ git commit -m "feat(fee): let riders confirm food-was-ready at pickup for the ve
 ## Task 10: Expose resolved + timing fields on order reads (Nest)
 
 **Files:**
+
 - Modify: `src/modules/orders/orders.types.ts` (+ admin/rider order serializers that select order columns).
 - Test: mapping/serializer spec.
 
@@ -807,8 +822,15 @@ git commit -m "feat(fee): let riders confirm food-was-ready at pickup for the ve
 
 ```ts
 it('maps resolved share and timing fields on an order read', () => {
-  const row = { ...baseRow, rider_delivery_share_kobo: 10000, vendor_delivery_share_kobo: 5000,
-    platform_delivery_share_kobo: 15000, ready_on_time: true, delivered_on_time: true, point_delivery: false };
+  const row = {
+    ...baseRow,
+    rider_delivery_share_kobo: 10000,
+    vendor_delivery_share_kobo: 5000,
+    platform_delivery_share_kobo: 15000,
+    ready_on_time: true,
+    delivered_on_time: true,
+    point_delivery: false
+  };
   const dto = mapOrder(row);
   expect(dto.riderDeliveryShareKobo).toBe(10000);
   expect(dto.deliveredOnTime).toBe(true);
@@ -864,4 +886,4 @@ git commit -m "docs(fee): regenerate OpenAPI for the ₦300 fee model"
 
 - **Spec coverage:** ₦300 base + point surcharge (T4), configurable shares (T1), timing gates + rider confirmation (T3+T5), platform residual + forfeits (T5), vendor_delivery both-shares (T5), settlements + batch (T6), settings guard (T7), point-delivery order field (T2+T8), analytics fields (T10), backfill (T2). All spec sections map to a task.
 - **Type consistency:** RPC arg `p_point_delivery` / `p_food_was_ready` used consistently across T3–T9; DTO names `pointDelivery` / `foodWasReady`; resolved columns `rider_delivery_share_kobo` / `vendor_delivery_share_kobo` / `platform_delivery_share_kobo` consistent T2→T10.
-- **Known follow-through for the executor:** T3, T4, T5, T6 each require reading the *current* function body and re-pasting it whole with the marked edits — the plan names every edit but the executor must copy the surrounding body verbatim (these functions are long and their full text is in the referenced migrations). Do not ship a function that drops existing logic.
+- **Known follow-through for the executor:** T3, T4, T5, T6 each require reading the _current_ function body and re-pasting it whole with the marked edits — the plan names every edit but the executor must copy the surrounding body verbatim (these functions are long and their full text is in the referenced migrations). Do not ship a function that drops existing logic.

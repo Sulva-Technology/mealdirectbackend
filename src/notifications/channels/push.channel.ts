@@ -58,13 +58,12 @@ export class PushChannel {
     let transientError: unknown;
     for (const [index, result] of results.entries()) {
       if (result.status === 'fulfilled') continue;
+      const token = tokens[index];
+      if (token === undefined) continue;
       if (isInvalidTokenError(result.reason)) {
         // Permanent: disable the dead token so it stops poisoning future events.
         const code = (result.reason as { code?: unknown }).code;
-        await this.tokens.removeToken(
-          tokens[index] as string,
-          typeof code === 'string' ? code : 'invalid-token'
-        );
+        await this.tokens.removeToken(token, typeof code === 'string' ? code : 'invalid-token');
         continue;
       }
       // Transient (network, quota, auth): remember it so the event retries.
@@ -72,7 +71,11 @@ export class PushChannel {
     }
 
     if (transientError !== undefined) {
-      throw transientError instanceof Error ? transientError : new Error(String(transientError));
+      throw transientError instanceof Error
+        ? transientError
+        : new Error(
+            typeof transientError === 'string' ? transientError : 'push channel transient failure'
+          );
     }
   }
 }

@@ -3,7 +3,6 @@ export type ErrorReporter = {
 };
 
 export class NoopErrorReporter implements ErrorReporter {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   captureException(_error: unknown): void {
     // Intentionally does nothing when Sentry is not configured.
   }

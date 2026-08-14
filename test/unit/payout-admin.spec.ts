@@ -65,7 +65,7 @@ describe('AdminService.reviewPayoutAccount', () => {
     expect(record).toHaveBeenCalledWith(
       expect.objectContaining({
         entityType: 'rider_payout_account',
-        metadata: expect.objectContaining({ failureReason: 'name mismatch' })
+        metadata: expect.objectContaining({ failureReason: 'name mismatch' }) as object
       })
     );
   });

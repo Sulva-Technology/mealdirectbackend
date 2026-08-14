@@ -11,4 +11,6 @@ values
   ('vendor_ready_lead_minutes', to_jsonb(10), 'Minutes before the slot target the vendor must mark food ready to earn the cooking share.')
 on conflict (key) do nothing;
 
+comment on table public.platform_settings is 'Key/value platform configuration. Includes the v2 fee model (fee_delivery_base_kobo, fee_point_surcharge_kobo) and the delivery-share incentive split (share_rider_ontime_kobo, share_rider_late_kobo, share_vendor_ontime_kobo, share_point_rider_kobo, vendor_ready_lead_minutes).';
+
 commit;

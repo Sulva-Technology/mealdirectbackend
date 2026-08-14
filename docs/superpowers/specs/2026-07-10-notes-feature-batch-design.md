@@ -6,17 +6,17 @@ require new implementation. See the status table for what already exists.
 
 ## Status of all 9 notes
 
-| # | Note | Status | Action |
-|---|------|--------|--------|
-| 1 | Reduce order closure 1hr → 30min | **Exists** (config) | Data update: `update public.delivery_slots set cutoff_minutes = 30 where cutoff_minutes <> 30;` Column default is already 30. Apply by hand via psql per hosted-db-deploy-model. |
-| 2 | Admin add item quantity without going to cafe | **Needs impl** | §1 below |
-| 3 | Add room numbers | **Done** | `room_number` col + create-order flow (migration 20260709000100). |
-| 4 | Live chat | **Needs impl** (new) | §4 — founder wants 1-on-1 customer↔admin support chat, separate from the existing batch chat. |
-| 5 | Orders show customer's number | **Done 2026-07-10** | `customerPhone`/`customerDisplayName` added to vendor + admin order queries and DTOs. |
-| 6 | Orders have room number | **Done** | Same as #3. |
-| 7 | See difference between charges and sulvatech funds | **Needs impl** | §3 below |
-| 8 | Campus admin acct for everybody | **Exists** (mechanism) | `campus_admin` role + `grantMembership` already implemented. Operational: provision one campus_admin per campus. No code. |
-| 9 | Push notifications for riders | **Needs impl** | §2 below |
+| #   | Note                                               | Status                 | Action                                                                                                                                                                           |
+| --- | -------------------------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Reduce order closure 1hr → 30min                   | **Exists** (config)    | Data update: `update public.delivery_slots set cutoff_minutes = 30 where cutoff_minutes <> 30;` Column default is already 30. Apply by hand via psql per hosted-db-deploy-model. |
+| 2   | Admin add item quantity without going to cafe      | **Needs impl**         | §1 below                                                                                                                                                                         |
+| 3   | Add room numbers                                   | **Done**               | `room_number` col + create-order flow (migration 20260709000100).                                                                                                                |
+| 4   | Live chat                                          | **Needs impl** (new)   | §4 — founder wants 1-on-1 customer↔admin support chat, separate from the existing batch chat.                                                                                    |
+| 5   | Orders show customer's number                      | **Done 2026-07-10**    | `customerPhone`/`customerDisplayName` added to vendor + admin order queries and DTOs.                                                                                            |
+| 6   | Orders have room number                            | **Done**               | Same as #3.                                                                                                                                                                      |
+| 7   | See difference between charges and sulvatech funds | **Needs impl**         | §3 below                                                                                                                                                                         |
+| 8   | Campus admin acct for everybody                    | **Exists** (mechanism) | `campus_admin` role + `grantMembership` already implemented. Operational: provision one campus_admin per campus. No code.                                                        |
+| 9   | Push notifications for riders                      | **Needs impl**         | §2 below                                                                                                                                                                         |
 
 Implementation items in this spec: **§1 admin inventory adjust · §2 rider push · §3 funds
 dashboard · §4 support chat.** Each is independent and gets its own implementation plan.
@@ -104,6 +104,7 @@ per-beneficiary payables (`previewSettlement` aggregates food subtotal, delivery
 service fee, refunds). No single view expresses "customer charges vs platform net take."
 
 **Definitions (to confirm with founder):**
+
 - **Total customer charges** = sum of `total_kobo` for paid orders in scope.
 - **Vendor payouts** = food subtotal + vendor delivery share (vendor_delivery mode).
 - **Rider payouts** = rider delivery earnings.
@@ -117,7 +118,7 @@ service fee, refunds). No single view expresses "customer charges vs platform ne
   guarded `@RequireRoles('campus_admin','super_admin')`, campus_admin scoped to own campus.
 - Single aggregation query over paid/settled orders in the window: returns
   `{ grossChargesKobo, vendorPayoutsKobo, riderPayoutsKobo, platformNetKobo,
-  serviceFeesKobo, surchargeKobo, refundsKobo, orderCount }`.
+serviceFeesKobo, surchargeKobo, refundsKobo, orderCount }`.
 - Read-only, no schema change. Reuse the fee columns already on `orders`.
 
 **Files:** `src/modules/admin/*` (controller route + service + repository query), new DTO,

@@ -4,7 +4,7 @@
 
 **Goal:** Give every customer a wallet with a Paystack dedicated virtual account (DVA), fundable by bank transfer, spendable on orders in a single atomic transaction, refundable to balance, with admin oversight and nightly reconciliation.
 
-**Architecture:** A new `wallets` NestJS module owns customer + admin wallet HTTP surface. Money movement lives in Postgres: an append-only `wallet_ledger_entries` table is the source of truth, `wallets.balance_kobo` is a cached projection maintained by `security definer` plpgsql functions, and a new `create_paid_order_from_wallet` RPC does inventory reservation, wallet debit, order insert-at-`paid` and inventory sell-through in one transaction under row locks. Inbound top-ups arrive as Paystack `charge.success` webhooks whose `authorization.channel = 'dedicated_nuban'`, routed by a new domain event type *before* the existing order-reference lookup. DVA provisioning is asynchronous through the existing outbox worker and gated by `WALLET_DVA_ENABLED`.
+**Architecture:** A new `wallets` NestJS module owns customer + admin wallet HTTP surface. Money movement lives in Postgres: an append-only `wallet_ledger_entries` table is the source of truth, `wallets.balance_kobo` is a cached projection maintained by `security definer` plpgsql functions, and a new `create_paid_order_from_wallet` RPC does inventory reservation, wallet debit, order insert-at-`paid` and inventory sell-through in one transaction under row locks. Inbound top-ups arrive as Paystack `charge.success` webhooks whose `authorization.channel = 'dedicated_nuban'`, routed by a new domain event type _before_ the existing order-reference lookup. DVA provisioning is asynchronous through the existing outbox worker and gated by `WALLET_DVA_ENABLED`.
 
 **Tech Stack:** NestJS 11 (Fastify), Kysely raw `sql` tags over `pg`, Postgres/Supabase migrations in `supabase/migrations`, pgTAP for database tests, Vitest for unit/integration, class-validator DTOs, `@nestjs/swagger` for OpenAPI.
 
@@ -26,38 +26,38 @@ These are five places where `docs/superpowers/specs/2026-07-25-wallet-dedicated-
 
 ## Sequencing constraint: enum values
 
-Postgres forbids *using* an enum value added by `alter type ... add value` inside the same transaction that added it. Every migration file in this repo is wrapped in its own `begin; ... commit;`. Therefore **Task 2 does nothing but add enum values**, and no later statement in that file references them. Tasks 3+ live in separate files and may use them freely.
+Postgres forbids _using_ an enum value added by `alter type ... add value` inside the same transaction that added it. Every migration file in this repo is wrapped in its own `begin; ... commit;`. Therefore **Task 2 does nothing but add enum values**, and no later statement in that file references them. Tasks 3+ live in separate files and may use them freely.
 
 ## File structure
 
 **Migrations (new, applied in filename order):**
 
-| File | Responsibility |
-|---|---|
-| `supabase/migrations/20260727000100_platform_settings.sql` | Generic `platform_settings` key/value table, seeds, `platform_setting_int()` reader |
-| `supabase/migrations/20260727000150_wallet_enum_values.sql` | `alter type` only: `payment_provider += 'wallet'`, `payment_reconciliation_issue_type += 'wallet_balance_drift','wallet_balance_cap_exceeded'` |
-| `supabase/migrations/20260727000200_wallets.sql` | Wallet enums, three tables, append-only trigger, `orders.payment_method`, `ensure_customer_wallet()`, `append_wallet_ledger_entry()`, `credit_wallet_topup()` |
-| `supabase/migrations/20260727000300_create_paid_order_from_wallet.sql` | The atomic checkout RPC |
-| `supabase/migrations/20260727000400_wallet_reconciliation.sql` | `detect_wallet_balance_drift()`, `admin_adjust_wallet()`, `set_wallet_status()`, `refund_order_to_wallet()` |
+| File                                                                   | Responsibility                                                                                                                                                |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `supabase/migrations/20260727000100_platform_settings.sql`             | Generic `platform_settings` key/value table, seeds, `platform_setting_int()` reader                                                                           |
+| `supabase/migrations/20260727000150_wallet_enum_values.sql`            | `alter type` only: `payment_provider += 'wallet'`, `payment_reconciliation_issue_type += 'wallet_balance_drift','wallet_balance_cap_exceeded'`                |
+| `supabase/migrations/20260727000200_wallets.sql`                       | Wallet enums, three tables, append-only trigger, `orders.payment_method`, `ensure_customer_wallet()`, `append_wallet_ledger_entry()`, `credit_wallet_topup()` |
+| `supabase/migrations/20260727000300_create_paid_order_from_wallet.sql` | The atomic checkout RPC                                                                                                                                       |
+| `supabase/migrations/20260727000400_wallet_reconciliation.sql`         | `detect_wallet_balance_drift()`, `admin_adjust_wallet()`, `set_wallet_status()`, `refund_order_to_wallet()`                                                   |
 
 **TypeScript (new):**
 
-| File | Responsibility |
-|---|---|
-| `src/domain/wallet.ts` | Pure wallet types + SQLSTATE constants shared by repo/service/error mapping |
-| `src/modules/wallets/wallets.types.ts` | Repository/service contracts and record shapes |
-| `src/modules/wallets/wallets.repository.ts` | All wallet SQL (customer + admin) |
-| `src/modules/wallets/wallets.service.ts` | Customer wallet use-cases, DVA gating |
-| `src/modules/wallets/admin-wallets.service.ts` | Admin oversight use-cases + audit |
-| `src/modules/wallets/platform-settings.repository.ts` | `platform_settings` read/write |
-| `src/modules/wallets/wallets.controller.ts` | `GET /wallet`, `GET /wallet/ledger`, `POST /wallet/dedicated-account` |
-| `src/modules/wallets/admin-wallets.controller.ts` | `/admin/wallets*` |
-| `src/modules/wallets/admin-settings.controller.ts` | `/admin/settings` |
-| `src/modules/wallets/dto/wallet.dto.ts` | Customer DTOs + response schemas |
-| `src/modules/wallets/dto/admin-wallet.dto.ts` | Admin DTOs |
-| `src/modules/wallets/wallets.module.ts` | Wiring |
-| `src/worker/handlers/wallet-dva.handler.ts` | Drains `wallet.dva_requested` → Paystack customer + DVA |
-| `scripts/backfill-wallets.ts` | Cutover backfill for existing customers |
+| File                                                  | Responsibility                                                              |
+| ----------------------------------------------------- | --------------------------------------------------------------------------- |
+| `src/domain/wallet.ts`                                | Pure wallet types + SQLSTATE constants shared by repo/service/error mapping |
+| `src/modules/wallets/wallets.types.ts`                | Repository/service contracts and record shapes                              |
+| `src/modules/wallets/wallets.repository.ts`           | All wallet SQL (customer + admin)                                           |
+| `src/modules/wallets/wallets.service.ts`              | Customer wallet use-cases, DVA gating                                       |
+| `src/modules/wallets/admin-wallets.service.ts`        | Admin oversight use-cases + audit                                           |
+| `src/modules/wallets/platform-settings.repository.ts` | `platform_settings` read/write                                              |
+| `src/modules/wallets/wallets.controller.ts`           | `GET /wallet`, `GET /wallet/ledger`, `POST /wallet/dedicated-account`       |
+| `src/modules/wallets/admin-wallets.controller.ts`     | `/admin/wallets*`                                                           |
+| `src/modules/wallets/admin-settings.controller.ts`    | `/admin/settings`                                                           |
+| `src/modules/wallets/dto/wallet.dto.ts`               | Customer DTOs + response schemas                                            |
+| `src/modules/wallets/dto/admin-wallet.dto.ts`         | Admin DTOs                                                                  |
+| `src/modules/wallets/wallets.module.ts`               | Wiring                                                                      |
+| `src/worker/handlers/wallet-dva.handler.ts`           | Drains `wallet.dva_requested` → Paystack customer + DVA                     |
+| `scripts/backfill-wallets.ts`                         | Cutover backfill for existing customers                                     |
 
 **TypeScript (modified):**
 
@@ -68,6 +68,7 @@ Postgres forbids *using* an enum value added by `alter type ... add value` insid
 ## Task 1: `platform_settings` table
 
 **Files:**
+
 - Create: `supabase/migrations/20260727000100_platform_settings.sql`
 - Test: `supabase/tests/database/070_platform_settings_test.sql`
 
@@ -186,6 +187,7 @@ git add supabase/migrations/20260727000100_platform_settings.sql supabase/tests/
 ## Task 2: Enum values (isolated migration)
 
 **Files:**
+
 - Create: `supabase/migrations/20260727000150_wallet_enum_values.sql`
 - Test: `supabase/tests/database/071_wallet_enum_values_test.sql`
 
@@ -260,6 +262,7 @@ git add supabase/migrations/20260727000150_wallet_enum_values.sql supabase/tests
 ## Task 3: Wallet tables, ledger and top-up crediting
 
 **Files:**
+
 - Create: `supabase/migrations/20260727000200_wallets.sql`
 - Test: `supabase/tests/database/072_wallet_ledger_test.sql`
 
@@ -668,6 +671,7 @@ The atomic checkout. Body is the reservation logic from `create_pending_order_an
 `MDW01` is a custom SQLSTATE the API maps to HTTP 402. `detail` carries the shortfall as JSON.
 
 **Files:**
+
 - Create: `supabase/migrations/20260727000300_create_paid_order_from_wallet.sql`
 - Test: `supabase/tests/database/073_wallet_order_payment_test.sql`
 
@@ -1177,6 +1181,7 @@ git add supabase/migrations/20260727000300_create_paid_order_from_wallet.sql sup
 ## Task 5: Admin wallet operations, refund-to-wallet and drift detection
 
 **Files:**
+
 - Create: `supabase/migrations/20260727000400_wallet_admin_and_reconciliation.sql`
 - Test: `supabase/tests/database/074_wallet_admin_reconciliation_test.sql`
 
@@ -1443,6 +1448,7 @@ git add supabase/migrations/20260727000400_wallet_admin_and_reconciliation.sql s
 ## Task 6: Error code, SQLSTATE → 402 mapping, and env flag
 
 **Files:**
+
 - Create: `src/domain/wallet.ts`
 - Modify: `src/common/errors/error-codes.ts`, `src/common/errors/database-error.ts`, `src/config/env.ts`
 - Test: `test/unit/wallet-error-mapping.spec.ts`
@@ -1629,7 +1635,7 @@ Then add one entry inside `sqlStateMappings`, after the `P0002` line:
 And pass the detail through at the call site — change the final line of `mapDatabaseError`:
 
 ```ts
-  return mapping(exception.message, exception.detail);
+return mapping(exception.message, exception.detail);
 ```
 
 - [ ] **Step 6: Add the environment flag**
@@ -1663,6 +1669,7 @@ git add src/domain/wallet.ts src/common/errors src/config/env.ts test/unit/walle
 ## Task 7: `wallets:manage` admin permission
 
 **Files:**
+
 - Modify: `src/domain/admin-permissions.ts`
 - Test: `test/unit/admin-permissions.spec.ts`
 
@@ -1767,6 +1774,7 @@ git add src/domain/admin-permissions.ts test/unit/admin-permissions.spec.ts && g
 ## Task 8: Wallet types and repository
 
 **Files:**
+
 - Create: `src/modules/wallets/wallets.types.ts`, `src/modules/wallets/wallets.repository.ts`, `src/modules/wallets/platform-settings.repository.ts`
 
 No test in this task — the repository is raw SQL with no branching logic worth a unit test, and Task 9 exercises it through a fake. The SQL itself is covered by the pgTAP tests in Tasks 3–5 and by the integration test in Task 12.
@@ -1776,11 +1784,7 @@ No test in this task — the repository is raw SQL with no branching logic worth
 Create `src/modules/wallets/wallets.types.ts`:
 
 ```ts
-import type {
-  DedicatedAccountStatus,
-  WalletEntryType,
-  WalletStatus
-} from '../../domain/wallet.js';
+import type { DedicatedAccountStatus, WalletEntryType, WalletStatus } from '../../domain/wallet.js';
 
 export type DedicatedAccountRecord = {
   accountNumber: string;
@@ -1880,7 +1884,9 @@ export type WalletsRepositoryContract = {
   ): Promise<WalletRecord>;
   setWalletStatus(walletId: string, status: WalletStatus): Promise<WalletRecord>;
   upsertDedicatedAccount(input: DedicatedAccountUpsert): Promise<DedicatedAccountRecord>;
-  listWalletIdsMissingDedicatedAccount(limit: number): Promise<{ walletId: string; userId: string }[]>;
+  listWalletIdsMissingDedicatedAccount(
+    limit: number
+  ): Promise<{ walletId: string; userId: string }[]>;
 };
 ```
 
@@ -2251,6 +2257,7 @@ git add src/modules/wallets && git commit -m "feat(wallet): add wallet and platf
 ## Task 9: Customer wallet service
 
 **Files:**
+
 - Create: `src/modules/wallets/wallets.service.ts`
 - Test: `test/unit/wallets.service.spec.ts`
 
@@ -2487,9 +2494,7 @@ export class WalletsService {
       return existing;
     }
 
-    throw badRequest(
-      'Your dedicated account is still being created. Try again in a few minutes.'
-    );
+    throw badRequest('Your dedicated account is still being created. Try again in a few minutes.');
   }
 }
 ```
@@ -2510,6 +2515,7 @@ git add src/modules/wallets/wallets.service.ts test/unit/wallets.service.spec.ts
 ## Task 10: Admin wallet service
 
 **Files:**
+
 - Create: `src/modules/wallets/admin-wallets.service.ts`
 - Test: `test/unit/admin-wallets.service.spec.ts`
 
@@ -2854,6 +2860,7 @@ git add src/modules/wallets/admin-wallets.service.ts test/unit/admin-wallets.ser
 ## Task 11: DTOs
 
 **Files:**
+
 - Create: `src/modules/wallets/dto/wallet.dto.ts`, `src/modules/wallets/dto/admin-wallet.dto.ts`
 
 No test — DTOs are declarative; Task 13's integration test exercises the validation.
@@ -2865,7 +2872,11 @@ Create `src/modules/wallets/dto/wallet.dto.ts`:
 ```ts
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-import { dedicatedAccountStatuses, walletEntryTypes, walletStatuses } from '../../../domain/wallet.js';
+import {
+  dedicatedAccountStatuses,
+  walletEntryTypes,
+  walletStatuses
+} from '../../../domain/wallet.js';
 
 export class DedicatedAccountDto {
   @ApiProperty({ example: '9900001111', type: String })
@@ -3019,7 +3030,8 @@ export class WalletAdjustDto {
 
 export class WalletFreezeDto {
   @ApiProperty({
-    description: 'True freezes the wallet (no order payments, credits still land). False unfreezes.',
+    description:
+      'True freezes the wallet (no order payments, credits still land). False unfreezes.',
     type: Boolean
   })
   @IsBoolean()
@@ -3038,7 +3050,11 @@ export class PlatformSettingUpdateDto {
   @IsIn(editableSettingKeys)
   key!: (typeof editableSettingKeys)[number];
 
-  @ApiProperty({ description: 'Non-negative whole number of kobo.', example: 5000000, type: Number })
+  @ApiProperty({
+    description: 'Non-negative whole number of kobo.',
+    example: 5000000,
+    type: Number
+  })
   @Type(() => Number)
   @IsInt()
   value!: number;
@@ -3061,6 +3077,7 @@ git add src/modules/wallets/dto && git commit -m "feat(wallet): add customer and
 ## Task 12: Controllers and module wiring
 
 **Files:**
+
 - Create: `src/modules/wallets/wallets.controller.ts`, `src/modules/wallets/admin-wallets.controller.ts`, `src/modules/wallets/admin-settings.controller.ts`, `src/modules/wallets/wallets.module.ts`
 - Modify: `src/modules/capability-modules.ts`
 
@@ -3158,7 +3175,17 @@ export class WalletsController {
 Create `src/modules/wallets/admin-wallets.controller.ts`:
 
 ```ts
-import { Body, Controller, Get, HttpCode, Inject, Param, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Inject,
+  Param,
+  Post,
+  Query,
+  UseGuards
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiForbiddenResponse,
@@ -3184,11 +3211,7 @@ import {
   WalletIdParamDto
 } from './dto/admin-wallet.dto.js';
 import { WalletLedgerListEnvelopeDto } from './dto/wallet.dto.js';
-import type {
-  AdminWalletRecord,
-  WalletLedgerEntryRecord,
-  WalletRecord
-} from './wallets.types.js';
+import type { AdminWalletRecord, WalletLedgerEntryRecord, WalletRecord } from './wallets.types.js';
 
 @ApiTags('admin-wallets')
 @ApiBearerAuth('supabaseAuth')
@@ -3312,7 +3335,9 @@ export class AdminSettingsController {
 
   @Get()
   @RequirePermission('admin:manage')
-  @ApiOkResponse({ description: 'All platform settings. Wallet limits today, fee splits in slice B.' })
+  @ApiOkResponse({
+    description: 'All platform settings. Wallet limits today, fee splits in slice B.'
+  })
   async listSettings(): Promise<ListEnvelope<PlatformSettingRecord>> {
     const settings = await this.wallets.listSettings();
     return createListEnvelope(settings, { hasMore: false, limit: settings.length });
@@ -3391,6 +3416,7 @@ git add src/modules/wallets src/modules/capability-modules.ts && git commit -m "
 ## Task 13: Wallet API integration test
 
 **Files:**
+
 - Create: `test/integration/wallets-api.spec.ts`
 
 - [ ] **Step 1: Write the test**
@@ -3511,6 +3537,7 @@ git add test/integration/wallets-api.spec.ts && git commit -m "test(wallet): cov
 ## Task 14: Pay for an order from the wallet
 
 **Files:**
+
 - Modify: `src/modules/orders/dto/create-order.dto.ts`, `src/modules/orders/orders.types.ts`, `src/modules/orders/orders.repository.ts`, `src/modules/orders/orders.service.ts`, `src/modules/orders/orders.module.ts`
 - Test: `test/unit/orders.service.spec.ts`
 
@@ -3667,36 +3694,36 @@ In `src/modules/orders/orders.repository.ts`, add the method next to `createOrde
 In `src/modules/orders/orders.service.ts`, replace the `return this.repository.createOrder(...)` tail of `createOrder` with:
 
 ```ts
-    const surcharge = {
-      surchargeBps: this.env.get('LARGE_ORDER_SURCHARGE_BPS'),
-      surchargeFlatKobo: this.env.get('LARGE_ORDER_SURCHARGE_FLAT_KOBO'),
-      accepted
-    };
+const surcharge = {
+  surchargeBps: this.env.get('LARGE_ORDER_SURCHARGE_BPS'),
+  surchargeFlatKobo: this.env.get('LARGE_ORDER_SURCHARGE_FLAT_KOBO'),
+  accepted
+};
 
-    // Wallet orders are created already paid inside one transaction — no pending_payment,
-    // no reservation timer, no webhook. Everything before this point (quote, room number,
-    // large-order guard) is identical for both funding sources.
-    if (input.paymentMethod === 'wallet') {
-      return this.repository.createWalletOrder(
-        actor.userId,
-        input,
-        idempotencyKey,
-        hashOrderRequest(input),
-        serviceFeeKobo,
-        maxOrderTotalKobo,
-        surcharge
-      );
-    }
+// Wallet orders are created already paid inside one transaction — no pending_payment,
+// no reservation timer, no webhook. Everything before this point (quote, room number,
+// large-order guard) is identical for both funding sources.
+if (input.paymentMethod === 'wallet') {
+  return this.repository.createWalletOrder(
+    actor.userId,
+    input,
+    idempotencyKey,
+    hashOrderRequest(input),
+    serviceFeeKobo,
+    maxOrderTotalKobo,
+    surcharge
+  );
+}
 
-    return this.repository.createOrder(
-      actor.userId,
-      input,
-      idempotencyKey,
-      hashOrderRequest(input),
-      serviceFeeKobo,
-      maxOrderTotalKobo,
-      surcharge
-    );
+return this.repository.createOrder(
+  actor.userId,
+  input,
+  idempotencyKey,
+  hashOrderRequest(input),
+  serviceFeeKobo,
+  maxOrderTotalKobo,
+  surcharge
+);
 ```
 
 - [ ] **Step 6: Document the 402 on the endpoint**
@@ -3733,6 +3760,7 @@ git add src/modules/orders test/unit/orders.service.spec.ts && git commit -m "fe
 The critical ordering the spec calls out: a top-up has no order, so if it fell through to the existing order-reference lookup every top-up would file a spurious `provider_success_not_local` issue. Branching in `mapPaystackEvent` puts the decision before that lookup by construction.
 
 **Files:**
+
 - Modify: `src/domain/payments.ts`, `src/modules/payments/paystack-webhook.service.ts`
 - Test: `test/unit/paystack-event-mapping.spec.ts`
 
@@ -3845,23 +3873,23 @@ Add the event variant to `PaymentDomainEvent`, before `IGNORED`:
 And branch inside `mapPaystackEvent`, **above** the existing `charge.success` block:
 
 ```ts
-  // Money landing on a customer dedicated virtual account. This must be decided before the
-  // ordinary charge.success branch: a top-up has no order, so the order-reference lookup
-  // downstream would file a spurious provider_success_not_local issue for every top-up.
-  if (input.event === 'charge.success' && input.data?.authorization?.channel === 'dedicated_nuban') {
-    const accountNumber =
-      input.data.authorization.receiver_bank_account_number ??
-      input.data.receiver_bank_account_number;
-    const senderName = input.data.authorization.sender_name;
-    return {
-      type: 'WALLET_TOPUP_SUCCEEDED',
-      providerReference: reference,
-      amountKobo: input.data.amount ?? 0,
-      ...(accountNumber === undefined ? {} : { accountNumber }),
-      ...(senderName === undefined ? {} : { senderName }),
-      ...(input.data.currency === undefined ? {} : { currency: input.data.currency })
-    };
-  }
+// Money landing on a customer dedicated virtual account. This must be decided before the
+// ordinary charge.success branch: a top-up has no order, so the order-reference lookup
+// downstream would file a spurious provider_success_not_local issue for every top-up.
+if (input.event === 'charge.success' && input.data?.authorization?.channel === 'dedicated_nuban') {
+  const accountNumber =
+    input.data.authorization.receiver_bank_account_number ??
+    input.data.receiver_bank_account_number;
+  const senderName = input.data.authorization.sender_name;
+  return {
+    type: 'WALLET_TOPUP_SUCCEEDED',
+    providerReference: reference,
+    amountKobo: input.data.amount ?? 0,
+    ...(accountNumber === undefined ? {} : { accountNumber }),
+    ...(senderName === undefined ? {} : { senderName }),
+    ...(input.data.currency === undefined ? {} : { currency: input.data.currency })
+  };
+}
 ```
 
 - [ ] **Step 4: Handle the event in the webhook service**
@@ -3869,9 +3897,9 @@ And branch inside `mapPaystackEvent`, **above** the existing `charge.success` bl
 In `src/modules/payments/paystack-webhook.service.ts`, inside `runWebhookTransaction`, add the branch alongside the existing two:
 
 ```ts
-      if (event.type === 'WALLET_TOPUP_SUCCEEDED') {
-        await this.creditWalletTopup(trx, payload, event);
-      }
+if (event.type === 'WALLET_TOPUP_SUCCEEDED') {
+  await this.creditWalletTopup(trx, payload, event);
+}
 ```
 
 And add the method next to `applyVerifiedPayment`:
@@ -3939,6 +3967,7 @@ git add src/domain/payments.ts src/modules/payments/paystack-webhook.service.ts 
 ## Task 16: Paystack DVA client methods
 
 **Files:**
+
 - Modify: `src/modules/payments/paystack.client.ts`, `src/modules/payments/payments.types.ts`
 - Test: `test/unit/paystack-dedicated-account.spec.ts`
 
@@ -4023,9 +4052,9 @@ describe('PaystackClient dedicated accounts', () => {
     );
 
     const client = new PaystackClient(createEnv());
-    await expect(client.createDedicatedAccount({ customerCode: 'CUS_abc123' })).rejects.toBeInstanceOf(
-      BadGatewayException
-    );
+    await expect(
+      client.createDedicatedAccount({ customerCode: 'CUS_abc123' })
+    ).rejects.toBeInstanceOf(BadGatewayException);
   });
 });
 ```
@@ -4157,6 +4186,7 @@ git add src/modules/payments/paystack.client.ts src/modules/payments/payments.ty
 ## Task 17: DVA provisioning outbox handler
 
 **Files:**
+
 - Create: `src/worker/handlers/wallet-dva.handler.ts`, `src/worker/handlers/wallet-reads.repository.ts`
 - Modify: `src/worker/worker.module.ts`
 - Test: `test/unit/wallet-dva.handler.spec.ts`
@@ -4312,9 +4342,7 @@ export class WalletReadsRepository {
     return result.rows[0];
   }
 
-  async findDedicatedAccount(
-    walletId: string
-  ): Promise<{ status: DedicatedAccountStatus } | null> {
+  async findDedicatedAccount(walletId: string): Promise<{ status: DedicatedAccountStatus } | null> {
     const result = await sql<{ status: DedicatedAccountStatus }>`
       select status::text as "status"
       from public.wallet_dedicated_accounts
@@ -4382,7 +4410,10 @@ export type DedicatedAccountProvisioner = {
 };
 
 function splitDisplayName(displayName: string | null): { firstName?: string; lastName?: string } {
-  const parts = (displayName ?? '').trim().split(/\s+/).filter((part) => part.length > 0);
+  const parts = (displayName ?? '')
+    .trim()
+    .split(/\s+/)
+    .filter((part) => part.length > 0);
   if (parts.length === 0) return {};
   const [firstName, ...rest] = parts;
   return {
@@ -4494,7 +4525,7 @@ Add `WalletReadsRepository` and `PaystackClient` to `providers`, then the handle
 And register it in the `HandlerRegistry` factory — add `walletDva: WalletDvaHandler` to its parameters and `WalletDvaHandler` to its `inject` array, then:
 
 ```ts
-        registry.register('wallet.dva_requested', walletDva.handle);
+registry.register('wallet.dva_requested', walletDva.handle);
 ```
 
 Do **not** add a `'wallet.'` entry to `NOTIFICATION_EVENT_PREFIXES`: `wallet.dva_requested` materializes no notification row, so the dispatch handler would find nothing to send.
@@ -4517,6 +4548,7 @@ git add src/worker test/unit/wallet-dva.handler.spec.ts && git commit -m "feat(w
 `PaymentsService.initiateRefund` today always calls Paystack. After this task the default destination is the wallet — instant, no Paystack refund fee, no 3–10 day wait — and the card path stays reachable for disputes and chargeback handling by passing `destination: 'paystack'`.
 
 **Files:**
+
 - Modify: `src/modules/payments/payments.service.ts`, `src/modules/payments/payments.types.ts`, `src/modules/payments/payments.repository.ts`, `src/modules/payments/dto/refund-admin.dto.ts`, `src/modules/payments/payments.module.ts`
 - Test: `test/unit/payments.service.spec.ts`
 
@@ -4637,38 +4669,38 @@ In `src/modules/payments/payments.repository.ts`, add:
 In `src/modules/payments/payments.service.ts`, replace the tail of `initiateRefund` (everything from `const refund = await this.repository.createRefundRequest(...)` onwards):
 
 ```ts
-    const refund = await this.repository.createRefundRequest(payment.id, input, actor.userId);
+const refund = await this.repository.createRefundRequest(payment.id, input, actor.userId);
 
-    // Wallet is the default destination: instant, no Paystack refund fee, no 3–10 day wait.
-    // The card path stays reachable for disputes and chargeback handling.
-    if ((input.destination ?? 'wallet') === 'wallet') {
-      const ledgerEntryId = await this.repository.creditRefundToWallet(
-        payment.orderId,
-        input.amountKobo,
-        input.reasonText ?? input.reasonCode,
-        actor.userId
-      );
+// Wallet is the default destination: instant, no Paystack refund fee, no 3–10 day wait.
+// The card path stays reachable for disputes and chargeback handling.
+if ((input.destination ?? 'wallet') === 'wallet') {
+  const ledgerEntryId = await this.repository.creditRefundToWallet(
+    payment.orderId,
+    input.amountKobo,
+    input.reasonText ?? input.reasonCode,
+    actor.userId
+  );
 
-      return this.repository.updateRefundProviderPayload(
-        refund.id,
-        ledgerEntryId,
-        { destination: 'wallet', walletLedgerEntryId: ledgerEntryId },
-        'succeeded'
-      );
-    }
+  return this.repository.updateRefundProviderPayload(
+    refund.id,
+    ledgerEntryId,
+    { destination: 'wallet', walletLedgerEntryId: ledgerEntryId },
+    'succeeded'
+  );
+}
 
-    const providerRefund = await this.paystack.createRefund({
-      amountKobo: input.amountKobo,
-      transaction: payment.providerTransactionId ?? payment.providerReference,
-      ...(input.reasonText === undefined ? {} : { reasonText: input.reasonText })
-    });
+const providerRefund = await this.paystack.createRefund({
+  amountKobo: input.amountKobo,
+  transaction: payment.providerTransactionId ?? payment.providerReference,
+  ...(input.reasonText === undefined ? {} : { reasonText: input.reasonText })
+});
 
-    return this.repository.updateRefundProviderPayload(
-      refund.id,
-      providerRefund.id.toString(),
-      providerRefund.providerPayload,
-      this.mapRefundStatus(providerRefund.status)
-    );
+return this.repository.updateRefundProviderPayload(
+  refund.id,
+  providerRefund.id.toString(),
+  providerRefund.providerPayload,
+  this.mapRefundStatus(providerRefund.status)
+);
 ```
 
 - [ ] **Step 6: Expose the choice on the DTO**
@@ -4708,6 +4740,7 @@ git add src/modules/payments test/unit/payments.service.spec.ts && git commit -m
 ## Task 19: Nightly balance-drift reconciliation
 
 **Files:**
+
 - Modify: `src/modules/payments/reconciliation.repository.ts`, `src/modules/payments/reconciliation.service.ts`, `src/modules/payments/reconciliation.types.ts`, `src/cron.ts`, `render.yaml`
 - Test: `test/unit/reconciliation.service.spec.ts`
 
@@ -4802,15 +4835,15 @@ export type ReconciliationIssueType =
 In `src/cron.ts`, add `'reconcile-wallet-balances'` to `cronJobs` and the branch inside `runCronJob`:
 
 ```ts
-    if (job === 'reconcile-wallet-balances') {
-      const result = await sql<{ detected: number }>`
+if (job === 'reconcile-wallet-balances') {
+  const result = await sql<{ detected: number }>`
         select public.detect_wallet_balance_drift() as "detected"
       `.execute(database.db);
-      logger.log(
-        { message: 'Reconciled wallet balances', job, detected: result.rows[0]?.detected ?? 0 },
-        'Cron'
-      );
-    }
+  logger.log(
+    { message: 'Reconciled wallet balances', job, detected: result.rows[0]?.detected ?? 0 },
+    'Cron'
+  );
+}
 ```
 
 - [ ] **Step 7: Schedule it**
@@ -4818,10 +4851,10 @@ In `src/cron.ts`, add `'reconcile-wallet-balances'` to `cronJobs` and the branch
 In `render.yaml`, add a cron service copying the shape of the existing `reconcile-pending-payments` entry, running nightly:
 
 ```yaml
-  - type: cron
-    name: mealdirect-reconcile-wallet-balances
-    schedule: '17 2 * * *'
-    startCommand: pnpm cron:prod reconcile-wallet-balances
+- type: cron
+  name: mealdirect-reconcile-wallet-balances
+  schedule: '17 2 * * *'
+  startCommand: pnpm cron:prod reconcile-wallet-balances
 ```
 
 Match the surrounding entries' `env`, `plan`, `repo`, `buildCommand` and `envVars` keys exactly — copy them from the neighbouring cron block rather than inventing values.
@@ -4844,6 +4877,7 @@ git add src/modules/payments src/cron.ts render.yaml test/unit/reconciliation.se
 Lazy provisioning in `WalletsService.getWallet` already guarantees correctness. Doing it at signup as well means the DVA request is queued the moment the account exists, so the account number is usually ready before the customer first opens the wallet screen.
 
 **Files:**
+
 - Modify: `src/modules/auth/supabase-auth.service.ts`, `src/modules/auth/auth.module.ts`
 - Test: `test/unit/supabase-auth.service.spec.ts` (create if absent)
 
@@ -4927,7 +4961,7 @@ export async function provisionWalletForRole(
 Inject `WalletsRepository` into `SupabaseAuthService` and call the helper inside `signUp`, right after the block that sets `app_metadata.meal_direct_role` (around `src/modules/auth/supabase-auth.service.ts:238`):
 
 ```ts
-      await provisionWalletForRole(this.wallets, role, user.id);
+await provisionWalletForRole(this.wallets, role, user.id);
 ```
 
 - [ ] **Step 4: Wire the dependency**
@@ -4950,6 +4984,7 @@ git add src/modules/auth test/unit/supabase-auth-wallet.spec.ts && git commit -m
 ## Task 21: Cutover backfill script
 
 **Files:**
+
 - Create: `scripts/backfill-wallets.ts`
 - Modify: `package.json`
 
@@ -5065,6 +5100,7 @@ git add scripts/backfill-wallets.ts package.json && git commit -m "feat(wallet):
 ## Task 22: OpenAPI, docs and full verification
 
 **Files:**
+
 - Modify: `docs/openapi.json`, `docs/openapi.yaml`, `README.md`, `docs/superpowers/specs/2026-07-25-v2-roadmap.md`
 
 - [ ] **Step 1: Regenerate the OpenAPI documents**
@@ -5081,10 +5117,10 @@ Expected: exit 0 — no diff after regeneration.
 
 In `README.md`, add to the environment-variable table (matching the surrounding rows' format):
 
-| Variable | Default | Purpose |
-|---|---|---|
-| `WALLET_DVA_ENABLED` | `false` | Enables Paystack dedicated virtual account provisioning. Keep false until Paystack support enables DVA on the account; wallets still work, funded by checkout link. |
-| `WALLET_DVA_PROVIDER` | `test-bank` | DVA provider slug. `test-bank` in Paystack test mode; `wema-bank` or `titan-paystack` in live. |
+| Variable              | Default     | Purpose                                                                                                                                                             |
+| --------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `WALLET_DVA_ENABLED`  | `false`     | Enables Paystack dedicated virtual account provisioning. Keep false until Paystack support enables DVA on the account; wallets still work, funded by checkout link. |
+| `WALLET_DVA_PROVIDER` | `test-bank` | DVA provider slug. `test-bank` in Paystack test mode; `wema-bank` or `titan-paystack` in live.                                                                      |
 
 - [ ] **Step 4: Mark slice A done in the roadmap**
 

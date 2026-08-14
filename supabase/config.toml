@@ -96,3 +96,6 @@ redirect_uri = ""
 enabled = true
 policy = "oneshot"
 inspector_port = 54327
+
+[analytics]
+enabled = false

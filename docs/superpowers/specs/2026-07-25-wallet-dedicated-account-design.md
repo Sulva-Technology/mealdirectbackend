@@ -21,16 +21,16 @@ analytics, the fee-model and order-status changes (slices B–F).
 
 ## Decisions
 
-| Decision | Choice | Reason |
-|---|---|---|
-| Who holds a wallet | Customers only | Vendors and riders are already paid by Paystack transfer; wallets for them would turn settlements into a second ledger system |
-| DVA provisioning | Automatically at signup, plus a backfill for existing customers at cutover | The account number is always present in the UI with no extra step |
-| Withdrawals | Not supported | Balance is spendable on orders only. Keeps MealDirect out of the "financial services" business category, which is what would force per-customer BVN validation on DVAs |
-| Refund destination | Always to wallet | Instant, no Paystack refund fee or 3–10 day wait. The existing card-refund path stays, admin-only, for disputes |
-| Insufficient balance | Blocked; customer chooses to top up or to pay for that order directly through Paystack checkout | Every order is paid from exactly one source, so there is one leg to reconcile and one leg to refund |
-| Direct-pay option | Existing hosted Paystack checkout, all channels | Card, bank transfer (which presents a temporary account number) and USSD already work; no new integration |
-| Debit timing | Atomic — order creation and wallet debit are one database transaction | No `pending_payment`, no reservation timer, no expiry sweep, no webhook for wallet orders |
-| Balance storage | Cached `balance_kobo` with an append-only ledger as source of truth, reconciled nightly | Fast reads, full auditability, drift is detectable |
+| Decision             | Choice                                                                                          | Reason                                                                                                                                                                 |
+| -------------------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Who holds a wallet   | Customers only                                                                                  | Vendors and riders are already paid by Paystack transfer; wallets for them would turn settlements into a second ledger system                                          |
+| DVA provisioning     | Automatically at signup, plus a backfill for existing customers at cutover                      | The account number is always present in the UI with no extra step                                                                                                      |
+| Withdrawals          | Not supported                                                                                   | Balance is spendable on orders only. Keeps MealDirect out of the "financial services" business category, which is what would force per-customer BVN validation on DVAs |
+| Refund destination   | Always to wallet                                                                                | Instant, no Paystack refund fee or 3–10 day wait. The existing card-refund path stays, admin-only, for disputes                                                        |
+| Insufficient balance | Blocked; customer chooses to top up or to pay for that order directly through Paystack checkout | Every order is paid from exactly one source, so there is one leg to reconcile and one leg to refund                                                                    |
+| Direct-pay option    | Existing hosted Paystack checkout, all channels                                                 | Card, bank transfer (which presents a temporary account number) and USSD already work; no new integration                                                              |
+| Debit timing         | Atomic — order creation and wallet debit are one database transaction                           | No `pending_payment`, no reservation timer, no expiry sweep, no webhook for wallet orders                                                                              |
+| Balance storage      | Cached `balance_kobo` with an append-only ledger as source of truth, reconciled nightly         | Fast reads, full auditability, drift is detectable                                                                                                                     |
 
 ## Paystack constraints
 
@@ -233,13 +233,13 @@ Extend the existing reconciliation cron with two checks:
 
 ## Risks
 
-| Risk | Handling |
-|---|---|
-| Paystack has not enabled DVA on the account | Everything ships behind `WALLET_DVA_ENABLED`. The wallet still funds through a checkout link until approval lands. Request approval now — it gates the slice |
+| Risk                                                                      | Handling                                                                                                                                                                         |
+| ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Paystack has not enabled DVA on the account                               | Everything ships behind `WALLET_DVA_ENABLED`. The wallet still funds through a checkout link until approval lands. Request approval now — it gates the slice                     |
 | The registered business category turns out to require customer validation | The spec assumes no BVN step. If the category is general or financial services, a BVN plus bank-account validation step must be added before provisioning. Verify before go-live |
-| Wallet balances are customer money held on the platform | No withdrawals keeps MealDirect clear of deposit-taking. The balance cap limits per-wallet exposure |
-| Card-funded top-up refunded to wallet, then charged back | The customer keeps spendable balance while the card money is clawed back. Admins can force a real card refund instead for any disputed order |
-| Administrator abuses manual adjustment | RBAC permission, mandatory reason, audit row, and adjustments are visible in the wallet ledger the customer can see |
+| Wallet balances are customer money held on the platform                   | No withdrawals keeps MealDirect clear of deposit-taking. The balance cap limits per-wallet exposure                                                                              |
+| Card-funded top-up refunded to wallet, then charged back                  | The customer keeps spendable balance while the card money is clawed back. Admins can force a real card refund instead for any disputed order                                     |
+| Administrator abuses manual adjustment                                    | RBAC permission, mandatory reason, audit row, and adjustments are visible in the wallet ledger the customer can see                                                              |
 
 ## Open items before implementation
 

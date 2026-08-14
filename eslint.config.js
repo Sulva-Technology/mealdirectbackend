@@ -9,6 +9,8 @@ export default tseslint.config(
       'node_modules/**',
       'coverage/**',
       'supabase/types/**',
+      'supabase/.temp/**',
+      'supabase/.branches/**',
       'eslint.config.js',
       'scripts/*.mjs',
       'scripts/*.cjs',
@@ -32,6 +34,15 @@ export default tseslint.config(
     rules: {
       '@typescript-eslint/no-extraneous-class': 'off',
       '@typescript-eslint/no-unnecessary-condition': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+          destructuredArrayIgnorePattern: '^_'
+        }
+      ],
       '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
       '@typescript-eslint/no-confusing-void-expression': ['error', { ignoreArrowShorthand: true }]
     }
