@@ -4937,6 +4937,373 @@
         "tags": ["admin"]
       }
     },
+    "/v1/admin/feature-flags": {
+      "get": {
+        "operationId": "AdminFeatureFlagsController_listFlags",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "All feature flags and their mode.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FeatureFlagListEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role and the admin:manage permission are required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-feature-flags"]
+      }
+    },
+    "/v1/admin/feature-flags/{key}": {
+      "patch": {
+        "operationId": "AdminFeatureFlagsController_updateFlag",
+        "parameters": [
+          { "name": "key", "required": true, "in": "path", "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateFeatureFlagDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Flag mode updated. Audited.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FeatureFlagEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role and the admin:manage permission are required." },
+          "404": { "description": "Unknown flag key." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-feature-flags"]
+      }
+    },
+    "/v1/admin/feature-testers": {
+      "get": {
+        "operationId": "AdminFeatureFlagsController_listTesters",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Users and vendors in the test-mode cohort.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FeatureTesterListEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role and the admin:manage permission are required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-feature-flags"]
+      },
+      "post": {
+        "operationId": "AdminFeatureFlagsController_addTester",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/AddFeatureTesterDto" } }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Subject added to the tester cohort (idempotent). Audited.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FeatureTesterEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Subject does not exist." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role and the admin:manage permission are required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-feature-flags"]
+      }
+    },
+    "/v1/admin/feature-testers/{testerId}": {
+      "delete": {
+        "operationId": "AdminFeatureFlagsController_removeTester",
+        "parameters": [
+          {
+            "name": "testerId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Subject removed from the cohort. Audited.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FeatureTesterEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role and the admin:manage permission are required." },
+          "404": { "description": "Tester not found." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin-feature-flags"]
+      }
+    },
+    "/v1/me/feature-flags": {
+      "get": {
+        "operationId": "MyFeatureFlagsController_myFlags",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Every feature flag resolved for the caller (test-mode cohort applied).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MyFeatureFlagsEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["feature-flags"]
+      }
+    },
+    "/v1/vendor/printers": {
+      "get": {
+        "operationId": "VendorPrintersController_listPrinters",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Live printers for the vendor.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VendorPrinterListEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": {
+            "description": "Vendor role and membership required; some actions also need the cloud_printing feature flag."
+          }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor-printing"]
+      },
+      "post": {
+        "operationId": "VendorPrintersController_registerPrinter",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/RegisterPrinterDto" } }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Printer registered. serverUrl is returned only here — paste it into the printer.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PrinterRegistrationEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid MAC address or body." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": {
+            "description": "Vendor role and membership required; some actions also need the cloud_printing feature flag."
+          },
+          "409": { "description": "MAC already registered." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor-printing"]
+      }
+    },
+    "/v1/vendor/printers/{printerId}/rotate-key": {
+      "post": {
+        "operationId": "VendorPrintersController_rotateKey",
+        "parameters": [
+          {
+            "name": "printerId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "New key issued; the old server URL stops working immediately.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PrinterRegistrationEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": {
+            "description": "Vendor role and membership required; some actions also need the cloud_printing feature flag."
+          },
+          "404": { "description": "Printer not found." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor-printing"]
+      }
+    },
+    "/v1/vendor/printers/{printerId}": {
+      "delete": {
+        "operationId": "VendorPrintersController_revokePrinter",
+        "parameters": [
+          {
+            "name": "printerId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Printer revoked.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/VendorPrinterEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": {
+            "description": "Vendor role and membership required; some actions also need the cloud_printing feature flag."
+          },
+          "404": { "description": "Printer not found." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor-printing"]
+      }
+    },
+    "/v1/vendor/printers/{printerId}/test-print": {
+      "post": {
+        "operationId": "VendorPrintersController_testPrint",
+        "parameters": [
+          {
+            "name": "printerId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Sample ticket queued (no order data).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PrintJobEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": {
+            "description": "Vendor role and membership required; some actions also need the cloud_printing feature flag."
+          },
+          "404": { "description": "Printer not found." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor-printing"]
+      }
+    },
+    "/v1/vendor/print-jobs": {
+      "get": {
+        "operationId": "VendorPrintersController_listJobs",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Recent print jobs, newest first.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PrintJobListEnvelopeDto" }
+              }
+            }
+          },
+          "400": { "description": "Invalid filters." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": {
+            "description": "Vendor role and membership required; some actions also need the cloud_printing feature flag."
+          }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor-printing"]
+      }
+    },
+    "/v1/vendor/orders/{orderId}/receipt": {
+      "get": {
+        "operationId": "VendorPrintersController_getReceipt",
+        "parameters": [
+          {
+            "name": "orderId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Kitchen ticket data plus the rendered text.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ReceiptViewEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": {
+            "description": "Vendor role and membership required; some actions also need the cloud_printing feature flag."
+          },
+          "404": { "description": "Order not found for this vendor." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor-printing"]
+      }
+    },
+    "/v1/vendor/orders/{orderId}/reprint": {
+      "post": {
+        "operationId": "VendorPrintersController_reprint",
+        "parameters": [
+          {
+            "name": "orderId",
+            "required": true,
+            "in": "path",
+            "schema": { "format": "uuid", "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ticket re-queued to print now. Audited.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PrintJobEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": {
+            "description": "Vendor role and membership required; some actions also need the cloud_printing feature flag."
+          },
+          "404": { "description": "Order not found for this vendor." },
+          "409": { "description": "Vendor has no printer." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor-printing"]
+      }
+    },
     "/v1/notifications": {
       "get": {
         "operationId": "NotificationsController_listNotifications",
@@ -8213,6 +8580,286 @@
       "EscalationEnvelopeDto": {
         "type": "object",
         "properties": { "data": { "$ref": "#/components/schemas/EscalationRecordDto" } },
+        "required": ["data"]
+      },
+      "FeatureFlagDto": {
+        "type": "object",
+        "properties": {
+          "key": { "type": "string" },
+          "mode": { "type": "string", "enum": ["off", "test", "on"] },
+          "description": { "type": "string", "nullable": true },
+          "updatedAt": { "type": "string" }
+        },
+        "required": ["key", "mode", "description", "updatedAt"]
+      },
+      "FeatureFlagListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/FeatureFlagDto" } }
+        },
+        "required": ["data"]
+      },
+      "UpdateFeatureFlagDto": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "description": "off = nobody, test = feature testers only, on = everyone.",
+            "enum": ["off", "test", "on"]
+          }
+        },
+        "required": ["mode"]
+      },
+      "FeatureFlagEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/FeatureFlagDto" } },
+        "required": ["data"]
+      },
+      "FeatureTesterDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "subjectType": { "type": "string", "enum": ["user", "vendor"] },
+          "subjectId": { "type": "string", "format": "uuid" },
+          "note": { "type": "string", "nullable": true },
+          "createdAt": { "type": "string" }
+        },
+        "required": ["id", "subjectType", "subjectId", "note", "createdAt"]
+      },
+      "FeatureTesterListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/FeatureTesterDto" } }
+        },
+        "required": ["data"]
+      },
+      "AddFeatureTesterDto": {
+        "type": "object",
+        "properties": {
+          "subjectType": { "type": "string", "enum": ["user", "vendor"] },
+          "subjectId": {
+            "type": "string",
+            "description": "profiles.id for subjectType user, vendors.id for subjectType vendor.",
+            "format": "uuid"
+          },
+          "note": { "type": "string", "maxLength": 500 }
+        },
+        "required": ["subjectType", "subjectId"]
+      },
+      "FeatureTesterEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/FeatureTesterDto" } },
+        "required": ["data"]
+      },
+      "MyFeatureFlagsEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": { "type": "boolean" },
+            "description": "Flag key → enabled for the caller.",
+            "example": { "cloud_printing": true }
+          }
+        },
+        "required": ["data"]
+      },
+      "VendorPrinterDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "vendorId": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "macAddress": { "type": "string", "example": "00:11:62:aa:bb:cc" },
+          "paperWidthChars": { "type": "number", "enum": [32, 42, 48] },
+          "lastSeenAt": { "type": "string", "nullable": true },
+          "lastStatusCode": { "type": "string", "nullable": true },
+          "online": { "type": "boolean", "description": "Polled within the last 2 minutes." },
+          "createdAt": { "type": "string" }
+        },
+        "required": [
+          "id",
+          "vendorId",
+          "name",
+          "macAddress",
+          "paperWidthChars",
+          "lastSeenAt",
+          "lastStatusCode",
+          "online",
+          "createdAt"
+        ]
+      },
+      "VendorPrinterListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/VendorPrinterDto" } }
+        },
+        "required": ["data"]
+      },
+      "RegisterPrinterDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Kitchen printer",
+            "maxLength": 80,
+            "minLength": 1
+          },
+          "macAddress": {
+            "type": "string",
+            "description": "Printer MAC address as printed on its self-test page. Any of 00:11:62:AA:BB:CC, 00-11-62-aa-bb-cc, 001162AABBCC.",
+            "example": "00:11:62:AA:BB:CC"
+          },
+          "paperWidthChars": {
+            "type": "number",
+            "default": 48,
+            "description": "Characters per line: 32 for 58mm paper, 42 or 48 for 80mm.",
+            "enum": [32, 42, 48]
+          }
+        },
+        "required": ["name", "macAddress"]
+      },
+      "PrinterRegistrationDto": {
+        "type": "object",
+        "properties": {
+          "printer": { "$ref": "#/components/schemas/VendorPrinterDto" },
+          "serverUrl": {
+            "type": "string",
+            "description": "Paste into the printer's CloudPRNT Server URL setting. Shown only once — rotate the key to get a new one."
+          }
+        },
+        "required": ["printer", "serverUrl"]
+      },
+      "PrinterRegistrationEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/PrinterRegistrationDto" } },
+        "required": ["data"]
+      },
+      "VendorPrinterEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/VendorPrinterDto" } },
+        "required": ["data"]
+      },
+      "PrintJobDto": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "vendorId": { "type": "string", "format": "uuid" },
+          "orderId": { "type": "string", "format": "uuid", "nullable": true },
+          "orderNumber": { "type": "string", "nullable": true },
+          "kind": { "type": "string", "enum": ["order", "test"] },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "printing", "printed", "failed", "cancelled"]
+          },
+          "printAfter": { "type": "string" },
+          "attempts": { "type": "number" },
+          "printedAt": { "type": "string", "nullable": true },
+          "lastError": { "type": "string", "nullable": true },
+          "createdAt": { "type": "string" }
+        },
+        "required": [
+          "id",
+          "vendorId",
+          "orderId",
+          "orderNumber",
+          "kind",
+          "status",
+          "printAfter",
+          "attempts",
+          "printedAt",
+          "lastError",
+          "createdAt"
+        ]
+      },
+      "PrintJobEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/PrintJobDto" } },
+        "required": ["data"]
+      },
+      "PrintJobListEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": { "type": "array", "items": { "$ref": "#/components/schemas/PrintJobDto" } }
+        },
+        "required": ["data"]
+      },
+      "ReceiptItemDto": {
+        "type": "object",
+        "properties": {
+          "itemName": { "type": "string" },
+          "quantity": { "type": "number" },
+          "unitPriceKobo": { "type": "number" },
+          "lineTotalKobo": { "type": "number" },
+          "unitType": { "type": "string" },
+          "soupName": { "type": "string", "nullable": true },
+          "customization": { "type": "object", "additionalProperties": true }
+        },
+        "required": [
+          "itemName",
+          "quantity",
+          "unitPriceKobo",
+          "lineTotalKobo",
+          "unitType",
+          "soupName",
+          "customization"
+        ]
+      },
+      "ReceiptDto": {
+        "type": "object",
+        "properties": {
+          "orderId": { "type": "string", "format": "uuid" },
+          "orderNumber": { "type": "string" },
+          "vendorDisplayName": { "type": "string" },
+          "serviceDate": { "type": "string", "example": "2026-09-23" },
+          "deliveryTime": { "type": "string", "example": "13:00" },
+          "deliverySlotName": { "type": "string" },
+          "campusTimezone": { "type": "string", "example": "Africa/Lagos" },
+          "customerName": { "type": "string" },
+          "customerPhone": { "type": "string", "nullable": true },
+          "locationName": { "type": "string" },
+          "roomNumber": { "type": "string", "nullable": true },
+          "deliveryMode": { "type": "string" },
+          "specialInstructions": { "type": "string", "nullable": true },
+          "foodSubtotalKobo": {
+            "type": "number",
+            "description": "Food subtotal only — excludes delivery, service fee and surcharge."
+          },
+          "paidAt": { "type": "string", "nullable": true },
+          "items": { "type": "array", "items": { "$ref": "#/components/schemas/ReceiptItemDto" } }
+        },
+        "required": [
+          "orderId",
+          "orderNumber",
+          "vendorDisplayName",
+          "serviceDate",
+          "deliveryTime",
+          "deliverySlotName",
+          "campusTimezone",
+          "customerName",
+          "customerPhone",
+          "locationName",
+          "roomNumber",
+          "deliveryMode",
+          "specialInstructions",
+          "foodSubtotalKobo",
+          "paidAt",
+          "items"
+        ]
+      },
+      "ReceiptViewDto": {
+        "type": "object",
+        "properties": {
+          "receipt": { "$ref": "#/components/schemas/ReceiptDto" },
+          "text": {
+            "type": "string",
+            "description": "The ticket exactly as printed (48-column preview)."
+          }
+        },
+        "required": ["receipt", "text"]
+      },
+      "ReceiptViewEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/ReceiptViewDto" } },
         "required": ["data"]
       },
       "NotificationRecordDto": {
