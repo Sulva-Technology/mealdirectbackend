@@ -1,7 +1,7 @@
 # Cloud printing of order tickets + feature-flag test mode
 
 Date: 2026-09-23
-Status: BUILT (backend) — vendor/admin portal UI pending
+Status: BUILT — backend, vendor portal (Printers page, ticket preview/reprint, unprinted banner) and admin portal (Feature Flags page)
 
 ## 1. Goal
 
@@ -136,7 +136,7 @@ StarPRNT or Star Document Markup is a later enhancement.
 
 ## 9. Out of scope / follow-ups
 
-- Vendor portal UI (printer setup screen, "N tickets not printed" banner, reprint button).
-- Admin portal UI for flags/testers.
+- ~~Vendor portal UI (printer setup screen, "N tickets not printed" banner, reprint button).~~ Done.
+- ~~Admin portal UI for flags/testers.~~ Done.
 - FCM alert when a job is still pending 5 min after `print_after`.
 - Rich formatting (StarPRNT), QR code.
