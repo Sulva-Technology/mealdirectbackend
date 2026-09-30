@@ -1,0 +1,2148 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>MealDirect — Campus Handbook</title>
+    <style>
+      /* ============================================================
+         MealDirect Campus Handbook — print stylesheet (A4)
+         Rendered to PDF with headless Chrome. No external assets.
+         ============================================================ */
+
+      @page {
+        size: A4;
+        margin: 16mm 14mm 16mm 14mm;
+      }
+      @page :first {
+        margin: 0;
+      }
+
+      :root {
+        --ink: #16130f;
+        --ink-2: #443c33;
+        --ink-3: #6d6355;
+        --rule: #e2dbd0;
+        --paper: #ffffff;
+        --cream: #faf6ef;
+        --amber: #c2410c;
+        --amber-soft: #fdf1e7;
+        --green: #14663f;
+        --green-soft: #e9f4ee;
+        --blue: #1d4e89;
+        --blue-soft: #eaf1f9;
+        --red: #9f1239;
+        --red-soft: #fdeaef;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+        font-size: 9.6pt;
+        line-height: 1.5;
+        color: var(--ink);
+        background: var(--paper);
+      }
+
+      /* ---------- cover ---------- */
+
+      .cover {
+        position: relative;
+        height: 297mm;
+        width: 210mm;
+        padding: 26mm 20mm;
+        background: linear-gradient(158deg, #1c1a17 0%, #3a2a1c 46%, #7c2d12 100%);
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        break-after: page;
+        overflow: hidden;
+      }
+      .cover::after {
+        content: "";
+        position: absolute;
+        right: -70mm;
+        top: -40mm;
+        width: 190mm;
+        height: 190mm;
+        border-radius: 50%;
+        border: 1.2mm solid rgba(255, 255, 255, 0.09);
+      }
+      .cover::before {
+        content: "";
+        position: absolute;
+        right: -30mm;
+        bottom: -80mm;
+        width: 150mm;
+        height: 150mm;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(234, 88, 12, 0.32) 0%, rgba(234, 88, 12, 0) 68%);
+      }
+      .cover-top,
+      .cover-mid,
+      .cover-bottom {
+        position: relative;
+        z-index: 2;
+      }
+      .brandmark {
+        display: flex;
+        align-items: center;
+        gap: 4mm;
+      }
+      .brandmark .dot {
+        width: 11mm;
+        height: 11mm;
+        border-radius: 3mm;
+        background: #ea580c;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 16pt;
+        color: #1c1a17;
+      }
+      .brandmark .name {
+        font-size: 15pt;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+      }
+      .brandmark .sub {
+        font-size: 8pt;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.6);
+      }
+      .cover h1 {
+        font-size: 46pt;
+        line-height: 1.02;
+        margin: 0 0 6mm;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+      .cover h1 em {
+        font-style: normal;
+        color: #fdba74;
+      }
+      .cover .lede {
+        font-size: 12pt;
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.82);
+        max-width: 120mm;
+      }
+      .cover-roles {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2.5mm;
+        margin-top: 10mm;
+      }
+      .cover-roles span {
+        border: 0.3mm solid rgba(255, 255, 255, 0.28);
+        border-radius: 20mm;
+        padding: 1.6mm 4.5mm;
+        font-size: 8.5pt;
+        color: rgba(255, 255, 255, 0.9);
+      }
+      .cover-bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        border-top: 0.3mm solid rgba(255, 255, 255, 0.2);
+        padding-top: 5mm;
+        font-size: 8.5pt;
+        color: rgba(255, 255, 255, 0.65);
+      }
+
+      /* ---------- structure ---------- */
+
+      .part {
+        break-before: page;
+      }
+      .part-head {
+        border-top: 1.4mm solid var(--amber);
+        padding-top: 4mm;
+        margin-bottom: 7mm;
+      }
+      .part-head .kicker {
+        font-size: 7.6pt;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--amber);
+        font-weight: 700;
+      }
+      .part-head h2 {
+        font-size: 22pt;
+        margin: 1.5mm 0 2mm;
+        letter-spacing: -0.02em;
+        font-weight: 800;
+      }
+      .part-head p {
+        margin: 0;
+        color: var(--ink-3);
+        font-size: 10pt;
+        max-width: 150mm;
+      }
+
+      h3 {
+        font-size: 12pt;
+        margin: 8mm 0 2.5mm;
+        letter-spacing: -0.01em;
+        border-bottom: 0.3mm solid var(--rule);
+        padding-bottom: 1.6mm;
+      }
+      h4 {
+        font-size: 10pt;
+        margin: 5mm 0 1.8mm;
+        color: var(--ink);
+      }
+      p {
+        margin: 0 0 2.6mm;
+      }
+      ul,
+      ol {
+        margin: 0 0 3mm;
+        padding-left: 5mm;
+      }
+      li {
+        margin-bottom: 1.2mm;
+      }
+      strong {
+        font-weight: 700;
+      }
+      code {
+        font-family: "Cascadia Mono", Consolas, "Courier New", monospace;
+        font-size: 8.4pt;
+        background: var(--cream);
+        border: 0.2mm solid var(--rule);
+        border-radius: 1mm;
+        padding: 0.2mm 1.2mm;
+      }
+      a {
+        color: var(--blue);
+        text-decoration: none;
+      }
+
+      /* ---------- tables ---------- */
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0 0 4mm;
+        font-size: 8.8pt;
+        break-inside: avoid;
+      }
+      thead th {
+        background: var(--ink);
+        color: #fff;
+        text-align: left;
+        padding: 2mm 2.4mm;
+        font-size: 8pt;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        font-weight: 700;
+      }
+      tbody td {
+        padding: 2mm 2.4mm;
+        border-bottom: 0.2mm solid var(--rule);
+        vertical-align: top;
+      }
+      tbody tr:nth-child(even) td {
+        background: #fbf9f6;
+      }
+      td.num {
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* ---------- callouts ---------- */
+
+      .note {
+        border-left: 1mm solid var(--blue);
+        background: var(--blue-soft);
+        padding: 2.6mm 3.4mm;
+        margin: 0 0 4mm;
+        break-inside: avoid;
+        font-size: 9pt;
+      }
+      .warn {
+        border-left: 1mm solid var(--red);
+        background: var(--red-soft);
+      }
+      .tip {
+        border-left: 1mm solid var(--green);
+        background: var(--green-soft);
+      }
+      .note .label {
+        display: block;
+        font-size: 7.4pt;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        font-weight: 700;
+        margin-bottom: 1mm;
+        color: var(--blue);
+      }
+      .warn .label {
+        color: var(--red);
+      }
+      .tip .label {
+        color: var(--green);
+      }
+
+      /* ---------- cards / grids ---------- */
+
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4mm;
+        margin-bottom: 4mm;
+      }
+      .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 3.5mm;
+        margin-bottom: 4mm;
+      }
+      .card {
+        border: 0.3mm solid var(--rule);
+        border-radius: 2mm;
+        padding: 3.2mm 3.6mm;
+        background: var(--paper);
+        break-inside: avoid;
+      }
+      .card.cream {
+        background: var(--cream);
+      }
+      .card h5 {
+        margin: 0 0 1.6mm;
+        font-size: 9.4pt;
+        letter-spacing: -0.01em;
+      }
+      .card p:last-child,
+      .card ul:last-child {
+        margin-bottom: 0;
+      }
+      .stat {
+        font-size: 19pt;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        color: var(--amber);
+        line-height: 1.1;
+      }
+      .stat-label {
+        font-size: 8pt;
+        color: var(--ink-3);
+      }
+
+      /* ---------- steps ---------- */
+
+      ol.steps {
+        list-style: none;
+        padding: 0;
+        counter-reset: step;
+        margin-bottom: 4mm;
+      }
+      ol.steps > li {
+        counter-increment: step;
+        position: relative;
+        padding-left: 9mm;
+        margin-bottom: 3mm;
+        break-inside: avoid;
+      }
+      ol.steps > li::before {
+        content: counter(step);
+        position: absolute;
+        left: 0;
+        top: -0.4mm;
+        width: 6mm;
+        height: 6mm;
+        border-radius: 50%;
+        background: var(--amber);
+        color: #fff;
+        font-size: 8.4pt;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      ol.steps > li strong {
+        display: block;
+      }
+
+      /* ---------- checklists ---------- */
+
+      ul.check {
+        list-style: none;
+        padding: 0;
+      }
+      ul.check li {
+        position: relative;
+        padding-left: 7mm;
+        margin-bottom: 2mm;
+        break-inside: avoid;
+      }
+      ul.check li::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0.7mm;
+        width: 3.6mm;
+        height: 3.6mm;
+        border: 0.35mm solid var(--ink-3);
+        border-radius: 0.8mm;
+      }
+
+      .fill {
+        display: inline-block;
+        min-width: 42mm;
+        border-bottom: 0.3mm dotted var(--ink-3);
+      }
+
+      /* ---------- toc ---------- */
+
+      .toc {
+        columns: 2;
+        column-gap: 10mm;
+      }
+      .toc-item {
+        break-inside: avoid;
+        margin-bottom: 3.4mm;
+        border-left: 0.6mm solid var(--rule);
+        padding-left: 3mm;
+      }
+      .toc-item .n {
+        font-size: 7.4pt;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--amber);
+        font-weight: 700;
+      }
+      .toc-item .t {
+        font-weight: 700;
+        font-size: 10pt;
+        display: block;
+      }
+      .toc-item .d {
+        color: var(--ink-3);
+        font-size: 8.6pt;
+      }
+
+      .avoid {
+        break-inside: avoid;
+      }
+      figure {
+        margin: 0 0 5mm;
+        break-inside: avoid;
+      }
+      figcaption {
+        font-size: 8pt;
+        color: var(--ink-3);
+        margin-top: 1.6mm;
+      }
+      svg {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+      .footer-note {
+        margin-top: 8mm;
+        padding-top: 3mm;
+        border-top: 0.3mm solid var(--rule);
+        font-size: 8pt;
+        color: var(--ink-3);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ==================== COVER ==================== -->
+    <section class="cover">
+      <div class="cover-top">
+        <div class="brandmark">
+          <div class="dot">M</div>
+          <div>
+            <div class="name">MealDirect</div>
+            <div class="sub">Campus food, delivered on time</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cover-mid">
+        <h1>The Campus<br /><em>Handbook</em></h1>
+        <p class="lede">
+          Everything a new university needs to run MealDirect — how students order, how vendors
+          cook, how riders deliver, how admins keep the money straight, and the launch playbook
+          that takes a campus from first conversation to first delivered meal.
+        </p>
+        <div class="cover-roles">
+          <span>Students &amp; Staff</span>
+          <span>Vendors</span>
+          <span>Riders</span>
+          <span>Campus Admins</span>
+          <span>Platform Ops</span>
+        </div>
+      </div>
+
+      <div class="cover-bottom">
+        <div>
+          <strong style="color: #fff">Edition v2</strong><br />
+          Wallet · New fee model · 4-state orders · Automated payouts
+        </div>
+        <div style="text-align: right">
+          Prepared for: <span style="color: #fff">____________________ University</span><br />
+          Launch date: <span style="color: #fff">____ / ____ / ________</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TOC ==================== -->
+    <section class="part" style="break-before: auto">
+      <div class="part-head">
+        <div class="kicker">Contents</div>
+        <h2>What is in this handbook</h2>
+        <p>
+          Parts 1–5 are the day-to-day guides — hand each one to the people it is written for.
+          Part 6 is the operator playbook for opening a new campus. Part 7 is what to do when
+          something goes wrong.
+        </p>
+      </div>
+
+      <div class="toc">
+        <div class="toc-item">
+          <span class="n">Part 1</span><span class="t">How MealDirect Works</span>
+          <span class="d">The batch model, campus structure, delivery slots, and the four order states everyone shares.</span>
+        </div>
+        <div class="toc-item">
+          <span class="n">Part 2</span><span class="t">For Students &amp; Staff</span>
+          <span class="d">Signing up, ordering, the wallet, fees, tracking, group chat, reviews, refunds.</span>
+        </div>
+        <div class="toc-item">
+          <span class="n">Part 3</span><span class="t">For Vendors</span>
+          <span class="d">Onboarding, menus, availability, the one-tap service day, earnings and payouts.</span>
+        </div>
+        <div class="toc-item">
+          <span class="n">Part 4</span><span class="t">For Riders</span>
+          <span class="d">Onboarding, assignments, the pickup confirmation, delivery, earnings rules.</span>
+        </div>
+        <div class="toc-item">
+          <span class="n">Part 5</span><span class="t">For Campus Admins &amp; Ops</span>
+          <span class="d">Roles and permissions, the daily console routine, escalations, settlements, payouts.</span>
+        </div>
+        <div class="toc-item">
+          <span class="n">Part 6</span><span class="t">Launching a New University</span>
+          <span class="d">Six phases from discovery to go-live, with checklists you can print and sign off.</span>
+        </div>
+        <div class="toc-item">
+          <span class="n">Part 7</span><span class="t">Troubleshooting &amp; FAQ</span>
+          <span class="d">The questions every campus asks in week one, and the fix for each.</span>
+        </div>
+        <div class="toc-item">
+          <span class="n">Appendix</span><span class="t">Reference</span>
+          <span class="d">Glossary, permission matrix, order-state matrix, fill-in contact card.</span>
+        </div>
+      </div>
+
+      <h3>Before you print this</h3>
+      <p>
+        Three things in this handbook are campus-specific and are left blank on purpose. Fill them
+        in once, then print for everyone.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 30%">Blank</th>
+            <th>Where it appears</th>
+            <th style="width: 34%">Fill with</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>App links</strong></td>
+            <td>Parts 2, 3, 4 — the sign-in step for each role</td>
+            <td>Your customer app, vendor portal and rider portal URLs</td>
+          </tr>
+          <tr>
+            <td><strong>Support contacts</strong></td>
+            <td>Part 7 and the back-cover contact card</td>
+            <td>Support phone, WhatsApp line, e-mail, escalation phone</td>
+          </tr>
+          <tr>
+            <td><strong>Campus schedule</strong></td>
+            <td>Part 1 — delivery slots; Part 6 — Phase 1</td>
+            <td>Your slot names, delivery times and order cut-offs</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="note tip">
+        <span class="label">Money in this handbook</span>
+        Every naira figure quoted here is the <strong>seeded default</strong>. Delivery fee,
+        surcharges and the rider/vendor shares are admin-configurable per platform, and zones can
+        carry their own delivery fee. Confirm the live numbers in the admin console before you
+        print figures on posters.
+      </div>
+    </section>
+
+    <!-- ==================== PART 1 ==================== -->
+    <section class="part">
+      <div class="part-head">
+        <div class="kicker">Part 1</div>
+        <h2>How MealDirect Works</h2>
+        <p>
+          MealDirect is not a general food-delivery app pointed at a campus. It is built around
+          <strong>scheduled batch delivery</strong>: students order ahead for a fixed meal time,
+          the vendor cooks one batch, and one rider carries the whole batch to a zone. That is why
+          the food is cheap, the delivery fee is flat, and the timing is predictable.
+        </p>
+      </div>
+
+      <h3>The batch model in one picture</h3>
+      <figure>
+        <svg viewBox="0 0 760 220" role="img" aria-label="Batch delivery flow">
+          <defs>
+            <marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0,0 L10,5 L0,10 z" fill="#6d6355" />
+            </marker>
+          </defs>
+          <g font-family="Segoe UI, Arial" font-size="12">
+            <!-- students -->
+            <rect x="6" y="34" width="150" height="152" rx="8" fill="#faf6ef" stroke="#e2dbd0" />
+            <text x="81" y="56" text-anchor="middle" font-size="12.5" font-weight="700" fill="#16130f">Many students</text>
+            <text x="81" y="73" text-anchor="middle" font-size="10.5" fill="#6d6355">order before the cut-off</text>
+            <g fill="#ffffff" stroke="#c2410c">
+              <rect x="24" y="86" width="114" height="20" rx="4" />
+              <rect x="24" y="112" width="114" height="20" rx="4" />
+              <rect x="24" y="138" width="114" height="20" rx="4" />
+            </g>
+            <g font-size="9.5" fill="#443c33" text-anchor="middle">
+              <text x="81" y="100">Order · Hostel A · 1:00 pm</text>
+              <text x="81" y="126">Order · Hostel A · 1:00 pm</text>
+              <text x="81" y="152">Order · Hostel A · 1:00 pm</text>
+            </g>
+
+            <line x1="160" y1="110" x2="204" y2="110" stroke="#6d6355" stroke-width="1.4" marker-end="url(#arw)" />
+
+            <!-- batch -->
+            <rect x="208" y="34" width="150" height="152" rx="8" fill="#fdf1e7" stroke="#c2410c" />
+            <text x="283" y="56" text-anchor="middle" font-size="12.5" font-weight="700" fill="#7c2d12">One batch</text>
+            <text x="283" y="73" text-anchor="middle" font-size="10.5" fill="#7c2d12">vendor + slot + zone + date</text>
+            <rect x="230" y="86" width="106" height="72" rx="6" fill="#ffffff" stroke="#f0b48a" />
+            <text x="283" y="112" text-anchor="middle" font-size="10.5" fill="#443c33">Closes at cut-off</text>
+            <text x="283" y="130" text-anchor="middle" font-size="10.5" fill="#443c33">Vendor cooks once</text>
+            <text x="283" y="148" text-anchor="middle" font-size="10.5" fill="#443c33">Rider assigned once</text>
+
+            <line x1="362" y1="110" x2="406" y2="110" stroke="#6d6355" stroke-width="1.4" marker-end="url(#arw)" />
+
+            <!-- rider -->
+            <rect x="410" y="34" width="150" height="152" rx="8" fill="#e9f4ee" stroke="#14663f" />
+            <text x="485" y="56" text-anchor="middle" font-size="12.5" font-weight="700" fill="#14663f">One rider run</text>
+            <text x="485" y="73" text-anchor="middle" font-size="10.5" fill="#14663f">picks up the whole batch</text>
+            <circle cx="485" cy="122" r="30" fill="#ffffff" stroke="#a8ccb8" />
+            <text x="485" y="119" text-anchor="middle" font-size="11" fill="#14663f">1 trip</text>
+            <text x="485" y="135" text-anchor="middle" font-size="11" fill="#14663f">N orders</text>
+
+            <line x1="564" y1="110" x2="608" y2="110" stroke="#6d6355" stroke-width="1.4" marker-end="url(#arw)" />
+
+            <!-- delivery -->
+            <rect x="612" y="34" width="142" height="152" rx="8" fill="#faf6ef" stroke="#e2dbd0" />
+            <text x="683" y="56" text-anchor="middle" font-size="12.5" font-weight="700" fill="#16130f">Delivered</text>
+            <text x="683" y="73" text-anchor="middle" font-size="10.5" fill="#6d6355">at the promised time</text>
+            <g font-size="10.5" fill="#443c33" text-anchor="middle">
+              <text x="683" y="100">Zone drop point</text>
+              <text x="683" y="120">or</text>
+              <text x="683" y="140">point delivery to</text>
+              <text x="683" y="156">a room / class</text>
+            </g>
+
+            <text x="380" y="208" text-anchor="middle" font-size="10.5" fill="#6d6355">Flat delivery fee is possible because the cost of the trip is shared across the batch.</text>
+          </g>
+        </svg>
+        <figcaption>Batch = one vendor × one delivery slot × one zone × one service date.</figcaption>
+      </figure>
+
+      <h3>How a campus is structured</h3>
+      <p>
+        Before anyone can order, the campus is described in the system as four nested things. Part 6
+        walks through creating them.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 20%">Layer</th>
+            <th style="width: 44%">What it is</th>
+            <th>Example</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Campus</strong></td>
+            <td>The university itself. Carries timezone, currency, country and the campus fee ceiling.</td>
+            <td>Venite University · <code>Africa/Lagos</code> · NGN</td>
+          </tr>
+          <tr>
+            <td><strong>Zone</strong></td>
+            <td>A delivery cluster inside the campus. Batches are grouped per zone; a zone can carry its own delivery fee.</td>
+            <td>North Hostels (<code>NH</code>), Academic Core (<code>AC</code>)</td>
+          </tr>
+          <tr>
+            <td><strong>Location</strong></td>
+            <td>The actual drop point a student picks. Typed <code>hostel</code> or <code>department</code>, with optional delivery instructions.</td>
+            <td>Queen Amina Hall · Faculty of Law</td>
+          </tr>
+          <tr>
+            <td><strong>Delivery slot</strong></td>
+            <td>A promised meal time plus a cut-off measured in minutes before it. Orders after the cut-off roll to the next slot.</td>
+            <td>Lunch · delivers 1:00 pm · cut-off 90 min → orders close 11:30 am</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="note">
+        <span class="label">Why the cut-off matters more than anything else</span>
+        The cut-off is the single number that decides whether a campus runs smoothly. Too short and
+        vendors cannot cook in time; too long and students feel the app is inflexible. Start at
+        <strong>90 minutes</strong> for lunch, review after the pilot week.
+      </div>
+
+      <h3>The four order states</h3>
+      <p>
+        Everyone — student, vendor, rider, admin — sees the same four states. There are no hidden
+        intermediate steps and no "accepted" or "preparing" taps.
+      </p>
+      <figure>
+        <svg viewBox="0 0 760 150" role="img" aria-label="Order lifecycle">
+          <defs>
+            <marker id="arw2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0,0 L10,5 L0,10 z" fill="#c2410c" />
+            </marker>
+          </defs>
+          <g font-family="Segoe UI, Arial">
+            <g>
+              <rect x="4" y="40" width="128" height="52" rx="7" fill="#ffffff" stroke="#e2dbd0" stroke-dasharray="4 3" />
+              <text x="68" y="63" text-anchor="middle" font-size="12" font-weight="700" fill="#6d6355">pending_payment</text>
+              <text x="68" y="80" text-anchor="middle" font-size="10" fill="#6d6355">student is paying</text>
+            </g>
+            <line x1="136" y1="66" x2="164" y2="66" stroke="#c2410c" stroke-width="1.6" marker-end="url(#arw2)" />
+            <g>
+              <rect x="168" y="40" width="128" height="52" rx="7" fill="#fdf1e7" stroke="#c2410c" />
+              <text x="232" y="63" text-anchor="middle" font-size="12.5" font-weight="700" fill="#7c2d12">paid</text>
+              <text x="232" y="80" text-anchor="middle" font-size="10" fill="#7c2d12">vendor's worklist</text>
+            </g>
+            <line x1="300" y1="66" x2="328" y2="66" stroke="#c2410c" stroke-width="1.6" marker-end="url(#arw2)" />
+            <g>
+              <rect x="332" y="40" width="128" height="52" rx="7" fill="#fdf1e7" stroke="#c2410c" />
+              <text x="396" y="63" text-anchor="middle" font-size="12.5" font-weight="700" fill="#7c2d12">ready</text>
+              <text x="396" y="80" text-anchor="middle" font-size="10" fill="#7c2d12">vendor taps once</text>
+            </g>
+            <line x1="464" y1="66" x2="492" y2="66" stroke="#c2410c" stroke-width="1.6" marker-end="url(#arw2)" />
+            <g>
+              <rect x="496" y="40" width="128" height="52" rx="7" fill="#e9f4ee" stroke="#14663f" />
+              <text x="560" y="63" text-anchor="middle" font-size="12" font-weight="700" fill="#14663f">out_for_delivery</text>
+              <text x="560" y="80" text-anchor="middle" font-size="10" fill="#14663f">rider has the food</text>
+            </g>
+            <line x1="628" y1="66" x2="656" y2="66" stroke="#c2410c" stroke-width="1.6" marker-end="url(#arw2)" />
+            <g>
+              <rect x="660" y="40" width="96" height="52" rx="7" fill="#14663f" stroke="#14663f" />
+              <text x="708" y="63" text-anchor="middle" font-size="12.5" font-weight="700" fill="#ffffff">delivered</text>
+              <text x="708" y="80" text-anchor="middle" font-size="10" fill="#cbe6d8">final</text>
+            </g>
+            <text x="380" y="122" text-anchor="middle" font-size="10.5" fill="#6d6355">
+              Off-path states: cancelled · expired (unpaid past cut-off) · refunded · administratively_completed (admin closes a stuck order)
+            </text>
+          </g>
+        </svg>
+        <figcaption>
+          <strong>delivered</strong> is the end of the happy path. There is no customer
+          "confirm receipt" step — reviews open as soon as the order is delivered.
+        </figcaption>
+      </figure>
+
+      <h3>Who does what</h3>
+      <div class="grid-3">
+        <div class="card">
+          <h5>Student</h5>
+          <p>Orders before the cut-off, pays by wallet or card, tracks the order, reviews after delivery.</p>
+        </div>
+        <div class="card">
+          <h5>Vendor</h5>
+          <p>Keeps the menu and daily availability honest, cooks the batch, taps <strong>Ready</strong> once.</p>
+        </div>
+        <div class="card">
+          <h5>Rider</h5>
+          <p>Accepts the batch assignment, confirms whether the food was ready at pickup, delivers.</p>
+        </div>
+        <div class="card">
+          <h5>Campus admin</h5>
+          <p>Runs the campus: zones, slots, vendors, riders, escalations, refunds, daily settlements.</p>
+        </div>
+        <div class="card">
+          <h5>Finance admin</h5>
+          <p>Verifies payments, approves settlements, releases payouts, handles reconciliation.</p>
+        </div>
+        <div class="card">
+          <h5>Support admin</h5>
+          <p>Read-only across the campus. Answers questions and hands real problems to ops or finance.</p>
+        </div>
+      </div>
+
+      <h3>Two delivery modes, two fulfilment shapes</h3>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 26%">Mode</th>
+            <th>How it runs</th>
+            <th style="width: 26%">When to use it</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>MealDirect rider</strong><br /><code>meal_direct_rider</code></td>
+            <td>Batch is assigned to a campus rider who picks up from the vendor and delivers to the zone.</td>
+            <td>Default. Needed once more than one vendor serves a slot.</td>
+          </tr>
+          <tr>
+            <td><strong>Vendor delivery</strong><br /><code>vendor_delivery</code></td>
+            <td>The vendor delivers its own batch and earns the delivery share itself.</td>
+            <td>Very early pilots, or a vendor that already has a delivery person.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Standard delivery vs point delivery</h3>
+      <div class="grid-2">
+        <div class="card cream">
+          <h5>Standard — ₦300</h5>
+          <p>
+            Food comes to the location's normal drop point: the hall entrance, the departmental
+            lobby, wherever the campus agreed. Fastest for the rider, cheapest for the student.
+          </p>
+        </div>
+        <div class="card cream">
+          <h5>Point delivery — ₦400</h5>
+          <p>
+            The student asks for it to be brought to a specific spot — hostel room, classroom,
+            office — and labels it (e.g. "Block C, Room 214"). The extra ₦100 covers the extra
+            walking; ₦50 of it goes to whoever carries it.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PART 2 ==================== -->
+    <section class="part">
+      <div class="part-head">
+        <div class="kicker">Part 2 · Hand this to students</div>
+        <h2>For Students &amp; Staff</h2>
+        <p>
+          Order lunch between lectures, pay from a wallet you top up by bank transfer, and get it
+          at the time it was promised.
+        </p>
+      </div>
+
+      <h3>Getting started</h3>
+      <ol class="steps">
+        <li>
+          <strong>Open the app</strong>
+          Go to <span class="fill"></span> (customer app link) and sign up with your e-mail or
+          phone number. Verify the code you receive.
+        </li>
+        <li>
+          <strong>Enter a referral code, if you have one</strong>
+          Referral codes only work <strong>before you finish onboarding</strong>. Once your profile
+          is complete the window closes permanently — so enter it on the signup screen, not later.
+        </li>
+        <li>
+          <strong>Pick your campus and usual location</strong>
+          Choose your hostel or department. This decides which zone you are in and which batch your
+          orders join.
+        </li>
+        <li>
+          <strong>Turn on notifications</strong>
+          This is how you find out the food is ready and the rider is on the way. Without it you
+          will be refreshing the app instead.
+        </li>
+      </ol>
+
+      <h3>Placing an order</h3>
+      <ol class="steps">
+        <li>
+          <strong>Pick the meal time first, then the food</strong>
+          Choose the service date and delivery slot (e.g. Lunch, delivers 1:00 pm). The app only
+          shows vendors and items actually available for that slot.
+        </li>
+        <li>
+          <strong>Build the plate</strong>
+          Set quantities, choose a soup where the item requires one, and add anything the item
+          allows — spoons of rice, protein, drinks, extra sides.
+        </li>
+        <li>
+          <strong>Choose where it lands</strong>
+          Standard delivery to your location's drop point, or point delivery to an exact spot for
+          ₦100 more. If it is a hostel, add your room number.
+        </li>
+        <li>
+          <strong>Add a note if it matters</strong>
+          Allergies, "no pepper", "call when you're outside". Keep it short — riders read it on a
+          phone in motion.
+        </li>
+        <li>
+          <strong>Apply a promo code</strong>
+          Enter it before checkout; the app shows the discount in the total before you pay.
+        </li>
+        <li>
+          <strong>Check the total, then pay</strong>
+          Pay from your wallet balance or by card through Paystack. The order is only real once it
+          is <strong>paid</strong>.
+        </li>
+      </ol>
+
+      <div class="note warn">
+        <span class="label">The cut-off is hard</span>
+        Every slot closes a set time before delivery (typically 90 minutes for lunch). After the
+        cut-off, that slot disappears and you order for the next one. An order left unpaid past the
+        cut-off <strong>expires</strong> automatically — no food, no charge.
+      </div>
+
+      <h3>What you actually pay</h3>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 34%">Line</th>
+            <th style="width: 22%">Default</th>
+            <th>What it is</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Food subtotal</td>
+            <td class="num">varies</td>
+            <td>What the vendor charges for the items you picked.</td>
+          </tr>
+          <tr>
+            <td>Delivery fee</td>
+            <td class="num">₦300</td>
+            <td>Flat per order. Shared between the rider, the vendor and the platform.</td>
+          </tr>
+          <tr>
+            <td>Point-delivery surcharge</td>
+            <td class="num">+₦100</td>
+            <td>Only if you ask for delivery to a specific room or spot.</td>
+          </tr>
+          <tr>
+            <td>Service fee</td>
+            <td class="num">₦200</td>
+            <td>Platform fee. Configurable per environment, capped per campus.</td>
+          </tr>
+          <tr>
+            <td>Discount</td>
+            <td class="num">− varies</td>
+            <td>Promo code, if applied and valid.</td>
+          </tr>
+          <tr>
+            <td>Large-order surcharge</td>
+            <td class="num">1.5% + ₦100</td>
+            <td>
+              Only on totals above <strong>₦2,490</strong>. Big orders are allowed — you just have
+              to tick the box accepting the surcharge.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="note tip">
+        <span class="label">Ordering for a group</span>
+        Group orders are welcome. Anything over ₦2,490 asks you to accept the large-order
+        surcharge — that is a confirmation, not a rejection. Tick it and the order goes through.
+      </div>
+
+      <h3>The wallet</h3>
+      <p>
+        Every student gets a MealDirect wallet with a <strong>dedicated bank account number</strong>
+        of their own, provided through Paystack. Transfer money to that account and your balance
+        goes up — no card, no re-entering details at every checkout.
+      </p>
+      <div class="grid-3">
+        <div class="card">
+          <h5>Top up</h5>
+          <p>Open Wallet → your account number is on screen. Transfer from any Nigerian bank app. Balance updates when the transfer lands.</p>
+        </div>
+        <div class="card">
+          <h5>Pay</h5>
+          <p>At checkout choose <strong>Wallet</strong>. If the balance is short, the app tells you exactly how much is missing.</p>
+        </div>
+        <div class="card">
+          <h5>Refunds</h5>
+          <p>Refunds land back in your wallet balance, ready for the next order. Every movement is listed in the wallet ledger.</p>
+        </div>
+      </div>
+      <p>
+        The ledger records five kinds of movement: <code>topup</code>, <code>order_payment</code>,
+        <code>order_refund</code>, <code>adjustment</code> (an admin correction) and
+        <code>reversal</code>. If a number ever looks wrong, the ledger is the proof — screenshot it
+        when you contact support.
+      </p>
+
+      <h3>Tracking, chat and delivery</h3>
+      <ul>
+        <li><strong>paid</strong> — the vendor has your order in their worklist.</li>
+        <li><strong>ready</strong> — the food is cooked and packed, waiting for the rider.</li>
+        <li><strong>out_for_delivery</strong> — the rider has your batch and is moving.</li>
+        <li><strong>delivered</strong> — handed over. Reviews open now.</li>
+      </ul>
+      <p>
+        Each batch has a <strong>group chat</strong> with the other people on the same run, the
+        vendor and the rider. Customers appear under pseudonyms — nobody sees your name or number.
+        Use it for "we're at the Law car park" type coordination, not complaints.
+      </p>
+      <p>
+        The rider may confirm delivery with a <strong>hand-off code</strong> you show them. Do not
+        share the code before you have the food in your hand.
+      </p>
+
+      <h3>Reviews, problems and refunds</h3>
+      <ul>
+        <li><strong>Review</strong> — once an order is delivered you can rate the vendor and leave a comment. This is what keeps campus food quality honest.</li>
+        <li><strong>Report a problem</strong> — wrong item, missing item, cold food, never arrived: raise an issue on the order. It goes to campus admins as an escalation, and they can attach a refund to it.</li>
+        <li><strong>Refunds</strong> — approved refunds go to your wallet balance. Where a payment must be reversed to the original card instead, admins handle it from the payments console.</li>
+      </ul>
+
+      <div class="note">
+        <span class="label">Cancelling</span>
+        You can cancel while an order is still <code>paid</code>. Once the vendor has marked it
+        <code>ready</code> the food exists and has been paid for — from that point it is an
+        escalation, not a cancellation.
+      </div>
+    </section>
+
+    <!-- ==================== PART 3 ==================== -->
+    <section class="part">
+      <div class="part-head">
+        <div class="kicker">Part 3 · Hand this to vendors</div>
+        <h2>For Vendors</h2>
+        <p>
+          You cook one batch per slot for a known number of plates, tap <strong>Ready</strong> once,
+          and get paid on a daily settlement. Guessing demand is the platform's job, not yours.
+        </p>
+      </div>
+
+      <h3>Onboarding — the once-only setup</h3>
+      <ol class="steps">
+        <li>
+          <strong>Create your vendor account</strong>
+          Sign in at <span class="fill"></span> (vendor portal) and complete onboarding. A campus
+          admin then approves the vendor before it can appear to students.
+        </li>
+        <li>
+          <strong>Complete the business profile</strong>
+          Name, description, contact phone, logo. This is what students see first — upload a real
+          photo of your food, not a stock image.
+        </li>
+        <li>
+          <strong>Add your payout account</strong>
+          Bank and account number. The system <strong>verifies the account name</strong> with the
+          bank before it is usable, and an admin reviews it. No verified payout account means no
+          money can leave the platform to you.
+        </li>
+        <li>
+          <strong>Build the menu</strong>
+          Categories first, then items. For each item set price, unit type, the maximum quantity a
+          single order may take, and whether it requires a soup choice.
+        </li>
+        <li>
+          <strong>Add your soup options</strong>
+          Any item flagged as requiring soup makes the student pick from this list at checkout —
+          egusi, efo, ogbono, and so on. Keep it to what you genuinely cook every day.
+        </li>
+        <li>
+          <strong>Set item schedules</strong>
+          Say which slots and days each item is available. Jollof at lunch only, swallow in the
+          evening — set it once and stop re-answering the question daily.
+        </li>
+      </ol>
+
+      <div class="note tip">
+        <span class="label">Unit types decide two things</span>
+        A unit type controls whether a takeaway pack fee applies and whether the item is counted in
+        spoons. Get these right at onboarding — they change what students see and what you are
+        paid for packaging.
+      </div>
+
+      <h3>The service day</h3>
+      <ol class="steps">
+        <li>
+          <strong>Morning: set availability</strong>
+          Before the cut-off, set how much of each item you can actually produce. This is the single
+          most important daily action — availability is what students can order.
+        </li>
+        <li>
+          <strong>Cut-off: the batch closes</strong>
+          Orders stop. Your batch list shows the exact number of plates per item. Cook to that
+          number.
+        </li>
+        <li>
+          <strong>Cook, pack, then tap Ready</strong>
+          One tap moves the order from <code>paid</code> to <code>ready</code>. There is no accept
+          step and no preparing step — that was removed so you tap once per order, not three times.
+        </li>
+        <li>
+          <strong>Hand over to the rider</strong>
+          The rider confirms at pickup whether the food was actually ready. That confirmation
+          decides your on-time bonus, so pack before the rider arrives, not while they wait.
+        </li>
+        <li>
+          <strong>Evening: check the settlement</strong>
+          Your daily settlement lists food revenue, your delivery share and any adjustments.
+        </li>
+      </ol>
+
+      <h3>What you earn</h3>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 34%">Component</th>
+            <th style="width: 22%">Amount</th>
+            <th>Condition</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Food revenue</td>
+            <td class="num">your prices</td>
+            <td>Less platform commission, as agreed at onboarding.</td>
+          </tr>
+          <tr>
+            <td>Delivery-fee share</td>
+            <td class="num">₦50 / order</td>
+            <td>
+              Paid when the food was ready <strong>at least 10 minutes before</strong> the slot
+              time, confirmed by the rider at pickup.
+            </td>
+          </tr>
+          <tr>
+            <td>Delivery-fee share (late)</td>
+            <td class="num">₦0</td>
+            <td>Food not ready in time. The forfeited ₦50 goes to the platform.</td>
+          </tr>
+          <tr>
+            <td>Self-delivery</td>
+            <td class="num">rider share</td>
+            <td>On <code>vendor_delivery</code> batches you earn the rider's delivery share too.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="note warn">
+        <span class="label">The ₦50 is decided at pickup, not at delivery</span>
+        The rider taps "was the food ready?" when they collect the batch. Being 9 minutes early is
+        a forfeit; being 15 minutes early is a bonus. Aim to be packed 20 minutes before the slot
+        and this line never costs you anything.
+      </div>
+
+      <h3>Getting paid</h3>
+      <ol class="steps">
+        <li><strong>Settlement generated</strong> — a daily settlement is produced from your delivered orders.</li>
+        <li><strong>Admin approves</strong> — a finance or campus admin reviews and approves it.</li>
+        <li><strong>Payout sent</strong> — an automated Paystack transfer to your verified account, or a manual payment marked in the console if automated payouts are off.</li>
+        <li><strong>Reconciled</strong> — the transfer status is tracked until the bank confirms; failed transfers are retried and surfaced to admins.</li>
+      </ol>
+
+      <h3>Vendor rules that protect you</h3>
+      <ul>
+        <li>You are never asked to cook on speculation — every plate in a closed batch is already paid for.</li>
+        <li>An order you genuinely cannot fulfil can be cancelled while it is still <code>paid</code>; the student is refunded.</li>
+        <li>Only your own vendor's orders, menu and settlements are visible to you. Other vendors cannot see your numbers, and you cannot see theirs.</li>
+        <li>Reviews are tied to delivered orders only. Nobody can review food they never received.</li>
+      </ul>
+
+      <div class="note">
+        <span class="label">Vendor staff accounts</span>
+        A vendor can have several user accounts — owner, kitchen lead, cashier. Ask the campus admin
+        to invite them. Everyone sees the same vendor worklist, so agree who taps
+        <strong>Ready</strong> before service starts.
+      </div>
+    </section>
+
+    <!-- ==================== PART 4 ==================== -->
+    <section class="part">
+      <div class="part-head">
+        <div class="kicker">Part 4 · Hand this to riders</div>
+        <h2>For Riders</h2>
+        <p>
+          One trip, many orders, one zone. Your earnings depend on one thing you control — arriving
+          on time — and one thing you report honestly: whether the food was ready.
+        </p>
+      </div>
+
+      <h3>Onboarding</h3>
+      <ol class="steps">
+        <li>
+          <strong>Sign up as a rider</strong>
+          At <span class="fill"></span> (rider portal), complete rider onboarding with your name,
+          phone and vehicle type.
+        </li>
+        <li>
+          <strong>Get verified</strong>
+          A campus admin verifies your identity and campus eligibility. Until then you receive no
+          assignments.
+        </li>
+        <li>
+          <strong>Add your payout account</strong>
+          Bank and account number, verified against the bank's records and reviewed by an admin.
+          Earnings cannot be paid out without it.
+        </li>
+        <li>
+          <strong>Set yourself available</strong>
+          Assignments only reach riders who are marked available. Turn it off when you are in class.
+        </li>
+      </ol>
+
+      <h3>A delivery run, step by step</h3>
+      <ol class="steps">
+        <li>
+          <strong>Assignment arrives</strong>
+          You get a batch: one vendor, one slot, one zone, N orders. <strong>Accept</strong> or
+          <strong>decline</strong> promptly — declining fast lets ops reassign before the food gets
+          cold. Declining with a reason is not held against you; silence is.
+        </li>
+        <li>
+          <strong>Go to the vendor and mark picked up</strong>
+          Count the packs against the batch list before you leave. Wrong counts found at the hostel
+          are your problem; wrong counts found at the kitchen are the vendor's.
+        </li>
+        <li>
+          <strong>Answer the readiness question honestly</strong>
+          When you start the run you confirm whether the food was ready. This decides the vendor's
+          ₦50 bonus. It is not a complaint mechanism and it is not optional — answer what actually
+          happened.
+        </li>
+        <li>
+          <strong>Ride out</strong>
+          The batch moves to <code>out_for_delivery</code> and every student in it is notified.
+        </li>
+        <li>
+          <strong>Deliver each order</strong>
+          Mark each one delivered as you hand it over, or scan/enter the student's
+          <strong>hand-off code</strong>. Do not mark a whole batch delivered from the car park.
+        </li>
+        <li>
+          <strong>Raise an issue if something is wrong</strong>
+          Nobody at the door, wrong address, damaged pack — report it on the order instead of
+          improvising. It becomes an escalation an admin can resolve.
+        </li>
+      </ol>
+
+      <h3>What you earn per order</h3>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 40%">Situation</th>
+            <th style="width: 20%">You earn</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Delivered on time</td>
+            <td class="num">₦100</td>
+            <td>Measured against the slot's promised delivery time.</td>
+          </tr>
+          <tr>
+            <td>Delivered late</td>
+            <td class="num">₦50</td>
+            <td>The forfeited ₦50 goes to the platform, not to the vendor.</td>
+          </tr>
+          <tr>
+            <td>Point delivery</td>
+            <td class="num">+₦50</td>
+            <td>Paid on any successful point delivery — this one is not timing-gated.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        So a full run of on-time point deliveries pays ₦150 per order, and a late standard delivery
+        pays ₦50. Across a 20-order batch that is the difference between ₦3,000 and ₦1,000 — timing
+        is the whole job.
+      </p>
+
+      <div class="note tip">
+        <span class="label">The fastest way to protect your earnings</span>
+        Get to the vendor <em>before</em> the slot time, not at it. If the vendor is not packed,
+        report it at pickup — that protects you when the delivery lands late.
+      </div>
+
+      <h3>Earnings and payouts</h3>
+      <ul>
+        <li><strong>Earnings</strong> — running totals per day and per settlement period, in the rider portal.</li>
+        <li><strong>Settlements</strong> — generated daily from delivered orders, then approved by an admin.</li>
+        <li><strong>Payout history</strong> — every transfer to your bank, with its status.</li>
+      </ul>
+      <div class="note warn">
+        <span class="label">Never accept cash for a MealDirect order</span>
+        Every order in the app is already paid. A student asking to "pay you directly" is either
+        confused or trying it on — point them at the app and report it to campus support.
+      </div>
+    </section>
+
+    <!-- ==================== PART 5 ==================== -->
+    <section class="part">
+      <div class="part-head">
+        <div class="kicker">Part 5 · Hand this to the campus team</div>
+        <h2>For Campus Admins &amp; Ops</h2>
+        <p>
+          The admin console is where a campus is configured, watched and unblocked. This part covers
+          who can do what, the daily routine, and how money leaves the platform.
+        </p>
+      </div>
+
+      <h3>Admin roles and what each can do</h3>
+      <p>
+        Admin rights come from an explicit membership record — never from a user editing their own
+        profile. Everyone can read; the columns below add write powers.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 22%">Role</th>
+            <th>Can do</th>
+            <th style="width: 26%">Give it to</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>super_admin</strong></td>
+            <td>Everything, across every campus, including managing other admins.</td>
+            <td>1–2 people at the platform company. Not the campus.</td>
+          </tr>
+          <tr>
+            <td><strong>campus_admin</strong></td>
+            <td>
+              Everything for their campus: vendors, riders, users, refunds, wallets, settlements,
+              payouts, reconciliation, payment verification.
+            </td>
+            <td>The campus lead who owns the launch.</td>
+          </tr>
+          <tr>
+            <td><strong>finance_admin</strong></td>
+            <td>Payments, refunds, wallets, settlements, payouts, reconciliation. No vendor/rider management.</td>
+            <td>Whoever reconciles money daily.</td>
+          </tr>
+          <tr>
+            <td><strong>operations_admin</strong></td>
+            <td>Vendors and riders. No money powers at all.</td>
+            <td>The person recruiting and managing kitchens and riders.</td>
+          </tr>
+          <tr>
+            <td><strong>support_admin</strong></td>
+            <td>Read-only. Sees orders, batches and escalations to answer questions.</td>
+            <td>Student support volunteers and the front desk.</td>
+          </tr>
+          <tr>
+            <td><strong>readonly_admin</strong></td>
+            <td>Read-only. Reporting and oversight.</td>
+            <td>University stakeholders who want visibility, not control.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="note warn">
+        <span class="label">Separate money from operations</span>
+        Do not give the person who recruits vendors the power to approve settlements to those same
+        vendors. <code>operations_admin</code> and <code>finance_admin</code> exist precisely so one
+        person cannot both create a payee and pay them.
+      </div>
+
+      <h3>The daily routine</h3>
+      <div class="grid-2">
+        <div class="card cream">
+          <h5>Before the cut-off</h5>
+          <ul>
+            <li>Check every serving vendor has set availability.</li>
+            <li>Check enough riders are marked available per zone.</li>
+            <li>Watch order volume per batch; flag a batch that is unusually large.</li>
+          </ul>
+        </div>
+        <div class="card cream">
+          <h5>At the cut-off</h5>
+          <ul>
+            <li>Batches close. Confirm each has an assigned fulfiller.</li>
+            <li>Assign or reassign riders where a batch is unassigned or declined.</li>
+            <li>Switch a batch to vendor delivery if no rider is available.</li>
+          </ul>
+        </div>
+        <div class="card cream">
+          <h5>During service</h5>
+          <ul>
+            <li>Watch orders still <code>paid</code> close to the slot time — those are late kitchens.</li>
+            <li>Answer batch chat where students are confused.</li>
+            <li>Pick up escalations as they arrive; assign an owner to each.</li>
+          </ul>
+        </div>
+        <div class="card cream">
+          <h5>After service</h5>
+          <ul>
+            <li>Resolve open escalations, attaching refunds where justified.</li>
+            <li>Clear the payment problem queues (mismatches, unverified payments).</li>
+            <li>Preview, generate and approve settlements.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>Handling problems</h3>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 30%">Situation</th>
+            <th>What to do</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Student paid but order shows unpaid</td>
+            <td>
+              Reconcile the payment against Paystack from the payments console. If the money is
+              genuinely there and the webhook was lost, an admin with the right permission can
+              force the payment to paid — this is a deliberate, audited override, not a routine fix.
+            </td>
+          </tr>
+          <tr>
+            <td>Rider declined and nobody picked up the batch</td>
+            <td>Reassign the rider, or assign the batch to vendor delivery.</td>
+            </tr>
+          <tr>
+            <td>Vendor cannot fulfil after cut-off</td>
+            <td>Cancel the affected orders (refunds follow) and notify the batch chat. Log it against the vendor's performance.</td>
+          </tr>
+          <tr>
+            <td>Food never arrived</td>
+            <td>Open the escalation, request evidence, resolve with a refund to the student's wallet.</td>
+          </tr>
+          <tr>
+            <td>Order stuck in a state after the fact</td>
+            <td>Use the administrative status transition to close it out. Every transition is audit-logged with the actor.</td>
+          </tr>
+          <tr>
+            <td>Wallet balance disputed</td>
+            <td>Open the wallet ledger, find the entry, and post an adjustment if it is genuinely wrong. Freeze the wallet if fraud is suspected.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Money, end to end</h3>
+      <figure>
+        <svg viewBox="0 0 760 210" role="img" aria-label="Money flow">
+          <defs>
+            <marker id="arw3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0,0 L10,5 L0,10 z" fill="#6d6355" />
+            </marker>
+          </defs>
+          <g font-family="Segoe UI, Arial" font-size="11">
+            <rect x="6" y="66" width="126" height="66" rx="7" fill="#faf6ef" stroke="#e2dbd0" />
+            <text x="69" y="92" text-anchor="middle" font-size="11.5" font-weight="700">Student pays</text>
+            <text x="69" y="110" text-anchor="middle" font-size="10" fill="#6d6355">wallet or card</text>
+
+            <line x1="136" y1="99" x2="170" y2="99" stroke="#6d6355" stroke-width="1.4" marker-end="url(#arw3)" />
+
+            <rect x="174" y="52" width="140" height="94" rx="7" fill="#fdf1e7" stroke="#c2410c" />
+            <text x="244" y="76" text-anchor="middle" font-size="11.5" font-weight="700" fill="#7c2d12">Order total</text>
+            <text x="244" y="96" text-anchor="middle" font-size="10" fill="#7c2d12">food + delivery</text>
+            <text x="244" y="112" text-anchor="middle" font-size="10" fill="#7c2d12">+ service fee</text>
+            <text x="244" y="128" text-anchor="middle" font-size="10" fill="#7c2d12">− discount</text>
+
+            <line x1="318" y1="99" x2="352" y2="99" stroke="#6d6355" stroke-width="1.4" marker-end="url(#arw3)" />
+
+            <rect x="356" y="20" width="150" height="52" rx="7" fill="#e9f4ee" stroke="#14663f" />
+            <text x="431" y="42" text-anchor="middle" font-size="11.5" font-weight="700" fill="#14663f">Vendor</text>
+            <text x="431" y="58" text-anchor="middle" font-size="10" fill="#14663f">food − commission, +₦50 early</text>
+
+            <rect x="356" y="80" width="150" height="52" rx="7" fill="#e9f4ee" stroke="#14663f" />
+            <text x="431" y="102" text-anchor="middle" font-size="11.5" font-weight="700" fill="#14663f">Rider</text>
+            <text x="431" y="118" text-anchor="middle" font-size="10" fill="#14663f">₦100 on time / ₦50 late (+₦50 point)</text>
+
+            <rect x="356" y="140" width="150" height="52" rx="7" fill="#eaf1f9" stroke="#1d4e89" />
+            <text x="431" y="162" text-anchor="middle" font-size="11.5" font-weight="700" fill="#1d4e89">Platform</text>
+            <text x="431" y="178" text-anchor="middle" font-size="10" fill="#1d4e89">the remainder + every forfeit</text>
+
+            <line x1="510" y1="46" x2="544" y2="70" stroke="#6d6355" stroke-width="1.4" marker-end="url(#arw3)" />
+            <line x1="510" y1="106" x2="544" y2="100" stroke="#6d6355" stroke-width="1.4" marker-end="url(#arw3)" />
+
+            <rect x="548" y="52" width="140" height="94" rx="7" fill="#faf6ef" stroke="#e2dbd0" />
+            <text x="618" y="78" text-anchor="middle" font-size="11.5" font-weight="700">Daily settlement</text>
+            <text x="618" y="98" text-anchor="middle" font-size="10" fill="#6d6355">generate → approve</text>
+            <text x="618" y="116" text-anchor="middle" font-size="10" fill="#6d6355">→ Paystack transfer</text>
+            <text x="618" y="134" text-anchor="middle" font-size="10" fill="#6d6355">→ reconcile</text>
+          </g>
+        </svg>
+        <figcaption>
+          Shares are resolved at the moment the order is <strong>delivered</strong>, when the
+          promised time, the actual time and the rider's readiness confirmation are all known.
+        </figcaption>
+      </figure>
+
+      <h3>Settlement and payout controls</h3>
+      <ol class="steps">
+        <li><strong>Preview</strong> — see what a settlement run would produce before committing.</li>
+        <li><strong>Generate</strong> — create the settlement records for the period.</li>
+        <li><strong>Approve</strong> — a finance-permission action. Only approved settlements can be paid.</li>
+        <li><strong>Pay</strong> — automated Paystack transfer to the verified payout account, or mark-paid for a manual bank transfer.</li>
+        <li><strong>Reconcile</strong> — transfer status is tracked and retried; failures land in a queue for an admin.</li>
+        <li><strong>Adjust</strong> — corrections are posted as explicit adjustments against the settlement, never by editing history.</li>
+      </ol>
+
+      <div class="note">
+        <span class="label">Everything sensitive is audited</span>
+        Refunds, force-paid overrides, wallet adjustments, status transitions, vendor and rider
+        state changes and payout approvals all write an audit entry naming the admin who did it.
+        Tell your team this on day one — it changes behaviour for the better.
+      </div>
+
+      <h3>Growth levers you control</h3>
+      <div class="grid-3">
+        <div class="card">
+          <h5>Promotions</h5>
+          <p>Create discount codes, watch redemption, deactivate when the budget is spent.</p>
+        </div>
+        <div class="card">
+          <h5>Referrals</h5>
+          <p>Every student has a code. Referral analytics show who is actually bringing people in.</p>
+        </div>
+        <div class="card">
+          <h5>Vendor performance</h5>
+          <p>Per-vendor stats on volume, readiness and reviews — the basis for keeping or dropping a kitchen.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PART 6 ==================== -->
+    <section class="part">
+      <div class="part-head">
+        <div class="kicker">Part 6 · The operator playbook</div>
+        <h2>Launching a New University</h2>
+        <p>
+          Six phases, roughly six weeks. The sequence matters: a campus that recruits vendors before
+          agreeing meal times ends up rebuilding its menus, and a campus that goes wide before a
+          pilot week burns its first impression on students who only try once.
+        </p>
+      </div>
+
+      <figure>
+        <svg viewBox="0 0 760 128" role="img" aria-label="Launch timeline">
+          <g font-family="Segoe UI, Arial">
+            <line x1="20" y1="62" x2="740" y2="62" stroke="#e2dbd0" stroke-width="3" />
+            <g font-size="10.5">
+              <g>
+                <circle cx="60" cy="62" r="10" fill="#c2410c" />
+                <text x="60" y="66" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">0</text>
+                <text x="60" y="36" text-anchor="middle" font-weight="700" fill="#16130f">Discovery</text>
+                <text x="60" y="92" text-anchor="middle" fill="#6d6355">Week 1</text>
+              </g>
+              <g>
+                <circle cx="196" cy="62" r="10" fill="#c2410c" />
+                <text x="196" y="66" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">1</text>
+                <text x="196" y="36" text-anchor="middle" font-weight="700" fill="#16130f">Configure</text>
+                <text x="196" y="92" text-anchor="middle" fill="#6d6355">Week 2</text>
+              </g>
+              <g>
+                <circle cx="332" cy="62" r="10" fill="#c2410c" />
+                <text x="332" y="66" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">2</text>
+                <text x="332" y="36" text-anchor="middle" font-weight="700" fill="#16130f">Vendors</text>
+                <text x="332" y="92" text-anchor="middle" fill="#6d6355">Weeks 2–3</text>
+              </g>
+              <g>
+                <circle cx="468" cy="62" r="10" fill="#c2410c" />
+                <text x="468" y="66" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">3</text>
+                <text x="468" y="36" text-anchor="middle" font-weight="700" fill="#16130f">Riders &amp; team</text>
+                <text x="468" y="92" text-anchor="middle" fill="#6d6355">Week 3</text>
+              </g>
+              <g>
+                <circle cx="604" cy="62" r="10" fill="#14663f" />
+                <text x="604" y="66" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">4</text>
+                <text x="604" y="36" text-anchor="middle" font-weight="700" fill="#16130f">Pilot week</text>
+                <text x="604" y="92" text-anchor="middle" fill="#6d6355">Week 4</text>
+              </g>
+              <g>
+                <circle cx="722" cy="62" r="10" fill="#14663f" />
+                <text x="722" y="66" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">5</text>
+                <text x="722" y="36" text-anchor="middle" font-weight="700" fill="#16130f">Go live</text>
+                <text x="722" y="92" text-anchor="middle" fill="#6d6355">Weeks 5–6</text>
+              </g>
+            </g>
+          </g>
+        </svg>
+      </figure>
+
+      <h3>Phase 0 — Discovery and agreement</h3>
+      <p>Before touching the console, leave discovery with these answers written down.</p>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 34%">Question</th>
+            <th>Why it decides something</th>
+            <th style="width: 20%">Answer</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Who owns this campus internally?</td>
+            <td>One named campus admin. Launches without an owner stall in week two.</td>
+            <td><span class="fill"></span></td>
+          </tr>
+          <tr>
+            <td>Which hostels and faculties are in scope?</td>
+            <td>Becomes your zones and locations. Start narrow — two zones beats eight.</td>
+            <td><span class="fill"></span></td>
+          </tr>
+          <tr>
+            <td>When do students actually eat?</td>
+            <td>Becomes your delivery slots. Ask students, not the administration.</td>
+            <td><span class="fill"></span></td>
+          </tr>
+          <tr>
+            <td>Which kitchens already feed this campus?</td>
+            <td>Your vendor shortlist. Existing demand beats a new kitchen every time.</td>
+            <td><span class="fill"></span></td>
+          </tr>
+          <tr>
+            <td>Are bikes allowed on campus, and where?</td>
+            <td>Decides rider mode, zone shapes and realistic delivery windows.</td>
+            <td><span class="fill"></span></td>
+          </tr>
+          <tr>
+            <td>Is university permission needed to operate?</td>
+            <td>Security stopping riders at the gate on day one is a launch-ending problem.</td>
+            <td><span class="fill"></span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Phase 1 — Configure the campus</h3>
+      <ol class="steps">
+        <li>
+          <strong>Create the campus</strong>
+          Name, slug, timezone (<code>Africa/Lagos</code>), currency <code>NGN</code>, country
+          <code>NG</code>. Leave it inactive until the pilot.
+        </li>
+        <li>
+          <strong>Create zones</strong>
+          A short code and display order each. Two to four zones for a launch; add more when volume
+          justifies a second rider run.
+        </li>
+        <li>
+          <strong>Create locations</strong>
+          Each hostel and department, typed correctly, with delivery instructions that a rider who
+          has never been there can follow ("gate 2, ask for the porter's desk").
+        </li>
+        <li>
+          <strong>Create delivery slots</strong>
+          Name, delivery time and cut-off minutes. Start with one or two slots. One slot done well
+          beats four half-served.
+        </li>
+        <li>
+          <strong>Confirm fees and settings</strong>
+          Delivery base, point surcharge, rider and vendor shares, service fee, large-order
+          threshold. Check the live values rather than assuming the defaults.
+        </li>
+      </ol>
+      <div class="note tip">
+        <span class="label">Launch shape that works</span>
+        1 slot × 2 zones × 3 vendors × 2 riders. Everything else is a week-four decision.
+      </div>
+
+      <h3>Phase 2 — Vendors</h3>
+      <ol class="steps">
+        <li><strong>Shortlist</strong> — kitchens students already trust, ideally already cooking at volume.</li>
+        <li><strong>Explain the model honestly</strong> — cook to a known number, get paid daily, ₦50 per order for being early, ₦0 for being late.</li>
+        <li><strong>Onboard and approve</strong> — vendor completes onboarding; an admin approves before they are visible.</li>
+        <li><strong>Verify payout accounts</strong> — do this in week two, not the night before launch. Bank name mismatches take days to sort out.</li>
+        <li><strong>Build menus together</strong> — sit with each vendor for the first menu. Prices, unit types, soup options, max quantities, photos.</li>
+        <li><strong>Rehearse a service day</strong> — place a test order, have them set availability, cook it and tap Ready. Do this before students exist.</li>
+      </ol>
+
+      <h3>Phase 3 — Riders and the campus team</h3>
+      <ol class="steps">
+        <li><strong>Recruit riders</strong> — students with bikes are usually the best first riders; they know the halls.</li>
+        <li><strong>Onboard, verify, add payout accounts</strong> — no verified account means no earnings can be paid.</li>
+        <li><strong>Walk the zones</strong> — physically walk each drop point with the riders before launch day.</li>
+        <li><strong>Set up admins</strong> — one campus admin, one finance admin, one or two operations admins, support as read-only.</li>
+        <li><strong>Agree the on-call rota</strong> — who answers the phone during each slot, in writing.</li>
+      </ol>
+
+      <h3>Phase 4 — Pilot week</h3>
+      <p>
+        One slot, invited students only, capped volume. The pilot is not a demo — it is where you
+        find the wrong cut-off, the hostel with no signage and the vendor who cooks in 90 minutes,
+        not 60.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 34%">Watch</th>
+            <th style="width: 24%">Healthy</th>
+            <th>If it is worse</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Orders ready before the slot time</td>
+            <td class="num">&gt; 90%</td>
+            <td>Lengthen the cut-off or reduce the vendor's availability numbers.</td>
+          </tr>
+          <tr>
+            <td>Delivered on time</td>
+            <td class="num">&gt; 85%</td>
+            <td>Zones are too big or there are too few riders per run.</td>
+          </tr>
+          <tr>
+            <td>Escalations per 100 orders</td>
+            <td class="num">&lt; 5</td>
+            <td>Read them all — the same cause usually repeats.</td>
+          </tr>
+          <tr>
+            <td>Wallet payment share</td>
+            <td class="num">rising weekly</td>
+            <td>Students have not found the top-up flow; push it in orientation.</td>
+          </tr>
+          <tr>
+            <td>Payment problem queue</td>
+            <td class="num">empty daily</td>
+            <td>Reconcile before it accumulates; a stale queue hides real losses.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Phase 5 — Go-live gates</h3>
+      <p>Do not open to the whole campus until every box below is ticked.</p>
+      <div class="grid-2">
+        <div class="card">
+          <h5>Configuration</h5>
+          <ul class="check">
+            <li>Campus active, zones and locations complete</li>
+            <li>Delivery slots with agreed cut-offs</li>
+            <li>Fee settings confirmed against the console</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h5>Supply</h5>
+          <ul class="check">
+            <li>≥ 3 approved vendors with live menus and photos</li>
+            <li>Every vendor payout account verified</li>
+            <li>≥ 2 verified riders with payout accounts, per zone</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h5>People</h5>
+          <ul class="check">
+            <li>Campus admin named and trained</li>
+            <li>Finance admin able to approve a settlement unaided</li>
+            <li>Support rota published with a phone number students can reach</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h5>Proof</h5>
+          <ul class="check">
+            <li>Pilot week completed with metrics above the thresholds</li>
+            <li>One full settlement generated, approved and paid out</li>
+            <li>One refund issued end to end</li>
+            <li>One escalation resolved end to end</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>Launch day runbook</h3>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 22%">When</th>
+            <th style="width: 26%">Who</th>
+            <th>Does what</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Cut-off − 3 h</td>
+            <td>Operations admin</td>
+            <td>Confirm every vendor has set availability. Phone the ones who have not.</td>
+          </tr>
+          <tr>
+            <td>Cut-off − 1 h</td>
+            <td>Operations admin</td>
+            <td>Confirm riders are marked available per zone.</td>
+          </tr>
+          <tr>
+            <td>Cut-off</td>
+            <td>Campus admin</td>
+            <td>Batches close. Confirm every batch has a fulfiller; reassign as needed.</td>
+          </tr>
+          <tr>
+            <td>Slot − 30 min</td>
+            <td>Campus admin</td>
+            <td>Any order still <code>paid</code> is a late kitchen — call it now, not at delivery time.</td>
+          </tr>
+          <tr>
+            <td>Slot time</td>
+            <td>Support</td>
+            <td>Live in batch chat, answering "where is my food".</td>
+          </tr>
+          <tr>
+            <td>Slot + 1 h</td>
+            <td>Campus admin</td>
+            <td>Resolve escalations, issue refunds, log what broke.</td>
+          </tr>
+          <tr>
+            <td>End of day</td>
+            <td>Finance admin</td>
+            <td>Clear payment problem queues, generate and approve settlements.</td>
+          </tr>
+          <tr>
+            <td>Day + 1</td>
+            <td>Everyone</td>
+            <td>15-minute retro. One fix chosen, one owner, done before the next service.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Week-one metrics that matter</h3>
+      <div class="grid-3">
+        <div class="card cream">
+          <div class="stat">&gt;85%</div>
+          <div class="stat-label">delivered on time</div>
+        </div>
+        <div class="card cream">
+          <div class="stat">&gt;40%</div>
+          <div class="stat-label">students ordering a second time</div>
+        </div>
+        <div class="card cream">
+          <div class="stat">0</div>
+          <div class="stat-label">unresolved escalations older than 24 h</div>
+        </div>
+      </div>
+      <p>
+        Repeat ordering is the only number that predicts whether a campus survives month two.
+        Everything else is a lever on it.
+      </p>
+    </section>
+
+    <!-- ==================== PART 7 ==================== -->
+    <section class="part">
+      <div class="part-head">
+        <div class="kicker">Part 7</div>
+        <h2>Troubleshooting &amp; FAQ</h2>
+        <p>The questions every campus asks in week one, grouped by who asks them.</p>
+      </div>
+
+      <h3>Students ask</h3>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 34%">Question</th>
+            <th>Answer</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>"Why can't I order lunch now?"</td>
+            <td>The cut-off has passed. Order for the next slot — the app only shows slots still open.</td>
+          </tr>
+          <tr>
+            <td>"I transferred money, the wallet is empty."</td>
+            <td>Bank transfers can lag. Open the wallet ledger; if nothing appears after a few minutes, contact support with the transfer reference.</td>
+          </tr>
+          <tr>
+            <td>"I paid but the order says unpaid."</td>
+            <td>Support reconciles the payment against Paystack. Do not pay twice.</td>
+          </tr>
+          <tr>
+            <td>"My order is above ₦2,490 and won't go through."</td>
+            <td>Accept the large-order surcharge (1.5% + ₦100) on the checkout screen. Big orders are allowed.</td>
+          </tr>
+          <tr>
+            <td>"Can I change my delivery location after paying?"</td>
+            <td>Not in-app. Ask in the batch chat before the rider leaves; otherwise it is an escalation.</td>
+          </tr>
+          <tr>
+            <td>"Where do I claim my referral bonus?"</td>
+            <td>Enter the code during signup, before completing onboarding. After that the window is closed permanently.</td>
+          </tr>
+          <tr>
+            <td>"Nobody delivered my food."</td>
+            <td>Report a problem on the order. It becomes an escalation; an approved refund goes to your wallet.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Vendors ask</h3>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 34%">Question</th>
+            <th>Answer</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>"No orders came in today."</td>
+            <td>Availability was probably not set before the cut-off. Nothing available means nothing orderable.</td>
+          </tr>
+          <tr>
+            <td>"An item isn't showing to students."</td>
+            <td>Check three things in order: item active, schedule covers this slot and day, availability set for today.</td>
+          </tr>
+          <tr>
+            <td>"I didn't get the ₦50 bonus."</td>
+            <td>The rider confirmed the food was not ready at pickup, or it was ready less than 10 minutes before the slot time.</td>
+          </tr>
+          <tr>
+            <td>"Where is my money?"</td>
+            <td>Settlements are daily and must be approved before payout. Check settlement status first, then payout status.</td>
+          </tr>
+          <tr>
+            <td>"I need to cancel an order."</td>
+            <td>Possible while it is still <code>paid</code>. Once marked ready, raise it with the campus admin.</td>
+          </tr>
+          <tr>
+            <td>"Can my cashier have their own login?"</td>
+            <td>Yes — ask the campus admin to invite a vendor user. Agree who taps Ready.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Riders ask</h3>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 34%">Question</th>
+            <th>Answer</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>"I'm not getting assignments."</td>
+            <td>Check: verified by an admin, marked available, and a batch exists in your zone for that slot.</td>
+          </tr>
+          <tr>
+            <td>"The vendor wasn't ready — am I penalised?"</td>
+            <td>No. Answer the readiness question honestly at pickup; that is exactly what it protects against.</td>
+          </tr>
+          <tr>
+            <td>"The student isn't answering."</td>
+            <td>Message the batch chat, wait the agreed grace period, then raise an issue on the order. Do not leave food unattended.</td>
+          </tr>
+          <tr>
+            <td>"I was paid ₦50 instead of ₦100."</td>
+            <td>That order was delivered after the slot's promised time.</td>
+          </tr>
+          <tr>
+            <td>"My payout failed."</td>
+            <td>Usually an unverified or mismatched bank account. Re-verify in the rider portal and tell the admin.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Admins ask</h3>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 34%">Question</th>
+            <th>Answer</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>"A batch has no rider and the slot is close."</td>
+            <td>Reassign a rider, or switch the batch to vendor delivery. Both are console actions.</td>
+          </tr>
+          <tr>
+            <td>"A payment is stuck in the problem queue."</td>
+            <td>Reconcile against Paystack first. Only use force-paid when the money is provably received — it is audited.</td>
+          </tr>
+          <tr>
+            <td>"Should a refund go to the wallet or the card?"</td>
+            <td>Wallet by default — instant and keeps the student on the platform. Reverse to the card only when the student is leaving or explicitly asks.</td>
+          </tr>
+          <tr>
+            <td>"A vendor keeps missing readiness."</td>
+            <td>Vendor performance shows the pattern. Coach first, reduce their availability second, suspend third.</td>
+          </tr>
+          <tr>
+            <td>"Someone needs admin access."</td>
+            <td>Grant the narrowest role that does the job. Never <code>super_admin</code> for a campus person.</td>
+          </tr>
+          <tr>
+            <td>"Can we change the delivery fee for one zone?"</td>
+            <td>Yes — zones carry their own delivery fee. The rider and vendor shares stay fixed and the platform absorbs the difference.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ==================== APPENDIX ==================== -->
+    <section class="part">
+      <div class="part-head">
+        <div class="kicker">Appendix</div>
+        <h2>Reference</h2>
+        <p>The tables worth pinning to a wall.</p>
+      </div>
+
+      <h3>Order state matrix</h3>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 24%">State</th>
+            <th style="width: 24%">Set by</th>
+            <th>Means</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>pending_payment</code></td>
+            <td>System, at order creation</td>
+            <td>Not yet paid. Expires if the cut-off passes.</td>
+          </tr>
+          <tr>
+            <td><code>paid</code></td>
+            <td>Payment (wallet or Paystack)</td>
+            <td>Money received. The order is in the vendor's worklist.</td>
+          </tr>
+          <tr>
+            <td><code>ready</code></td>
+            <td>Vendor — one tap</td>
+            <td>Cooked and packed, waiting for pickup.</td>
+          </tr>
+          <tr>
+            <td><code>out_for_delivery</code></td>
+            <td>Rider, at pickup</td>
+            <td>In transit. Rider's readiness confirmation captured here.</td>
+          </tr>
+          <tr>
+            <td><code>delivered</code></td>
+            <td>Rider, at hand-off</td>
+            <td>Terminal happy path. Earnings shares resolved; reviews open.</td>
+          </tr>
+          <tr>
+            <td><code>cancelled</code></td>
+            <td>Customer, vendor or admin</td>
+            <td>Stopped before delivery. Refund follows where money was taken.</td>
+          </tr>
+          <tr>
+            <td><code>expired</code></td>
+            <td>System</td>
+            <td>Never paid before the cut-off. No charge.</td>
+          </tr>
+          <tr>
+            <td><code>refunded</code></td>
+            <td>Admin</td>
+            <td>Money returned, to the wallet or the original payment method.</td>
+          </tr>
+          <tr>
+            <td><code>administratively_completed</code></td>
+            <td>Admin</td>
+            <td>Closed out by an admin when the normal flow could not finish.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Permission matrix</h3>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 30%">Capability</th>
+            <th>Super</th>
+            <th>Campus</th>
+            <th>Finance</th>
+            <th>Ops</th>
+            <th>Support</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Read everything in scope</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
+          <tr><td>Verify payments</td><td>✓</td><td>✓</td><td>✓</td><td>—</td><td>—</td></tr>
+          <tr><td>Issue refunds</td><td>✓</td><td>✓</td><td>✓</td><td>—</td><td>—</td></tr>
+          <tr><td>Adjust / freeze wallets</td><td>✓</td><td>✓</td><td>✓</td><td>—</td><td>—</td></tr>
+          <tr><td>Approve settlements</td><td>✓</td><td>✓</td><td>✓</td><td>—</td><td>—</td></tr>
+          <tr><td>Release payouts</td><td>✓</td><td>✓</td><td>✓</td><td>—</td><td>—</td></tr>
+          <tr><td>Reconciliation</td><td>✓</td><td>✓</td><td>✓</td><td>—</td><td>—</td></tr>
+          <tr><td>Manage vendors</td><td>✓</td><td>✓</td><td>—</td><td>✓</td><td>—</td></tr>
+          <tr><td>Manage riders</td><td>✓</td><td>✓</td><td>—</td><td>✓</td><td>—</td></tr>
+          <tr><td>Manage users</td><td>✓</td><td>✓</td><td>—</td><td>—</td><td>—</td></tr>
+          <tr><td>Manage other admins</td><td>✓</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Glossary</h3>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 26%">Term</th>
+            <th>Meaning</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Batch</strong></td><td>All orders for one vendor, one delivery slot, one zone, one service date. The unit a rider carries.</td></tr>
+          <tr><td><strong>Cut-off</strong></td><td>Minutes before a slot's delivery time when ordering closes and the batch is fixed.</td></tr>
+          <tr><td><strong>Delivery slot</strong></td><td>A promised meal delivery time on a campus, e.g. Lunch at 1:00 pm.</td></tr>
+          <tr><td><strong>Zone</strong></td><td>A delivery cluster within a campus. Batches group by zone; a zone may carry its own delivery fee.</td></tr>
+          <tr><td><strong>Location</strong></td><td>The hostel or department a student selects as the drop point.</td></tr>
+          <tr><td><strong>Point delivery</strong></td><td>Delivery to a specific spot (room, class, office) for an extra ₦100.</td></tr>
+          <tr><td><strong>Dedicated account</strong></td><td>The bank account number issued to each student's wallet for top-ups by transfer.</td></tr>
+          <tr><td><strong>Ledger</strong></td><td>The itemised record of every wallet movement — the source of truth in a dispute.</td></tr>
+          <tr><td><strong>Settlement</strong></td><td>The daily statement of what a vendor or rider is owed, before payout.</td></tr>
+          <tr><td><strong>Payout</strong></td><td>The actual bank transfer of an approved settlement.</td></tr>
+          <tr><td><strong>Escalation</strong></td><td>A logged problem on an order, assigned to an admin, resolvable with a refund.</td></tr>
+          <tr><td><strong>Forfeit</strong></td><td>A rider or vendor share not earned because of timing. Forfeits always go to the platform.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Campus contact card</h3>
+      <p>Fill this in and reprint it for every vendor, rider and admin.</p>
+      <div class="grid-2">
+        <div class="card cream">
+          <h5>Campus</h5>
+          <p>
+            University: <span class="fill"></span><br /><br />
+            Campus admin: <span class="fill"></span><br /><br />
+            Phone: <span class="fill"></span><br /><br />
+            Zones live: <span class="fill"></span>
+          </p>
+        </div>
+        <div class="card cream">
+          <h5>Support</h5>
+          <p>
+            Student support: <span class="fill"></span><br /><br />
+            WhatsApp: <span class="fill"></span><br /><br />
+            Vendor / rider line: <span class="fill"></span><br /><br />
+            Escalation (out of hours): <span class="fill"></span>
+          </p>
+        </div>
+        <div class="card cream">
+          <h5>Links</h5>
+          <p>
+            Customer app: <span class="fill"></span><br /><br />
+            Vendor portal: <span class="fill"></span><br /><br />
+            Rider portal: <span class="fill"></span><br /><br />
+            Admin console: <span class="fill"></span>
+          </p>
+        </div>
+        <div class="card cream">
+          <h5>Service schedule</h5>
+          <p>
+            Slot 1: <span class="fill"></span><br /><br />
+            Cut-off: <span class="fill"></span><br /><br />
+            Slot 2: <span class="fill"></span><br /><br />
+            Cut-off: <span class="fill"></span>
+          </p>
+        </div>
+      </div>
+
+      <div class="footer-note">
+        MealDirect Campus Handbook · Edition v2 · All naira figures are seeded defaults and are
+        admin-configurable; confirm live values in the admin console before publishing them to
+        students.
+      </div>
+    </section>
+  </body>
+</html>
