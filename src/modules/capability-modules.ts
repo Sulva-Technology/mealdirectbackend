@@ -1,4 +1,5 @@
 import { AdminModule } from './admin/admin.module.js';
+import { AnalyticsModule } from './analytics/analytics.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { BatchesModule } from './batches/batches.module.js';
 import { CampusesModule } from './campuses/campuses.module.js';
@@ -40,6 +41,7 @@ export const capabilityModules = [
   ReviewsModule,
   EscalationsModule,
   AdminModule,
+  AnalyticsModule,
   FeatureFlagsModule,
   PrintingModule,
   NotificationsModule,

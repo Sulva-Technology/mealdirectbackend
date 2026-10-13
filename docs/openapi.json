@@ -4937,6 +4937,34 @@
         "tags": ["admin"]
       }
     },
+    "/v1/analytics/events": {
+      "post": {
+        "operationId": "AnalyticsController_recordEvent",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Records one signup funnel step. Public so pre-signup steps can be counted; a valid bearer token, when sent, links the step to the signed-in user."
+          },
+          "400": { "description": "Unknown event name or malformed ids." }
+        },
+        "tags": ["analytics"]
+      }
+    },
+    "/v1/admin/analytics/funnel": {
+      "get": {
+        "operationId": "AnalyticsAdminController_funnel",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Signup funnel (campus link opened → first paid order) plus a per-campus breakdown. Campus admins only see their own campus."
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
     "/v1/admin/feature-flags": {
       "get": {
         "operationId": "AdminFeatureFlagsController_listFlags",

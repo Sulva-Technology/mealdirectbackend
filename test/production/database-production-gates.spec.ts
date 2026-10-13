@@ -115,7 +115,8 @@ describe('production database gates', () => {
       'platform_settings',
       'wallets',
       'wallet_ledger_entries',
-      'wallet_dedicated_accounts'
+      'wallet_dedicated_accounts',
+      'funnel_events'
     ];
 
     const result = await pool.query<{ relname: string; relrowsecurity: boolean }>(
