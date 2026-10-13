@@ -5,6 +5,7 @@ import {
   Injectable,
   Logger,
   Optional,
+  ServiceUnavailableException,
   UnauthorizedException
 } from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
@@ -67,6 +68,39 @@ type ResolvedGrant = {
   role: ActorRole;
   metadata: Record<string, unknown>;
 };
+
+type SupabaseAuthErrorLike = {
+  message?: string | undefined;
+  status?: number | undefined;
+  code?: string | undefined;
+  name?: string | undefined;
+};
+
+/**
+ * Turn a Supabase signup error into a client-facing exception. When Supabase Auth itself
+ * fails (5xx, or the request never got an answer: status 0) older supabase-js builds
+ * replace the reason with `JSON.stringify(response)`, i.e. the literal "{}", which the
+ * customer app then showed verbatim. The usual cause on signup is the confirmation email
+ * failing to send (SMTP settings or provider limits), so the account is not created and
+ * the user can simply retry once that is fixed. The real reason only goes to the logs.
+ */
+export function signUpFailureException(
+  error: SupabaseAuthErrorLike
+): BadRequestException | ServiceUnavailableException {
+  const status = typeof error.status === 'number' ? error.status : undefined;
+  const message = (error.message ?? '').trim();
+  const unreadable = message === '' || message === '{}' || message === '[object Object]';
+
+  if (status === 0 || (status !== undefined && status >= 500) || unreadable) {
+    return new ServiceUnavailableException({
+      code: ErrorCodes.AUTH_FAILED,
+      message:
+        "We couldn't create your account right now because our verification email could not be sent. Please try again in a few minutes."
+    });
+  }
+
+  return new BadRequestException({ code: ErrorCodes.AUTH_FAILED, message });
+}
 
 @Injectable()
 export class SupabaseAuthService {
@@ -224,6 +258,13 @@ export class SupabaseAuthService {
     });
   }
 
+  private logSignUpFailure(email: string, role: string, error: SupabaseAuthErrorLike) {
+    this.logger.error(
+      `Supabase signUp failed for ${email} (role: ${role}): status=${String(error.status)} ` +
+        `code=${error.code ?? 'none'} name=${error.name ?? 'unknown'} message=${error.message ?? ''}`
+    );
+  }
+
   async signUp(
     email: string,
     password: string,
@@ -247,10 +288,8 @@ export class SupabaseAuthService {
     });
 
     if (error) {
-      throw new BadRequestException({
-        code: ErrorCodes.AUTH_FAILED,
-        message: error.message
-      });
+      this.logSignUpFailure(email, role, error);
+      throw signUpFailureException(error);
     }
 
     const user = data.user;
@@ -341,10 +380,8 @@ export class SupabaseAuthService {
     });
 
     if (error) {
-      throw new BadRequestException({
-        code: ErrorCodes.AUTH_FAILED,
-        message: error.message
-      });
+      this.logSignUpFailure(email, 'vendor', error);
+      throw signUpFailureException(error);
     }
 
     const user = data.user;
@@ -673,9 +710,14 @@ export class SupabaseAuthService {
   async requestPasswordReset(email: string, portal: AuthPortal = 'customer'): Promise<void> {
     // Swallow provider errors so the response never reveals whether an account exists.
     try {
-      await this.getClient().auth.resetPasswordForEmail(email.trim(), {
+      const { error } = await this.getClient().auth.resetPasswordForEmail(email.trim(), {
         redirectTo: this.authRedirectUrl(portal)
       });
+      if (error) {
+        this.logger.warn(
+          `Password reset email failed (portal: ${portal}): status=${String(error.status)} message=${error.message}`
+        );
+      }
     } catch {
       // intentionally ignored to prevent user enumeration
     }
@@ -683,13 +725,18 @@ export class SupabaseAuthService {
 
   async resendConfirmation(email: string, portal: AuthPortal = 'customer'): Promise<void> {
     try {
-      await this.getClient().auth.resend({
+      const { error } = await this.getClient().auth.resend({
         type: 'signup',
         email: email.trim(),
         options: {
           emailRedirectTo: this.authRedirectUrl(portal)
         }
       });
+      if (error) {
+        this.logger.warn(
+          `Confirmation email resend failed (portal: ${portal}): status=${String(error.status)} message=${error.message}`
+        );
+      }
     } catch {
       // intentionally ignored to prevent user enumeration
     }

@@ -3,7 +3,10 @@ import { createClient } from '@supabase/supabase-js';
 
 import type { EnvService } from '../../src/config/env.service.js';
 import type { AuthRoleGrantsRepository } from '../../src/modules/auth/auth-role-grants.repository.js';
-import { SupabaseAuthService } from '../../src/modules/auth/supabase-auth.service.js';
+import {
+  SupabaseAuthService,
+  signUpFailureException
+} from '../../src/modules/auth/supabase-auth.service.js';
 
 vi.mock('@supabase/supabase-js', () => ({
   createClient: vi.fn()
@@ -17,6 +20,7 @@ let signInWithPasswordMock: ReturnType<typeof vi.fn>;
 let refreshSessionMock: ReturnType<typeof vi.fn>;
 let resetPasswordForEmailMock: ReturnType<typeof vi.fn>;
 let resendMock: ReturnType<typeof vi.fn>;
+let signUpMock: ReturnType<typeof vi.fn>;
 let getUserMock: ReturnType<typeof vi.fn>;
 let updateUserByIdMock: ReturnType<typeof vi.fn>;
 
@@ -51,6 +55,7 @@ function authClient() {
       signInWithPassword: signInWithPasswordMock,
       resetPasswordForEmail: resetPasswordForEmailMock,
       resend: resendMock,
+      signUp: signUpMock,
       getUser: getUserMock,
       admin: {
         updateUserById: updateUserByIdMock
@@ -106,6 +111,7 @@ describe('SupabaseAuthService', () => {
     refreshSessionMock = vi.fn();
     resetPasswordForEmailMock = vi.fn().mockResolvedValue({ data: {}, error: null });
     resendMock = vi.fn().mockResolvedValue({ data: {}, error: null });
+    signUpMock = vi.fn();
     getUserMock = vi.fn().mockResolvedValue({
       data: { user: { id: userId, email: 'person@example.com' } },
       error: null
@@ -324,5 +330,32 @@ describe('SupabaseAuthService', () => {
       /invalid|expired/i
     );
     expect(updateUserByIdMock).not.toHaveBeenCalled();
+  });
+
+  it('never surfaces the "{}" message Supabase gives for a failed signup email', async () => {
+    signUpMock.mockResolvedValue({
+      data: { user: null, session: null },
+      error: { name: 'AuthRetryableFetchError', message: '{}', status: 500 }
+    });
+
+    const failure = service.signUp('new@example.com', 'Password123!', 'customer');
+
+    await expect(failure).rejects.toMatchObject({ status: 503 });
+    await expect(failure).rejects.toThrow(/verification email could not be sent/);
+  });
+
+  it('keeps actionable Supabase signup messages as a 400', () => {
+    const exception = signUpFailureException({
+      message: 'Password should be at least 8 characters.',
+      status: 422
+    });
+    expect(exception.getStatus()).toBe(400);
+    expect(exception.getResponse()).toMatchObject({
+      message: 'Password should be at least 8 characters.'
+    });
+  });
+
+  it('treats an unanswered Supabase request (status 0) as unavailable', () => {
+    expect(signUpFailureException({ message: 'fetch failed', status: 0 }).getStatus()).toBe(503);
   });
 });
