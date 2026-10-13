@@ -1,0 +1,1233 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>MealDirect Ambassador Guide</title>
+    <style>
+      /* ============================================================
+         MealDirect Campus Ambassador Guide — print stylesheet (A4)
+         Rendered to PDF with headless Chrome. No external assets.
+         ============================================================ */
+
+      @page {
+        size: A4;
+        margin: 18mm 16mm 20mm 16mm;
+        @bottom-left {
+          content: "MealDirect · Campus Ambassador Guide";
+          font-family: "Segoe UI", Arial, sans-serif;
+          font-size: 7.5pt;
+          color: #8a7f70;
+        }
+        @bottom-right {
+          content: counter(page);
+          font-family: "Bahnschrift", "Segoe UI", Arial, sans-serif;
+          font-size: 9pt;
+          font-weight: 700;
+          color: #c2410c;
+        }
+      }
+      @page bleed {
+        margin: 0;
+        @bottom-left { content: none; }
+        @bottom-right { content: none; }
+      }
+
+      :root {
+        --ink: #17120d;
+        --ink-2: #463c31;
+        --ink-3: #75695a;
+        --rule: #e8e0d4;
+        --paper: #ffffff;
+        --cream: #fbf7f1;
+        --amber: #c2410c;
+        --amber-2: #ea580c;
+        --amber-soft: #fff1e6;
+        --gold: #f59e0b;
+        --green: #15703f;
+        --green-soft: #e8f5ed;
+        --blue: #1d4e89;
+        --blue-soft: #eaf1fa;
+        --red: #a3123a;
+        --red-soft: #fdeaef;
+        --night: #1c1209;
+      }
+
+      * { box-sizing: border-box; }
+      html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+        font-size: 9.8pt;
+        line-height: 1.55;
+        color: var(--ink);
+        background: var(--paper);
+      }
+
+      h1, h2, h3, .display { font-family: "Bahnschrift", "Segoe UI", Arial, sans-serif; }
+
+      /* ---------- full-bleed pages ---------- */
+
+      .bleed {
+        page: bleed;
+        width: 210mm;
+        height: 297mm;
+        position: relative;
+        overflow: hidden;
+        break-after: page;
+      }
+
+      /* ---------- cover ---------- */
+
+      .cover {
+        background:
+          radial-gradient(circle at 88% 12%, rgba(245, 158, 11, 0.55) 0, rgba(245, 158, 11, 0) 38%),
+          radial-gradient(circle at 8% 92%, rgba(234, 88, 12, 0.6) 0, rgba(234, 88, 12, 0) 42%),
+          linear-gradient(160deg, #2a1608 0%, #1c1209 55%, #120b05 100%);
+        color: #fff;
+        padding: 24mm 20mm;
+      }
+      .cover .rings {
+        position: absolute;
+        right: -78mm;
+        top: -36mm;
+        width: 190mm;
+        height: 190mm;
+        border-radius: 50%;
+        border: 1.2mm solid rgba(255, 255, 255, 0.06);
+        box-shadow:
+          0 0 0 14mm rgba(255, 255, 255, 0.025),
+          0 0 0 28mm rgba(255, 255, 255, 0.02),
+          inset 0 0 0 14mm rgba(255, 255, 255, 0.025);
+      }
+      .cover .plate {
+        position: absolute;
+        right: 18mm;
+        top: 20mm;
+        width: 78mm;
+        height: 78mm;
+        border-radius: 50%;
+        background: radial-gradient(circle at 35% 30%, #fbbf24 0, #ea580c 48%, #9a3412 100%);
+        box-shadow: 0 10mm 30mm rgba(0, 0, 0, 0.45);
+      }
+      .cover .plate::after {
+        content: "";
+        position: absolute;
+        inset: 13mm;
+        border-radius: 50%;
+        border: 0.8mm dashed rgba(255, 255, 255, 0.55);
+      }
+      .cover .plate .mega {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        font-family: "Bahnschrift", sans-serif;
+        line-height: 1;
+        text-align: center;
+      }
+      .cover .plate .mega b { font-size: 34pt; letter-spacing: -1pt; }
+      .cover .plate .mega span { font-size: 9pt; letter-spacing: 3pt; text-transform: uppercase; margin-top: 3mm; }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 4mm;
+        font-family: "Bahnschrift", sans-serif;
+        font-size: 15pt;
+        font-weight: 700;
+        letter-spacing: 0.5pt;
+      }
+      .brand .mark {
+        width: 12mm;
+        height: 12mm;
+        border-radius: 3.5mm;
+        background: linear-gradient(135deg, var(--gold), var(--amber-2));
+        color: #1c1209;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18pt;
+        font-weight: 800;
+      }
+      .cover .kicker {
+        margin-top: 92mm;
+        font-size: 9pt;
+        letter-spacing: 4pt;
+        text-transform: uppercase;
+        color: var(--gold);
+        font-weight: 700;
+      }
+      .cover h1 {
+        margin: 4mm 0 0;
+        font-size: 50pt;
+        line-height: 0.95;
+        letter-spacing: -1.5pt;
+        font-weight: 800;
+        max-width: 110mm;
+      }
+      .cover h1 em { font-style: normal; color: var(--gold); }
+      .cover .lede {
+        margin-top: 9mm;
+        max-width: 100mm;
+        font-size: 11.5pt;
+        line-height: 1.55;
+        color: rgba(255, 255, 255, 0.82);
+      }
+      .cover .chips {
+        position: absolute;
+        left: 20mm;
+        bottom: 46mm;
+        display: flex;
+        gap: 3mm;
+        flex-wrap: wrap;
+        max-width: 170mm;
+      }
+      .cover .chips span {
+        border: 0.3mm solid rgba(255, 255, 255, 0.3);
+        border-radius: 20mm;
+        padding: 1.6mm 4.5mm;
+        font-size: 8.5pt;
+        color: rgba(255, 255, 255, 0.9);
+      }
+      .cover .foot {
+        position: absolute;
+        left: 20mm;
+        right: 20mm;
+        bottom: 20mm;
+        display: flex;
+        justify-content: space-between;
+        border-top: 0.3mm solid rgba(255, 255, 255, 0.2);
+        padding-top: 5mm;
+        font-size: 8.5pt;
+        color: rgba(255, 255, 255, 0.7);
+      }
+      .cover .foot b { color: #fff; font-weight: 600; }
+
+      /* ---------- section openers ---------- */
+
+      .part {
+        break-before: page;
+        margin: 0 0 6mm;
+        padding: 2mm 0 5mm;
+        border-bottom: 0.6mm solid var(--ink);
+        position: relative;
+      }
+      .part .num {
+        font-family: "Bahnschrift", sans-serif;
+        font-size: 64pt;
+        font-weight: 800;
+        line-height: 0.8;
+        color: var(--amber-soft);
+        position: absolute;
+        right: 0;
+        top: 1mm;
+        -webkit-text-stroke: 0.4mm var(--amber);
+      }
+      .part .eyebrow {
+        font-size: 8pt;
+        letter-spacing: 3pt;
+        text-transform: uppercase;
+        color: var(--amber);
+        font-weight: 700;
+      }
+      .part h2 {
+        margin: 1.5mm 0 2mm;
+        font-size: 26pt;
+        line-height: 1.05;
+        letter-spacing: -0.5pt;
+        font-weight: 800;
+        max-width: 130mm;
+      }
+      .part p { margin: 0; max-width: 135mm; color: var(--ink-2); font-size: 10.5pt; }
+
+      h3 {
+        font-size: 13.5pt;
+        margin: 7mm 0 2.5mm;
+        letter-spacing: -0.2pt;
+        break-after: avoid;
+      }
+      h3 small {
+        font-family: "Segoe UI", sans-serif;
+        font-size: 8pt;
+        letter-spacing: 1.5pt;
+        text-transform: uppercase;
+        color: var(--amber);
+        font-weight: 700;
+        display: block;
+        margin-bottom: 0.5mm;
+      }
+      p { margin: 0 0 3mm; }
+      .muted { color: var(--ink-3); }
+      code, .code {
+        font-family: "Cascadia Mono", Consolas, monospace;
+        font-size: 8.6pt;
+        background: var(--cream);
+        border: 0.25mm solid var(--rule);
+        border-radius: 1mm;
+        padding: 0 1.2mm;
+      }
+
+      /* ---------- building blocks ---------- */
+
+      .grid { display: grid; gap: 4mm; }
+      .g2 { grid-template-columns: 1fr 1fr; }
+      .g3 { grid-template-columns: 1fr 1fr 1fr; }
+      .g4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+      .card {
+        border: 0.3mm solid var(--rule);
+        border-radius: 3mm;
+        padding: 4mm 4.5mm;
+        background: #fff;
+        break-inside: avoid;
+      }
+      .card h4 {
+        margin: 0 0 1.5mm;
+        font-family: "Bahnschrift", sans-serif;
+        font-size: 11pt;
+      }
+      .card p { margin: 0; font-size: 9pt; color: var(--ink-2); }
+      .card.amber { background: var(--amber-soft); border-color: #fbd5b5; }
+      .card.green { background: var(--green-soft); border-color: #bfe3cc; }
+      .card.blue { background: var(--blue-soft); border-color: #c7d9ef; }
+      .card.dark { background: var(--night); border-color: var(--night); color: #fff; }
+      .card.dark p { color: rgba(255, 255, 255, 0.78); }
+      .card .icon {
+        width: 9mm;
+        height: 9mm;
+        border-radius: 2.5mm;
+        background: var(--ink);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "Bahnschrift", sans-serif;
+        font-weight: 800;
+        font-size: 11pt;
+        margin-bottom: 2.5mm;
+      }
+      .card.amber .icon { background: var(--amber); }
+      .card.green .icon { background: var(--green); }
+      .card.blue .icon { background: var(--blue); }
+
+      .stat {
+        border-radius: 3mm;
+        padding: 4.5mm;
+        background: var(--cream);
+        border: 0.3mm solid var(--rule);
+        break-inside: avoid;
+      }
+      .stat b {
+        display: block;
+        font-family: "Bahnschrift", sans-serif;
+        font-size: 24pt;
+        line-height: 1;
+        color: var(--amber);
+        letter-spacing: -0.5pt;
+      }
+      .stat span { display: block; margin-top: 2mm; font-size: 8.6pt; color: var(--ink-2); line-height: 1.35; }
+
+      .callout {
+        border-left: 1.4mm solid var(--amber);
+        background: var(--amber-soft);
+        border-radius: 0 3mm 3mm 0;
+        padding: 3.5mm 5mm;
+        margin: 4mm 0;
+        break-inside: avoid;
+      }
+      .callout b.t { display: block; font-family: "Bahnschrift", sans-serif; font-size: 10.5pt; margin-bottom: 1mm; }
+      .callout p { margin: 0; font-size: 9.2pt; }
+      .callout.red { border-color: var(--red); background: var(--red-soft); }
+      .callout.green { border-color: var(--green); background: var(--green-soft); }
+      .callout.blue { border-color: var(--blue); background: var(--blue-soft); }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 2mm 0 4mm;
+        font-size: 9pt;
+        break-inside: avoid;
+      }
+      th {
+        text-align: left;
+        font-size: 7.6pt;
+        letter-spacing: 1.2pt;
+        text-transform: uppercase;
+        color: var(--ink-3);
+        font-weight: 700;
+        padding: 2mm 3mm;
+        border-bottom: 0.5mm solid var(--ink);
+      }
+      td { padding: 2.4mm 3mm; border-bottom: 0.25mm solid var(--rule); vertical-align: top; }
+      td.k { font-weight: 600; white-space: nowrap; }
+      td.n { font-family: "Bahnschrift", sans-serif; font-weight: 700; color: var(--amber); white-space: nowrap; }
+      tr:nth-child(even) td { background: #fdfbf8; }
+
+      .steps { counter-reset: s; margin: 2mm 0 4mm; padding: 0; list-style: none; }
+      .steps li {
+        counter-increment: s;
+        position: relative;
+        padding: 0 0 3.5mm 12mm;
+        break-inside: avoid;
+      }
+      .steps li::before {
+        content: counter(s);
+        position: absolute;
+        left: 0;
+        top: -0.4mm;
+        width: 7.5mm;
+        height: 7.5mm;
+        border-radius: 50%;
+        background: var(--amber);
+        color: #fff;
+        font-family: "Bahnschrift", sans-serif;
+        font-weight: 700;
+        font-size: 10pt;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .steps li::after {
+        content: "";
+        position: absolute;
+        left: 3.6mm;
+        top: 8mm;
+        bottom: 0.5mm;
+        width: 0.3mm;
+        background: var(--rule);
+      }
+      .steps li:last-child::after { display: none; }
+      .steps li b { display: block; font-size: 10pt; }
+      .steps li span { color: var(--ink-2); font-size: 9.2pt; }
+
+      .checks { list-style: none; margin: 0; padding: 0; }
+      .checks li {
+        position: relative;
+        padding: 1.3mm 0 1.3mm 7mm;
+        font-size: 9.2pt;
+        border-bottom: 0.25mm dashed var(--rule);
+        break-inside: avoid;
+      }
+      .checks li:last-child { border-bottom: 0; }
+      .checks li::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 2.2mm;
+        width: 3.6mm;
+        height: 3.6mm;
+        border: 0.4mm solid var(--amber);
+        border-radius: 0.8mm;
+      }
+
+      .dos li::before { content: "✓"; border: 0; color: var(--green); font-weight: 800; top: 1.1mm; font-size: 10pt; }
+      .donts li::before { content: "✕"; border: 0; color: var(--red); font-weight: 800; top: 1.1mm; font-size: 10pt; }
+
+      .pill {
+        display: inline-block;
+        padding: 0.4mm 2.4mm;
+        border-radius: 10mm;
+        font-size: 7.6pt;
+        font-weight: 700;
+        letter-spacing: 0.4pt;
+        background: var(--ink);
+        color: #fff;
+      }
+      .pill.amber { background: var(--amber); }
+      .pill.green { background: var(--green); }
+      .pill.blue { background: var(--blue); }
+
+      /* flow diagram */
+      .flow {
+        display: flex;
+        align-items: stretch;
+        gap: 0;
+        margin: 4mm 0 2mm;
+        break-inside: avoid;
+      }
+      .flow .node {
+        flex: 1;
+        background: var(--cream);
+        border: 0.3mm solid var(--rule);
+        border-radius: 3mm;
+        padding: 3.5mm 3mm;
+        text-align: center;
+      }
+      .flow .node b { display: block; font-family: "Bahnschrift", sans-serif; font-size: 10.5pt; }
+      .flow .node span { font-size: 8pt; color: var(--ink-3); line-height: 1.3; display: block; margin-top: 1mm; }
+      .flow .node.hot { background: var(--amber); border-color: var(--amber); color: #fff; }
+      .flow .node.hot span { color: rgba(255, 255, 255, 0.85); }
+      .flow .arrow {
+        width: 7mm;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--amber);
+        font-weight: 800;
+        font-size: 13pt;
+      }
+
+      /* states */
+      .states { display: flex; gap: 2mm; margin: 3mm 0; break-inside: avoid; }
+      .states div {
+        flex: 1;
+        border-radius: 2.5mm;
+        padding: 3mm;
+        background: var(--cream);
+        border: 0.3mm solid var(--rule);
+      }
+      .states div b { font-family: "Cascadia Mono", Consolas, monospace; font-size: 8.4pt; display: block; color: var(--amber); }
+      .states div span { font-size: 8.2pt; color: var(--ink-2); }
+
+      /* timeline */
+      .timeline { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; margin: 3mm 0 4mm; }
+      .week {
+        border-radius: 3mm;
+        overflow: hidden;
+        border: 0.3mm solid var(--rule);
+        break-inside: avoid;
+      }
+      .week header {
+        background: var(--night);
+        color: #fff;
+        padding: 3mm 3.5mm;
+      }
+      .week header small { display: block; font-size: 7.4pt; letter-spacing: 2pt; text-transform: uppercase; color: var(--gold); font-weight: 700; }
+      .week header b { font-family: "Bahnschrift", sans-serif; font-size: 11.5pt; }
+      .week ul { margin: 0; padding: 3mm 3.5mm 3mm 7mm; font-size: 8.5pt; color: var(--ink-2); }
+      .week ul li { margin-bottom: 1.4mm; }
+      .week footer {
+        border-top: 0.3mm solid var(--rule);
+        padding: 2.5mm 3.5mm;
+        font-size: 8pt;
+        background: var(--amber-soft);
+      }
+      .week footer b { color: var(--amber); }
+
+      /* day clock */
+      .clock { border: 0.3mm solid var(--rule); border-radius: 3mm; overflow: hidden; break-inside: avoid; margin: 3mm 0 4mm; }
+      .clock .row { display: grid; grid-template-columns: 34mm 1fr; border-bottom: 0.25mm solid var(--rule); }
+      .clock .row:last-child { border-bottom: 0; }
+      .clock .when {
+        background: var(--cream);
+        padding: 3mm;
+        font-family: "Bahnschrift", sans-serif;
+        font-weight: 700;
+        font-size: 10pt;
+        color: var(--amber);
+        border-right: 0.3mm solid var(--rule);
+      }
+      .clock .when small { display: block; font-family: "Segoe UI", sans-serif; font-weight: 400; color: var(--ink-3); font-size: 7.8pt; }
+      .clock .what { padding: 3mm 4mm; font-size: 9.1pt; }
+      .clock .what b { display: block; font-size: 9.6pt; }
+
+      /* quote / pitch */
+      .pitch {
+        background: var(--night);
+        color: #fff;
+        border-radius: 4mm;
+        padding: 7mm 8mm;
+        margin: 3mm 0 5mm;
+        position: relative;
+        break-inside: avoid;
+      }
+      .pitch::before {
+        content: "\201C";
+        position: absolute;
+        top: -6mm;
+        left: 5mm;
+        font-family: Georgia, serif;
+        font-size: 64pt;
+        color: var(--gold);
+        line-height: 1;
+      }
+      .pitch p { font-size: 12.5pt; line-height: 1.5; margin: 0; font-family: "Bahnschrift", sans-serif; font-weight: 400; }
+      .pitch p em { color: var(--gold); font-style: normal; font-weight: 700; }
+      .pitch .by { margin-top: 3mm; font-size: 8.5pt; color: rgba(255, 255, 255, 0.6); font-family: "Segoe UI", sans-serif; }
+
+      .blank { display: inline-block; min-width: 40mm; border-bottom: 0.3mm solid var(--ink-3); height: 4.5mm; vertical-align: bottom; }
+      .blank.w { min-width: 70mm; }
+
+      .keep { break-inside: avoid; }
+      .mt0 { margin-top: 0; }
+      .sp { height: 3mm; }
+
+      /* ---------- back page ---------- */
+
+      .back {
+        background:
+          radial-gradient(circle at 15% 15%, rgba(245, 158, 11, 0.45) 0, rgba(245, 158, 11, 0) 40%),
+          linear-gradient(200deg, #2a1608 0%, #1c1209 60%, #120b05 100%);
+        color: #fff;
+        padding: 22mm 20mm;
+        break-after: auto;
+      }
+      .back h2 {
+        font-size: 34pt;
+        line-height: 1;
+        margin: 52mm 0 5mm;
+        letter-spacing: -1pt;
+        font-weight: 800;
+      }
+      .back h2 em { font-style: normal; color: var(--gold); }
+      .back p { color: rgba(255, 255, 255, 0.8); max-width: 130mm; font-size: 11pt; }
+      .back .sign {
+        position: absolute;
+        left: 20mm;
+        right: 20mm;
+        bottom: 26mm;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12mm;
+      }
+      .back .sign div { border-top: 0.3mm solid rgba(255, 255, 255, 0.5); padding-top: 2mm; font-size: 8.5pt; color: rgba(255, 255, 255, 0.7); }
+      .back .pledge {
+        margin-top: 8mm;
+        background: rgba(255, 255, 255, 0.06);
+        border: 0.3mm solid rgba(255, 255, 255, 0.15);
+        border-radius: 4mm;
+        padding: 6mm 7mm;
+        max-width: 150mm;
+      }
+      .back .pledge li { margin-bottom: 2mm; font-size: 10pt; color: rgba(255, 255, 255, 0.9); }
+      .back .pledge ol { margin: 0; padding-left: 5mm; }
+    </style>
+  </head>
+  <body>
+    <!-- ======================= COVER ======================= -->
+    <section class="bleed cover">
+      <div class="rings"></div>
+      <div class="plate">
+        <div class="mega"><b>₦300</b><span>flat delivery</span></div>
+      </div>
+      <div class="brand"><div class="mark">M</div>MealDirect</div>
+
+      <div class="kicker">Campus Ambassador Programme</div>
+      <h1>Feed your campus. <em>Lead</em> the movement.</h1>
+      <p class="lede">
+        Your guide to what MealDirect is, why students love it, and exactly what you do
+        as the person who brings it to your campus.
+      </p>
+
+      <div class="chips">
+        <span>What MealDirect is</span>
+        <span>Your role</span>
+        <span>Your referral code</span>
+        <span>Daily &amp; weekly duties</span>
+        <span>First 30 days</span>
+        <span>The pitch</span>
+        <span>Code of conduct</span>
+      </div>
+
+      <div class="foot">
+        <div>Ambassador: <b>______________________</b></div>
+        <div>Campus: <b>______________________</b></div>
+        <div>Start date: <b>___ / ___ / ______</b></div>
+      </div>
+    </section>
+
+    <!-- ======================= WELCOME ======================= -->
+    <section class="part" style="break-before: auto">
+      <div class="num">00</div>
+      <div class="eyebrow">Welcome aboard</div>
+      <h2>You are the face of MealDirect on your campus</h2>
+      <p>
+        Students won't trust an app until they trust the person who told them about it. That
+        person is you. This guide gives you everything you need to explain MealDirect clearly
+        and do the job well.
+      </p>
+    </section>
+
+    <div class="grid g2">
+      <div>
+        <h3 class="mt0"><small>The short version</small>What you are signing up for</h3>
+        <p>
+          A <b>Campus Ambassador</b> is a student who grows MealDirect on their campus. You get
+          students signed up with your referral code, help them place their first order and top
+          up their wallet, and get them ordering again. You also pass on what students are saying
+          to the campus team.
+        </p>
+        <p>
+          You are not customer support, a rider or a cashier. Your job is to bring people in and
+          help them get started. When something goes wrong, you <b>pass it to the campus
+          team</b> instead of trying to fix it yourself.
+        </p>
+      </div>
+      <div class="card amber keep">
+        <h4>Inside this guide</h4>
+        <table style="margin: 1mm 0 0; font-size: 8.8pt">
+          <tr><td class="n">01</td><td><b>What is MealDirect?</b><br /><span class="muted">The idea, the batch model, who does what</span></td></tr>
+          <tr><td class="n">02</td><td><b>How it works for students</b><br /><span class="muted">Ordering, fees, wallet, tracking, refunds</span></td></tr>
+          <tr><td class="n">03</td><td><b>Your role</b><br /><span class="muted">Mission, responsibilities, how you're measured</span></td></tr>
+          <tr><td class="n">04</td><td><b>Your referral code</b><br /><span class="muted">The one rule you must never get wrong</span></td></tr>
+          <tr><td class="n">05</td><td><b>What you do, and when</b><br /><span class="muted">Service-day clock, weekly routine, first 30 days</span></td></tr>
+          <tr><td class="n">06</td><td><b>The pitch</b><br /><span class="muted">Scripts, talking points, objections</span></td></tr>
+          <tr><td class="n">07</td><td><b>Code of conduct</b><br /><span class="muted">Do's, don'ts, escalation</span></td></tr>
+          <tr><td class="n">08</td><td><b>Rewards &amp; quick reference</b><br /><span class="muted">Your targets, contacts, sign-off</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="grid g4" style="margin-top: 5mm">
+      <div class="stat"><b>₦300</b><span>Flat delivery fee on every standard order</span></div>
+      <div class="stat"><b>4</b><span>Simple order states anyone can follow</span></div>
+      <div class="stat"><b>1</b><span>Bank account number per student wallet, for top-ups</span></div>
+      <div class="stat"><b>&gt;40%</b><span>Repeat-order target. This number matters more than any other</span></div>
+    </div>
+
+    <div class="callout">
+      <b class="t">About the naira figures in this guide</b>
+      <p>
+        All amounts shown are MealDirect's standard default settings. Your campus team can change
+        fees per campus or zone. Check the live numbers in the app before you print them on a
+        poster or quote them in a group chat.
+      </p>
+    </div>
+
+    <!-- ======================= 01 WHAT IS MEALDIRECT ======================= -->
+    <section class="part">
+      <div class="num">01</div>
+      <div class="eyebrow">Part one</div>
+      <h2>What is MealDirect?</h2>
+      <p>
+        MealDirect is a food-ordering app built only for campuses. Students order ahead for a set
+        meal time, the vendor cooks everything at once, and one rider delivers the whole batch.
+      </p>
+    </section>
+
+    <div class="grid g2">
+      <div>
+        <h3 class="mt0"><small>The problem</small>Campus food is a daily headache</h3>
+        <p>
+          Long queues between lectures. Walking across campus in the heat. Delivery apps that
+          charge too much, arrive late, or won't come past the gate. Vendors who either run out of
+          food or end up throwing it away.
+        </p>
+      </div>
+      <div>
+        <h3 class="mt0"><small>The fix</small>Scheduled batch delivery</h3>
+        <p>
+          Students order before a <b>cut-off</b> for a fixed meal time like Lunch at 1:00 pm.
+          Every order for one vendor, one meal time and one zone becomes a single
+          <b>batch</b>. The vendor cooks exactly that many plates, and one rider delivers all of
+          them in one trip.
+        </p>
+      </div>
+    </div>
+
+    <h3><small>The model in one picture</small>Why it's cheap and on time</h3>
+    <div class="flow">
+      <div class="node"><b>Many students</b><span>order before the cut-off for the same meal time</span></div>
+      <div class="arrow">→</div>
+      <div class="node hot"><b>One batch</b><span>vendor × meal time × zone × date</span></div>
+      <div class="arrow">→</div>
+      <div class="node"><b>Vendor cooks once</b><span>to an exact, already-paid number</span></div>
+      <div class="arrow">→</div>
+      <div class="node"><b>One rider trip</b><span>carries the whole batch to the zone</span></div>
+      <div class="arrow">→</div>
+      <div class="node"><b>Delivered</b><span>at the promised time</span></div>
+    </div>
+    <p class="muted" style="font-size: 8.6pt">
+      Many orders share the cost of one trip. That is why delivery can be a flat ₦300 and still
+      pay the rider.
+    </p>
+
+    <h3><small>The four words students will hear</small>How the campus is organised</h3>
+    <table>
+      <tr><th>Word</th><th>What it means</th><th>Example</th></tr>
+      <tr><td class="k">Zone</td><td>A delivery area inside the campus. Each batch belongs to one zone.</td><td>North Hostels · Academic Core</td></tr>
+      <tr><td class="k">Location</td><td>The hostel or department a student picks as their drop point.</td><td>Queen Amina Hall · Faculty of Law</td></tr>
+      <tr><td class="k">Delivery slot</td><td>A promised meal time, with a cut-off when ordering for it closes.</td><td>Lunch · delivers 1:00 pm</td></tr>
+      <tr><td class="k">Cut-off</td><td>How long before the meal time ordering closes. Late orders go to the next slot.</td><td>90 min → lunch orders close at 11:30 am</td></tr>
+    </table>
+
+    <div class="keep"><h3><small>The ecosystem</small>Who does what</h3>
+    <div class="grid g3">
+      <div class="card"><div class="icon">S</div><h4>Students &amp; staff</h4><p>Order before the cut-off, pay by wallet or card, track the order, leave a review after delivery.</p></div>
+      <div class="card"><div class="icon">V</div><h4>Vendors</h4><p>Keep their menu and daily availability up to date, cook the batch, and tap <b>Ready</b> once. Paid daily.</p></div>
+      <div class="card"><div class="icon">R</div><h4>Riders</h4><p>Pick up the batch, confirm whether the food was ready on time, and deliver it to the zone.</p></div>
+      <div class="card"><div class="icon">A</div><h4>Campus team</h4><p>Admins run the campus: zones, meal times, vendors, riders, refunds, problems and payouts.</p></div>
+      <div class="card amber"><div class="icon">★</div><h4>You, the Ambassador</h4><p>Bring students in, help them through their first order, keep them coming back, and pass on feedback.</p></div>
+      <div class="card"><div class="icon">P</div><h4>Platform</h4><p>Runs the app, payments (through Paystack), notifications and the systems behind them.</p></div>
+    </div></div>
+
+    <!-- ======================= 02 FOR STUDENTS ======================= -->
+    <section class="part">
+      <div class="num">02</div>
+      <div class="eyebrow">Part two · Know it cold</div>
+      <h2>How it works for students</h2>
+      <p>
+        You'll be asked these questions many times. If you can explain this page from memory,
+        you can handle almost any conversation.
+      </p>
+    </section>
+
+    <h3 class="mt0"><small>The student journey</small>From signup to first meal</h3>
+    <ol class="steps">
+      <li><b>Sign up and enter a referral code (yours)</b><span>Email or phone, then verify the code they receive. The referral code must be entered <b>during signup</b>. See Part 4.</span></li>
+      <li><b>Pick campus and usual location</b><span>Their hostel or department. This sets their zone and which batch their orders join.</span></li>
+      <li><b>Turn on notifications</b><span>This is how they find out the food is ready and the rider is on the way.</span></li>
+      <li><b>Choose the meal time first, then the food</b><span>Pick the date and slot (e.g. Lunch · 1:00 pm). The app only shows vendors and items available for that slot.</span></li>
+      <li><b>Build the plate</b><span>Quantities, soup choice where needed, extras like spoons of rice, protein and drinks. They can add a short note ("no pepper").</span></li>
+      <li><b>Choose where it's delivered, then pay</b><span>Standard drop point, or point delivery to a room or class for ₦100 more. Pay from the wallet or by card. An order only counts once it's paid.</span></li>
+    </ol>
+
+    <div class="callout red">
+      <b class="t">The cut-off is strict</b>
+      <p>
+        Each meal time closes a set time before delivery (usually 90 minutes for lunch). After
+        that, students have to order for the next slot. An order left unpaid past the cut-off
+        expires on its own. No food, no charge. Remind people <b>before</b> the cut-off.
+      </p>
+    </div>
+
+    <div class="keep"><h3><small>What students pay</small>The bill, line by line</h3>
+    <table>
+      <tr><th>Line</th><th>Default</th><th>What it is</th></tr>
+      <tr><td class="k">Food subtotal</td><td class="n">varies</td><td>What the vendor charges for the items picked.</td></tr>
+      <tr><td class="k">Delivery fee</td><td class="n">₦300</td><td>Flat per order, split between the rider, the vendor and the platform.</td></tr>
+      <tr><td class="k">Point delivery</td><td class="n">+₦100</td><td>Only if they want it brought to a specific room, class or office.</td></tr>
+      <tr><td class="k">Service fee</td><td class="n">₦200</td><td>Platform fee, capped per campus.</td></tr>
+      <tr><td class="k">Discount</td><td class="n">− varies</td><td>A valid promo code, shown in the total before paying.</td></tr>
+      <tr><td class="k">Large-order surcharge</td><td class="n">1.5% + ₦100</td><td>Only on totals above ₦2,490. Group orders are still allowed. The student just ticks a box to accept the surcharge.</td></tr>
+    </table></div>
+
+    <div class="grid g2">
+      <div class="keep">
+        <h3><small>The wallet</small>The feature to show off</h3>
+        <p>
+          Every student gets a MealDirect wallet with <b>their own bank account number</b>
+          (through Paystack). They transfer money to it from any Nigerian bank app and their
+          balance goes up. No card, and no typing card details every time they order.
+        </p>
+        <ul class="checks dos">
+          <li><b>Top up</b>: Wallet → copy account number → transfer</li>
+          <li><b>Pay</b>: choose Wallet at checkout; the app shows any shortfall</li>
+          <li><b>Refunds</b>: go straight back into the wallet</li>
+          <li><b>Ledger</b>: every movement is listed, so it's easy to prove what happened</li>
+        </ul>
+      </div>
+      <div class="keep">
+        <h3><small>After paying</small>The four order states</h3>
+        <div class="states" style="flex-direction: column">
+          <div><b>paid</b><span>The vendor has the order on their list.</span></div>
+          <div><b>ready</b><span>Cooked and packed, waiting for the rider.</span></div>
+          <div><b>out_for_delivery</b><span>The rider has the batch and is on the way.</span></div>
+          <div><b>delivered</b><span>Handed over. Reviews open now.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid g3" style="margin-top: 2mm">
+      <div class="card blue"><h4>Batch group chat</h4><p>Each batch has a chat with the other students on the same run, the vendor and the rider. Students are shown under nicknames, so no names or phone numbers are visible.</p></div>
+      <div class="card blue"><h4>Hand-off code</h4><p>The rider may ask for a hand-off code. Students should only show it once the food is in their hands.</p></div>
+      <div class="card blue"><h4>Problems &amp; refunds</h4><p>Wrong, missing or cold food, or nothing delivered? They report it on the order. Approved refunds go to their wallet.</p></div>
+    </div>
+
+    <!-- ======================= 03 YOUR ROLE ======================= -->
+    <section class="part">
+      <div class="num">03</div>
+      <div class="eyebrow">Part three</div>
+      <h2>Your role as Campus Ambassador</h2>
+      <p>
+        Your goal is to get students ordering and keep them ordering. Every responsibility below
+        supports that.
+      </p>
+    </section>
+
+    <div class="pitch" style="margin-top: 0">
+      <p>
+        Get every student on your campus to their <em>first order</em>, and make that order go so
+        well that they place a <em>second one</em>.
+      </p>
+      <div class="by">Your mission in one sentence</div>
+    </div>
+
+    <h3><small>Your five core responsibilities</small>What you are accountable for</h3>
+    <div class="grid g2">
+      <div class="card amber">
+        <div class="icon">1</div>
+        <h4>Grow signups with your code</h4>
+        <p>Get students signed up with <b>your referral code entered at signup</b>. Use hostels, departments, fellowships, clubs, sports teams and class group chats.</p>
+      </div>
+      <div class="card amber">
+        <div class="icon">2</div>
+        <h4>Turn signups into first orders</h4>
+        <p>A signup that never orders doesn't count for much. Help new users top up their wallet, find their meal time and place an order before the cut-off.</p>
+      </div>
+      <div class="card amber">
+        <div class="icon">3</div>
+        <h4>Drive repeat ordering</h4>
+        <p>Remind people before each cut-off, share promo codes from the campus team, and check in after a student's first order.</p>
+      </div>
+      <div class="card amber">
+        <div class="icon">4</div>
+        <h4>Be the feedback channel</h4>
+        <p>Collect what students say: missing food, hostels with no signs, slow vendors, confusing screens. Send a short weekly report to the campus lead.</p>
+      </div>
+      <div class="card amber" style="grid-column: span 2">
+        <div class="icon">5</div>
+        <h4>Represent the brand well, and scout for the team</h4>
+        <p>
+          Be visible, friendly and honest. Run stands and promotions at orientation and events. Pass
+          leads to the campus operations team: kitchens students already trust, and reliable
+          students with bikes who could be riders. <b>You suggest them; the campus team does the
+          onboarding.</b>
+        </p>
+      </div>
+    </div>
+
+    <div class="keep"><h3><small>How you're measured</small>The numbers that count</h3>
+    <p>
+      MealDirect tracks each referral code. The campus team can see how many people you
+      referred, <b>how many of them paid for an order</b>, how many orders they placed and how
+      much they spent. Paying users count far more than signups.
+    </p>
+    <table>
+      <tr><th>Metric</th><th>What it means</th><th>Why it matters</th></tr>
+      <tr><td class="k">Referred users</td><td>Students who signed up with your code</td><td>Your reach. It's a starting point, not the goal.</td></tr>
+      <tr><td class="k">Paying referred users</td><td>Referred students who paid for at least one order</td><td><b>Your headline number.</b> It shows real people who actually ordered.</td></tr>
+      <tr><td class="k">Paid orders</td><td>Total paid orders placed by your referrals</td><td>Shows whether they keep ordering.</td></tr>
+      <tr><td class="k">Total spent</td><td>Naira spent by your referrals</td><td>The value you have brought to the campus.</td></tr>
+      <tr><td class="k">Feedback reports</td><td>Weekly notes sent to the campus lead</td><td>Fixing problems early keeps students ordering.</td></tr>
+    </table></div>
+
+    <!-- ======================= 04 REFERRAL CODE ======================= -->
+    <section class="part">
+      <div class="num">04</div>
+      <div class="eyebrow">Part four · Read twice</div>
+      <h2>Your referral code</h2>
+      <p>
+        Every MealDirect user has a personal referral code, including you. It's how your
+        work is tracked. One rule decides whether a referral counts.
+      </p>
+    </section>
+
+    <div class="callout red" style="margin-top: 0">
+      <b class="t">The golden rule: the code must be entered during signup</b>
+      <p>
+        A referral code only works <b>before the student finishes setting up their
+        profile</b>. Once their profile is complete, they can never add a code. If a
+        friend signs up first and plans to add your code later, that referral is lost. Always get
+        them to enter your code <b>on the signup screen</b>.
+      </p>
+    </div>
+
+    <div class="grid g2">
+      <div>
+        <h3><small>Step by step</small>Getting your code</h3>
+        <ol class="steps">
+          <li><b>Create your own MealDirect account</b><span>Use the customer app like any student. You need to know the app well before you can teach it.</span></li>
+          <li><b>Open your referral code in the app</b><span>It's unique to you and is created automatically.</span></li>
+          <li><b>Put it everywhere</b><span>WhatsApp status, bio, flyers, a QR code at your stand. Make it short and easy to remember.</span></li>
+        </ol>
+      </div>
+      <div>
+        <h3><small>Step by step</small>Signing up a friend</h3>
+        <ol class="steps">
+          <li><b>Open the app on their phone with them</b><span>Signing up together works much better than "I'll send you the link."</span></li>
+          <li><b>Enter your code on the signup screen</b><span>Before they finish setting up their profile. Check it's correct.</span></li>
+          <li><b>Set campus, location, notifications</b><span>Their hostel or department, plus push notifications.</span></li>
+          <li><b>Show them the wallet</b><span>Point out their account number and how to transfer to it.</span></li>
+          <li><b>Find tomorrow's meal time together</b><span>Show them the slot and cut-off, so their first order isn't late.</span></li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="grid g3">
+      <div class="card green"><h4>Each person uses a code once</h4><p>A student can redeem one referral code, one time. They can't change it later.</p></div>
+      <div class="card green"><h4>You can't refer yourself</h4><p>Your own account can't use your code. Only real students count.</p></div>
+      <div class="card green"><h4>Paying users are what count</h4><p>Fake or empty signups show up as referrals who never paid. They don't help you, and they get noticed.</p></div>
+    </div>
+
+    <!-- ======================= 05 WHAT YOU DO ======================= -->
+    <section class="part">
+      <div class="num">05</div>
+      <div class="eyebrow">Part five · Your routine</div>
+      <h2>What you do, and when</h2>
+      <p>
+        Your routine follows the meal times. Timing matters most just before the cut-off, so
+        plan your day around it.
+      </p>
+    </section>
+
+    <h3 class="mt0"><small>A service day</small>The ambassador clock (example: Lunch at 1:00 pm, 90-min cut-off)</h3>
+    <div class="clock">
+      <div class="row"><div class="when">Morning<small>8–10 am</small></div><div class="what"><b>Get people thinking about lunch</b>Post today's highlights (vendors, any promo code from the campus team) in your hostel and class group chats. Mention the cut-off time.</div></div>
+      <div class="row"><div class="when">Cut-off − 60 min<small>~10:30 am</small></div><div class="what"><b>Send the reminder</b>"Lunch orders close at 11:30." This one message brings in more orders than anything else you'll do today.</div></div>
+      <div class="row"><div class="when">Cut-off − 30 min<small>~11:00 am</small></div><div class="what"><b>Help people who are stuck</b>Help anyone with an empty wallet or a first-time order before the slot closes.</div></div>
+      <div class="row"><div class="when">Cut-off<small>11:30 am</small></div><div class="what"><b>Ordering closes</b>Anyone who missed it orders for the next slot. Tell them which one and when it closes.</div></div>
+      <div class="row"><div class="when">Delivery<small>~1:00 pm</small></div><div class="what"><b>Be around if you can</b>Be near a busy drop point. Point confused students to the batch chat. Note any problems you see.</div></div>
+      <div class="row"><div class="when">After service<small>afternoon</small></div><div class="what"><b>Follow up</b>Message first-time orderers: "How was it? Leave a review." Write down complaints for your weekly report. Pass serious problems to the campus team the same day.</div></div>
+    </div>
+
+    <div class="grid g2">
+      <div class="card keep">
+        <h4>Every week</h4>
+        <ul class="checks">
+          <li>Hit your weekly target for new <b>paying</b> referrals</li>
+          <li>Visit at least two new groups (hostel block, club, department)</li>
+          <li>Post at least three times in group chats and on WhatsApp status</li>
+          <li>Check on everyone you referred who hasn't ordered yet</li>
+          <li>Send the weekly feedback report to the campus lead</li>
+          <li>Join the ambassador check-in call or meeting</li>
+        </ul>
+      </div>
+      <div class="card keep">
+        <h4>Your weekly feedback report: five lines</h4>
+        <ul class="checks">
+          <li><b>Numbers:</b> new referrals, new paying referrals</li>
+          <li><b>What students love</b>: what's working</li>
+          <li><b>What students complain about</b>: with order details if possible</li>
+          <li><b>Leads</b>: kitchens or potential riders worth contacting</li>
+          <li><b>One idea</b> for next week</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3><small>Your first 30 days</small>From day one to fully up and running</h3>
+    <div class="timeline">
+      <div class="week">
+        <header><small>Week 1</small><b>Learn it</b></header>
+        <ul>
+          <li>Read this guide twice</li>
+          <li>Create your account and place 2–3 orders yourself</li>
+          <li>Top up your wallet by bank transfer</li>
+          <li>Get your referral code and save the campus contacts</li>
+          <li>Learn the zones, drop points and meal times</li>
+        </ul>
+        <footer><b>Done when:</b> you can explain Part 2 without notes</footer>
+      </div>
+      <div class="week">
+        <header><small>Week 2</small><b>Your circle</b></header>
+        <ul>
+          <li>Sign up your roommates, coursemates and close friends in person</li>
+          <li>Get each of them to a first order</li>
+          <li>Post in your hostel and class group chats</li>
+          <li>Write your first feedback report</li>
+        </ul>
+        <footer><b>Target:</b> <span class="blank" style="min-width: 14mm"></span> paying referrals</footer>
+      </div>
+      <div class="week">
+        <header><small>Week 3</small><b>Go wider</b></header>
+        <ul>
+          <li>Set up a stand at a busy spot or event</li>
+          <li>Talk to 2–3 clubs, fellowships or teams</li>
+          <li>Suggest kitchens or riders to the campus team</li>
+          <li>Start daily cut-off reminders</li>
+        </ul>
+        <footer><b>Target:</b> <span class="blank" style="min-width: 14mm"></span> paying referrals</footer>
+      </div>
+      <div class="week">
+        <header><small>Week 4</small><b>Repeat orders</b></header>
+        <ul>
+          <li>Follow up everyone who ordered only once</li>
+          <li>Run a group-order push (e.g. a hostel lunch day)</li>
+          <li>Review your numbers with the campus lead</li>
+          <li>Agree targets for next month</li>
+        </ul>
+        <footer><b>Target:</b> &gt;40% of referrals order twice</footer>
+      </div>
+    </div>
+
+    <div class="keep"><h3><small>Ideas that work</small>Your growth toolkit</h3>
+    <div class="grid g4">
+      <div class="card"><h4>Signup stands</h4><p>Busy spot, phone in hand, QR code to the app, your code on a big card. Sign people up on the spot.</p></div>
+      <div class="card"><h4>Hostel lunch days</h4><p>Get one hostel block to order from the same slot. Everyone gets their food at the same time.</p></div>
+      <div class="card"><h4>Exam-season pushes</h4><p>"Don't leave the library. Lunch comes to you." Point delivery to study spots works well here.</p></div>
+      <div class="card"><h4>Promo codes</h4><p>Only share codes the campus team gives you. Students see the discount before they pay.</p></div>
+    </div></div>
+
+    <!-- ======================= 06 THE PITCH ======================= -->
+    <section class="part">
+      <div class="num">06</div>
+      <div class="eyebrow">Part six</div>
+      <h2>The pitch</h2>
+      <p>
+        Short, honest and focused on what students care about: cheap, on time, and no queue.
+        Adjust it to your own style, but keep the facts accurate.
+      </p>
+    </section>
+
+    <div class="pitch" style="margin-top: 0">
+      <p>
+        "You know the lunch queue between lectures? Skip it. On MealDirect you order before
+        11:30, pay from your <em>own wallet account number</em>, and your food arrives at your
+        hostel at 1. Delivery is a <em>flat ₦300</em>. Put my code in when you sign up, and
+        I'll help you place your first order now."
+      </p>
+      <div class="by">The 20-second version · swap in your campus's real times</div>
+    </div>
+
+    <div class="grid g3">
+      <div class="card"><div class="icon">₦</div><h4>Cheap</h4><p>Flat delivery fee because one rider carries many orders. No surge pricing.</p></div>
+      <div class="card"><div class="icon">⏱</div><h4>On time</h4><p>Food is cooked for a set meal time, not "whenever". Riders are paid more for delivering on time.</p></div>
+      <div class="card"><div class="icon">✓</div><h4>Safe &amp; simple</h4><p>Wallet top-up by bank transfer, refunds back to the wallet, and nicknames in group chats.</p></div>
+    </div>
+
+    <div class="keep"><h3><small>Objection handling</small>What students will ask, and what to say</h3>
+    <table>
+      <tr><th style="width: 38%">They say</th><th>You say</th></tr>
+      <tr><td class="k">"Why can't I order lunch right now?"</td><td>Ordering for that meal time has closed. That's how the vendor knows exactly how much to cook. Let's order for the next slot.</td></tr>
+      <tr><td class="k">"I don't have a card."</td><td>You don't need one. Your wallet has its own account number. Transfer from your bank app and pay with the wallet.</td></tr>
+      <tr><td class="k">"I transferred money and my wallet is empty."</td><td>Bank transfers can take a few minutes. Check the wallet history. If nothing shows up, contact support with the transfer reference. Don't send money again.</td></tr>
+      <tr><td class="k">"I paid but it says unpaid."</td><td>Don't pay twice. Support will check the payment and sort it out. I'll pass it on now.</td></tr>
+      <tr><td class="k">"My order is over ₦2,490 and won't go through."</td><td>Big orders are allowed. Tick the box to accept the large-order surcharge (1.5% + ₦100) and it will go through.</td></tr>
+      <tr><td class="k">"What if the food doesn't come or it's wrong?"</td><td>Report a problem on the order in the app. The campus team reviews it, and approved refunds go straight back to your wallet.</td></tr>
+      <tr><td class="k">"Can I add your code later?"</td><td>No. It only works during signup. Let's do it now.</td></tr>
+      <tr><td class="k">"Will other people see my number in the group chat?"</td><td>No. Students show up under nicknames. Nobody sees your name or number.</td></tr>
+    </table></div>
+
+    <!-- ======================= 07 CODE OF CONDUCT ======================= -->
+    <section class="part">
+      <div class="num">07</div>
+      <div class="eyebrow">Part seven · Non-negotiable</div>
+      <h2>Code of conduct</h2>
+      <p>
+        Students trust MealDirect because they trust you. These rules protect them, the brand
+        and you.
+      </p>
+    </section>
+
+    <div class="grid g2">
+      <div class="card green keep">
+        <h4>Always</h4>
+        <ul class="checks dos">
+          <li>Be honest about fees, times and cut-offs, even when it costs you a signup</li>
+          <li>Let students type their own details on their own phones</li>
+          <li>Send problems to the campus team the same day</li>
+          <li>Use only promo codes and materials the campus team gave you</li>
+          <li>Respect university rules on where you can promote and set up stands</li>
+          <li>Treat vendors and riders as teammates, because they are</li>
+          <li>Keep any student information you see private</li>
+        </ul>
+      </div>
+      <div class="card keep" style="background: var(--red-soft); border-color: #f5c2cf">
+        <h4>Never</h4>
+        <ul class="checks donts">
+          <li><b>Take cash</b> for an order. Every order is paid in the app</li>
+          <li>Ask for or handle anyone's <b>password, OTP, PIN or card details</b></li>
+          <li>Ask for a student's hand-off code, or share your own</li>
+          <li>Make fake accounts or pay people to sign up and do nothing</li>
+          <li>Promise refunds, discounts or free food the campus team hasn't approved</li>
+          <li>Speak to the media or the university administration on MealDirect's behalf</li>
+          <li>Run down other vendors, riders or competitors in public</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout red">
+      <b class="t">Money safety</b>
+      <p>
+        If someone offers to "just pay you directly", or asks you to pay for them and they'll pay
+        you back, say no. Point them to the app and their wallet. Report anything that looks like
+        a scam to the campus team straight away. Any account caught gaming referrals will be
+        removed from the programme.
+      </p>
+    </div>
+
+    <div class="keep"><h3><small>When something goes wrong</small>Your escalation path</h3>
+    <div class="flow">
+      <div class="node"><b>Student reports it</b><span>Ask them to "Report a problem" on the order in the app</span></div>
+      <div class="arrow">→</div>
+      <div class="node"><b>You note it</b><span>Order details, time, what happened. Screenshot if possible</span></div>
+      <div class="arrow">→</div>
+      <div class="node hot"><b>Campus team</b><span>Support / campus admin handles refunds and fixes</span></div>
+      <div class="arrow">→</div>
+      <div class="node"><b>You follow up</b><span>Check the student got a response</span></div>
+    </div></div>
+    <div class="callout blue">
+      <b class="t">You flag problems. The campus team fixes them.</b>
+      <p>
+        Refunds, payment problems, wallet corrections, cancelled orders and rider or vendor
+        issues are handled by admins with the right access. Every action they take is logged.
+        Your job is to make sure the problem reaches them quickly with clear details.
+      </p>
+    </div>
+
+    <!-- ======================= 08 REWARDS & REFERENCE ======================= -->
+    <section class="part">
+      <div class="num">08</div>
+      <div class="eyebrow">Part eight</div>
+      <h2>Rewards &amp; quick reference</h2>
+      <p>
+        Fill this page in with your campus lead on day one, then keep it on your phone.
+      </p>
+    </section>
+
+    <div class="grid g2">
+      <div class="keep">
+        <h3 class="mt0"><small>Agreed with your campus lead</small>Your targets &amp; rewards</h3>
+        <table>
+          <tr><th>Item</th><th>Agreed</th></tr>
+          <tr><td class="k">Monthly target: paying referrals</td><td><span class="blank"></span></td></tr>
+          <tr><td class="k">Reward per paying referral</td><td><span class="blank"></span></td></tr>
+          <tr><td class="k">Bonus for hitting target</td><td><span class="blank"></span></td></tr>
+          <tr><td class="k">Repeat-order bonus</td><td><span class="blank"></span></td></tr>
+          <tr><td class="k">Perks (merch, credit, certificate)</td><td><span class="blank"></span></td></tr>
+          <tr><td class="k">Paid on / via</td><td><span class="blank"></span></td></tr>
+          <tr><td class="k">Review date</td><td><span class="blank"></span></td></tr>
+        </table>
+        <p class="muted" style="font-size: 8.4pt">
+          Rewards are based on the referral numbers in Part 3. Paying referrals are what
+          count, not signups.
+        </p>
+      </div>
+      <div class="keep">
+        <h3 class="mt0"><small>Save these now</small>Campus contacts &amp; links</h3>
+        <table>
+          <tr><th>Who / what</th><th>Details</th></tr>
+          <tr><td class="k">Campus lead</td><td><span class="blank"></span></td></tr>
+          <tr><td class="k">Student support</td><td><span class="blank"></span></td></tr>
+          <tr><td class="k">WhatsApp line</td><td><span class="blank"></span></td></tr>
+          <tr><td class="k">Urgent (out of hours)</td><td><span class="blank"></span></td></tr>
+          <tr><td class="k">Customer app link</td><td><span class="blank"></span></td></tr>
+          <tr><td class="k">My referral code</td><td><span class="blank"></span></td></tr>
+          <tr><td class="k">Lunch slot / cut-off</td><td><span class="blank"></span></td></tr>
+          <tr><td class="k">Dinner slot / cut-off</td><td><span class="blank"></span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="keep"><h3><small>Glossary</small>Words you'll use every day</h3>
+    <table>
+      <tr><td class="k">Batch</td><td>All orders for one vendor, one meal time, one zone and one date. The rider delivers it in one trip.</td></tr>
+      <tr><td class="k">Cut-off</td><td>When ordering closes for a meal time, a set number of minutes before delivery.</td></tr>
+      <tr><td class="k">Delivery slot</td><td>A promised meal delivery time, e.g. Lunch at 1:00 pm.</td></tr>
+      <tr><td class="k">Zone / Location</td><td>A zone is a delivery area. A location is the student's hostel or department drop point.</td></tr>
+      <tr><td class="k">Point delivery</td><td>Delivery to a specific room, class or office for an extra ₦100.</td></tr>
+      <tr><td class="k">Wallet / Ledger</td><td>A student's MealDirect balance, with its own account number for top-ups. The ledger lists every movement.</td></tr>
+      <tr><td class="k">Referral code</td><td>Your personal code. It counts only if entered during signup, before the profile is complete.</td></tr>
+      <tr><td class="k">Paying referral</td><td>Someone who signed up with your code and paid for at least one order. This is your main number.</td></tr>
+      <tr><td class="k">Escalation</td><td>A reported problem on an order, handled by the campus team, sometimes with a refund.</td></tr>
+    </table></div>
+
+    <!-- ======================= BACK PAGE ======================= -->
+    <section class="bleed back" style="break-before: page">
+      <div class="brand"><div class="mark">M</div>MealDirect</div>
+      <h2>Welcome to the team.<br /><em>Let's feed your campus.</em></h2>
+      <p>
+        Every student you help through their first order is a student who stops queuing between
+        lectures. Thank you for leading this on your campus.
+      </p>
+
+      <div class="pledge">
+        <ol>
+          <li>I have read this guide and understand how MealDirect works.</li>
+          <li>I will always get my referral code entered <b>during signup</b>.</li>
+          <li>I will never take cash or handle anyone's passwords, OTPs or card details.</li>
+          <li>I will pass every problem to the campus team the same day.</li>
+          <li>I will send a short feedback report every week.</li>
+        </ol>
+      </div>
+
+      <div class="sign">
+        <div>Ambassador signature &amp; date</div>
+        <div>Campus lead signature &amp; date</div>
+      </div>
+    </section>
+  </body>
+</html>
