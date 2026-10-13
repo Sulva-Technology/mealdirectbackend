@@ -14,6 +14,9 @@ function applyOpenApiGenerationDefaults(): void {
   process.env.DATABASE_URL ??= 'postgresql://postgres:postgres@127.0.0.1:54322/postgres';
   process.env.SUPABASE_URL ??= 'http://127.0.0.1:54321';
   process.env.SUPABASE_JWT_ISSUER ??= 'http://127.0.0.1:54321/auth/v1';
+  // Placeholder only: the document never contains it, but env validation requires it,
+  // and CI runs this without secrets.
+  process.env.SUPABASE_ANON_KEY ??= 'openapi-generation-anon-key';
 }
 
 async function generateOpenApi(): Promise<void> {
