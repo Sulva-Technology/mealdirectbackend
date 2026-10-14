@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Inject,
   Injectable,
@@ -772,6 +773,11 @@ export class AdminService {
     return this.repository.listAdminMemberships();
   }
 
+  /**
+   * Grant an admin role by user id or by email. An email that already has a Meal
+   * Direct account is granted immediately; an unknown email is sent a Supabase
+   * invite and granted up front, so the role is live the moment they set a password.
+   */
   async createAdminMembership(
     actor: AuthenticatedActor,
     input: AdminCreateMembershipDto
@@ -780,9 +786,48 @@ export class AdminService {
     if (input.role === 'campus_admin' && input.campusId === undefined) {
       throw badRequest('campusId is required for campus admin memberships.');
     }
-    const record = await this.repository.createAdminMembership(input, actor.userId);
+    if ((input.userId === undefined) === (input.email === undefined)) {
+      throw badRequest('Provide either userId or email.');
+    }
+
+    let userId = input.userId;
+    let invited = false;
+    const email = input.email?.toLowerCase();
+    if (email !== undefined) {
+      userId = await this.repository.findUserIdByEmail(email);
+      if (userId === undefined) {
+        if (this.auth === undefined) {
+          throw badRequest('Supabase auth is not configured.');
+        }
+        userId = (await this.auth.inviteAdminByEmail(email)).userId;
+        await this.repository.ensureProfile(userId, email);
+        invited = true;
+      }
+    }
+    if (userId === undefined) {
+      throw badRequest('Provide either userId or email.');
+    }
+
+    const grant = {
+      userId,
+      role: input.role,
+      ...(input.campusId === undefined ? {} : { campusId: input.campusId })
+    };
+    let record: AdminRecord | undefined;
+    try {
+      record = await this.repository.createAdminMembership(grant, actor.userId);
+    } catch (error) {
+      if ((error as { code?: string } | null)?.code === '23505') {
+        throw new ConflictException({
+          code: ErrorCodes.CONFLICT,
+          message: 'This user already has that admin role.'
+        });
+      }
+      throw error;
+    }
     if (record !== undefined) {
-      await this.syncUserAppMetadata(input.userId, this.adminAppMetadata(input));
+      await this.syncUserAppMetadata(userId, this.adminAppMetadata(grant));
+      return { ...record, ...(email === undefined ? {} : { email }), invited };
     }
     return record;
   }
@@ -851,7 +896,10 @@ export class AdminService {
     return url.toString();
   }
 
-  private adminAppMetadata(input: AdminCreateMembershipDto): Record<string, unknown> {
+  private adminAppMetadata(input: {
+    role: AdminCreateMembershipDto['role'];
+    campusId?: string;
+  }): Record<string, unknown> {
     if (input.role === 'super_admin') {
       return {
         campus_id: null,

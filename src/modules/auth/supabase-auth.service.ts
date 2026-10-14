@@ -167,6 +167,39 @@ export class SupabaseAuthService {
   }
 
   /**
+   * Send a Supabase invite email to a brand-new admin. The link lands on the admin
+   * app's /auth/callback, where the invitee sets a password. Returns the new auth
+   * user id so the caller can grant the membership straight away. Requires the
+   * service_role key.
+   */
+  async inviteAdminByEmail(email: string): Promise<{ userId: string }> {
+    const admin = this.getAdminClient();
+    if (admin === undefined) {
+      throw new BadRequestException({
+        code: ErrorCodes.AUTH_FAILED,
+        message: 'Server is not configured to invite users (SUPABASE_SERVICE_ROLE_KEY missing).'
+      });
+    }
+
+    const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
+      redirectTo: this.authRedirectUrl('admin')
+    });
+    if (error || !data.user) {
+      this.logger.error(
+        `Admin invite failed for ${email}: status=${String(error?.status)} message=${error?.message ?? 'no user returned'}`
+      );
+      throw new BadRequestException({
+        code: ErrorCodes.AUTH_FAILED,
+        message: /already been registered|already exists/i.test(error?.message ?? '')
+          ? 'An account with this email already exists but has no profile yet. Ask them to sign in once, then try again.'
+          : "We couldn't send the invite email. Please try again in a few minutes."
+      });
+    }
+
+    return { userId: data.user.id };
+  }
+
+  /**
    * Permanently delete a Supabase Auth user via the service_role admin API. Callers must
    * first remove the public.profiles row (profiles.id references auth.users on delete
    * restrict), otherwise the delete is rejected. Idempotent: a missing user is treated as

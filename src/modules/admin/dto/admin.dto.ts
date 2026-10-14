@@ -553,8 +553,16 @@ export class AdminEscalationResolveDto {
 }
 
 export class AdminCreateMembershipDto {
+  // Exactly one of userId / email. An email with no Meal Direct account is sent a
+  // Supabase invite and granted the role once the account exists.
+  @IsOptional()
   @IsDatabaseUuid()
-  userId!: string;
+  userId?: string;
+
+  @IsOptional()
+  @Transform(({ value }) => trimString(value))
+  @IsEmail()
+  email?: string;
 
   @IsIn([
     'super_admin',

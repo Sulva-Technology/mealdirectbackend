@@ -26,6 +26,9 @@ let purgeUserMock: ReturnType<typeof vi.fn>;
 let anonymizeUserMock: ReturnType<typeof vi.fn>;
 let deleteAuthUserMock: ReturnType<typeof vi.fn>;
 let banAuthUserMock: ReturnType<typeof vi.fn>;
+let inviteAdminByEmailMock: ReturnType<typeof vi.fn>;
+let findUserIdByEmailMock: ReturnType<typeof vi.fn>;
+let ensureProfileMock: ReturnType<typeof vi.fn>;
 
 function repositoryMock(): AdminRepository {
   listOrdersMock = vi.fn().mockResolvedValue({ hasMore: false, items: [], limit: 20 });
@@ -36,6 +39,8 @@ function repositoryMock(): AdminRepository {
     }),
     addVendorUser: addVendorUserMock,
     createAdminMembership: createAdminMembershipMock,
+    findUserIdByEmail: findUserIdByEmailMock,
+    ensureProfile: ensureProfileMock,
     listOrders: listOrdersMock,
     getUserDeletionSnapshot: getUserDeletionSnapshotMock,
     purgeUser: purgeUserMock,
@@ -74,7 +79,11 @@ function authMock(): SupabaseAuthService {
   setUserAppMetadataMock = vi.fn().mockResolvedValue(undefined);
   deleteAuthUserMock = vi.fn().mockResolvedValue(undefined);
   banAuthUserMock = vi.fn().mockResolvedValue(undefined);
+  inviteAdminByEmailMock = vi
+    .fn()
+    .mockResolvedValue({ userId: '66666666-6666-4666-8666-666666666666' });
   return {
+    inviteAdminByEmail: inviteAdminByEmailMock,
     setUserAppMetadata: setUserAppMetadataMock,
     deleteAuthUser: deleteAuthUserMock,
     banAuthUser: banAuthUserMock
@@ -115,6 +124,8 @@ describe('AdminService', () => {
       hasHistory: false
     });
     purgeUserMock = vi.fn().mockResolvedValue(true);
+    findUserIdByEmailMock = vi.fn().mockResolvedValue(undefined);
+    ensureProfileMock = vi.fn().mockResolvedValue(undefined);
     anonymizeUserMock = vi.fn().mockResolvedValue(true);
     repository = repositoryMock();
     invitations = invitationsMock();
@@ -202,6 +213,72 @@ describe('AdminService', () => {
       campus_id: campusId,
       meal_direct_role: 'campus_admin'
     });
+  });
+
+  it('grants an admin role by email to an existing account without inviting', async () => {
+    const userId = '33333333-3333-4333-8333-333333333333';
+    findUserIdByEmailMock.mockResolvedValue(userId);
+
+    await expect(
+      service.createAdminMembership(superAdmin, {
+        campusId,
+        email: 'Ops@Example.com',
+        role: 'campus_admin'
+      })
+    ).resolves.toMatchObject({ email: 'ops@example.com', invited: false, userId });
+
+    expect(findUserIdByEmailMock).toHaveBeenCalledWith('ops@example.com');
+    expect(inviteAdminByEmailMock).not.toHaveBeenCalled();
+    expect(createAdminMembershipMock).toHaveBeenCalledWith(
+      { campusId, role: 'campus_admin', userId },
+      superAdmin.userId
+    );
+  });
+
+  it('invites an unknown email and grants the role to the new account', async () => {
+    const invitedId = '66666666-6666-4666-8666-666666666666';
+
+    await expect(
+      service.createAdminMembership(superAdmin, {
+        email: 'new.admin@example.com',
+        role: 'super_admin'
+      })
+    ).resolves.toMatchObject({ invited: true });
+
+    expect(inviteAdminByEmailMock).toHaveBeenCalledWith('new.admin@example.com');
+    expect(ensureProfileMock).toHaveBeenCalledWith(invitedId, 'new.admin@example.com');
+    expect(createAdminMembershipMock).toHaveBeenCalledWith(
+      { role: 'super_admin', userId: invitedId },
+      superAdmin.userId
+    );
+    expect(setUserAppMetadataMock).toHaveBeenCalledWith(invitedId, {
+      campus_id: null,
+      meal_direct_role: 'super_admin'
+    });
+  });
+
+  it('requires exactly one of userId or email for admin grants', async () => {
+    await expect(
+      service.createAdminMembership(superAdmin, { role: 'super_admin' })
+    ).rejects.toThrow('Provide either userId or email.');
+    await expect(
+      service.createAdminMembership(superAdmin, {
+        email: 'a@example.com',
+        role: 'super_admin',
+        userId: '33333333-3333-4333-8333-333333333333'
+      })
+    ).rejects.toThrow('Provide either userId or email.');
+  });
+
+  it('reports a duplicate admin grant as a conflict', async () => {
+    createAdminMembershipMock.mockRejectedValue(Object.assign(new Error('dup'), { code: '23505' }));
+
+    await expect(
+      service.createAdminMembership(superAdmin, {
+        role: 'super_admin',
+        userId: '33333333-3333-4333-8333-333333333333'
+      })
+    ).rejects.toThrow('This user already has that admin role.');
   });
 
   it('syncs vendor user grants into Supabase app metadata', async () => {

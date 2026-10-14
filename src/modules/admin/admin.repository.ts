@@ -1042,12 +1042,36 @@ export class AdminRepository {
 
   async listAdminMemberships(): Promise<AdminRecord[]> {
     const result = await sql<AdminRecord>`
-      select id::text as "id", user_id::text as "userId", campus_id::text as "campusId",
-        role::text as "role", active, granted_at::text as "grantedAt", revoked_at::text as "revokedAt"
-      from public.admin_memberships
-      order by granted_at desc
+      select am.id::text as "id", am.user_id::text as "userId", am.campus_id::text as "campusId",
+        am.role::text as "role", am.active, am.granted_at::text as "grantedAt",
+        am.revoked_at::text as "revokedAt", p.email::text as "email", p.display_name as "displayName"
+      from public.admin_memberships am
+      left join public.profiles p on p.id = am.user_id
+      order by am.granted_at desc
     `.execute(this.database.db);
     return result.rows;
+  }
+
+  async findUserIdByEmail(email: string): Promise<string | undefined> {
+    const result = await sql<{ id: string }>`
+      select id::text as "id"
+      from public.profiles
+      where email = ${email}::extensions.citext
+      limit 1
+    `.execute(this.database.db);
+    return result.rows[0]?.id;
+  }
+
+  /**
+   * Guarantee the profiles row admin_memberships.user_id references for a freshly
+   * invited auth user, rather than racing the on_auth_user_created trigger.
+   */
+  async ensureProfile(userId: string, email: string): Promise<void> {
+    await sql`
+      insert into public.profiles (id, email, last_seen_at)
+      values (${userId}::uuid, ${email}::extensions.citext, now())
+      on conflict (id) do nothing
+    `.execute(this.database.db);
   }
 
   async createAdminMembership(
