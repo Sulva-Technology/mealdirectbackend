@@ -7,6 +7,7 @@ import { CatalogModule } from './catalog/catalog.module.js';
 import { ChatModule } from './chat/chat.module.js';
 import { EscalationsModule } from './escalations/escalations.module.js';
 import { FeatureFlagsModule } from './feature-flags/feature-flags.module.js';
+import { FleetModule } from './fleet/fleet.module.js';
 import { InventoryModule } from './inventory/inventory.module.js';
 import { JobsModule } from './jobs/jobs.module.js';
 import { NotificationsModule } from './notifications/notifications.module.js';
@@ -37,6 +38,7 @@ export const capabilityModules = [
   BatchesModule,
   ChatModule,
   RidersModule,
+  FleetModule,
   SettlementsModule,
   ReviewsModule,
   EscalationsModule,

@@ -58,4 +58,20 @@ export class AuthRoleGrantsRepository {
 
     return result.rows[0];
   }
+
+  /** True when the user manages at least one fleet partner that is not deactivated. */
+  async hasFleetMembership(userId: string): Promise<boolean> {
+    const result = await sql<{ found: boolean }>`
+      select exists (
+        select 1
+        from public.fleet_partner_members m
+        join public.fleet_partners fp on fp.id = m.fleet_partner_id
+        where m.user_id = ${userId}::uuid
+          and m.active
+          and fp.status <> 'deactivated'
+      ) as "found"
+    `.execute(this.database.db);
+
+    return result.rows[0]?.found === true;
+  }
 }

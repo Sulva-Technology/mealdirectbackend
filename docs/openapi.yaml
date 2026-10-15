@@ -153,6 +153,23 @@ paths:
         '403':
           description: Incorrect role.
       tags: *a2
+  /v1/auth/fleet/login:
+    post:
+      operationId: AuthController_fleetLogin
+      parameters: []
+      responses:
+        '200':
+          description: Fleet partner manager logged in. Requires an active fleet
+            membership; the JWT role is left unchanged.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokensResponseDto'
+        '401':
+          description: Invalid credentials.
+        '403':
+          description: Account does not manage an active fleet partner.
+      tags: *a2
   /v1/auth/refresh:
     post:
       operationId: AuthController_refresh
@@ -3209,6 +3226,266 @@ paths:
           description: Settlement not found for this rider.
       security: *a81
       tags: *a82
+  /v1/admin/fleet-partners:
+    get:
+      operationId: AdminFleetPartnersController_list
+      parameters: []
+      responses:
+        '200':
+          description: Fleet partners, scoped to the campus admin campus.
+        '401': &a83
+          description: Missing, invalid, or expired Supabase JWT.
+        '403': &a84
+          description: Admin role is required.
+      security: &a85
+        - supabaseAuth: []
+      tags: &a86
+        - admin
+    post:
+      operationId: AdminFleetPartnersController_create
+      parameters: []
+      responses:
+        '201':
+          description: Fleet partner created with a fresh rider join code.
+        '401': *a83
+        '403': *a84
+        '409':
+          description: A fleet partner with this name already exists here.
+      security: *a85
+      tags: *a86
+  /v1/admin/fleet-partners/{partnerId}:
+    get:
+      operationId: AdminFleetPartnersController_get
+      parameters: []
+      responses:
+        '200':
+          description: Fleet partner with its managers and riders.
+        '401': *a83
+        '403': *a84
+        '404':
+          description: Fleet partner was not found in scope.
+      security: *a85
+      tags: *a86
+    patch:
+      operationId: AdminFleetPartnersController_update
+      parameters: []
+      responses:
+        '200':
+          description: Updated fleet partner terms or status.
+        '401': *a83
+        '403': *a84
+      security: *a85
+      tags: *a86
+  /v1/admin/fleet-partners/{partnerId}/join-code/rotate:
+    post:
+      operationId: AdminFleetPartnersController_rotateJoinCode
+      parameters: []
+      responses:
+        '200':
+          description: Fleet partner with a new join code; the old code stops working.
+        '401': *a83
+        '403': *a84
+      security: *a85
+      tags: *a86
+  /v1/admin/fleet-partners/{partnerId}/managers:
+    post:
+      operationId: AdminFleetPartnersController_addManager
+      parameters: []
+      responses:
+        '201':
+          description: Manager granted. Unknown emails are invited to set a password first.
+        '401': *a83
+        '403': *a84
+        '409':
+          description: This user already manages this fleet.
+      security: *a85
+      tags: *a86
+  /v1/admin/fleet-partners/{partnerId}/managers/{userId}/remove:
+    post:
+      operationId: AdminFleetPartnersController_removeManager
+      parameters: []
+      responses:
+        '200':
+          description: Manager access revoked.
+        '401': *a83
+        '403': *a84
+      security: *a85
+      tags: *a86
+  /v1/admin/fleet-partners/{partnerId}/riders:
+    post:
+      operationId: AdminFleetPartnersController_attachRider
+      parameters: []
+      responses:
+        '200':
+          description: Rider moved into the fleet without a join code.
+        '401': *a83
+        '403': *a84
+        '409':
+          description: Rider already belongs to another fleet.
+      security: *a85
+      tags: *a86
+  /v1/admin/fleet-partners/{partnerId}/riders/{riderId}/remove:
+    post:
+      operationId: AdminFleetPartnersController_detachRider
+      parameters: []
+      responses:
+        '200':
+          description: Rider released from the fleet and taken off shift.
+        '401': *a83
+        '403': *a84
+      security: *a85
+      tags: *a86
+  /v1/admin/fleet-partners/{partnerId}/earnings:
+    get:
+      operationId: AdminFleetPartnersController_earnings
+      parameters: []
+      responses:
+        '200':
+          description: Fleet delivery earnings by rider and the partner commission.
+        '401': *a83
+        '403': *a84
+      security: *a85
+      tags: *a86
+  /v1/fleet/partners:
+    get:
+      operationId: FleetController_listMine
+      parameters: []
+      responses:
+        '200':
+          description: Fleets the caller manages.
+        '401': &a87
+          description: Missing, invalid, or expired Supabase JWT.
+        '404': &a88
+          description: Fleet was not found or the caller does not manage it.
+      security: &a89
+        - supabaseAuth: []
+      tags: &a90
+        - fleet
+  /v1/fleet/partners/{partnerId}:
+    get:
+      operationId: FleetController_get
+      parameters: []
+      responses:
+        '200':
+          description: Fleet profile, terms, and join code.
+        '401': *a87
+        '404': *a88
+      security: *a89
+      tags: *a90
+  /v1/fleet/partners/{partnerId}/join-code/rotate:
+    post:
+      operationId: FleetController_rotateJoinCode
+      parameters: []
+      responses:
+        '200':
+          description: Fleet with a new join code; the old code stops working.
+        '401': *a87
+        '403':
+          description: Fleet is suspended.
+        '404': *a88
+      security: *a89
+      tags: *a90
+  /v1/fleet/partners/{partnerId}/riders:
+    get:
+      operationId: FleetController_listRiders
+      parameters: []
+      responses:
+        '200':
+          description: Riders in the fleet with their shift and workload.
+        '401': *a87
+        '404': *a88
+      security: *a89
+      tags: *a90
+  /v1/fleet/partners/{partnerId}/riders/{riderId}/remove:
+    post:
+      operationId: FleetController_removeRider
+      parameters: []
+      responses:
+        '200':
+          description: Rider released from the fleet and taken off shift.
+        '401': *a87
+        '404': *a88
+      security: *a89
+      tags: *a90
+  /v1/fleet/partners/{partnerId}/batches:
+    get:
+      operationId: FleetController_listBatches
+      parameters: []
+      responses:
+        '200':
+          description: Rider-delivered batches on the fleet campus for a date that are
+            open to the fleet or held by its riders.
+        '401': *a87
+        '404': *a88
+      security: *a89
+      tags: *a90
+  /v1/fleet/partners/{partnerId}/batches/{batchId}/assign:
+    post:
+      operationId: FleetController_assignBatch
+      parameters: []
+      responses:
+        '200':
+          description: Batch assigned to a fleet rider.
+        '401': *a87
+        '403':
+          description: Fleet is suspended or dispatch is disabled for it.
+        '404': *a88
+        '409':
+          description: Batch is in progress or held outside the fleet.
+      security: *a89
+      tags: *a90
+  /v1/fleet/partners/{partnerId}/earnings:
+    get:
+      operationId: FleetController_earnings
+      parameters: []
+      responses:
+        '200':
+          description: Fleet delivery earnings by rider and the partner commission.
+        '401': *a87
+        '404': *a88
+      security: *a89
+      tags: *a90
+  /v1/rider/fleet:
+    get:
+      operationId: RiderFleetController_get
+      parameters: []
+      responses:
+        '200':
+          description: The fleet the rider delivers for, or null for a platform rider.
+        '401': &a91
+          description: Missing, invalid, or expired Supabase JWT.
+        '403': &a92
+          description: Rider role is required.
+      security: &a93
+        - supabaseAuth: []
+      tags: &a94
+        - rider
+  /v1/rider/fleet/join:
+    post:
+      operationId: RiderFleetController_join
+      parameters: []
+      responses:
+        '200':
+          description: Rider joined the fleet and was taken off shift.
+        '401': *a91
+        '403': *a92
+        '404':
+          description: Join code was not recognised for the rider campus.
+        '409':
+          description: Rider already belongs to another fleet.
+      security: *a93
+      tags: *a94
+  /v1/rider/fleet/leave:
+    post:
+      operationId: RiderFleetController_leave
+      parameters: []
+      responses:
+        '200':
+          description: Rider left its fleet and was taken off shift.
+        '401': *a91
+        '403': *a92
+      security: *a93
+      tags: *a94
   /v1/settlements/vendors/{vendorId}/daily:
     post:
       operationId: SettlementsController_generateVendorDailySettlement
@@ -3216,9 +3493,9 @@ paths:
       responses:
         '201':
           description: Vendor daily settlement was generated idempotently.
-      security: &a83
+      security: &a95
         - supabaseAuth: []
-      tags: &a84
+      tags: &a96
         - settlements
   /v1/settlements/riders/{riderId}/daily:
     post:
@@ -3227,8 +3504,8 @@ paths:
       responses:
         '201':
           description: Rider daily settlement was generated idempotently.
-      security: *a83
-      tags: *a84
+      security: *a95
+      tags: *a96
   /v1/settlements/{settlementId}/pay:
     post:
       operationId: SettlementsController_paySettlement
@@ -3237,8 +3514,8 @@ paths:
         '200':
           description: Initiated (or returned the existing) automated payout transfer for
             a settlement.
-      security: *a83
-      tags: *a84
+      security: *a95
+      tags: *a96
   /v1/vendor/settlements:
     get:
       operationId: VendorSettlementsController_listSettlements
@@ -3252,13 +3529,13 @@ paths:
                 $ref: '#/components/schemas/VendorSettlementListEnvelopeDto'
         '400':
           description: Invalid filters or cursor.
-        '401': &a85
+        '401': &a97
           description: Missing, invalid, or expired Supabase JWT.
-        '403': &a86
+        '403': &a98
           description: Vendor role and vendor membership are required.
-      security: &a87
+      security: &a99
         - supabaseAuth: []
-      tags: &a88
+      tags: &a100
         - vendor-settlements
   /v1/vendor/settlements/{id}:
     get:
@@ -3277,12 +3554,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/VendorSettlementDetailEnvelopeDto'
-        '401': *a85
-        '403': *a86
+        '401': *a97
+        '403': *a98
         '404':
           description: Settlement not found for this vendor.
-      security: *a87
-      tags: *a88
+      security: *a99
+      tags: *a100
   /v1/orders/{orderId}/review:
     post:
       operationId: CustomerReviewsController_createReview
@@ -3344,11 +3621,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EscalationListEnvelopeDto'
-        '401': &a89
+        '401': &a101
           description: Missing, invalid, or expired Supabase JWT.
-      security: &a90
+      security: &a102
         - supabaseAuth: []
-      tags: &a91
+      tags: &a103
         - escalations
     post:
       operationId: CustomerEscalationsController_openEscalation
@@ -3368,9 +3645,9 @@ paths:
                 $ref: '#/components/schemas/EscalationEnvelopeDto'
         '400':
           description: Invalid escalation input or ineligible order.
-        '401': *a89
-      security: *a90
-      tags: *a91
+        '401': *a101
+      security: *a102
+      tags: *a103
   /v1/admin/session:
     get:
       operationId: AdminController_getSession
@@ -3378,13 +3655,13 @@ paths:
       responses:
         '200':
           description: Authenticated admin session and scope.
-        '401': &a92
+        '401': &a104
           description: Missing, invalid, or expired Supabase JWT.
-        '403': &a93
+        '403': &a105
           description: Admin role is required.
-      security: &a94
+      security: &a106
         - supabaseAuth: []
-      tags: &a95
+      tags: &a107
         - admin
   /v1/admin/dashboard:
     get:
@@ -3393,10 +3670,10 @@ paths:
       responses:
         '200':
           description: Admin operational dashboard for a service date.
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/orders:
     get:
       operationId: AdminController_listOrders
@@ -3404,10 +3681,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/orders/{orderId}:
     get:
       operationId: AdminController_getOrder
@@ -3421,10 +3698,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/orders/{orderId}/cancel:
     post:
       operationId: AdminController_cancelOrder
@@ -3432,10 +3709,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/orders/{orderId}/status-transition:
     post:
       operationId: AdminController_transitionOrder
@@ -3443,10 +3720,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/orders/{orderId}/notes:
     post:
       operationId: AdminController_addOrderNote
@@ -3454,10 +3731,10 @@ paths:
       responses:
         '201':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/orders/{orderId}/escalations:
     post:
       operationId: AdminController_escalateOrder
@@ -3465,10 +3742,10 @@ paths:
       responses:
         '201':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/batches:
     get:
       operationId: AdminController_listBatches
@@ -3476,10 +3753,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/batches/{batchId}:
     get:
       operationId: AdminController_getBatch
@@ -3487,10 +3764,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/batches/{batchId}/chat/messages:
     get:
       operationId: AdminController_getBatchChatMessages
@@ -3498,20 +3775,20 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
     post:
       operationId: AdminController_postBatchChatMessage
       parameters: []
       responses:
         '201':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/batches/{batchId}/chat/participants:
     get:
       operationId: AdminController_getBatchChatParticipants
@@ -3519,10 +3796,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/batches/{batchId}/close:
     post:
       operationId: AdminController_closeBatch
@@ -3530,10 +3807,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/batches/{batchId}/assign-rider:
     post:
       operationId: AdminController_assignRider
@@ -3541,10 +3818,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/batches/{batchId}/assign-vendor-delivery:
     post:
       operationId: AdminController_assignVendorDelivery
@@ -3552,10 +3829,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/batches/{batchId}/reassign-rider:
     post:
       operationId: AdminController_reassignRider
@@ -3563,10 +3840,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/batches/{batchId}/cancel-assignment:
     post:
       operationId: AdminController_cancelAssignment
@@ -3574,10 +3851,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/vendors:
     get:
       operationId: AdminController_listVendors
@@ -3585,20 +3862,20 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
     post:
       operationId: AdminController_createVendor
       parameters: []
       responses:
         '201':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/vendors/{vendorId}:
     get:
       operationId: AdminController_getVendor
@@ -3606,20 +3883,20 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
     patch:
       operationId: AdminController_updateVendor
       parameters: []
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/vendors/{vendorId}/approve:
     post:
       operationId: AdminController_approveVendor
@@ -3627,10 +3904,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/vendors/{vendorId}/suspend:
     post:
       operationId: AdminController_suspendVendor
@@ -3638,10 +3915,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/vendors/{vendorId}/activate:
     post:
       operationId: AdminController_activateVendor
@@ -3649,10 +3926,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/vendors/{vendorId}/users:
     post:
       operationId: AdminController_addVendorUser
@@ -3660,10 +3937,10 @@ paths:
       responses:
         '201':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/users/{userId}:
     delete:
       operationId: AdminController_deleteUser
@@ -3672,20 +3949,20 @@ paths:
         '200':
           description: Permanently deletes a user (any type) and all rows referencing
             them. Super admin only. Irreversible.
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
     get:
       operationId: AdminController_getUser
       parameters: []
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/vendors/{vendorId}/invitations:
     get:
       operationId: AdminController_listVendorInvitations
@@ -3693,20 +3970,20 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
     post:
       operationId: AdminController_createVendorInvitation
       parameters: []
       responses:
         '201':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/vendors/{vendorId}/performance:
     get:
       operationId: AdminController_getVendorPerformance
@@ -3714,10 +3991,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/riders:
     get:
       operationId: AdminController_listRiders
@@ -3725,10 +4002,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/riders/{riderId}:
     get:
       operationId: AdminController_getRider
@@ -3736,10 +4013,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/riders/{riderId}/assignments:
     get:
       operationId: AdminController_getRiderAssignments
@@ -3747,10 +4024,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/riders/{riderId}/settlements:
     get:
       operationId: AdminController_getRiderSettlements
@@ -3758,10 +4035,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/riders/{riderId}/verify:
     post:
       operationId: AdminController_verifyRider
@@ -3769,10 +4046,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/riders/{riderId}/suspend:
     post:
       operationId: AdminController_suspendRider
@@ -3780,10 +4057,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/riders/{riderId}/activate:
     post:
       operationId: AdminController_activateRider
@@ -3791,10 +4068,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/inventory:
     get:
       operationId: AdminController_listInventory
@@ -3802,10 +4079,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/inventory/{inventoryId}/adjustments:
     post:
       operationId: AdminController_adjustInventory
@@ -3813,10 +4090,10 @@ paths:
       responses:
         '201':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/inventory/{inventoryId}:
     patch:
       operationId: AdminController_setInventoryTotal
@@ -3824,10 +4101,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/escalations:
     get:
       operationId: AdminController_listEscalations
@@ -3835,10 +4112,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/escalations/{id}:
     get:
       operationId: AdminController_getEscalation
@@ -3846,10 +4123,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/escalations/{id}/assign:
     post:
       operationId: AdminController_assignEscalation
@@ -3857,10 +4134,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/escalations/{id}/request-evidence:
     post:
       operationId: AdminController_requestEvidence
@@ -3868,10 +4145,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/escalations/{id}/resolve:
     post:
       operationId: AdminController_resolveEscalation
@@ -3879,10 +4156,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/escalations/{id}/refunds:
     post:
       operationId: AdminController_refundEscalation
@@ -3890,10 +4167,10 @@ paths:
       responses:
         '201':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/settlements:
     get:
       operationId: AdminController_listSettlements
@@ -3901,10 +4178,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/settlements/preview:
     post:
       operationId: AdminController_previewSettlement
@@ -3912,10 +4189,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/settlements/generate:
     post:
       operationId: AdminController_generateSettlement
@@ -3923,10 +4200,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/settlements/{id}:
     get:
       operationId: AdminController_getSettlement
@@ -3934,10 +4211,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/settlements/{id}/approve:
     post:
       operationId: AdminController_approveSettlement
@@ -3945,10 +4222,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/settlements/{id}/mark-paid:
     post:
       operationId: AdminController_markSettlementPaid
@@ -3956,10 +4233,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/settlements/{id}/payout-account:
     get:
       operationId: AdminController_getSettlementPayoutAccount
@@ -3968,10 +4245,10 @@ paths:
         '200':
           description: Beneficiary bank account for a settlement, fetched from Paystack
             for manual payout.
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/settlements/{id}/pay:
     post:
       operationId: AdminController_paySettlement
@@ -3980,10 +4257,10 @@ paths:
         '200':
           description: Initiated (or returned the existing) automated Paystack payout for
             a settlement.
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/payout-accounts/vendor/{vendorId}/review:
     patch:
       operationId: AdminController_reviewVendorPayoutAccount
@@ -3991,10 +4268,10 @@ paths:
       responses:
         '200':
           description: Set the admin review status of a vendor payout account.
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/payout-accounts/rider/{riderId}/review:
     patch:
       operationId: AdminController_reviewRiderPayoutAccount
@@ -4002,10 +4279,10 @@ paths:
       responses:
         '200':
           description: Set the admin review status of a rider payout account.
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/payout-transfers:
     get:
       operationId: AdminController_listPayoutTransfers
@@ -4013,10 +4290,10 @@ paths:
       responses:
         '200':
           description: Keyset-paginated payout transfers; filter by status or needs_admin.
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/payout-transfers/{id}:
     get:
       operationId: AdminController_getPayoutTransfer
@@ -4024,10 +4301,10 @@ paths:
       responses:
         '200':
           description: A single payout transfer with its derived needs_admin flag.
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/settlements/{id}/adjustments:
     post:
       operationId: AdminController_adjustSettlement
@@ -4035,10 +4312,10 @@ paths:
       responses:
         '201':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/reviews:
     get:
       operationId: AdminController_listReviews
@@ -4046,10 +4323,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/reviews/{reviewId}/moderate:
     post:
       operationId: AdminController_moderateReview
@@ -4057,10 +4334,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/users:
     get:
       operationId: AdminController_listUsers
@@ -4068,10 +4345,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/users/{userId}/suspend:
     post:
       operationId: AdminController_suspendUser
@@ -4079,10 +4356,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/users/{userId}/activate:
     post:
       operationId: AdminController_activateUser
@@ -4090,10 +4367,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/users/{userId}/notes:
     post:
       operationId: AdminController_addUserNote
@@ -4101,10 +4378,10 @@ paths:
       responses:
         '201':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/users/{userId}/escalations:
     post:
       operationId: AdminController_escalateUser
@@ -4112,10 +4389,10 @@ paths:
       responses:
         '201':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/users/{userId}/issues/resolve:
     post:
       operationId: AdminController_resolveUserIssues
@@ -4123,10 +4400,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/admin-memberships:
     get:
       operationId: AdminController_listAdminMemberships
@@ -4134,20 +4411,20 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
     post:
       operationId: AdminController_createAdminMembership
       parameters: []
       responses:
         '201':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/admin-memberships/{id}/revoke:
     post:
       operationId: AdminController_revokeAdminMembership
@@ -4155,10 +4432,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/admin-memberships/{id}/activate:
     post:
       operationId: AdminController_activateAdminMembership
@@ -4166,10 +4443,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/analytics:
     get:
       operationId: AdminController_getAnalytics
@@ -4177,10 +4454,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/analytics/insights:
     get:
       operationId: AdminController_getAnalyticsInsights
@@ -4189,10 +4466,10 @@ paths:
         '200':
           description: Top-selling items, peak order hours, daily revenue trend and
             customer behaviour. Campus- and date-scoped.
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/admin/audit-logs:
     get:
       operationId: AdminController_listAuditLogs
@@ -4200,10 +4477,10 @@ paths:
       responses:
         '200':
           description: ''
-        '401': *a92
-        '403': *a93
-      security: *a94
-      tags: *a95
+        '401': *a104
+        '403': *a105
+      security: *a106
+      tags: *a107
   /v1/analytics/events:
     post:
       operationId: AnalyticsController_recordEvent
@@ -4244,13 +4521,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FeatureFlagListEnvelopeDto'
-        '401': &a96
+        '401': &a108
           description: Missing, invalid, or expired Supabase JWT.
-        '403': &a97
+        '403': &a109
           description: Admin role and the admin:manage permission are required.
-      security: &a98
+      security: &a110
         - supabaseAuth: []
-      tags: &a99
+      tags: &a111
         - admin-feature-flags
   /v1/admin/feature-flags/{key}:
     patch:
@@ -4274,12 +4551,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FeatureFlagEnvelopeDto'
-        '401': *a96
-        '403': *a97
+        '401': *a108
+        '403': *a109
         '404':
           description: Unknown flag key.
-      security: *a98
-      tags: *a99
+      security: *a110
+      tags: *a111
   /v1/admin/feature-testers:
     get:
       operationId: AdminFeatureFlagsController_listTesters
@@ -4291,10 +4568,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FeatureTesterListEnvelopeDto'
-        '401': *a96
-        '403': *a97
-      security: *a98
-      tags: *a99
+        '401': *a108
+        '403': *a109
+      security: *a110
+      tags: *a111
     post:
       operationId: AdminFeatureFlagsController_addTester
       parameters: []
@@ -4313,10 +4590,10 @@ paths:
                 $ref: '#/components/schemas/FeatureTesterEnvelopeDto'
         '400':
           description: Subject does not exist.
-        '401': *a96
-        '403': *a97
-      security: *a98
-      tags: *a99
+        '401': *a108
+        '403': *a109
+      security: *a110
+      tags: *a111
   /v1/admin/feature-testers/{testerId}:
     delete:
       operationId: AdminFeatureFlagsController_removeTester
@@ -4334,12 +4611,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FeatureTesterEnvelopeDto'
-        '401': *a96
-        '403': *a97
+        '401': *a108
+        '403': *a109
         '404':
           description: Tester not found.
-      security: *a98
-      tags: *a99
+      security: *a110
+      tags: *a111
   /v1/me/feature-flags:
     get:
       operationId: MyFeatureFlagsController_myFlags
@@ -4369,14 +4646,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/VendorPrinterListEnvelopeDto'
-        '401': &a100
+        '401': &a112
           description: Missing, invalid, or expired Supabase JWT.
-        '403': &a101
+        '403': &a113
           description: Vendor role and membership required; some actions also need the
             cloud_printing feature flag.
-      security: &a102
+      security: &a114
         - supabaseAuth: []
-      tags: &a103
+      tags: &a115
         - vendor-printing
     post:
       operationId: VendorPrintersController_registerPrinter
@@ -4397,12 +4674,12 @@ paths:
                 $ref: '#/components/schemas/PrinterRegistrationEnvelopeDto'
         '400':
           description: Invalid MAC address or body.
-        '401': *a100
-        '403': *a101
+        '401': *a112
+        '403': *a113
         '409':
           description: MAC already registered.
-      security: *a102
-      tags: *a103
+      security: *a114
+      tags: *a115
   /v1/vendor/printers/{printerId}/rotate-key:
     post:
       operationId: VendorPrintersController_rotateKey
@@ -4420,12 +4697,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PrinterRegistrationEnvelopeDto'
-        '401': *a100
-        '403': *a101
+        '401': *a112
+        '403': *a113
         '404':
           description: Printer not found.
-      security: *a102
-      tags: *a103
+      security: *a114
+      tags: *a115
   /v1/vendor/printers/{printerId}:
     delete:
       operationId: VendorPrintersController_revokePrinter
@@ -4443,12 +4720,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/VendorPrinterEnvelopeDto'
-        '401': *a100
-        '403': *a101
+        '401': *a112
+        '403': *a113
         '404':
           description: Printer not found.
-      security: *a102
-      tags: *a103
+      security: *a114
+      tags: *a115
   /v1/vendor/printers/{printerId}/test-print:
     post:
       operationId: VendorPrintersController_testPrint
@@ -4466,12 +4743,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PrintJobEnvelopeDto'
-        '401': *a100
-        '403': *a101
+        '401': *a112
+        '403': *a113
         '404':
           description: Printer not found.
-      security: *a102
-      tags: *a103
+      security: *a114
+      tags: *a115
   /v1/vendor/print-jobs:
     get:
       operationId: VendorPrintersController_listJobs
@@ -4485,10 +4762,10 @@ paths:
                 $ref: '#/components/schemas/PrintJobListEnvelopeDto'
         '400':
           description: Invalid filters.
-        '401': *a100
-        '403': *a101
-      security: *a102
-      tags: *a103
+        '401': *a112
+        '403': *a113
+      security: *a114
+      tags: *a115
   /v1/vendor/orders/{orderId}/receipt:
     get:
       operationId: VendorPrintersController_getReceipt
@@ -4506,12 +4783,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReceiptViewEnvelopeDto'
-        '401': *a100
-        '403': *a101
+        '401': *a112
+        '403': *a113
         '404':
           description: Order not found for this vendor.
-      security: *a102
-      tags: *a103
+      security: *a114
+      tags: *a115
   /v1/vendor/orders/{orderId}/reprint:
     post:
       operationId: VendorPrintersController_reprint
@@ -4529,14 +4806,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PrintJobEnvelopeDto'
-        '401': *a100
-        '403': *a101
+        '401': *a112
+        '403': *a113
         '404':
           description: Order not found for this vendor.
         '409':
           description: Vendor has no printer.
-      security: *a102
-      tags: *a103
+      security: *a114
+      tags: *a115
   /v1/notifications:
     get:
       operationId: NotificationsController_listNotifications
@@ -4548,11 +4825,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotificationListEnvelopeDto'
-        '401': &a104
+        '401': &a116
           description: Missing, invalid, or expired Supabase JWT.
-      security: &a105
+      security: &a117
         - supabaseAuth: []
-      tags: &a106
+      tags: &a118
         - notifications
   /v1/notifications/read-all:
     post:
@@ -4565,9 +4842,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MarkAllNotificationsReadEnvelopeDto'
-        '401': *a104
-      security: *a105
-      tags: *a106
+        '401': *a116
+      security: *a117
+      tags: *a118
   /v1/notifications/{notificationId}/read:
     post:
       operationId: NotificationsController_markRead
@@ -4585,9 +4862,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotificationEnvelopeDto'
-        '401': *a104
-      security: *a105
-      tags: *a106
+        '401': *a116
+      security: *a117
+      tags: *a118
   /v1/notifications/preferences:
     get:
       operationId: NotificationsController_getPreferences
@@ -4599,9 +4876,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotificationPreferencesEnvelopeDto'
-        '401': *a104
-      security: *a105
-      tags: *a106
+        '401': *a116
+      security: *a117
+      tags: *a118
     put:
       operationId: NotificationsController_updatePreferences
       parameters: []
@@ -4612,9 +4889,9 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotificationPreferencesEnvelopeDto'
-        '401': *a104
-      security: *a105
-      tags: *a106
+        '401': *a116
+      security: *a117
+      tags: *a118
   /v1/me/device-tokens:
     post:
       operationId: DeviceTokensController_register
@@ -4628,11 +4905,11 @@ paths:
       responses:
         '204':
           description: Registers (or refreshes) a push device token for the current user.
-        '401': &a107
+        '401': &a119
           description: Missing, invalid, or expired Supabase JWT.
-      security: &a108
+      security: &a120
         - supabaseAuth: []
-      tags: &a109
+      tags: &a121
         - notifications
   /v1/me/device-tokens/test:
     post:
@@ -4642,9 +4919,9 @@ paths:
         '204':
           description: Sends a test push notification to all active tokens for the current
             user.
-        '401': *a107
-      security: *a108
-      tags: *a109
+        '401': *a119
+      security: *a120
+      tags: *a121
   /v1/me/device-tokens/{token}:
     delete:
       operationId: DeviceTokensController_remove
@@ -4652,9 +4929,9 @@ paths:
       responses:
         '204':
           description: Unregisters a push device token for the current user.
-        '401': *a107
-      security: *a108
-      tags: *a109
+        '401': *a119
+      security: *a120
+      tags: *a121
   /v1/admin/system:
     get:
       operationId: JobsController_getSystemSummary
@@ -4662,13 +4939,13 @@ paths:
       responses:
         '200':
           description: Worker and outbox operational summary.
-        '401': &a110
+        '401': &a122
           description: Missing, invalid, or expired Supabase JWT.
-        '403': &a111
+        '403': &a123
           description: Admin role is required.
-      security: &a112
+      security: &a124
         - supabaseAuth: []
-      tags: &a113
+      tags: &a125
         - admin-jobs
   /v1/admin/jobs/outbox:
     get:
@@ -4677,10 +4954,10 @@ paths:
       responses:
         '200':
           description: Outbox event list for admin operations.
-        '401': *a110
-        '403': *a111
-      security: *a112
-      tags: *a113
+        '401': *a122
+        '403': *a123
+      security: *a124
+      tags: *a125
   /v1/admin/jobs/outbox/process:
     post:
       operationId: JobsController_processOutboxEvents
@@ -4688,10 +4965,10 @@ paths:
       responses:
         '200':
           description: Claims currently available outbox events for a worker.
-        '401': *a110
-        '403': *a111
-      security: *a112
-      tags: *a113
+        '401': *a122
+        '403': *a123
+      security: *a124
+      tags: *a125
 info:
   title: Meal Direct API
   description: Stable REST API for Meal Direct web and future mobile clients.
@@ -4779,7 +5056,7 @@ components:
           format: uuid
         role:
           type: string
-          enum: &a114
+          enum: &a126
             - customer
             - vendor
             - rider
@@ -4983,7 +5260,7 @@ components:
           type: array
           items:
             type: string
-            enum: *a114
+            enum: *a126
         campuses:
           type: array
           items:
@@ -5342,7 +5619,7 @@ components:
           type: boolean
         defaultDeliveryMode:
           type: string
-          enum: &a115
+          enum: &a127
             - meal_direct_rider
             - vendor_delivery
         createdAt:
@@ -5420,7 +5697,7 @@ components:
             global default; may not exceed the campus ceiling.
         defaultDeliveryMode:
           type: string
-          enum: *a115
+          enum: *a127
     UploadUrlRequestDto:
       type: object
       properties:
@@ -5904,7 +6181,7 @@ components:
           type: boolean
         state:
           type: string
-          enum: &a116
+          enum: &a128
             - open
             - closed
             - paused
@@ -5944,7 +6221,7 @@ components:
           type: boolean
         state:
           type: string
-          enum: *a116
+          enum: *a128
         pauseUntil:
           type: string
           nullable: true
@@ -6014,7 +6291,7 @@ components:
           type: string
         orderStatus:
           type: string
-          enum: &a117
+          enum: &a129
             - administratively_completed
             - cancelled
             - delivered
@@ -6262,7 +6539,7 @@ components:
           type: string
         orderStatus:
           type: string
-          enum: *a117
+          enum: *a129
         deliveryMode:
           type: string
         specialInstructions:
@@ -6940,7 +7217,7 @@ components:
           format: uuid
         orderStatus:
           type: string
-          enum: *a117
+          enum: *a129
         payment:
           nullable: true
           type: object
@@ -7238,7 +7515,7 @@ components:
           format: uuid
         issueType:
           type: string
-          enum: &a118
+          enum: &a130
             - initialized_unconfirmed
             - paid_order_pending
             - webhook_processing_failed
@@ -7249,14 +7526,14 @@ components:
             - refund_stuck
         status:
           type: string
-          enum: &a119
+          enum: &a131
             - open
             - investigating
             - resolved
             - ignored
         severity:
           type: string
-          enum: &a120
+          enum: &a132
             - info
             - warning
             - critical
@@ -7336,13 +7613,13 @@ components:
           format: uuid
         issueType:
           type: string
-          enum: *a118
+          enum: *a130
         status:
           type: string
-          enum: *a119
+          enum: *a131
         severity:
           type: string
-          enum: *a120
+          enum: *a132
         paymentId:
           type: string
           nullable: true
@@ -7667,7 +7944,7 @@ components:
           type: string
         status:
           type: string
-          enum: &a121
+          enum: &a133
             - open
             - closed
             - assigned
@@ -7737,7 +8014,7 @@ components:
           type: string
         status:
           type: string
-          enum: *a121
+          enum: *a133
         deliveryMode:
           type: string
         orderCount:
@@ -8084,7 +8361,7 @@ components:
           type: string
         status:
           type: string
-          enum: &a122
+          enum: &a134
             - accepted
             - assigned
             - cancelled
@@ -8169,7 +8446,7 @@ components:
           type: string
         status:
           type: string
-          enum: *a122
+          enum: *a134
         batchStatus:
           type: string
         orderCount:
@@ -8259,7 +8536,7 @@ components:
           type: string
         orderStatus:
           type: string
-          enum: *a117
+          enum: *a129
         deliveryMode:
           type: string
         specialInstructions:
@@ -8359,7 +8636,7 @@ components:
           format: uuid
         assignmentStatus:
           type: string
-          enum: *a122
+          enum: *a134
         deliveryInstructions:
           type: string
           nullable: true
@@ -8471,7 +8748,7 @@ components:
           nullable: true
         settlementStatus:
           type: string
-          enum: &a123
+          enum: &a135
             - approved
             - cancelled
             - draft
@@ -8551,7 +8828,7 @@ components:
           type: string
         status:
           type: string
-          enum: *a123
+          enum: *a135
         deliveryEarningsKobo:
           type: number
         adjustmentsKobo:
@@ -8638,7 +8915,7 @@ components:
           type: string
         status:
           type: string
-          enum: *a123
+          enum: *a135
         deliveryEarningsKobo:
           type: number
         adjustmentsKobo:
@@ -8703,7 +8980,7 @@ components:
           example: 2026-06-15
         status:
           type: string
-          enum: &a124
+          enum: &a136
             - approved
             - cancelled
             - draft
@@ -8815,7 +9092,7 @@ components:
           example: 2026-06-15
         status:
           type: string
-          enum: *a124
+          enum: *a136
         grossFoodAmountKobo:
           type: number
         deliveryEarningsKobo:
@@ -9063,7 +9340,7 @@ components:
           type: string
         mode:
           type: string
-          enum: &a125
+          enum: &a137
             - off
             - test
             - on
@@ -9092,7 +9369,7 @@ components:
         mode:
           type: string
           description: off = nobody, test = feature testers only, on = everyone.
-          enum: *a125
+          enum: *a137
       required:
         - mode
     FeatureFlagEnvelopeDto:
@@ -9110,7 +9387,7 @@ components:
           format: uuid
         subjectType:
           type: string
-          enum: &a126
+          enum: &a138
             - user
             - vendor
         subjectId:
@@ -9141,7 +9418,7 @@ components:
       properties:
         subjectType:
           type: string
-          enum: *a126
+          enum: *a138
         subjectId:
           type: string
           description: profiles.id for subjectType user, vendors.id for subjectType vendor.
@@ -9187,7 +9464,7 @@ components:
           example: 00:11:62:aa:bb:cc
         paperWidthChars:
           type: number
-          enum: &a127
+          enum: &a139
             - 32
             - 42
             - 48
@@ -9238,7 +9515,7 @@ components:
           type: number
           default: 48
           description: 'Characters per line: 32 for 58mm paper, 42 or 48 for 80mm.'
-          enum: *a127
+          enum: *a139
       required:
         - name
         - macAddress
