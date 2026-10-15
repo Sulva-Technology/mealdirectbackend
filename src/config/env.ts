@@ -76,6 +76,9 @@ const envSchema = z
     APP_URL_ADMIN: z.url().default('https://admin.mealdirectly.com'),
     // Fleet partner managers' dashboard. Ships inside the admin web app until it has its own.
     APP_URL_FLEET: z.url().default('https://admin.mealdirectly.com'),
+    // Average rider speed for delivery ETAs (straight-line distance x detour / speed).
+    // 15 km/h fits bicycles and scooters on campus paths; tune per campus experience.
+    RIDER_AVERAGE_SPEED_KMH: z.coerce.number().positive().max(80).default(15),
     LOG_LEVEL: z.enum(['silent', 'debug', 'info', 'warn', 'error']).default('info'),
     BODY_LIMIT_BYTES: z.coerce.number().int().positive().max(10_485_760).default(1_048_576),
     RATE_LIMIT_MAX: z.coerce.number().int().positive().default(120),

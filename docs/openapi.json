@@ -4082,6 +4082,155 @@
         "tags": ["rider"]
       }
     },
+    "/v1/rider/location": {
+      "put": {
+        "operationId": "RiderTrackingController_recordLocation",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Latest position stored. accepted=false means a newer or too-old fix was ignored; send fixes every 10-20 seconds while on shift."
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Rider role is required." },
+          "409": { "description": "Rider is off shift with no open delivery: stop sending." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["rider"]
+      },
+      "delete": {
+        "operationId": "RiderTrackingController_stopSharing",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Stored position deleted; the rider disappears from maps." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Rider role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["rider"]
+      }
+    },
+    "/v1/rider/assignments/{assignmentId}/route": {
+      "get": {
+        "operationId": "RiderTrackingController_getRoute",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Pickup and drop-off stops in visiting order with distance and ETA per stop, from the rider position."
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Rider role is required." },
+          "404": { "description": "Assignment was not found for this rider." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["rider"]
+      }
+    },
+    "/v1/orders/{orderId}/tracking": {
+      "get": {
+        "operationId": "OrderTrackingController_getTracking",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Delivery phase, destination pin, ETA, and (only while on the way) the rider first name and position. Poll every 15-30 seconds."
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "404": { "description": "Order was not found for this customer." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["orders"]
+      }
+    },
+    "/v1/admin/map/riders": {
+      "get": {
+        "operationId": "AdminMapController_riders",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Riders sharing a position (on shift or mid-delivery), with a stale flag."
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/map/campuses/{campusId}/points": {
+      "get": {
+        "operationId": "AdminMapController_points",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Campus locations and vendors with their map pins (null if unset)."
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/map/locations/{locationId}/coordinates": {
+      "put": {
+        "operationId": "AdminMapController_setLocation",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Drop-off pin set for a campus location." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      },
+      "delete": {
+        "operationId": "AdminMapController_clearLocation",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Drop-off pin cleared." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/map/vendors/{vendorId}/coordinates": {
+      "put": {
+        "operationId": "AdminMapController_setVendor",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Pickup pin set for a vendor." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      },
+      "delete": {
+        "operationId": "AdminMapController_clearVendor",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Pickup pin cleared." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/fleet/partners/{partnerId}/map/riders": {
+      "get": {
+        "operationId": "FleetMapController_riders",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "The fleet riders currently sharing a position." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "404": { "description": "Fleet was not found or the caller does not manage it." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["fleet"]
+      }
+    },
     "/v1/settlements/vendors/{vendorId}/daily": {
       "post": {
         "operationId": "SettlementsController_generateVendorDailySettlement",
