@@ -13,6 +13,7 @@ import type {
   TrackingRider
 } from './tracking.types.js';
 
+// Timestamps leave as ISO 8601 UTC so map clients and freshness checks parse them reliably.
 // Orders a rider still has to hand over. Delivered, cancelled, and refunded orders drop off
 // the route as soon as their status changes.
 const openDropoffStatuses = ['paid', 'ready', 'out_for_delivery'];
@@ -95,8 +96,8 @@ export class TrackingRepository {
         accuracy_m as "accuracyMeters",
         heading_deg as "headingDegrees",
         speed_mps::double precision as "speedMps",
-        recorded_at::text as "recordedAt",
-        received_at::text as "receivedAt"
+        to_char(recorded_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') as "recordedAt",
+        to_char(received_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') as "receivedAt"
       from public.rider_locations
       where rider_id = ${riderId}::uuid
     `.execute(this.database.db);
@@ -202,7 +203,7 @@ export class TrackingRepository {
         rl.accuracy_m as "accuracyMeters",
         rl.heading_deg as "headingDegrees",
         rl.speed_mps::double precision as "speedMps",
-        rl.recorded_at::text as "recordedAt",
+        to_char(rl.recorded_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"') as "recordedAt",
         rl.recorded_at < now() - make_interval(secs => ${staleAfterSeconds}) as "stale"
       from public.rider_locations rl
       join public.riders r on r.id = rl.rider_id
