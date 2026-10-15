@@ -433,6 +433,14 @@ export class FleetService {
     return this.buildEarnings(partner, range);
   }
 
+  /**
+   * Resolve a fleet the caller manages, for other modules that serve fleet-manager views
+   * (e.g. the live rider map). Same 404 for non-members as every /fleet route.
+   */
+  async requireManagedFleet(actor: AuthenticatedActor, partnerId: string): Promise<FleetPartner> {
+    return (await this.requireFleetAccess(actor, partnerId)).partner;
+  }
+
   // ---------------------------------------------------------------------------
   // Rider (/rider/fleet)
   // ---------------------------------------------------------------------------
