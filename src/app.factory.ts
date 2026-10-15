@@ -79,7 +79,9 @@ export async function createApp(options: CreateAppOptions = {}): Promise<NestFas
     bodyLimit: env?.BODY_LIMIT_BYTES ?? 1_048_576,
     // Trust exactly one hop (Render's edge proxy). `true` would trust the whole
     // X-Forwarded-For chain, letting clients spoof their IP past rate limiting.
-    trustProxy: 1,
+    // A function, not `1`: since fastify 5.12 a numeric hop count trusts nothing,
+    // which would collapse every client onto the proxy's IP for rate limiting.
+    trustProxy: (_address: string, hop: number) => hop < 1,
     logger: false,
     // FCM device tokens (~160 chars) are passed as a path param on
     // DELETE /me/device-tokens/:token; fastify's default maxParamLength of 100
