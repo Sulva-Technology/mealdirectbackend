@@ -144,6 +144,20 @@ export class AuthController {
     return this.authService.signIn(dto.email, dto.password, ['campus_admin', 'super_admin']);
   }
 
+  @Post('fleet/login')
+  @UseGuards(AuthThrottleGuard)
+  @HttpCode(200)
+  @ApiOkResponse({
+    type: AuthTokensResponseDto,
+    description:
+      'Fleet partner manager logged in. Requires an active fleet membership; the JWT role is left unchanged.'
+  })
+  @ApiUnauthorizedResponse({ description: 'Invalid credentials.' })
+  @ApiForbiddenResponse({ description: 'Account does not manage an active fleet partner.' })
+  async fleetLogin(@Body() dto: LoginDto): Promise<AuthTokensResponseDto> {
+    return this.authService.signInFleetManager(dto.email, dto.password);
+  }
+
   @Post('refresh')
   @UseGuards(AuthThrottleGuard)
   @HttpCode(200)

@@ -44,7 +44,8 @@ function envMock(): EnvService {
 function grantsMock(): AuthRoleGrantsRepository {
   return {
     findAdminGrantForUser: vi.fn().mockResolvedValue(undefined),
-    findVendorGrantForUser: vi.fn().mockResolvedValue(undefined)
+    findVendorGrantForUser: vi.fn().mockResolvedValue(undefined),
+    hasFleetMembership: vi.fn().mockResolvedValue(false)
   } as unknown as AuthRoleGrantsRepository;
 }
 
@@ -121,6 +122,30 @@ describe('SupabaseAuthService', () => {
     grants = grantsMock();
     service = new SupabaseAuthService(envMock(), undefined, grants);
     vi.spyOn(service, 'setUserAppMetadata').mockResolvedValue(undefined);
+  });
+
+  it('signs a fleet manager in without touching their role', async () => {
+    vi.mocked(grants.hasFleetMembership).mockResolvedValue(true);
+
+    const result = await service.signInFleetManager(' Person@Example.com ', 'Password123!');
+
+    expect(signInWithPasswordMock).toHaveBeenCalledWith({
+      email: 'person@example.com',
+      password: 'Password123!'
+    });
+    expect(grants.hasFleetMembership).toHaveBeenCalledWith(userId);
+    expect(service.setUserAppMetadata).not.toHaveBeenCalled();
+    expect(refreshSessionMock).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      accessToken: 'old-token',
+      user: { id: userId, role: 'customer' }
+    });
+  });
+
+  it('refuses fleet sign-in for accounts that manage no fleet', async () => {
+    await expect(service.signInFleetManager('person@example.com', 'Password123!')).rejects.toThrow(
+      'Your account is not permitted to sign in to this portal.'
+    );
   });
 
   it('repairs DB-only campus admin grants during admin login', async () => {

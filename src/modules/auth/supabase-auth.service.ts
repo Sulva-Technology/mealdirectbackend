@@ -167,12 +167,15 @@ export class SupabaseAuthService {
   }
 
   /**
-   * Send a Supabase invite email to a brand-new admin. The link lands on the admin
-   * app's /auth/callback, where the invitee sets a password. Returns the new auth
-   * user id so the caller can grant the membership straight away. Requires the
+   * Send a Supabase invite email to a brand-new admin or fleet manager. The link lands
+   * on that portal's /auth/callback, where the invitee sets a password. Returns the new
+   * auth user id so the caller can grant the membership straight away. Requires the
    * service_role key.
    */
-  async inviteAdminByEmail(email: string): Promise<{ userId: string }> {
+  async inviteAdminByEmail(
+    email: string,
+    portal: 'admin' | 'fleet' = 'admin'
+  ): Promise<{ userId: string }> {
     const admin = this.getAdminClient();
     if (admin === undefined) {
       throw new BadRequestException({
@@ -182,11 +185,11 @@ export class SupabaseAuthService {
     }
 
     const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
-      redirectTo: this.authRedirectUrl('admin')
+      redirectTo: this.authRedirectUrl(portal)
     });
     if (error || !data.user) {
       this.logger.error(
-        `Admin invite failed for ${email}: status=${String(error?.status)} message=${error?.message ?? 'no user returned'}`
+        `${portal === 'fleet' ? 'Fleet manager' : 'Admin'} invite failed for ${email}: status=${String(error?.status)} message=${error?.message ?? 'no user returned'}`
       );
       throw new BadRequestException({
         code: ErrorCodes.AUTH_FAILED,
@@ -261,6 +264,8 @@ export class SupabaseAuthService {
       case 'super_admin':
       case 'campus_admin':
         return this.env.get('APP_URL_ADMIN');
+      case 'fleet':
+        return this.env.get('APP_URL_FLEET');
       default:
         return this.env.get('APP_URL_CUSTOMER');
     }
@@ -466,35 +471,9 @@ export class SupabaseAuthService {
     password: string,
     allowedRoles: string[]
   ): Promise<AuthTokensResponseDto> {
-    // Normalize the email the way signup stores it so copy-paste whitespace/case is never
-    // the cause of a failed sign-in.
-    const normalizedEmail = email.trim().toLowerCase();
-    const { data, error } = await this.getClient().auth.signInWithPassword({
-      email: normalizedEmail,
-      password
-    });
-
-    if (error) {
-      // Log the underlying Supabase reason server-side (distinguishes "no such user" vs
-      // "bad password" vs "email not confirmed") without leaking it to the client.
-      this.logger.warn(
-        `Sign-in failed for ${normalizedEmail} (portals: ${allowedRoles.join(',')}): ${error.message}`
-      );
-      throw new UnauthorizedException({
-        code: ErrorCodes.AUTH_FAILED,
-        message: error.message
-      });
-    }
-
-    if (!data.session) {
-      throw new UnauthorizedException({
-        code: ErrorCodes.AUTH_FAILED,
-        message: 'No active session was returned.'
-      });
-    }
-
-    let session: SupabaseSession = data.session;
-    let user: SupabaseUser = data.user;
+    const authenticated = await this.authenticate(email, password, allowedRoles.join(','));
+    let session: SupabaseSession = authenticated.session;
+    let user: SupabaseUser = authenticated.user;
     let role = this.resolveUserRole(user);
 
     if (!allowedRoles.includes(role)) {
@@ -528,6 +507,70 @@ export class SupabaseAuthService {
         role
       }
     };
+  }
+
+  /**
+   * Sign in to the fleet partner dashboard. Fleet access comes from an active
+   * fleet_partner_members row rather than a JWT role, so the account keeps whatever
+   * role it already has (usually customer or rider) and nothing in app_metadata changes.
+   */
+  async signInFleetManager(email: string, password: string): Promise<AuthTokensResponseDto> {
+    const { session, user } = await this.authenticate(email, password, 'fleet');
+
+    const hasFleet =
+      this.roleGrants !== undefined && (await this.roleGrants.hasFleetMembership(user.id));
+    if (!hasFleet) {
+      throw new ForbiddenException({
+        code: ErrorCodes.AUTH_FAILED,
+        message: 'Your account is not permitted to sign in to this portal.'
+      });
+    }
+
+    return {
+      accessToken: session.access_token,
+      refreshToken: session.refresh_token,
+      expiresIn: session.expires_in,
+      user: {
+        id: user.id,
+        email: user.email ?? '',
+        role: this.resolveUserRole(user)
+      }
+    };
+  }
+
+  private async authenticate(
+    email: string,
+    password: string,
+    portals: string
+  ): Promise<{ session: SupabaseSession; user: SupabaseUser }> {
+    // Normalize the email the way signup stores it so copy-paste whitespace/case is never
+    // the cause of a failed sign-in.
+    const normalizedEmail = email.trim().toLowerCase();
+    const { data, error } = await this.getClient().auth.signInWithPassword({
+      email: normalizedEmail,
+      password
+    });
+
+    if (error) {
+      // Log the underlying Supabase reason server-side (distinguishes "no such user" vs
+      // "bad password" vs "email not confirmed") without leaking it to the client.
+      this.logger.warn(
+        `Sign-in failed for ${normalizedEmail} (portals: ${portals}): ${error.message}`
+      );
+      throw new UnauthorizedException({
+        code: ErrorCodes.AUTH_FAILED,
+        message: error.message
+      });
+    }
+
+    if (!data.session) {
+      throw new UnauthorizedException({
+        code: ErrorCodes.AUTH_FAILED,
+        message: 'No active session was returned.'
+      });
+    }
+
+    return { session: data.session, user: data.user };
   }
 
   private resolveUserRole(user: {

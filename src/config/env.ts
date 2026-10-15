@@ -74,6 +74,8 @@ const envSchema = z
     APP_URL_VENDOR: z.url().default('https://vendor.mealdirectly.com'),
     APP_URL_RIDER: z.url().default('https://rider.mealdirectly.com'),
     APP_URL_ADMIN: z.url().default('https://admin.mealdirectly.com'),
+    // Fleet partner managers' dashboard. Ships inside the admin web app until it has its own.
+    APP_URL_FLEET: z.url().default('https://admin.mealdirectly.com'),
     LOG_LEVEL: z.enum(['silent', 'debug', 'info', 'warn', 'error']).default('info'),
     BODY_LIMIT_BYTES: z.coerce.number().int().positive().max(10_485_760).default(1_048_576),
     RATE_LIMIT_MAX: z.coerce.number().int().positive().default(120),

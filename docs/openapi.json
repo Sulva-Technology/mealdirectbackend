@@ -180,6 +180,25 @@
         "tags": ["auth"]
       }
     },
+    "/v1/auth/fleet/login": {
+      "post": {
+        "operationId": "AuthController_fleetLogin",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Fleet partner manager logged in. Requires an active fleet membership; the JWT role is left unchanged.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthTokensResponseDto" }
+              }
+            }
+          },
+          "401": { "description": "Invalid credentials." },
+          "403": { "description": "Account does not manage an active fleet partner." }
+        },
+        "tags": ["auth"]
+      }
+    },
     "/v1/auth/refresh": {
       "post": {
         "operationId": "AuthController_refresh",
@@ -3772,6 +3791,292 @@
           "401": { "description": "Missing, invalid, or expired Supabase JWT." },
           "403": { "description": "Verified active rider access is required." },
           "404": { "description": "Settlement not found for this rider." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["rider"]
+      }
+    },
+    "/v1/admin/fleet-partners": {
+      "get": {
+        "operationId": "AdminFleetPartnersController_list",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Fleet partners, scoped to the campus admin campus." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      },
+      "post": {
+        "operationId": "AdminFleetPartnersController_create",
+        "parameters": [],
+        "responses": {
+          "201": { "description": "Fleet partner created with a fresh rider join code." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." },
+          "409": { "description": "A fleet partner with this name already exists here." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/fleet-partners/{partnerId}": {
+      "get": {
+        "operationId": "AdminFleetPartnersController_get",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Fleet partner with its managers and riders." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." },
+          "404": { "description": "Fleet partner was not found in scope." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      },
+      "patch": {
+        "operationId": "AdminFleetPartnersController_update",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Updated fleet partner terms or status." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/fleet-partners/{partnerId}/join-code/rotate": {
+      "post": {
+        "operationId": "AdminFleetPartnersController_rotateJoinCode",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Fleet partner with a new join code; the old code stops working."
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/fleet-partners/{partnerId}/managers": {
+      "post": {
+        "operationId": "AdminFleetPartnersController_addManager",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Manager granted. Unknown emails are invited to set a password first."
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." },
+          "409": { "description": "This user already manages this fleet." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/fleet-partners/{partnerId}/managers/{userId}/remove": {
+      "post": {
+        "operationId": "AdminFleetPartnersController_removeManager",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Manager access revoked." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/fleet-partners/{partnerId}/riders": {
+      "post": {
+        "operationId": "AdminFleetPartnersController_attachRider",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Rider moved into the fleet without a join code." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." },
+          "409": { "description": "Rider already belongs to another fleet." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/fleet-partners/{partnerId}/riders/{riderId}/remove": {
+      "post": {
+        "operationId": "AdminFleetPartnersController_detachRider",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Rider released from the fleet and taken off shift." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/admin/fleet-partners/{partnerId}/earnings": {
+      "get": {
+        "operationId": "AdminFleetPartnersController_earnings",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Fleet delivery earnings by rider and the partner commission." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Admin role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["admin"]
+      }
+    },
+    "/v1/fleet/partners": {
+      "get": {
+        "operationId": "FleetController_listMine",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Fleets the caller manages." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "404": { "description": "Fleet was not found or the caller does not manage it." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["fleet"]
+      }
+    },
+    "/v1/fleet/partners/{partnerId}": {
+      "get": {
+        "operationId": "FleetController_get",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Fleet profile, terms, and join code." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "404": { "description": "Fleet was not found or the caller does not manage it." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["fleet"]
+      }
+    },
+    "/v1/fleet/partners/{partnerId}/join-code/rotate": {
+      "post": {
+        "operationId": "FleetController_rotateJoinCode",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Fleet with a new join code; the old code stops working." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Fleet is suspended." },
+          "404": { "description": "Fleet was not found or the caller does not manage it." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["fleet"]
+      }
+    },
+    "/v1/fleet/partners/{partnerId}/riders": {
+      "get": {
+        "operationId": "FleetController_listRiders",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Riders in the fleet with their shift and workload." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "404": { "description": "Fleet was not found or the caller does not manage it." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["fleet"]
+      }
+    },
+    "/v1/fleet/partners/{partnerId}/riders/{riderId}/remove": {
+      "post": {
+        "operationId": "FleetController_removeRider",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Rider released from the fleet and taken off shift." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "404": { "description": "Fleet was not found or the caller does not manage it." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["fleet"]
+      }
+    },
+    "/v1/fleet/partners/{partnerId}/batches": {
+      "get": {
+        "operationId": "FleetController_listBatches",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Rider-delivered batches on the fleet campus for a date that are open to the fleet or held by its riders."
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "404": { "description": "Fleet was not found or the caller does not manage it." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["fleet"]
+      }
+    },
+    "/v1/fleet/partners/{partnerId}/batches/{batchId}/assign": {
+      "post": {
+        "operationId": "FleetController_assignBatch",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Batch assigned to a fleet rider." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Fleet is suspended or dispatch is disabled for it." },
+          "404": { "description": "Fleet was not found or the caller does not manage it." },
+          "409": { "description": "Batch is in progress or held outside the fleet." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["fleet"]
+      }
+    },
+    "/v1/fleet/partners/{partnerId}/earnings": {
+      "get": {
+        "operationId": "FleetController_earnings",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Fleet delivery earnings by rider and the partner commission." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "404": { "description": "Fleet was not found or the caller does not manage it." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["fleet"]
+      }
+    },
+    "/v1/rider/fleet": {
+      "get": {
+        "operationId": "RiderFleetController_get",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The fleet the rider delivers for, or null for a platform rider."
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Rider role is required." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["rider"]
+      }
+    },
+    "/v1/rider/fleet/join": {
+      "post": {
+        "operationId": "RiderFleetController_join",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Rider joined the fleet and was taken off shift." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Rider role is required." },
+          "404": { "description": "Join code was not recognised for the rider campus." },
+          "409": { "description": "Rider already belongs to another fleet." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["rider"]
+      }
+    },
+    "/v1/rider/fleet/leave": {
+      "post": {
+        "operationId": "RiderFleetController_leave",
+        "parameters": [],
+        "responses": {
+          "200": { "description": "Rider left its fleet and was taken off shift." },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Rider role is required." }
         },
         "security": [{ "supabaseAuth": [] }],
         "tags": ["rider"]
