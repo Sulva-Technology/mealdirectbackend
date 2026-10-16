@@ -83,6 +83,7 @@ export class WalletsService {
       minTopupKobo: limits.minTopupKobo,
       maxBalanceKobo: limits.maxBalanceKobo,
       dedicatedAccountFeeBps: this.env.get('WALLET_DVA_DEPOSIT_FEE_BPS'),
+      dedicatedAccountFeeCapKobo: this.env.get('WALLET_DVA_DEPOSIT_FEE_CAP_KOBO'),
       dedicatedAccount
     };
   }

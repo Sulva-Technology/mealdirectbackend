@@ -25,6 +25,7 @@ export type CustomerWalletView = {
   minTopupKobo: number;
   maxBalanceKobo: number;
   dedicatedAccountFeeBps: number;
+  dedicatedAccountFeeCapKobo: number;
   dedicatedAccount: DedicatedAccountRecord | null;
 };
 

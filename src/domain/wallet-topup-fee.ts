@@ -41,17 +41,22 @@ export type DedicatedAccountDepositSplit = {
 
 /**
  * MealDirect's fee on a bank transfer into a customer's dedicated account (basis points;
- * 100 = 1%), deducted from the amount received. Card checkout top-ups are not charged this —
- * they pay Paystack's processing fee on top instead. Rounded to the nearest kobo and never
- * allowed to consume the whole transfer.
+ * 100 = 1%) up to capKobo, deducted from the amount received. Defaults mirror Paystack's own
+ * DVA charge (1% capped at ₦300), so the customer covers exactly what Paystack takes. Card
+ * checkout top-ups are not charged this — they pay Paystack's processing fee on top instead.
+ * Rounded to the nearest kobo and never allowed to consume the whole transfer.
  */
 export function splitDedicatedAccountDeposit(
   amountKobo: number,
-  feeBps: number
+  feeBps: number,
+  capKobo?: number
 ): DedicatedAccountDepositSplit {
   if (feeBps <= 0 || amountKobo <= 1) {
     return { depositFeeKobo: 0, creditKobo: amountKobo };
   }
-  const depositFeeKobo = Math.min(Math.round((amountKobo * feeBps) / 10_000), amountKobo - 1);
+  const uncappedKobo = Math.round((amountKobo * feeBps) / 10_000);
+  const cappedKobo =
+    capKobo !== undefined && capKobo > 0 ? Math.min(uncappedKobo, capKobo) : uncappedKobo;
+  const depositFeeKobo = Math.min(cappedKobo, amountKobo - 1);
   return { depositFeeKobo, creditKobo: amountKobo - depositFeeKobo };
 }

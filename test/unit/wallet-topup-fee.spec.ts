@@ -71,4 +71,21 @@ describe('splitDedicatedAccountDeposit', () => {
     expect(splitDedicatedAccountDeposit(1, 10_000).creditKobo).toBe(1);
     expect(splitDedicatedAccountDeposit(100, 10_000).creditKobo).toBe(1);
   });
+
+  it('caps the fee at ₦300 like Paystack', () => {
+    // ₦30,000 → exactly ₦300; ₦100,000 → 1% would be ₦1,000, capped at ₦300.
+    expect(splitDedicatedAccountDeposit(3_000_000, 100, 30_000)).toEqual({
+      depositFeeKobo: 30_000,
+      creditKobo: 2_970_000
+    });
+    expect(splitDedicatedAccountDeposit(10_000_000, 100, 30_000)).toEqual({
+      depositFeeKobo: 30_000,
+      creditKobo: 9_970_000
+    });
+    expect(splitDedicatedAccountDeposit(1_000_000, 100, 30_000).depositFeeKobo).toBe(10_000);
+  });
+
+  it('applies no cap when the cap is 0', () => {
+    expect(splitDedicatedAccountDeposit(10_000_000, 100, 0).depositFeeKobo).toBe(100_000);
+  });
 });

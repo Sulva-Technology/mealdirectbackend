@@ -58,6 +58,7 @@ function createEnv(dvaEnabled: boolean, passFees = false): EnvService {
       if (key === 'APP_URL_CUSTOMER') return 'https://user.mealdirectly.com';
       if (key === 'WALLET_TOPUP_PASS_FEES') return passFees;
       if (key === 'WALLET_DVA_DEPOSIT_FEE_BPS') return 100;
+      if (key === 'WALLET_DVA_DEPOSIT_FEE_CAP_KOBO') return 30_000;
       return dvaEnabled;
     })
   } as unknown as EnvService;
@@ -133,6 +134,7 @@ describe('WalletsService', () => {
       minTopupKobo: 50_000,
       maxBalanceKobo: 5_000_000,
       dedicatedAccountFeeBps: 100,
+      dedicatedAccountFeeCapKobo: 30_000,
       dedicatedAccount: null
     });
   });

@@ -59,6 +59,13 @@ export class WalletDto {
   })
   dedicatedAccountFeeBps!: number;
 
+  @ApiProperty({
+    description: 'Maximum fee per dedicated-account transfer in kobo (0 = no cap).',
+    example: 30000,
+    type: Number
+  })
+  dedicatedAccountFeeCapKobo!: number;
+
   @ApiPropertyOptional({
     description:
       'The customer dedicated bank account, or null while WALLET_DVA_ENABLED is off or provisioning is pending.',

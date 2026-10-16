@@ -8013,6 +8013,10 @@ components:
             (100 = 1%), deducted from the amount received. Card top-ups do not
             pay it.
           example: 100
+        dedicatedAccountFeeCapKobo:
+          type: number
+          description: Maximum fee per dedicated-account transfer in kobo (0 = no cap).
+          example: 30000
         dedicatedAccount:
           description: The customer dedicated bank account, or null while
             WALLET_DVA_ENABLED is off or provisioning is pending.
@@ -8027,6 +8031,7 @@ components:
         - minTopupKobo
         - maxBalanceKobo
         - dedicatedAccountFeeBps
+        - dedicatedAccountFeeCapKobo
     WalletEnvelopeDto:
       type: object
       properties:

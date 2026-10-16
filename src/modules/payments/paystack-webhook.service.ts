@@ -308,7 +308,11 @@ export class PaystackWebhookService {
     // A transfer into a dedicated account pays the MealDirect deposit fee out of the amount.
     const dvaSplit =
       event.accountNumber !== undefined
-        ? splitDedicatedAccountDeposit(event.amountKobo, this.env.get('WALLET_DVA_DEPOSIT_FEE_BPS'))
+        ? splitDedicatedAccountDeposit(
+            event.amountKobo,
+            this.env.get('WALLET_DVA_DEPOSIT_FEE_BPS'),
+            this.env.get('WALLET_DVA_DEPOSIT_FEE_CAP_KOBO')
+          )
         : undefined;
     const creditKobo =
       dvaSplit !== undefined
