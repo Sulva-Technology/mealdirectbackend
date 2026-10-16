@@ -20,14 +20,17 @@ import {
   WalletEnvelopeDto,
   WalletLedgerListEnvelopeDto,
   WalletTopupCheckoutEnvelopeDto,
-  WalletTopupDto
+  WalletTopupDto,
+  WalletTopupQuoteEnvelopeDto,
+  WalletTopupQuoteQueryDto
 } from './dto/wallet.dto.js';
 import { WalletsService } from './wallets.service.js';
 import type {
   CustomerWalletView,
   DedicatedAccountRecord,
   WalletLedgerEntryRecord,
-  WalletTopupCheckout
+  WalletTopupCheckout,
+  WalletTopupQuote
 } from './wallets.types.js';
 
 @ApiTags('wallet')
@@ -81,6 +84,18 @@ export class WalletsController {
     @CurrentActor() actor: AuthenticatedActor
   ): Promise<SuccessEnvelope<DedicatedAccountRecord>> {
     return createSuccessEnvelope(await this.wallets.requestDedicatedAccount(actor));
+  }
+
+  @Get('topup/quote')
+  @ApiOkResponse({
+    description: 'Fee breakdown for a top-up: what the customer pays to receive amountKobo.',
+    type: WalletTopupQuoteEnvelopeDto
+  })
+  quoteTopup(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Query() query: WalletTopupQuoteQueryDto
+  ): SuccessEnvelope<WalletTopupQuote> {
+    return createSuccessEnvelope(this.wallets.quoteTopup(actor, query.amountKobo));
   }
 
   @Post('topup')

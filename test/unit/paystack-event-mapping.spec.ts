@@ -132,4 +132,20 @@ describe('dedicated virtual account top-ups', () => {
     });
     expect(event).toMatchObject({ type: 'PAYMENT_SUCCEEDED' });
   });
+
+  it('carries the credit amount when the top-up charge included a passed-on fee', () => {
+    const event = mapPaystackEvent({
+      event: 'charge.success',
+      data: {
+        reference: 'WTU-3',
+        amount: 507717,
+        metadata: { purpose: 'wallet_topup', userId: 'u1', creditKobo: '500000' }
+      }
+    });
+    expect(event).toMatchObject({
+      type: 'WALLET_TOPUP_SUCCEEDED',
+      amountKobo: 507717,
+      creditKobo: 500000
+    });
+  });
 });

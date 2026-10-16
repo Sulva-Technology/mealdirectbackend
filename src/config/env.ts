@@ -137,7 +137,10 @@ const envSchema = z
     WALLET_DVA_ENABLED: booleanFromString.default(false),
     // Paystack DVA provider for live traffic. 'test-bank' is the only provider that
     // works in Paystack test mode.
-    WALLET_DVA_PROVIDER: z.string().min(1).default('test-bank')
+    WALLET_DVA_PROVIDER: z.string().min(1).default('test-bank'),
+    // Card/checkout top-ups: add Paystack's processing fee on top so the wallet is credited
+    // the full amount the customer chose. Set false to absorb the fee instead.
+    WALLET_TOPUP_PASS_FEES: booleanFromString.default(true)
   })
   .superRefine((env, context) => {
     if ((env.NODE_ENV === 'production' || env.NODE_ENV === 'staging') && !env.DATABASE_SSL) {

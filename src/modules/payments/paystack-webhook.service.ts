@@ -302,12 +302,19 @@ export class PaystackWebhookService {
       return;
     }
 
+    // A checkout top-up charged the customer credit + Paystack fee; only the credit belongs in
+    // the wallet. Never credit more than was actually paid.
+    const creditKobo =
+      event.creditKobo !== undefined && event.creditKobo <= event.amountKobo
+        ? event.creditKobo
+        : event.amountKobo;
+
     const credited = await sql<{ entryId: string | null }>`
       select public.credit_wallet_topup(
         ${event.providerReference},
         ${event.accountNumber ?? null},
         ${userId ?? null}::uuid,
-        ${event.amountKobo}::integer,
+        ${creditKobo}::integer,
         ${event.senderName ?? null},
         ${JSON.stringify(payload)}::jsonb
       )::text as "entryId"

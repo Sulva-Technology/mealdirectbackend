@@ -46,6 +46,8 @@ export type PaymentDomainEvent =
       amountKobo: number;
       accountNumber?: string;
       userId?: string;
+      /** Amount to credit when the charge included a passed-on processing fee. */
+      creditKobo?: number;
       senderName?: string;
       currency?: string;
     }
@@ -114,11 +116,13 @@ export function mapPaystackEvent(input: PaystackWebhookEvent): PaymentDomainEven
     typeof metadata.userId === 'string' &&
     metadata.userId.length > 0
   ) {
+    const creditKobo = Number(metadata.creditKobo);
     return {
       type: 'WALLET_TOPUP_SUCCEEDED',
       providerReference: reference,
       amountKobo: input.data?.amount ?? 0,
       userId: metadata.userId,
+      ...(Number.isInteger(creditKobo) && creditKobo > 0 ? { creditKobo } : {}),
       ...(input.data?.currency === undefined ? {} : { currency: input.data.currency })
     };
   }

@@ -2515,6 +2515,22 @@ paths:
         '403': *a58
       security: *a59
       tags: *a60
+  /v1/wallet/topup/quote:
+    get:
+      operationId: WalletsController_quoteTopup
+      parameters: []
+      responses:
+        '200':
+          description: 'Fee breakdown for a top-up: what the customer pays to receive
+            amountKobo.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletTopupQuoteEnvelopeDto'
+        '401': *a57
+        '403': *a58
+      security: *a59
+      tags: *a60
   /v1/wallet/topup:
     post:
       operationId: WalletsController_initializeTopup
@@ -8078,6 +8094,32 @@ components:
           $ref: '#/components/schemas/DedicatedAccountDto'
       required:
         - data
+    WalletTopupQuoteDto:
+      type: object
+      properties:
+        amountKobo:
+          type: number
+          description: Amount credited to the wallet.
+          example: 500000
+        feeKobo:
+          type: number
+          description: Paystack processing fee added on top.
+          example: 7716
+        chargeKobo:
+          type: number
+          description: Total the customer pays at checkout.
+          example: 507716
+      required:
+        - amountKobo
+        - feeKobo
+        - chargeKobo
+    WalletTopupQuoteEnvelopeDto:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/WalletTopupQuoteDto'
+      required:
+        - data
     WalletTopupCheckoutDto:
       type: object
       properties:
@@ -8092,12 +8134,23 @@ components:
           type: string
         amountKobo:
           type: number
+          description: Amount credited to the wallet.
           example: 500000
+        feeKobo:
+          type: number
+          description: Paystack processing fee added on top (0 when fees are absorbed).
+          example: 7716
+        chargeKobo:
+          type: number
+          description: Total charged at checkout.
+          example: 507716
       required:
         - reference
         - authorizationUrl
         - accessCode
         - amountKobo
+        - feeKobo
+        - chargeKobo
     WalletTopupCheckoutEnvelopeDto:
       type: object
       properties:

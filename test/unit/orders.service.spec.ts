@@ -532,9 +532,9 @@ describe('OrdersService', () => {
       expect(repository.createWalletOrder).not.toHaveBeenCalled();
     });
 
-    it('applies the same large-order guard to wallet orders', async () => {
-      // Subtotal 500000 + delivery 15000 = 515000 kobo, above the 249000 cap, surcharge
-      // not accepted — the guard must reject before either repository path is called.
+    it('charges no large-order surcharge and applies no cap on wallet orders', async () => {
+      // Subtotal 500000 + delivery 15000 = 515000 kobo, above the 249000 card cap. A wallet
+      // order makes no Paystack charge, so it needs no surcharge acceptance.
       service = new OrdersService(
         repository,
         createEnv({ MAX_ORDER_TOTAL_KOBO: 249000 }),
@@ -542,10 +542,34 @@ describe('OrdersService', () => {
       );
       const input: CreateOrderDto = { ...orderInput, paymentMethod: 'wallet' };
 
-      await expect(service.createOrder(customer, input, 'idem-wallet-2')).rejects.toBeInstanceOf(
-        BadRequestException
+      await expect(service.quoteOrder(customer, input)).resolves.toMatchObject({
+        largeOrderSurchargeKobo: 0,
+        exceedsStandardCap: false
+      });
+      await service.createOrder(customer, input, 'idem-wallet-2');
+
+      expect(repository.createWalletOrder).toHaveBeenCalledWith(
+        customer.userId,
+        input,
+        'idem-wallet-2',
+        expect.any(String),
+        expect.any(Number),
+        null,
+        expect.objectContaining({ accepted: false })
       );
-      expect(repository.createWalletOrder).not.toHaveBeenCalled();
+    });
+
+    it('still requires surcharge acceptance for the same order paid by card', async () => {
+      service = new OrdersService(
+        repository,
+        createEnv({ MAX_ORDER_TOTAL_KOBO: 249000 }),
+        createPayments()
+      );
+
+      await expect(
+        service.createOrder(customer, { ...orderInput, paymentMethod: 'paystack' }, 'idem-card-2')
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(repository.createOrder).not.toHaveBeenCalled();
     });
   });
 });

@@ -52,11 +52,13 @@ function createSettings(): PlatformSettingsRepository {
   } as unknown as PlatformSettingsRepository;
 }
 
-function createEnv(dvaEnabled: boolean): EnvService {
+function createEnv(dvaEnabled: boolean, passFees = false): EnvService {
   return {
-    get: vi.fn((key: string) =>
-      key === 'APP_URL_CUSTOMER' ? 'https://user.mealdirectly.com' : dvaEnabled
-    )
+    get: vi.fn((key: string) => {
+      if (key === 'APP_URL_CUSTOMER') return 'https://user.mealdirectly.com';
+      if (key === 'WALLET_TOPUP_PASS_FEES') return passFees;
+      return dvaEnabled;
+    })
   } as unknown as EnvService;
 }
 
@@ -100,8 +102,14 @@ describe('WalletsService', () => {
   let paystack: ReturnType<typeof createPaystack>;
   let dvaReads: ReturnType<typeof createDvaReads>;
 
-  function createService(dvaEnabled: boolean): WalletsService {
-    return new WalletsService(repository, settings, createEnv(dvaEnabled), paystack, dvaReads);
+  function createService(dvaEnabled: boolean, passFees = false): WalletsService {
+    return new WalletsService(
+      repository,
+      settings,
+      createEnv(dvaEnabled, passFees),
+      paystack,
+      dvaReads
+    );
   }
 
   beforeEach(() => {
@@ -222,14 +230,21 @@ describe('WalletsService', () => {
       reference: 'WTU-x',
       authorizationUrl: 'https://checkout.paystack.com/abc',
       accessCode: 'abc',
-      amountKobo: 500_000
+      amountKobo: 500_000,
+      feeKobo: 0,
+      chargeKobo: 500_000
     });
     expect(paystack.initializeTransaction).toHaveBeenCalledWith(
       expect.objectContaining({
         email: customer.email,
         amountKobo: 500_000,
         currency: 'NGN',
-        metadata: { purpose: 'wallet_topup', userId: customer.userId, walletId: wallet.id },
+        metadata: {
+          purpose: 'wallet_topup',
+          userId: customer.userId,
+          walletId: wallet.id,
+          creditKobo: '500000'
+        },
         callbackUrl: 'https://user.mealdirectly.com/#/wallet'
       })
     );
@@ -260,5 +275,27 @@ describe('WalletsService', () => {
     await expect(service.initializeTopup(rider, 500_000)).rejects.toBeInstanceOf(
       ForbiddenException
     );
+  });
+
+  it('charges the Paystack fee on top and credits only the requested amount', async () => {
+    const service = createService(false, true);
+
+    const checkout = await service.initializeTopup(customer, 500_000);
+
+    expect(checkout.feeKobo).toBeGreaterThan(0);
+    expect(checkout.chargeKobo).toBe(500_000 + checkout.feeKobo);
+    expect(paystack.initializeTransaction).toHaveBeenCalledWith(
+      expect.objectContaining({
+        amountKobo: checkout.chargeKobo,
+        metadata: expect.objectContaining({ creditKobo: '500000' }) as unknown
+      })
+    );
+  });
+
+  it('quotes the fee before checkout', () => {
+    const quote = createService(false, true).quoteTopup(customer, 500_000);
+
+    expect(quote.amountKobo).toBe(500_000);
+    expect(quote.chargeKobo).toBe(500_000 + quote.feeKobo);
   });
 });

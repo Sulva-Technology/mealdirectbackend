@@ -111,7 +111,7 @@ export class OrdersRepository implements OrdersRepositoryContract {
     idempotencyKey: string,
     requestHash: string,
     serviceFeeKobo: number,
-    maxOrderTotalKobo: number,
+    maxOrderTotalKobo: number | null,
     largeOrderSurcharge: LargeOrderSurchargeConfig
   ): Promise<CreatedOrder> {
     const items = input.items.map((item) => ({

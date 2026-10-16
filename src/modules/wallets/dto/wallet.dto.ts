@@ -143,11 +143,54 @@ export class WalletTopupCheckoutDto {
   @ApiProperty({ type: String })
   accessCode!: string;
 
-  @ApiProperty({ example: 500000, type: Number })
+  @ApiProperty({ description: 'Amount credited to the wallet.', example: 500000, type: Number })
   amountKobo!: number;
+
+  @ApiProperty({
+    description: 'Paystack processing fee added on top (0 when fees are absorbed).',
+    example: 7716,
+    type: Number
+  })
+  feeKobo!: number;
+
+  @ApiProperty({ description: 'Total charged at checkout.', example: 507716, type: Number })
+  chargeKobo!: number;
 }
 
 export class WalletTopupCheckoutEnvelopeDto {
   @ApiProperty({ type: () => WalletTopupCheckoutDto })
   data!: WalletTopupCheckoutDto;
+}
+
+export class WalletTopupQuoteQueryDto {
+  @ApiProperty({ description: 'Amount to credit, in kobo.', example: 500000, type: Number })
+  @Type(() => Number)
+  @IsInt()
+  @Min(100)
+  @Max(100_000_000)
+  amountKobo!: number;
+}
+
+export class WalletTopupQuoteDto {
+  @ApiProperty({ description: 'Amount credited to the wallet.', example: 500000, type: Number })
+  amountKobo!: number;
+
+  @ApiProperty({
+    description: 'Paystack processing fee added on top.',
+    example: 7716,
+    type: Number
+  })
+  feeKobo!: number;
+
+  @ApiProperty({
+    description: 'Total the customer pays at checkout.',
+    example: 507716,
+    type: Number
+  })
+  chargeKobo!: number;
+}
+
+export class WalletTopupQuoteEnvelopeDto {
+  @ApiProperty({ type: () => WalletTopupQuoteDto })
+  data!: WalletTopupQuoteDto;
 }

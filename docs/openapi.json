@@ -2962,6 +2962,26 @@
         "tags": ["wallet"]
       }
     },
+    "/v1/wallet/topup/quote": {
+      "get": {
+        "operationId": "WalletsController_quoteTopup",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Fee breakdown for a top-up: what the customer pays to receive amountKobo.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WalletTopupQuoteEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Only customers hold wallets." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["wallet"]
+      }
+    },
     "/v1/wallet/topup": {
       "post": {
         "operationId": "WalletsController_initializeTopup",
@@ -8110,6 +8130,32 @@
         "properties": { "data": { "$ref": "#/components/schemas/DedicatedAccountDto" } },
         "required": ["data"]
       },
+      "WalletTopupQuoteDto": {
+        "type": "object",
+        "properties": {
+          "amountKobo": {
+            "type": "number",
+            "description": "Amount credited to the wallet.",
+            "example": 500000
+          },
+          "feeKobo": {
+            "type": "number",
+            "description": "Paystack processing fee added on top.",
+            "example": 7716
+          },
+          "chargeKobo": {
+            "type": "number",
+            "description": "Total the customer pays at checkout.",
+            "example": 507716
+          }
+        },
+        "required": ["amountKobo", "feeKobo", "chargeKobo"]
+      },
+      "WalletTopupQuoteEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/WalletTopupQuoteDto" } },
+        "required": ["data"]
+      },
       "WalletTopupCheckoutDto": {
         "type": "object",
         "properties": {
@@ -8120,9 +8166,30 @@
             "example": "https://checkout.paystack.com/abc123"
           },
           "accessCode": { "type": "string" },
-          "amountKobo": { "type": "number", "example": 500000 }
+          "amountKobo": {
+            "type": "number",
+            "description": "Amount credited to the wallet.",
+            "example": 500000
+          },
+          "feeKobo": {
+            "type": "number",
+            "description": "Paystack processing fee added on top (0 when fees are absorbed).",
+            "example": 7716
+          },
+          "chargeKobo": {
+            "type": "number",
+            "description": "Total charged at checkout.",
+            "example": 507716
+          }
         },
-        "required": ["reference", "authorizationUrl", "accessCode", "amountKobo"]
+        "required": [
+          "reference",
+          "authorizationUrl",
+          "accessCode",
+          "amountKobo",
+          "feeKobo",
+          "chargeKobo"
+        ]
       },
       "WalletTopupCheckoutEnvelopeDto": {
         "type": "object",

@@ -6,6 +6,7 @@ import { normalizeCursorPagination } from '../../common/api/pagination.js';
 import { ErrorCodes } from '../../common/errors/error-codes.js';
 import { EnvService } from '../../config/env.service.js';
 import { WALLET_TOPUP_PURPOSE } from '../../domain/payments.js';
+import { calculateTopupCharge } from '../../domain/wallet-topup-fee.js';
 import {
   provisionDedicatedAccount,
   type DedicatedAccountProvisioner,
@@ -26,7 +27,8 @@ import type {
   WalletLedgerEntryRecord,
   WalletPage,
   WalletsRepositoryContract,
-  WalletTopupCheckout
+  WalletTopupCheckout,
+  WalletTopupQuote
 } from './wallets.types.js';
 
 export type WalletPaystack = DedicatedAccountProvisioner & {
@@ -93,6 +95,16 @@ export class WalletsService {
     return this.repository.listLedgerEntries(walletId, normalizeCursorPagination(pagination));
   }
 
+  /** What the customer pays at checkout to receive amountKobo in the wallet. */
+  quoteTopup(actor: AuthenticatedActor, amountKobo: number): WalletTopupQuote {
+    customerOnly(actor);
+    const { feeKobo, chargeKobo } = calculateTopupCharge(
+      amountKobo,
+      this.env.get('WALLET_TOPUP_PASS_FEES')
+    );
+    return { amountKobo, feeKobo, chargeKobo };
+  }
+
   /**
    * Starts a Paystack checkout that funds the wallet. Works whether or not dedicated accounts
    * are enabled, so customers always have a way to top up. The charge.success webhook carries
@@ -134,13 +146,23 @@ export class WalletsService {
       );
     }
 
+    // The customer pays Paystack's fee on top; the webhook credits only amountKobo.
+    const { feeKobo, chargeKobo } = calculateTopupCharge(
+      amountKobo,
+      this.env.get('WALLET_TOPUP_PASS_FEES')
+    );
     const reference = `WTU-${randomUUID()}`;
     const checkout = await this.paystack.initializeTransaction({
       email: actor.email,
-      amountKobo,
+      amountKobo: chargeKobo,
       currency: wallet.currency,
       reference,
-      metadata: { purpose: WALLET_TOPUP_PURPOSE, userId: actor.userId, walletId },
+      metadata: {
+        purpose: WALLET_TOPUP_PURPOSE,
+        userId: actor.userId,
+        walletId,
+        creditKobo: String(amountKobo)
+      },
       callbackUrl: `${this.env.get('APP_URL_CUSTOMER')}/#/wallet`
     });
 
@@ -148,7 +170,9 @@ export class WalletsService {
       reference: checkout.reference,
       authorizationUrl: checkout.authorizationUrl,
       accessCode: checkout.accessCode,
-      amountKobo
+      amountKobo,
+      feeKobo,
+      chargeKobo
     };
   }
 

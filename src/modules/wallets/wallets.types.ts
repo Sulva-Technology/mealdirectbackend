@@ -71,6 +71,14 @@ export type WalletTopupCheckout = {
   authorizationUrl: string;
   accessCode: string;
   amountKobo: number;
+  feeKobo: number;
+  chargeKobo: number;
+};
+
+export type WalletTopupQuote = {
+  amountKobo: number;
+  feeKobo: number;
+  chargeKobo: number;
 };
 
 export type DedicatedAccountUpsert = {
