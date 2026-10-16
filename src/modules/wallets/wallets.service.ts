@@ -66,11 +66,18 @@ export class WalletsService {
   async getWallet(actor: AuthenticatedActor): Promise<CustomerWalletView> {
     customerOnly(actor);
     const walletId = await this.repository.ensureWallet(actor.userId);
-    const [wallet, dedicatedAccount, limits] = await Promise.all([
+    const [wallet, account, limits] = await Promise.all([
       this.repository.findWalletById(walletId),
       this.repository.findDedicatedAccount(walletId),
       this.settings.findWalletLimits()
     ]);
+    // A failed or pending row holds placeholder bank details ("pending:<walletId>"); never
+    // show it as an account the customer could transfer to.
+    const dedicatedAccount = account !== null && account.status === 'active' ? account : null;
+    const dedicatedAccountError =
+      account?.status === 'failed'
+        ? await this.repository.findDedicatedAccountError(walletId)
+        : null;
 
     if (wallet === undefined) {
       throw new Error(`Wallet ${walletId} was provisioned but could not be read back.`);
@@ -84,7 +91,9 @@ export class WalletsService {
       maxBalanceKobo: limits.maxBalanceKobo,
       dedicatedAccountFeeBps: this.env.get('WALLET_DVA_DEPOSIT_FEE_BPS'),
       dedicatedAccountFeeCapKobo: this.env.get('WALLET_DVA_DEPOSIT_FEE_CAP_KOBO'),
-      dedicatedAccount
+      dedicatedAccount,
+      dedicatedAccountStatus: account?.status ?? 'none',
+      dedicatedAccountError
     };
   }
 

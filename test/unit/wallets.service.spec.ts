@@ -37,6 +37,7 @@ function createRepository(): WalletsRepositoryContract {
     findWalletByUserId: vi.fn().mockResolvedValue(wallet),
     findWalletById: vi.fn().mockResolvedValue(wallet),
     findDedicatedAccount: vi.fn().mockResolvedValue(null),
+    findDedicatedAccountError: vi.fn().mockResolvedValue(null),
     listLedgerEntries: vi.fn().mockResolvedValue({ items: [], hasMore: false, limit: 20 }),
     listWallets: vi.fn().mockResolvedValue({ items: [], hasMore: false, limit: 20 }),
     adjustWallet: vi.fn().mockResolvedValue(wallet),
@@ -135,7 +136,9 @@ describe('WalletsService', () => {
       maxBalanceKobo: 5_000_000,
       dedicatedAccountFeeBps: 100,
       dedicatedAccountFeeCapKobo: 30_000,
-      dedicatedAccount: null
+      dedicatedAccount: null,
+      dedicatedAccountStatus: 'none',
+      dedicatedAccountError: null
     });
   });
 
@@ -301,5 +304,34 @@ describe('WalletsService', () => {
 
     expect(quote.amountKobo).toBe(500_000);
     expect(quote.chargeKobo).toBe(500_000 + quote.feeKobo);
+  });
+
+  it('never shows a failed placeholder row as an account, and surfaces why it failed', async () => {
+    repository.findDedicatedAccount = vi.fn().mockResolvedValue({
+      accountNumber: `pending:${wallet.id}`,
+      accountName: 'pending',
+      bankName: 'pending',
+      bankSlug: 'pending',
+      status: 'failed'
+    });
+    repository.findDedicatedAccountError = vi
+      .fn()
+      .mockResolvedValue('Dedicated NUBAN is not available for this business');
+
+    const view = await createService(true).getWallet(customer);
+
+    expect(view.dedicatedAccount).toBeNull();
+    expect(view.dedicatedAccountStatus).toBe('failed');
+    expect(view.dedicatedAccountError).toBe('Dedicated NUBAN is not available for this business');
+  });
+
+  it('returns an active account as-is', async () => {
+    repository.findDedicatedAccount = vi.fn().mockResolvedValue(activeAccount);
+
+    const view = await createService(true).getWallet(customer);
+
+    expect(view.dedicatedAccount).toEqual(activeAccount);
+    expect(view.dedicatedAccountStatus).toBe('active');
+    expect(view.dedicatedAccountError).toBeNull();
   });
 });

@@ -8018,12 +8018,27 @@ components:
           description: Maximum fee per dedicated-account transfer in kobo (0 = no cap).
           example: 30000
         dedicatedAccount:
-          description: The customer dedicated bank account, or null while
-            WALLET_DVA_ENABLED is off or provisioning is pending.
+          description: The customer dedicated bank account when active; null otherwise
+            (flag off, pending or failed — see dedicatedAccountStatus).
           nullable: true
           type: object
           allOf:
             - $ref: '#/components/schemas/DedicatedAccountDto'
+        dedicatedAccountStatus:
+          type: string
+          description: "Provisioning state: 'none' (never requested), 'pending', 'active',
+            'failed' or 'deactivated'."
+          enum:
+            - none
+            - pending
+            - active
+            - failed
+            - deactivated
+        dedicatedAccountError:
+          type: string
+          description: Why the last attempt failed (Paystack's message) when the status is
+            'failed'.
+          nullable: true
       required:
         - balanceKobo
         - currency
@@ -8032,6 +8047,7 @@ components:
         - maxBalanceKobo
         - dedicatedAccountFeeBps
         - dedicatedAccountFeeCapKobo
+        - dedicatedAccountStatus
     WalletEnvelopeDto:
       type: object
       properties:

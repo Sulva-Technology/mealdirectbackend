@@ -96,6 +96,17 @@ export class WalletsRepository implements WalletsRepositoryContract {
     return result.rows[0] ?? null;
   }
 
+  /** Why the last provisioning attempt failed (Paystack's message), or null. */
+  async findDedicatedAccountError(walletId: string): Promise<string | null> {
+    const result = await sql<{ error: string | null }>`
+      select provider_payload->>'error' as "error"
+      from public.wallet_dedicated_accounts
+      where wallet_id = ${walletId}::uuid and status = 'failed'
+    `.execute(this.database.db);
+
+    return result.rows[0]?.error ?? null;
+  }
+
   async listLedgerEntries(
     walletId: string,
     pagination: { cursor?: string; limit: number }
@@ -144,7 +155,8 @@ export class WalletsRepository implements WalletsRepositoryContract {
         w.updated_at::text as "updatedAt",
         p.email::text as "userEmail",
         p.display_name as "userDisplayName",
-        da.account_number as "accountNumber",
+        -- A failed/pending row carries a placeholder number; only a live account is real.
+        case when da.status = 'active' then da.account_number end as "accountNumber",
         (w.balance_kobo > ${maxBalanceKobo}) as "overCap"
       from public.wallets w
       left join public.profiles p on p.id = w.user_id

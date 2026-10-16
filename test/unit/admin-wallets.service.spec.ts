@@ -31,6 +31,7 @@ function createRepository(): WalletsRepositoryContract {
     findWalletByUserId: vi.fn(),
     findWalletById: vi.fn().mockResolvedValue(wallet),
     findDedicatedAccount: vi.fn().mockResolvedValue(null),
+    findDedicatedAccountError: vi.fn().mockResolvedValue(null),
     listLedgerEntries: vi.fn().mockResolvedValue({ items: [], hasMore: false, limit: 20 }),
     listWallets: vi.fn().mockResolvedValue({ items: [], hasMore: false, limit: 20 }),
     adjustWallet: vi.fn().mockResolvedValue({ ...wallet, balanceKobo: 350_000 }),

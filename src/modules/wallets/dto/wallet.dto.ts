@@ -68,11 +68,26 @@ export class WalletDto {
 
   @ApiPropertyOptional({
     description:
-      'The customer dedicated bank account, or null while WALLET_DVA_ENABLED is off or provisioning is pending.',
+      'The customer dedicated bank account when active; null otherwise (flag off, pending or failed — see dedicatedAccountStatus).',
     nullable: true,
     type: () => DedicatedAccountDto
   })
   dedicatedAccount!: DedicatedAccountDto | null;
+
+  @ApiProperty({
+    description:
+      "Provisioning state: 'none' (never requested), 'pending', 'active', 'failed' or 'deactivated'.",
+    enum: ['none', ...dedicatedAccountStatuses],
+    type: String
+  })
+  dedicatedAccountStatus!: 'none' | (typeof dedicatedAccountStatuses)[number];
+
+  @ApiPropertyOptional({
+    description: "Why the last attempt failed (Paystack's message) when the status is 'failed'.",
+    nullable: true,
+    type: String
+  })
+  dedicatedAccountError!: string | null;
 }
 
 export class WalletEnvelopeDto {
