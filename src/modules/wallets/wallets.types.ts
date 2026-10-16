@@ -26,7 +26,11 @@ export type CustomerWalletView = {
   maxBalanceKobo: number;
   dedicatedAccountFeeBps: number;
   dedicatedAccountFeeCapKobo: number;
+  /** Only ever an active account — failed/pending rows hold placeholder numbers. */
   dedicatedAccount: DedicatedAccountRecord | null;
+  dedicatedAccountStatus: DedicatedAccountStatus | 'none';
+  /** Why the last provisioning attempt failed, when dedicatedAccountStatus is 'failed'. */
+  dedicatedAccountError: string | null;
 };
 
 export type WalletLedgerEntryRecord = {
@@ -99,6 +103,7 @@ export type WalletsRepositoryContract = {
   findWalletByUserId(userId: string): Promise<WalletRecord | undefined>;
   findWalletById(walletId: string): Promise<WalletRecord | undefined>;
   findDedicatedAccount(walletId: string): Promise<DedicatedAccountRecord | null>;
+  findDedicatedAccountError(walletId: string): Promise<string | null>;
   listLedgerEntries(
     walletId: string,
     pagination: { cursor?: string; limit: number }

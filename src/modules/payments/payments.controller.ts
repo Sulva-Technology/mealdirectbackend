@@ -112,7 +112,8 @@ export class AdminPaymentsController {
       {
         ...(query.cursor === undefined ? {} : { cursor: query.cursor }),
         ...(query.limit === undefined ? {} : { limit: query.limit })
-      }
+      },
+      query.campusId
     );
     return createListEnvelope(result.items, {
       hasMore: result.hasMore,

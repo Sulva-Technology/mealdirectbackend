@@ -194,6 +194,28 @@ describe('PaymentsService', () => {
     );
   });
 
+  it('lets super admins narrow the payment list to one campus', async () => {
+    const otherCampus = '99999999-9999-4999-8999-999999999999';
+
+    await service.listAdminPayments(superAdmin, {}, {}, otherCampus);
+
+    expect(repository.listAdminPaymentsPaged).toHaveBeenLastCalledWith(
+      {},
+      expect.any(Object),
+      otherCampus
+    );
+  });
+
+  it('keeps campus admins on their own campus whatever campus they request', async () => {
+    await service.listAdminPayments(campusAdmin, {}, {}, '99999999-9999-4999-8999-999999999999');
+
+    expect(repository.listAdminPaymentsPaged).toHaveBeenLastCalledWith(
+      {},
+      expect.any(Object),
+      campusAdmin.campusId
+    );
+  });
+
   it('scopes admin payment reads to campus admins', async () => {
     await expect(service.getAdminPayment(campusAdmin, payment.id)).resolves.toEqual(paymentRecord);
 

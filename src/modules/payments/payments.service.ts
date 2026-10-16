@@ -250,10 +250,13 @@ export class PaymentsService {
   async listAdminPayments(
     actor: AuthenticatedActor,
     filter: AdminPaymentListFilter,
-    pagination: { cursor?: string; limit?: number }
+    pagination: { cursor?: string; limit?: number },
+    requestedCampusId?: string
   ): Promise<AdminPaymentListResult> {
     const normalized = normalizeCursorPagination(pagination);
-    return this.repository.listAdminPaymentsPaged(filter, normalized, this.adminCampusScope(actor));
+    // Campus admins stay pinned to their own campus; super admins may narrow to one.
+    const campusId = this.adminCampusScope(actor) ?? requestedCampusId;
+    return this.repository.listAdminPaymentsPaged(filter, normalized, campusId);
   }
 
   async getAdminPayment(actor: AuthenticatedActor, paymentId: string): Promise<PaymentRecord> {

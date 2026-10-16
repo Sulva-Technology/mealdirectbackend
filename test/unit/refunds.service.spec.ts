@@ -88,6 +88,14 @@ describe('RefundsService', () => {
     service = new RefundsService(repository, paystack, audit);
   });
 
+  it('lets super admins narrow the refund list to one campus', async () => {
+    const campusId = '99999999-9999-4999-8999-999999999999';
+
+    await service.listRefunds(superAdmin, {}, {}, campusId);
+
+    expect(repository.listRefunds).toHaveBeenLastCalledWith({}, expect.any(Object), campusId);
+  });
+
   it('forbids non-admins', async () => {
     await expect(service.listRefunds(customer, {}, {})).rejects.toBeInstanceOf(ForbiddenException);
   });

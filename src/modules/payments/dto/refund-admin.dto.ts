@@ -39,6 +39,16 @@ export class AdminRefundListQueryDto {
   @IsOptional()
   @IsIn(refundStatuses)
   status?: RefundStatus;
+
+  @ApiPropertyOptional({
+    description:
+      'Restrict to one campus. Honoured for super admins; campus admins are always scoped to their own campus.',
+    format: 'uuid',
+    type: String
+  })
+  @IsOptional()
+  @IsDatabaseUuid()
+  campusId?: string;
 }
 
 export class RefundInitiateDto {
