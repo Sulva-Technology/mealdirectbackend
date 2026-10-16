@@ -7,6 +7,9 @@ export type PaystackWebhookEvent = {
     currency?: string;
     status?: string;
     receiver_bank_account_number?: string;
+    // Echoed back from transaction/initialize. Paystack usually returns the object we sent,
+    // but some channels deliver it as a JSON string, so both shapes are accepted.
+    metadata?: Record<string, unknown> | string | null;
     authorization?: {
       channel?: string;
       receiver_bank_account_number?: string;
@@ -42,6 +45,9 @@ export type PaymentDomainEvent =
       providerReference: string;
       amountKobo: number;
       accountNumber?: string;
+      userId?: string;
+      /** Amount to credit when the charge included a passed-on processing fee. */
+      creditKobo?: number;
       senderName?: string;
       currency?: string;
     }
@@ -50,6 +56,25 @@ export type PaymentDomainEvent =
       reason: 'UNMAPPED_EVENT' | 'MISSING_REFERENCE';
       providerEvent: string;
     };
+
+/** Metadata purpose stamped on checkout-funded wallet top-ups (POST /wallet/topup). */
+export const WALLET_TOPUP_PURPOSE = 'wallet_topup';
+
+function metadataRecord(
+  metadata: Record<string, unknown> | string | null | undefined
+): Record<string, unknown> | undefined {
+  if (typeof metadata === 'string') {
+    try {
+      const parsed: unknown = JSON.parse(metadata);
+      return typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)
+        ? (parsed as Record<string, unknown>)
+        : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+  return metadata ?? undefined;
+}
 
 export function mapPaystackEvent(input: PaystackWebhookEvent): PaymentDomainEvent {
   const reference = input.data?.reference;
@@ -79,6 +104,26 @@ export function mapPaystackEvent(input: PaystackWebhookEvent): PaymentDomainEven
       ...(accountNumber === undefined ? {} : { accountNumber }),
       ...(senderName === undefined ? {} : { senderName }),
       ...(input.data.currency === undefined ? {} : { currency: input.data.currency })
+    };
+  }
+
+  // Checkout-funded wallet top-up. Same reasoning as the DVA branch: it has no order, so it
+  // must be routed before the order-payment branch. The wallet is resolved by user id.
+  const metadata = metadataRecord(input.data?.metadata);
+  if (
+    input.event === 'charge.success' &&
+    metadata?.purpose === WALLET_TOPUP_PURPOSE &&
+    typeof metadata.userId === 'string' &&
+    metadata.userId.length > 0
+  ) {
+    const creditKobo = Number(metadata.creditKobo);
+    return {
+      type: 'WALLET_TOPUP_SUCCEEDED',
+      providerReference: reference,
+      amountKobo: input.data?.amount ?? 0,
+      userId: metadata.userId,
+      ...(Number.isInteger(creditKobo) && creditKobo > 0 ? { creditKobo } : {}),
+      ...(input.data?.currency === undefined ? {} : { currency: input.data.currency })
     };
   }
 

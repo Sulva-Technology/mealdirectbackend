@@ -24,6 +24,8 @@ export type CustomerWalletView = {
   status: WalletStatus;
   minTopupKobo: number;
   maxBalanceKobo: number;
+  dedicatedAccountFeeBps: number;
+  dedicatedAccountFeeCapKobo: number;
   dedicatedAccount: DedicatedAccountRecord | null;
 };
 
@@ -64,6 +66,21 @@ export type PlatformSettingRecord = {
   description: string | null;
   updatedBy: string | null;
   updatedAt: string;
+};
+
+export type WalletTopupCheckout = {
+  reference: string;
+  authorizationUrl: string;
+  accessCode: string;
+  amountKobo: number;
+  feeKobo: number;
+  chargeKobo: number;
+};
+
+export type WalletTopupQuote = {
+  amountKobo: number;
+  feeKobo: number;
+  chargeKobo: number;
 };
 
 export type DedicatedAccountUpsert = {

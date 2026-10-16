@@ -1,4 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import { IsInt, Max, Min } from 'class-validator';
 
 import {
   dedicatedAccountStatuses,
@@ -48,6 +50,21 @@ export class WalletDto {
     type: Number
   })
   maxBalanceKobo!: number;
+
+  @ApiProperty({
+    description:
+      'Fee on bank transfers into the dedicated account, in basis points (100 = 1%), deducted from the amount received. Card top-ups do not pay it.',
+    example: 100,
+    type: Number
+  })
+  dedicatedAccountFeeBps!: number;
+
+  @ApiProperty({
+    description: 'Maximum fee per dedicated-account transfer in kobo (0 = no cap).',
+    example: 30000,
+    type: Number
+  })
+  dedicatedAccountFeeCapKobo!: number;
 
   @ApiPropertyOptional({
     description:
@@ -110,4 +127,85 @@ export class WalletLedgerListEnvelopeDto {
     type: Object
   })
   pagination!: Record<string, unknown>;
+}
+
+export class WalletTopupDto {
+  @ApiProperty({
+    description:
+      'Amount to add in kobo. Must meet the minimum top-up and stay within the balance limit.',
+    example: 500000,
+    minimum: 100,
+    type: Number
+  })
+  @Type(() => Number)
+  @IsInt()
+  @Min(100)
+  @Max(100_000_000)
+  amountKobo!: number;
+}
+
+export class WalletTopupCheckoutDto {
+  @ApiProperty({ example: 'WTU-0b6c9b1e-4d2f-4c55-9a7e-8f5d2a1c3b4e', type: String })
+  reference!: string;
+
+  @ApiProperty({
+    description: 'Paystack checkout URL. Redirect the customer here to pay.',
+    example: 'https://checkout.paystack.com/abc123',
+    type: String
+  })
+  authorizationUrl!: string;
+
+  @ApiProperty({ type: String })
+  accessCode!: string;
+
+  @ApiProperty({ description: 'Amount credited to the wallet.', example: 500000, type: Number })
+  amountKobo!: number;
+
+  @ApiProperty({
+    description: 'Paystack processing fee added on top (0 when fees are absorbed).',
+    example: 7716,
+    type: Number
+  })
+  feeKobo!: number;
+
+  @ApiProperty({ description: 'Total charged at checkout.', example: 507716, type: Number })
+  chargeKobo!: number;
+}
+
+export class WalletTopupCheckoutEnvelopeDto {
+  @ApiProperty({ type: () => WalletTopupCheckoutDto })
+  data!: WalletTopupCheckoutDto;
+}
+
+export class WalletTopupQuoteQueryDto {
+  @ApiProperty({ description: 'Amount to credit, in kobo.', example: 500000, type: Number })
+  @Type(() => Number)
+  @IsInt()
+  @Min(100)
+  @Max(100_000_000)
+  amountKobo!: number;
+}
+
+export class WalletTopupQuoteDto {
+  @ApiProperty({ description: 'Amount credited to the wallet.', example: 500000, type: Number })
+  amountKobo!: number;
+
+  @ApiProperty({
+    description: 'Paystack processing fee added on top.',
+    example: 7716,
+    type: Number
+  })
+  feeKobo!: number;
+
+  @ApiProperty({
+    description: 'Total the customer pays at checkout.',
+    example: 507716,
+    type: Number
+  })
+  chargeKobo!: number;
+}
+
+export class WalletTopupQuoteEnvelopeDto {
+  @ApiProperty({ type: () => WalletTopupQuoteDto })
+  data!: WalletTopupQuoteDto;
 }

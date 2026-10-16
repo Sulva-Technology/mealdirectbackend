@@ -55,7 +55,10 @@ export class OrdersService {
     customerOnly(actor);
     await this.assertRoomNumberWhenHostel(input);
     const { quote, serviceFeeKobo } = await this.buildQuote(input);
-    const maxOrderTotalKobo = this.env.get('MAX_ORDER_TOTAL_KOBO');
+    // The large-order surcharge passes Paystack's card fee on to the customer. A wallet order
+    // makes no Paystack charge (the fee was settled at top-up), so it has no cap and no surcharge.
+    const isWallet = input.paymentMethod === 'wallet';
+    const maxOrderTotalKobo = isWallet ? null : this.env.get('MAX_ORDER_TOTAL_KOBO');
     const accepted = input.acceptLargeOrderSurcharge === true;
 
     // The quoted total already includes delivery + service fees (and the large-order surcharge)
@@ -79,7 +82,7 @@ export class OrdersService {
     // Wallet orders are created already paid inside one transaction — no pending_payment,
     // no reservation timer, no webhook. Everything before this point (quote, room number,
     // large-order guard) is identical for both funding sources.
-    if (input.paymentMethod === 'wallet') {
+    if (isWallet) {
       return this.repository.createWalletOrder(
         actor.userId,
         input,
@@ -97,7 +100,7 @@ export class OrdersService {
       idempotencyKey,
       hashOrderRequest(input),
       serviceFeeKobo,
-      maxOrderTotalKobo,
+      this.env.get('MAX_ORDER_TOTAL_KOBO'),
       surcharge
     );
   }
@@ -120,7 +123,9 @@ export class OrdersService {
       })),
       deliveryFeeCents: zoneFeeKobo ?? this.env.get('DELIVERY_FEE_KOBO'),
       serviceFeeCents: serviceFeeKobo,
-      largeOrderThresholdCents: this.env.get('MAX_ORDER_TOTAL_KOBO'),
+      ...(input.paymentMethod === 'wallet'
+        ? {}
+        : { largeOrderThresholdCents: this.env.get('MAX_ORDER_TOTAL_KOBO') }),
       largeOrderSurchargeBps: this.env.get('LARGE_ORDER_SURCHARGE_BPS'),
       largeOrderSurchargeFlatCents: this.env.get('LARGE_ORDER_SURCHARGE_FLAT_KOBO')
     });

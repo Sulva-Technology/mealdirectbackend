@@ -178,7 +178,7 @@ export type OrdersRepositoryContract = {
     idempotencyKey: string,
     requestHash: string,
     serviceFeeKobo: number,
-    maxOrderTotalKobo: number,
+    maxOrderTotalKobo: number | null,
     largeOrderSurcharge: LargeOrderSurchargeConfig
   ) => Promise<CreatedOrder>;
   quoteOrder: (input: CreateOrderDto) => Promise<OrderQuoteItem[]>;

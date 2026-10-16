@@ -1,4 +1,4 @@
-import { Controller, Get, HttpCode, Inject, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Inject, Post, Query, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiForbiddenResponse,
@@ -18,13 +18,19 @@ import type { AuthenticatedActor } from '../auth/actor-context.js';
 import {
   DedicatedAccountEnvelopeDto,
   WalletEnvelopeDto,
-  WalletLedgerListEnvelopeDto
+  WalletLedgerListEnvelopeDto,
+  WalletTopupCheckoutEnvelopeDto,
+  WalletTopupDto,
+  WalletTopupQuoteEnvelopeDto,
+  WalletTopupQuoteQueryDto
 } from './dto/wallet.dto.js';
 import { WalletsService } from './wallets.service.js';
 import type {
   CustomerWalletView,
   DedicatedAccountRecord,
-  WalletLedgerEntryRecord
+  WalletLedgerEntryRecord,
+  WalletTopupCheckout,
+  WalletTopupQuote
 } from './wallets.types.js';
 
 @ApiTags('wallet')
@@ -78,5 +84,31 @@ export class WalletsController {
     @CurrentActor() actor: AuthenticatedActor
   ): Promise<SuccessEnvelope<DedicatedAccountRecord>> {
     return createSuccessEnvelope(await this.wallets.requestDedicatedAccount(actor));
+  }
+
+  @Get('topup/quote')
+  @ApiOkResponse({
+    description: 'Fee breakdown for a top-up: what the customer pays to receive amountKobo.',
+    type: WalletTopupQuoteEnvelopeDto
+  })
+  quoteTopup(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Query() query: WalletTopupQuoteQueryDto
+  ): SuccessEnvelope<WalletTopupQuote> {
+    return createSuccessEnvelope(this.wallets.quoteTopup(actor, query.amountKobo));
+  }
+
+  @Post('topup')
+  @HttpCode(200)
+  @ApiOkResponse({
+    description:
+      'Starts a Paystack checkout that funds the wallet. The balance is credited when the charge.success webhook lands.',
+    type: WalletTopupCheckoutEnvelopeDto
+  })
+  async initializeTopup(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Body() body: WalletTopupDto
+  ): Promise<SuccessEnvelope<WalletTopupCheckout>> {
+    return createSuccessEnvelope(await this.wallets.initializeTopup(actor, body.amountKobo));
   }
 }

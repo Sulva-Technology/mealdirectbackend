@@ -137,7 +137,16 @@ const envSchema = z
     WALLET_DVA_ENABLED: booleanFromString.default(false),
     // Paystack DVA provider for live traffic. 'test-bank' is the only provider that
     // works in Paystack test mode.
-    WALLET_DVA_PROVIDER: z.string().min(1).default('test-bank')
+    WALLET_DVA_PROVIDER: z.string().min(1).default('test-bank'),
+    // Card/checkout top-ups: add Paystack's processing fee on top so the wallet is credited
+    // the full amount the customer chose. Set false to absorb the fee instead.
+    WALLET_TOPUP_PASS_FEES: booleanFromString.default(true),
+    // MealDirect fee on bank transfers into a customer's dedicated account: basis points
+    // (100 = 1%) capped at WALLET_DVA_DEPOSIT_FEE_CAP_KOBO (₦300), deducted from the amount
+    // received — mirroring Paystack's DVA charge. Card top-ups are not charged this.
+    // BPS 0 disables it; CAP 0 removes the cap.
+    WALLET_DVA_DEPOSIT_FEE_BPS: z.coerce.number().int().min(0).max(10_000).default(100),
+    WALLET_DVA_DEPOSIT_FEE_CAP_KOBO: z.coerce.number().int().min(0).default(30_000)
   })
   .superRefine((env, context) => {
     if ((env.NODE_ENV === 'production' || env.NODE_ENV === 'staging') && !env.DATABASE_SSL) {

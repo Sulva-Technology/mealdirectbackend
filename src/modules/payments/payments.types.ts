@@ -125,6 +125,8 @@ export type PaystackInitializeInput = {
   currency: string;
   reference: string;
   metadata: Record<string, string>;
+  /** Where Paystack returns the customer after checkout; defaults to the order status page. */
+  callbackUrl?: string;
 };
 
 export type PaystackInitializeResult = {

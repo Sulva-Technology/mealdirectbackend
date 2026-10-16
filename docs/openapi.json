@@ -2962,6 +2962,46 @@
         "tags": ["wallet"]
       }
     },
+    "/v1/wallet/topup/quote": {
+      "get": {
+        "operationId": "WalletsController_quoteTopup",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Fee breakdown for a top-up: what the customer pays to receive amountKobo.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WalletTopupQuoteEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Only customers hold wallets." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["wallet"]
+      }
+    },
+    "/v1/wallet/topup": {
+      "post": {
+        "operationId": "WalletsController_initializeTopup",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Starts a Paystack checkout that funds the wallet. The balance is credited when the charge.success webhook lands.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WalletTopupCheckoutEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Only customers hold wallets." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["wallet"]
+      }
+    },
     "/v1/admin/wallets": {
       "get": {
         "operationId": "AdminWalletsController_listWallets",
@@ -8031,6 +8071,16 @@
             "description": "Advisory maximum balance in kobo. A credit crossing it is still applied and raises an admin flag.",
             "example": 5000000
           },
+          "dedicatedAccountFeeBps": {
+            "type": "number",
+            "description": "Fee on bank transfers into the dedicated account, in basis points (100 = 1%), deducted from the amount received. Card top-ups do not pay it.",
+            "example": 100
+          },
+          "dedicatedAccountFeeCapKobo": {
+            "type": "number",
+            "description": "Maximum fee per dedicated-account transfer in kobo (0 = no cap).",
+            "example": 30000
+          },
           "dedicatedAccount": {
             "description": "The customer dedicated bank account, or null while WALLET_DVA_ENABLED is off or provisioning is pending.",
             "nullable": true,
@@ -8038,7 +8088,15 @@
             "allOf": [{ "$ref": "#/components/schemas/DedicatedAccountDto" }]
           }
         },
-        "required": ["balanceKobo", "currency", "status", "minTopupKobo", "maxBalanceKobo"]
+        "required": [
+          "balanceKobo",
+          "currency",
+          "status",
+          "minTopupKobo",
+          "maxBalanceKobo",
+          "dedicatedAccountFeeBps",
+          "dedicatedAccountFeeCapKobo"
+        ]
       },
       "WalletEnvelopeDto": {
         "type": "object",
@@ -8088,6 +8146,72 @@
       "DedicatedAccountEnvelopeDto": {
         "type": "object",
         "properties": { "data": { "$ref": "#/components/schemas/DedicatedAccountDto" } },
+        "required": ["data"]
+      },
+      "WalletTopupQuoteDto": {
+        "type": "object",
+        "properties": {
+          "amountKobo": {
+            "type": "number",
+            "description": "Amount credited to the wallet.",
+            "example": 500000
+          },
+          "feeKobo": {
+            "type": "number",
+            "description": "Paystack processing fee added on top.",
+            "example": 7716
+          },
+          "chargeKobo": {
+            "type": "number",
+            "description": "Total the customer pays at checkout.",
+            "example": 507716
+          }
+        },
+        "required": ["amountKobo", "feeKobo", "chargeKobo"]
+      },
+      "WalletTopupQuoteEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/WalletTopupQuoteDto" } },
+        "required": ["data"]
+      },
+      "WalletTopupCheckoutDto": {
+        "type": "object",
+        "properties": {
+          "reference": { "type": "string", "example": "WTU-0b6c9b1e-4d2f-4c55-9a7e-8f5d2a1c3b4e" },
+          "authorizationUrl": {
+            "type": "string",
+            "description": "Paystack checkout URL. Redirect the customer here to pay.",
+            "example": "https://checkout.paystack.com/abc123"
+          },
+          "accessCode": { "type": "string" },
+          "amountKobo": {
+            "type": "number",
+            "description": "Amount credited to the wallet.",
+            "example": 500000
+          },
+          "feeKobo": {
+            "type": "number",
+            "description": "Paystack processing fee added on top (0 when fees are absorbed).",
+            "example": 7716
+          },
+          "chargeKobo": {
+            "type": "number",
+            "description": "Total charged at checkout.",
+            "example": 507716
+          }
+        },
+        "required": [
+          "reference",
+          "authorizationUrl",
+          "accessCode",
+          "amountKobo",
+          "feeKobo",
+          "chargeKobo"
+        ]
+      },
+      "WalletTopupCheckoutEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/WalletTopupCheckoutDto" } },
         "required": ["data"]
       },
       "BatchSummaryDto": {
