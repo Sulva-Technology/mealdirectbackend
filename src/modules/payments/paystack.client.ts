@@ -57,9 +57,10 @@ export class PaystackClient implements PaystackClientContract {
     const orderId = input.metadata.orderId;
     const customerAppBase = this.env.get('APP_URL_CUSTOMER');
     const callbackUrl =
-      orderId !== undefined && customerAppBase !== undefined
+      input.callbackUrl ??
+      (orderId !== undefined && customerAppBase !== undefined
         ? `${customerAppBase}/#/payment/status/${orderId}`
-        : undefined;
+        : undefined);
 
     const envelope = await this.request('/transaction/initialize', {
       method: 'POST',

@@ -2962,6 +2962,26 @@
         "tags": ["wallet"]
       }
     },
+    "/v1/wallet/topup": {
+      "post": {
+        "operationId": "WalletsController_initializeTopup",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Starts a Paystack checkout that funds the wallet. The balance is credited when the charge.success webhook lands.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WalletTopupCheckoutEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Only customers hold wallets." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["wallet"]
+      }
+    },
     "/v1/admin/wallets": {
       "get": {
         "operationId": "AdminWalletsController_listWallets",
@@ -8088,6 +8108,25 @@
       "DedicatedAccountEnvelopeDto": {
         "type": "object",
         "properties": { "data": { "$ref": "#/components/schemas/DedicatedAccountDto" } },
+        "required": ["data"]
+      },
+      "WalletTopupCheckoutDto": {
+        "type": "object",
+        "properties": {
+          "reference": { "type": "string", "example": "WTU-0b6c9b1e-4d2f-4c55-9a7e-8f5d2a1c3b4e" },
+          "authorizationUrl": {
+            "type": "string",
+            "description": "Paystack checkout URL. Redirect the customer here to pay.",
+            "example": "https://checkout.paystack.com/abc123"
+          },
+          "accessCode": { "type": "string" },
+          "amountKobo": { "type": "number", "example": 500000 }
+        },
+        "required": ["reference", "authorizationUrl", "accessCode", "amountKobo"]
+      },
+      "WalletTopupCheckoutEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/WalletTopupCheckoutDto" } },
         "required": ["data"]
       },
       "BatchSummaryDto": {

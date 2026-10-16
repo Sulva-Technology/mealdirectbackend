@@ -66,6 +66,13 @@ export type PlatformSettingRecord = {
   updatedAt: string;
 };
 
+export type WalletTopupCheckout = {
+  reference: string;
+  authorizationUrl: string;
+  accessCode: string;
+  amountKobo: number;
+};
+
 export type DedicatedAccountUpsert = {
   walletId: string;
   paystackCustomerCode: string;

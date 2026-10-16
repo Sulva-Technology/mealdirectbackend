@@ -1,4 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import { IsInt, Max, Min } from 'class-validator';
 
 import {
   dedicatedAccountStatuses,
@@ -110,4 +112,42 @@ export class WalletLedgerListEnvelopeDto {
     type: Object
   })
   pagination!: Record<string, unknown>;
+}
+
+export class WalletTopupDto {
+  @ApiProperty({
+    description:
+      'Amount to add in kobo. Must meet the minimum top-up and stay within the balance limit.',
+    example: 500000,
+    minimum: 100,
+    type: Number
+  })
+  @Type(() => Number)
+  @IsInt()
+  @Min(100)
+  @Max(100_000_000)
+  amountKobo!: number;
+}
+
+export class WalletTopupCheckoutDto {
+  @ApiProperty({ example: 'WTU-0b6c9b1e-4d2f-4c55-9a7e-8f5d2a1c3b4e', type: String })
+  reference!: string;
+
+  @ApiProperty({
+    description: 'Paystack checkout URL. Redirect the customer here to pay.',
+    example: 'https://checkout.paystack.com/abc123',
+    type: String
+  })
+  authorizationUrl!: string;
+
+  @ApiProperty({ type: String })
+  accessCode!: string;
+
+  @ApiProperty({ example: 500000, type: Number })
+  amountKobo!: number;
+}
+
+export class WalletTopupCheckoutEnvelopeDto {
+  @ApiProperty({ type: () => WalletTopupCheckoutDto })
+  data!: WalletTopupCheckoutDto;
 }

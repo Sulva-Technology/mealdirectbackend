@@ -93,4 +93,43 @@ describe('dedicated virtual account top-ups', () => {
       accountNumber: '9900002222'
     });
   });
+
+  it('routes a checkout-funded wallet top-up by metadata user id', () => {
+    const event = mapPaystackEvent({
+      event: 'charge.success',
+      data: {
+        reference: 'WTU-1',
+        amount: 500000,
+        currency: 'NGN',
+        metadata: { purpose: 'wallet_topup', userId: '11111111-1111-4111-8111-111111111111' }
+      }
+    });
+    expect(event).toEqual({
+      type: 'WALLET_TOPUP_SUCCEEDED',
+      providerReference: 'WTU-1',
+      amountKobo: 500000,
+      userId: '11111111-1111-4111-8111-111111111111',
+      currency: 'NGN'
+    });
+  });
+
+  it('accepts top-up metadata delivered as a JSON string', () => {
+    const event = mapPaystackEvent({
+      event: 'charge.success',
+      data: {
+        reference: 'WTU-2',
+        amount: 500000,
+        metadata: JSON.stringify({ purpose: 'wallet_topup', userId: 'u1' })
+      }
+    });
+    expect(event).toMatchObject({ type: 'WALLET_TOPUP_SUCCEEDED', userId: 'u1' });
+  });
+
+  it('keeps order payments on the order path when metadata is not a top-up', () => {
+    const event = mapPaystackEvent({
+      event: 'charge.success',
+      data: { reference: 'MD-3', amount: 4500, metadata: { orderId: 'o1' } }
+    });
+    expect(event).toMatchObject({ type: 'PAYMENT_SUCCEEDED' });
+  });
 });

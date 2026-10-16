@@ -1,4 +1,4 @@
-import { Controller, Get, HttpCode, Inject, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Inject, Post, Query, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiForbiddenResponse,
@@ -18,13 +18,16 @@ import type { AuthenticatedActor } from '../auth/actor-context.js';
 import {
   DedicatedAccountEnvelopeDto,
   WalletEnvelopeDto,
-  WalletLedgerListEnvelopeDto
+  WalletLedgerListEnvelopeDto,
+  WalletTopupCheckoutEnvelopeDto,
+  WalletTopupDto
 } from './dto/wallet.dto.js';
 import { WalletsService } from './wallets.service.js';
 import type {
   CustomerWalletView,
   DedicatedAccountRecord,
-  WalletLedgerEntryRecord
+  WalletLedgerEntryRecord,
+  WalletTopupCheckout
 } from './wallets.types.js';
 
 @ApiTags('wallet')
@@ -78,5 +81,19 @@ export class WalletsController {
     @CurrentActor() actor: AuthenticatedActor
   ): Promise<SuccessEnvelope<DedicatedAccountRecord>> {
     return createSuccessEnvelope(await this.wallets.requestDedicatedAccount(actor));
+  }
+
+  @Post('topup')
+  @HttpCode(200)
+  @ApiOkResponse({
+    description:
+      'Starts a Paystack checkout that funds the wallet. The balance is credited when the charge.success webhook lands.',
+    type: WalletTopupCheckoutEnvelopeDto
+  })
+  async initializeTopup(
+    @CurrentActor() actor: AuthenticatedActor,
+    @Body() body: WalletTopupDto
+  ): Promise<SuccessEnvelope<WalletTopupCheckout>> {
+    return createSuccessEnvelope(await this.wallets.initializeTopup(actor, body.amountKobo));
   }
 }

@@ -4,7 +4,8 @@ import type { ValidationError, ValidationOptions } from 'class-validator';
 
 import { ErrorCodes } from './errors/error-codes.js';
 
-const postgresUuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export const postgresUuidPattern =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function IsDatabaseUuid(options?: ValidationOptions): PropertyDecorator {
   return Matches(postgresUuidPattern, {

@@ -4,6 +4,7 @@ import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { sql, type Kysely } from 'kysely';
 
 import { ErrorCodes } from '../../common/errors/error-codes.js';
+import { postgresUuidPattern } from '../../common/validation.js';
 import { EnvService } from '../../config/env.service.js';
 import { DatabaseService } from '../../database/database.service.js';
 import type { DatabaseSchema } from '../../database/database.types.js';
@@ -250,10 +251,11 @@ export class PaystackWebhookService {
   }
 
   /**
-   * Credit an inbound transfer to the wallet behind the receiving account number. Crediting is
-   * idempotent on the Paystack reference inside credit_wallet_topup, so a redelivered webhook
-   * is a no-op. A transfer we cannot attribute to any wallet is money we hold with nowhere to
-   * put it, so it is filed as a critical issue rather than silently dropped.
+   * Credit an inbound top-up to a wallet: by receiving account number for a DVA transfer, or
+   * by the user id stamped in metadata for a checkout-funded top-up. Crediting is idempotent
+   * on the Paystack reference inside credit_wallet_topup, so a redelivered webhook is a no-op.
+   * A top-up we cannot attribute to any wallet is money we hold with nowhere to put it, so it
+   * is filed as a critical issue rather than silently dropped.
    */
   private async creditWalletTopup(
     trx: Kysely<DatabaseSchema>,
@@ -263,7 +265,11 @@ export class PaystackWebhookService {
       { type: 'WALLET_TOPUP_SUCCEEDED' }
     >
   ): Promise<void> {
-    if (event.accountNumber === undefined) {
+    const userId =
+      event.userId !== undefined && postgresUuidPattern.test(event.userId)
+        ? event.userId
+        : undefined;
+    if (event.accountNumber === undefined && userId === undefined) {
       await this.recordIssue(
         trx,
         `wallet_topup_unattributable:${event.providerReference}`,
@@ -272,7 +278,26 @@ export class PaystackWebhookService {
         null,
         null,
         event.providerReference,
-        { reason: 'dedicated_nuban charge carried no receiver account number' }
+        {
+          reason:
+            event.userId === undefined
+              ? 'dedicated_nuban charge carried no receiver account number'
+              : 'wallet top-up metadata carried an invalid user id'
+        }
+      );
+      return;
+    }
+
+    if (event.currency !== undefined && event.currency !== 'NGN') {
+      await this.recordIssue(
+        trx,
+        `wallet_topup_currency_mismatch:${event.providerReference}`,
+        'provider_success_not_local',
+        'critical',
+        null,
+        null,
+        event.providerReference,
+        { reason: `wallet top-up arrived in ${event.currency}; wallets hold NGN only` }
       );
       return;
     }
@@ -280,8 +305,8 @@ export class PaystackWebhookService {
     const credited = await sql<{ entryId: string | null }>`
       select public.credit_wallet_topup(
         ${event.providerReference},
-        ${event.accountNumber},
-        null::uuid,
+        ${event.accountNumber ?? null},
+        ${userId ?? null}::uuid,
         ${event.amountKobo}::integer,
         ${event.senderName ?? null},
         ${JSON.stringify(payload)}::jsonb
