@@ -48,10 +48,13 @@ export class RefundsService {
   async listRefunds(
     actor: AuthenticatedActor,
     filter: AdminRefundListFilter,
-    pagination: { cursor?: string; limit?: number }
+    pagination: { cursor?: string; limit?: number },
+    requestedCampusId?: string
   ): Promise<AdminRefundListResult> {
     const normalized = normalizeCursorPagination(pagination);
-    return this.repository.listRefunds(filter, normalized, this.adminCampusScope(actor));
+    // Campus admins stay pinned to their own campus; super admins may narrow to one.
+    const campusId = this.adminCampusScope(actor) ?? requestedCampusId;
+    return this.repository.listRefunds(filter, normalized, campusId);
   }
 
   async getRefund(actor: AuthenticatedActor, refundId: string): Promise<AdminRefundRecord> {

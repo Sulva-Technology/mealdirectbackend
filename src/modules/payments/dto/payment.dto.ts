@@ -264,6 +264,16 @@ export class AdminPaymentListQueryDto {
   @IsOptional()
   @IsString()
   dateTo?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Restrict to one campus. Honoured for super admins; campus admins are always scoped to their own campus.',
+    format: 'uuid',
+    type: String
+  })
+  @IsOptional()
+  @IsDatabaseUuid()
+  campusId?: string;
 }
 
 export class AdminPaymentDetailDto extends AdminPaymentDto {
