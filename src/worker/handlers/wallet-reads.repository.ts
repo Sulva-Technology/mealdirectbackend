@@ -9,6 +9,7 @@ export type WalletOwner = {
   userId: string;
   email: string | null;
   displayName: string | null;
+  phoneNumber: string | null;
 };
 
 export type DedicatedAccountWrite = {
@@ -32,7 +33,8 @@ export class WalletReadsRepository {
         w.id::text as "walletId",
         w.user_id::text as "userId",
         p.email::text as "email",
-        p.display_name as "displayName"
+        p.display_name as "displayName",
+        p.phone_number as "phoneNumber"
       from public.wallets w
       left join public.profiles p on p.id = w.user_id
       where w.id = ${walletId}::uuid

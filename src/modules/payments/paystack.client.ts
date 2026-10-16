@@ -284,7 +284,13 @@ export class PaystackClient implements PaystackClientContract {
     const preferredBank = input.preferredBank ?? this.env.get('WALLET_DVA_PROVIDER');
     const envelope = await this.request('/dedicated_account', {
       method: 'POST',
-      body: JSON.stringify({ customer: input.customerCode, preferred_bank: preferredBank })
+      body: JSON.stringify({
+        customer: input.customerCode,
+        preferred_bank: preferredBank,
+        ...(input.firstName === undefined ? {} : { first_name: input.firstName }),
+        ...(input.lastName === undefined ? {} : { last_name: input.lastName }),
+        ...(input.phone === undefined ? {} : { phone: input.phone })
+      })
     });
 
     if (!isRecord(envelope.data)) {

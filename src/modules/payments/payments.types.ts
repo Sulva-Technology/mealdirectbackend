@@ -210,6 +210,11 @@ export type PaystackCustomerResult = {
 export type PaystackDedicatedAccountInput = {
   customerCode: string;
   preferredBank?: string;
+  // Paystack requires the customer to have a name and phone before it issues an account;
+  // sending them here also fills them in on a customer created earlier without them.
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
 };
 
 export type PaystackDedicatedAccountResult = {
