@@ -8071,6 +8071,11 @@
             "description": "Advisory maximum balance in kobo. A credit crossing it is still applied and raises an admin flag.",
             "example": 5000000
           },
+          "depositFeeBps": {
+            "type": "number",
+            "description": "MealDirect deposit fee in basis points (100 = 1%), deducted from every deposit — card or bank transfer.",
+            "example": 100
+          },
           "dedicatedAccount": {
             "description": "The customer dedicated bank account, or null while WALLET_DVA_ENABLED is off or provisioning is pending.",
             "nullable": true,
@@ -8078,7 +8083,14 @@
             "allOf": [{ "$ref": "#/components/schemas/DedicatedAccountDto" }]
           }
         },
-        "required": ["balanceKobo", "currency", "status", "minTopupKobo", "maxBalanceKobo"]
+        "required": [
+          "balanceKobo",
+          "currency",
+          "status",
+          "minTopupKobo",
+          "maxBalanceKobo",
+          "depositFeeBps"
+        ]
       },
       "WalletEnvelopeDto": {
         "type": "object",
@@ -8135,7 +8147,7 @@
         "properties": {
           "amountKobo": {
             "type": "number",
-            "description": "Amount credited to the wallet.",
+            "description": "Amount deposited, before the deposit fee.",
             "example": 500000
           },
           "feeKobo": {
@@ -8147,9 +8159,19 @@
             "type": "number",
             "description": "Total the customer pays at checkout.",
             "example": 507716
+          },
+          "depositFeeKobo": {
+            "type": "number",
+            "description": "MealDirect deposit fee deducted from the amount.",
+            "example": 5000
+          },
+          "creditKobo": {
+            "type": "number",
+            "description": "What lands in the wallet: amount minus deposit fee.",
+            "example": 495000
           }
         },
-        "required": ["amountKobo", "feeKobo", "chargeKobo"]
+        "required": ["amountKobo", "feeKobo", "chargeKobo", "depositFeeKobo", "creditKobo"]
       },
       "WalletTopupQuoteEnvelopeDto": {
         "type": "object",
@@ -8168,7 +8190,7 @@
           "accessCode": { "type": "string" },
           "amountKobo": {
             "type": "number",
-            "description": "Amount credited to the wallet.",
+            "description": "Amount deposited, before the deposit fee.",
             "example": 500000
           },
           "feeKobo": {
@@ -8180,6 +8202,16 @@
             "type": "number",
             "description": "Total charged at checkout.",
             "example": 507716
+          },
+          "depositFeeKobo": {
+            "type": "number",
+            "description": "MealDirect deposit fee deducted from the amount.",
+            "example": 5000
+          },
+          "creditKobo": {
+            "type": "number",
+            "description": "What lands in the wallet: amount minus deposit fee.",
+            "example": 495000
           }
         },
         "required": [
@@ -8188,7 +8220,9 @@
           "accessCode",
           "amountKobo",
           "feeKobo",
-          "chargeKobo"
+          "chargeKobo",
+          "depositFeeKobo",
+          "creditKobo"
         ]
       },
       "WalletTopupCheckoutEnvelopeDto": {

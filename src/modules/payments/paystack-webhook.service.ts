@@ -9,6 +9,7 @@ import { EnvService } from '../../config/env.service.js';
 import { DatabaseService } from '../../database/database.service.js';
 import type { DatabaseSchema } from '../../database/database.types.js';
 import { mapPaystackEvent, type PaystackWebhookEvent } from '../../domain/payments.js';
+import { resolveTopupCredit } from '../../domain/wallet-topup-fee.js';
 
 type WebhookResult =
   | {
@@ -302,12 +303,15 @@ export class PaystackWebhookService {
       return;
     }
 
-    // A checkout top-up charged the customer credit + Paystack fee; only the credit belongs in
-    // the wallet. Never credit more than was actually paid.
-    const creditKobo =
-      event.creditKobo !== undefined && event.creditKobo <= event.amountKobo
-        ? event.creditKobo
-        : event.amountKobo;
+    const split = resolveTopupCredit(event, this.env.get('WALLET_DEPOSIT_FEE_BPS'));
+    const creditKobo = split.creditKobo;
+    const ledgerPayload =
+      split.depositFeeKobo === null
+        ? payload
+        : {
+            ...payload,
+            deposit_fee: { gross_kobo: event.amountKobo, fee_kobo: split.depositFeeKobo }
+          };
 
     const credited = await sql<{ entryId: string | null }>`
       select public.credit_wallet_topup(
@@ -316,7 +320,7 @@ export class PaystackWebhookService {
         ${userId ?? null}::uuid,
         ${creditKobo}::integer,
         ${event.senderName ?? null},
-        ${JSON.stringify(payload)}::jsonb
+        ${JSON.stringify(ledgerPayload)}::jsonb
       )::text as "entryId"
     `.execute(trx);
 

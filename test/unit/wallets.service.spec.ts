@@ -52,11 +52,12 @@ function createSettings(): PlatformSettingsRepository {
   } as unknown as PlatformSettingsRepository;
 }
 
-function createEnv(dvaEnabled: boolean, passFees = false): EnvService {
+function createEnv(dvaEnabled: boolean, passFees = false, depositFeeBps = 0): EnvService {
   return {
     get: vi.fn((key: string) => {
       if (key === 'APP_URL_CUSTOMER') return 'https://user.mealdirectly.com';
       if (key === 'WALLET_TOPUP_PASS_FEES') return passFees;
+      if (key === 'WALLET_DEPOSIT_FEE_BPS') return depositFeeBps;
       return dvaEnabled;
     })
   } as unknown as EnvService;
@@ -102,11 +103,11 @@ describe('WalletsService', () => {
   let paystack: ReturnType<typeof createPaystack>;
   let dvaReads: ReturnType<typeof createDvaReads>;
 
-  function createService(dvaEnabled: boolean, passFees = false): WalletsService {
+  function createService(dvaEnabled: boolean, passFees = false, depositFeeBps = 0): WalletsService {
     return new WalletsService(
       repository,
       settings,
-      createEnv(dvaEnabled, passFees),
+      createEnv(dvaEnabled, passFees, depositFeeBps),
       paystack,
       dvaReads
     );
@@ -131,6 +132,7 @@ describe('WalletsService', () => {
       status: 'active',
       minTopupKobo: 50_000,
       maxBalanceKobo: 5_000_000,
+      depositFeeBps: 0,
       dedicatedAccount: null
     });
   });
@@ -232,7 +234,9 @@ describe('WalletsService', () => {
       accessCode: 'abc',
       amountKobo: 500_000,
       feeKobo: 0,
-      chargeKobo: 500_000
+      chargeKobo: 500_000,
+      depositFeeKobo: 0,
+      creditKobo: 500_000
     });
     expect(paystack.initializeTransaction).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -243,7 +247,8 @@ describe('WalletsService', () => {
           purpose: 'wallet_topup',
           userId: customer.userId,
           walletId: wallet.id,
-          creditKobo: '500000'
+          creditKobo: '500000',
+          depositFeeKobo: '0'
         },
         callbackUrl: 'https://user.mealdirectly.com/#/wallet'
       })
@@ -297,5 +302,31 @@ describe('WalletsService', () => {
 
     expect(quote.amountKobo).toBe(500_000);
     expect(quote.chargeKobo).toBe(500_000 + quote.feeKobo);
+  });
+
+  it('takes the 1% deposit fee off a card top-up and credits the rest', async () => {
+    const service = createService(false, true, 100);
+
+    const checkout = await service.initializeTopup(customer, 500_000);
+
+    expect(checkout.depositFeeKobo).toBe(5_000);
+    expect(checkout.creditKobo).toBe(495_000);
+    // Paystack's fee is still added on top of the deposit amount, not the credit.
+    expect(checkout.chargeKobo).toBe(500_000 + checkout.feeKobo);
+    expect(paystack.initializeTransaction).toHaveBeenCalledWith(
+      expect.objectContaining({
+        amountKobo: checkout.chargeKobo,
+        metadata: expect.objectContaining({
+          creditKobo: '495000',
+          depositFeeKobo: '5000'
+        }) as unknown
+      })
+    );
+  });
+
+  it('exposes the deposit fee rate on the wallet view', async () => {
+    const view = await createService(false, true, 100).getWallet(customer);
+
+    expect(view.depositFeeBps).toBe(100);
   });
 });

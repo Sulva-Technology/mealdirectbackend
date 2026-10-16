@@ -24,6 +24,7 @@ export type CustomerWalletView = {
   status: WalletStatus;
   minTopupKobo: number;
   maxBalanceKobo: number;
+  depositFeeBps: number;
   dedicatedAccount: DedicatedAccountRecord | null;
 };
 
@@ -73,12 +74,21 @@ export type WalletTopupCheckout = {
   amountKobo: number;
   feeKobo: number;
   chargeKobo: number;
+  depositFeeKobo: number;
+  creditKobo: number;
 };
 
 export type WalletTopupQuote = {
+  /** Amount deposited (before the deposit fee). */
   amountKobo: number;
+  /** Paystack processing fee added on top at checkout. */
   feeKobo: number;
+  /** Total charged at checkout: amount + processing fee. */
   chargeKobo: number;
+  /** MealDirect deposit fee deducted from the amount. */
+  depositFeeKobo: number;
+  /** What lands in the wallet. */
+  creditKobo: number;
 };
 
 export type DedicatedAccountUpsert = {

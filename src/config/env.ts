@@ -140,7 +140,10 @@ const envSchema = z
     WALLET_DVA_PROVIDER: z.string().min(1).default('test-bank'),
     // Card/checkout top-ups: add Paystack's processing fee on top so the wallet is credited
     // the full amount the customer chose. Set false to absorb the fee instead.
-    WALLET_TOPUP_PASS_FEES: booleanFromString.default(true)
+    WALLET_TOPUP_PASS_FEES: booleanFromString.default(true),
+    // MealDirect deposit fee in basis points (100 = 1%), deducted from every wallet deposit
+    // (card checkout and dedicated-account transfer). 0 disables it.
+    WALLET_DEPOSIT_FEE_BPS: z.coerce.number().int().min(0).max(10_000).default(100)
   })
   .superRefine((env, context) => {
     if ((env.NODE_ENV === 'production' || env.NODE_ENV === 'staging') && !env.DATABASE_SSL) {
