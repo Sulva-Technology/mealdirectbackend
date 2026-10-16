@@ -92,7 +92,8 @@ function createDvaReads() {
       walletId: wallet.id,
       userId: customer.userId,
       email: customer.email,
-      displayName: 'Ada Lovelace'
+      displayName: 'Ada Lovelace',
+      phoneNumber: '0803 123 4567'
     }),
     findDedicatedAccount: vi.fn().mockResolvedValue(null),
     upsertDedicatedAccount: vi.fn().mockResolvedValue(undefined)
@@ -193,7 +194,12 @@ describe('WalletsService', () => {
     expect(paystack.createCustomer).toHaveBeenCalledWith(
       expect.objectContaining({ email: customer.email })
     );
-    expect(paystack.createDedicatedAccount).toHaveBeenCalledWith({ customerCode: 'CUS_abc' });
+    expect(paystack.createDedicatedAccount).toHaveBeenCalledWith({
+      customerCode: 'CUS_abc',
+      phone: '+2348031234567',
+      firstName: 'Ada',
+      lastName: 'Lovelace'
+    });
     expect(dvaReads.upsertDedicatedAccount).toHaveBeenCalledWith(
       expect.objectContaining({ walletId: wallet.id, status: 'active' })
     );
@@ -211,6 +217,22 @@ describe('WalletsService', () => {
       status: 'active'
     });
     expect(paystack.createDedicatedAccount).toHaveBeenCalledTimes(1);
+  });
+
+  it('asks for a phone number when the wallet owner has none', async () => {
+    dvaReads.findWalletOwner.mockResolvedValue({
+      walletId: wallet.id,
+      userId: customer.userId,
+      email: customer.email,
+      displayName: 'Ada Lovelace',
+      phoneNumber: null
+    });
+    const service = createService(true);
+
+    await expect(service.requestDedicatedAccount(customer)).rejects.toMatchObject({
+      response: { message: 'Add a phone number to your profile to get a dedicated account number.' }
+    });
+    expect(paystack.createCustomer).not.toHaveBeenCalled();
   });
 
   it('asks for an email when the wallet owner has none', async () => {

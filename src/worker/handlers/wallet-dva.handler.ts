@@ -27,39 +27,65 @@ function splitDisplayName(displayName: string | null): { firstName?: string; las
     .filter((part) => part.length > 0);
   if (parts.length === 0) return {};
   const [firstName, ...rest] = parts;
+  // Paystack wants both names on a DVA customer; a one-word name stands in for both.
   return {
     ...(firstName === undefined ? {} : { firstName }),
-    ...(rest.length === 0 ? {} : { lastName: rest.join(' ') })
+    ...(rest.length === 0
+      ? firstName === undefined
+        ? {}
+        : { lastName: firstName }
+      : { lastName: rest.join(' ') })
   };
 }
+
+/**
+ * Normalises a Nigerian profile phone to the international form Paystack expects:
+ * "0803 123 4567" / "2348031234567" / "+234 803-123-4567" → "+2348031234567".
+ * Anything else is passed through with spacing and punctuation removed.
+ */
+export function toPaystackPhone(phone: string | null): string | undefined {
+  const digits = (phone ?? '').replace(/[\s()-]/g, '');
+  if (digits.length === 0) return undefined;
+  if (/^0\d{10}$/.test(digits)) return `+234${digits.slice(1)}`;
+  if (/^234\d{10}$/.test(digits)) return `+${digits}`;
+  return digits;
+}
+
+export type ProvisionOutcome = 'provisioned' | 'missing_email' | 'missing_phone';
 
 /**
  * Creates the Paystack customer, then its dedicated virtual account, and stores the bank
  * details on the wallet. Shared by the outbox handler and POST /wallet/dedicated-account so a
  * customer whose signup-time attempt was skipped (flag off) or failed can self-serve a retry.
  *
- * Returns false without calling Paystack when the wallet owner has no email — Paystack cannot
- * create a customer without one. Failures write a `failed` row and rethrow.
+ * Paystack refuses a DVA without the customer's email, name and phone, so a profile missing
+ * the email or phone returns early without calling Paystack. Name and phone go on both the
+ * customer and the DVA request — the latter also fills them in on a Paystack customer created
+ * by an earlier attempt that lacked them. Failures write a `failed` row and rethrow.
  */
 export async function provisionDedicatedAccount(
   walletId: string,
   reads: WalletReads,
   paystack: DedicatedAccountProvisioner
-): Promise<boolean> {
+): Promise<ProvisionOutcome> {
   const owner = await reads.findWalletOwner(walletId);
   if (owner?.email == null) {
-    return false;
+    return 'missing_email';
   }
+  const phone = toPaystackPhone(owner.phoneNumber);
+  if (phone === undefined) {
+    return 'missing_phone';
+  }
+  const names = splitDisplayName(owner.displayName);
 
   let customer: PaystackCustomerResult | undefined;
   try {
-    customer = await paystack.createCustomer({
-      email: owner.email,
-      ...splitDisplayName(owner.displayName)
-    });
+    customer = await paystack.createCustomer({ email: owner.email, phone, ...names });
 
     const account = await paystack.createDedicatedAccount({
-      customerCode: customer.customerCode
+      customerCode: customer.customerCode,
+      phone,
+      ...names
     });
 
     await reads.upsertDedicatedAccount({
@@ -72,7 +98,7 @@ export async function provisionDedicatedAccount(
       status: 'active',
       providerPayload: account.providerPayload
     });
-    return true;
+    return 'provisioned';
   } catch (error) {
     await reads.upsertDedicatedAccount({
       walletId,
@@ -116,8 +142,8 @@ export class WalletDvaHandler {
       return;
     }
 
-    // No owner email: retrying cannot change the outcome, so the event completes and
-    // POST /wallet/dedicated-account can retry later.
+    // No owner email or phone: retrying cannot change the outcome, so the event completes and
+    // POST /wallet/dedicated-account can retry once the profile is complete.
     await provisionDedicatedAccount(walletId, this.reads, this.paystack);
   };
 }

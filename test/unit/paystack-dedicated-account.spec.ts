@@ -66,6 +66,37 @@ describe('PaystackClient dedicated accounts', () => {
     });
   });
 
+  it('sends the customer name and phone with the dedicated-account request', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          status: true,
+          data: {
+            account_number: '9900001111',
+            account_name: 'MEALDIRECT / ADA LOVELACE',
+            bank: { name: 'Wema Bank', slug: 'wema-bank' }
+          }
+        }),
+        { status: 200 }
+      )
+    );
+
+    await new PaystackClient(createEnv()).createDedicatedAccount({
+      customerCode: 'CUS_abc123',
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+      phone: '+2348031234567'
+    });
+
+    const [, init] = vi.mocked(fetch).mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(init.body as string)).toMatchObject({
+      customer: 'CUS_abc123',
+      first_name: 'Ada',
+      last_name: 'Lovelace',
+      phone: '+2348031234567'
+    });
+  });
+
   it('rejects a dedicated-account response missing the account number', async () => {
     vi.mocked(fetch).mockResolvedValue(
       new Response(JSON.stringify({ status: true, data: { bank: { name: 'Wema Bank' } } }), {

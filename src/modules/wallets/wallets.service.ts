@@ -207,9 +207,12 @@ export class WalletsService {
       return existing;
     }
 
-    const provisioned = await provisionDedicatedAccount(walletId, this.dvaReads, this.paystack);
-    if (!provisioned) {
+    const outcome = await provisionDedicatedAccount(walletId, this.dvaReads, this.paystack);
+    if (outcome === 'missing_email') {
       throw badRequest('Add an email address to your account to get a dedicated account number.');
+    }
+    if (outcome === 'missing_phone') {
+      throw badRequest('Add a phone number to your profile to get a dedicated account number.');
     }
 
     const account = await this.repository.findDedicatedAccount(walletId);
