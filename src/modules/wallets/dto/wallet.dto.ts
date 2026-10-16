@@ -53,11 +53,11 @@ export class WalletDto {
 
   @ApiProperty({
     description:
-      'MealDirect deposit fee in basis points (100 = 1%), deducted from every deposit — card or bank transfer.',
+      'Fee on bank transfers into the dedicated account, in basis points (100 = 1%), deducted from the amount received. Card top-ups do not pay it.',
     example: 100,
     type: Number
   })
-  depositFeeBps!: number;
+  dedicatedAccountFeeBps!: number;
 
   @ApiPropertyOptional({
     description:
@@ -151,11 +151,7 @@ export class WalletTopupCheckoutDto {
   @ApiProperty({ type: String })
   accessCode!: string;
 
-  @ApiProperty({
-    description: 'Amount deposited, before the deposit fee.',
-    example: 500000,
-    type: Number
-  })
+  @ApiProperty({ description: 'Amount credited to the wallet.', example: 500000, type: Number })
   amountKobo!: number;
 
   @ApiProperty({
@@ -167,20 +163,6 @@ export class WalletTopupCheckoutDto {
 
   @ApiProperty({ description: 'Total charged at checkout.', example: 507716, type: Number })
   chargeKobo!: number;
-
-  @ApiProperty({
-    description: 'MealDirect deposit fee deducted from the amount.',
-    example: 5000,
-    type: Number
-  })
-  depositFeeKobo!: number;
-
-  @ApiProperty({
-    description: 'What lands in the wallet: amount minus deposit fee.',
-    example: 495000,
-    type: Number
-  })
-  creditKobo!: number;
 }
 
 export class WalletTopupCheckoutEnvelopeDto {
@@ -198,11 +180,7 @@ export class WalletTopupQuoteQueryDto {
 }
 
 export class WalletTopupQuoteDto {
-  @ApiProperty({
-    description: 'Amount deposited, before the deposit fee.',
-    example: 500000,
-    type: Number
-  })
+  @ApiProperty({ description: 'Amount credited to the wallet.', example: 500000, type: Number })
   amountKobo!: number;
 
   @ApiProperty({
@@ -218,20 +196,6 @@ export class WalletTopupQuoteDto {
     type: Number
   })
   chargeKobo!: number;
-
-  @ApiProperty({
-    description: 'MealDirect deposit fee deducted from the amount.',
-    example: 5000,
-    type: Number
-  })
-  depositFeeKobo!: number;
-
-  @ApiProperty({
-    description: 'What lands in the wallet: amount minus deposit fee.',
-    example: 495000,
-    type: Number
-  })
-  creditKobo!: number;
 }
 
 export class WalletTopupQuoteEnvelopeDto {

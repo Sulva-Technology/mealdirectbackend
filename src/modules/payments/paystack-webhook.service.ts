@@ -9,7 +9,7 @@ import { EnvService } from '../../config/env.service.js';
 import { DatabaseService } from '../../database/database.service.js';
 import type { DatabaseSchema } from '../../database/database.types.js';
 import { mapPaystackEvent, type PaystackWebhookEvent } from '../../domain/payments.js';
-import { resolveTopupCredit } from '../../domain/wallet-topup-fee.js';
+import { splitDedicatedAccountDeposit } from '../../domain/wallet-topup-fee.js';
 
 type WebhookResult =
   | {
@@ -303,14 +303,25 @@ export class PaystackWebhookService {
       return;
     }
 
-    const split = resolveTopupCredit(event, this.env.get('WALLET_DEPOSIT_FEE_BPS'));
-    const creditKobo = split.creditKobo;
+    // A checkout top-up charged the customer credit + Paystack fee; only the credit belongs in
+    // the wallet. Never credit more than was actually paid.
+    // A transfer into a dedicated account pays the MealDirect deposit fee out of the amount.
+    const dvaSplit =
+      event.accountNumber !== undefined
+        ? splitDedicatedAccountDeposit(event.amountKobo, this.env.get('WALLET_DVA_DEPOSIT_FEE_BPS'))
+        : undefined;
+    const creditKobo =
+      dvaSplit !== undefined
+        ? dvaSplit.creditKobo
+        : event.creditKobo !== undefined && event.creditKobo <= event.amountKobo
+          ? event.creditKobo
+          : event.amountKobo;
     const ledgerPayload =
-      split.depositFeeKobo === null
+      dvaSplit === undefined
         ? payload
         : {
             ...payload,
-            deposit_fee: { gross_kobo: event.amountKobo, fee_kobo: split.depositFeeKobo }
+            deposit_fee: { gross_kobo: event.amountKobo, fee_kobo: dvaSplit.depositFeeKobo }
           };
 
     const credited = await sql<{ entryId: string | null }>`

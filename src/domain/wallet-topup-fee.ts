@@ -32,38 +32,26 @@ export function calculateTopupCharge(creditKobo: number, passFees = true): Topup
   return { creditKobo, feeKobo: chargeKobo - creditKobo, chargeKobo };
 }
 
-export type DepositSplit = {
-  /** MealDirect deposit fee kept from the deposit. */
+export type DedicatedAccountDepositSplit = {
+  /** MealDirect fee kept from the transfer. */
   depositFeeKobo: number;
-  /** What lands in the wallet: deposit minus the deposit fee. */
+  /** What lands in the wallet: transfer minus the fee. */
   creditKobo: number;
 };
 
 /**
- * MealDirect's own deposit fee (basis points; 100 = 1%), deducted from every wallet deposit —
- * card checkout and dedicated-account transfer alike. Rounded to the nearest kobo and never
- * allowed to consume the whole deposit.
+ * MealDirect's fee on a bank transfer into a customer's dedicated account (basis points;
+ * 100 = 1%), deducted from the amount received. Card checkout top-ups are not charged this —
+ * they pay Paystack's processing fee on top instead. Rounded to the nearest kobo and never
+ * allowed to consume the whole transfer.
  */
-export function splitDeposit(depositKobo: number, feeBps: number): DepositSplit {
-  if (feeBps <= 0 || depositKobo <= 1) {
-    return { depositFeeKobo: 0, creditKobo: depositKobo };
-  }
-  const depositFeeKobo = Math.min(Math.round((depositKobo * feeBps) / 10_000), depositKobo - 1);
-  return { depositFeeKobo, creditKobo: depositKobo - depositFeeKobo };
-}
-
-/**
- * What a successful top-up credits. A checkout top-up carries its own credit amount in
- * metadata (deposit fee already taken, Paystack fee excluded) — depositFeeKobo is null because
- * nothing is taken here. A dedicated-account transfer has no metadata, so the deposit fee is
- * taken from the amount received. Never credits more than was actually paid.
- */
-export function resolveTopupCredit(
-  input: { amountKobo: number; creditKobo?: number },
+export function splitDedicatedAccountDeposit(
+  amountKobo: number,
   feeBps: number
-): { creditKobo: number; depositFeeKobo: number | null } {
-  if (input.creditKobo !== undefined && input.creditKobo <= input.amountKobo) {
-    return { creditKobo: input.creditKobo, depositFeeKobo: null };
+): DedicatedAccountDepositSplit {
+  if (feeBps <= 0 || amountKobo <= 1) {
+    return { depositFeeKobo: 0, creditKobo: amountKobo };
   }
-  return splitDeposit(input.amountKobo, feeBps);
+  const depositFeeKobo = Math.min(Math.round((amountKobo * feeBps) / 10_000), amountKobo - 1);
+  return { depositFeeKobo, creditKobo: amountKobo - depositFeeKobo };
 }

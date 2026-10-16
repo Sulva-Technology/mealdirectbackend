@@ -8007,10 +8007,11 @@ components:
           description: Advisory maximum balance in kobo. A credit crossing it is still
             applied and raises an admin flag.
           example: 5000000
-        depositFeeBps:
+        dedicatedAccountFeeBps:
           type: number
-          description: MealDirect deposit fee in basis points (100 = 1%), deducted from
-            every deposit — card or bank transfer.
+          description: Fee on bank transfers into the dedicated account, in basis points
+            (100 = 1%), deducted from the amount received. Card top-ups do not
+            pay it.
           example: 100
         dedicatedAccount:
           description: The customer dedicated bank account, or null while
@@ -8025,7 +8026,7 @@ components:
         - status
         - minTopupKobo
         - maxBalanceKobo
-        - depositFeeBps
+        - dedicatedAccountFeeBps
     WalletEnvelopeDto:
       type: object
       properties:
@@ -8105,7 +8106,7 @@ components:
       properties:
         amountKobo:
           type: number
-          description: Amount deposited, before the deposit fee.
+          description: Amount credited to the wallet.
           example: 500000
         feeKobo:
           type: number
@@ -8115,20 +8116,10 @@ components:
           type: number
           description: Total the customer pays at checkout.
           example: 507716
-        depositFeeKobo:
-          type: number
-          description: MealDirect deposit fee deducted from the amount.
-          example: 5000
-        creditKobo:
-          type: number
-          description: 'What lands in the wallet: amount minus deposit fee.'
-          example: 495000
       required:
         - amountKobo
         - feeKobo
         - chargeKobo
-        - depositFeeKobo
-        - creditKobo
     WalletTopupQuoteEnvelopeDto:
       type: object
       properties:
@@ -8150,7 +8141,7 @@ components:
           type: string
         amountKobo:
           type: number
-          description: Amount deposited, before the deposit fee.
+          description: Amount credited to the wallet.
           example: 500000
         feeKobo:
           type: number
@@ -8160,14 +8151,6 @@ components:
           type: number
           description: Total charged at checkout.
           example: 507716
-        depositFeeKobo:
-          type: number
-          description: MealDirect deposit fee deducted from the amount.
-          example: 5000
-        creditKobo:
-          type: number
-          description: 'What lands in the wallet: amount minus deposit fee.'
-          example: 495000
       required:
         - reference
         - authorizationUrl
@@ -8175,8 +8158,6 @@ components:
         - amountKobo
         - feeKobo
         - chargeKobo
-        - depositFeeKobo
-        - creditKobo
     WalletTopupCheckoutEnvelopeDto:
       type: object
       properties:

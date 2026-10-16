@@ -6,7 +6,7 @@ import { normalizeCursorPagination } from '../../common/api/pagination.js';
 import { ErrorCodes } from '../../common/errors/error-codes.js';
 import { EnvService } from '../../config/env.service.js';
 import { WALLET_TOPUP_PURPOSE } from '../../domain/payments.js';
-import { calculateTopupCharge, splitDeposit } from '../../domain/wallet-topup-fee.js';
+import { calculateTopupCharge } from '../../domain/wallet-topup-fee.js';
 import {
   provisionDedicatedAccount,
   type DedicatedAccountProvisioner,
@@ -82,7 +82,7 @@ export class WalletsService {
       status: wallet.status,
       minTopupKobo: limits.minTopupKobo,
       maxBalanceKobo: limits.maxBalanceKobo,
-      depositFeeBps: this.env.get('WALLET_DEPOSIT_FEE_BPS'),
+      dedicatedAccountFeeBps: this.env.get('WALLET_DVA_DEPOSIT_FEE_BPS'),
       dedicatedAccount
     };
   }
@@ -99,23 +99,11 @@ export class WalletsService {
   /** What the customer pays at checkout to receive amountKobo in the wallet. */
   quoteTopup(actor: AuthenticatedActor, amountKobo: number): WalletTopupQuote {
     customerOnly(actor);
-    return this.priceTopup(amountKobo);
-  }
-
-  /**
-   * Card top-up pricing: Paystack's processing fee is added on top (when passed on) and the
-   * MealDirect deposit fee comes off the amount, so the wallet receives amount − deposit fee.
-   */
-  private priceTopup(amountKobo: number): WalletTopupQuote {
     const { feeKobo, chargeKobo } = calculateTopupCharge(
       amountKobo,
       this.env.get('WALLET_TOPUP_PASS_FEES')
     );
-    const { depositFeeKobo, creditKobo } = splitDeposit(
-      amountKobo,
-      this.env.get('WALLET_DEPOSIT_FEE_BPS')
-    );
-    return { amountKobo, feeKobo, chargeKobo, depositFeeKobo, creditKobo };
+    return { amountKobo, feeKobo, chargeKobo };
   }
 
   /**
@@ -159,9 +147,11 @@ export class WalletsService {
       );
     }
 
-    // The customer pays Paystack's fee on top; the webhook credits only creditKobo
-    // (amount minus the deposit fee), carried in metadata.
-    const { feeKobo, chargeKobo, depositFeeKobo, creditKobo } = this.priceTopup(amountKobo);
+    // The customer pays Paystack's fee on top; the webhook credits only amountKobo.
+    const { feeKobo, chargeKobo } = calculateTopupCharge(
+      amountKobo,
+      this.env.get('WALLET_TOPUP_PASS_FEES')
+    );
     const reference = `WTU-${randomUUID()}`;
     const checkout = await this.paystack.initializeTransaction({
       email: actor.email,
@@ -172,8 +162,7 @@ export class WalletsService {
         purpose: WALLET_TOPUP_PURPOSE,
         userId: actor.userId,
         walletId,
-        creditKobo: String(creditKobo),
-        depositFeeKobo: String(depositFeeKobo)
+        creditKobo: String(amountKobo)
       },
       callbackUrl: `${this.env.get('APP_URL_CUSTOMER')}/#/wallet`
     });
@@ -184,9 +173,7 @@ export class WalletsService {
       accessCode: checkout.accessCode,
       amountKobo,
       feeKobo,
-      chargeKobo,
-      depositFeeKobo,
-      creditKobo
+      chargeKobo
     };
   }
 

@@ -2,8 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   calculateTopupCharge,
-  resolveTopupCredit,
-  splitDeposit
+  splitDedicatedAccountDeposit
 } from '../../src/domain/wallet-topup-fee.js';
 
 // Paystack's net after its fee (1.5% + ₦100, ₦100 waived below ₦2,500, capped at ₦2,000).
@@ -46,44 +45,30 @@ describe('calculateTopupCharge', () => {
   });
 });
 
-describe('splitDeposit', () => {
-  it('takes 1% off the deposit', () => {
-    expect(splitDeposit(1_000_000, 100)).toEqual({ depositFeeKobo: 10_000, creditKobo: 990_000 });
+describe('splitDedicatedAccountDeposit', () => {
+  it('takes 1% off a dedicated-account transfer', () => {
+    expect(splitDedicatedAccountDeposit(1_000_000, 100)).toEqual({
+      depositFeeKobo: 10_000,
+      creditKobo: 990_000
+    });
   });
 
   it('rounds to the nearest kobo', () => {
-    expect(splitDeposit(12_345, 100)).toEqual({ depositFeeKobo: 123, creditKobo: 12_222 });
+    expect(splitDedicatedAccountDeposit(12_345, 100)).toEqual({
+      depositFeeKobo: 123,
+      creditKobo: 12_222
+    });
   });
 
   it('takes nothing when the fee is off', () => {
-    expect(splitDeposit(1_000_000, 0)).toEqual({ depositFeeKobo: 0, creditKobo: 1_000_000 });
-  });
-
-  it('never consumes the whole deposit', () => {
-    expect(splitDeposit(1, 10_000).creditKobo).toBe(1);
-    expect(splitDeposit(100, 10_000).creditKobo).toBe(1);
-  });
-});
-
-describe('resolveTopupCredit', () => {
-  it('takes the deposit fee from a dedicated-account transfer', () => {
-    expect(resolveTopupCredit({ amountKobo: 1_000_000 }, 100)).toEqual({
-      creditKobo: 990_000,
-      depositFeeKobo: 10_000
+    expect(splitDedicatedAccountDeposit(1_000_000, 0)).toEqual({
+      depositFeeKobo: 0,
+      creditKobo: 1_000_000
     });
   });
 
-  it('credits a checkout top-up exactly as quoted, without a second deduction', () => {
-    expect(resolveTopupCredit({ amountKobo: 1_017_766, creditKobo: 990_000 }, 100)).toEqual({
-      creditKobo: 990_000,
-      depositFeeKobo: null
-    });
-  });
-
-  it('ignores a metadata credit larger than what was paid', () => {
-    expect(resolveTopupCredit({ amountKobo: 500_000, creditKobo: 900_000 }, 100)).toEqual({
-      creditKobo: 495_000,
-      depositFeeKobo: 5_000
-    });
+  it('never consumes the whole transfer', () => {
+    expect(splitDedicatedAccountDeposit(1, 10_000).creditKobo).toBe(1);
+    expect(splitDedicatedAccountDeposit(100, 10_000).creditKobo).toBe(1);
   });
 });
