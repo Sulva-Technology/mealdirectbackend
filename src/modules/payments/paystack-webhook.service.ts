@@ -83,6 +83,20 @@ export class PaystackWebhookService {
     });
   }
 
+  /**
+   * Credit a dedicated-account transfer whose webhook never arrived, from a transaction
+   * already fetched from Paystack's verify API (so no signature applies). Runs the same path
+   * as the webhook: crediting is idempotent on the Paystack reference, so if the real webhook
+   * lands later it is a no-op, and replaying this is safe.
+   */
+  async creditVerifiedWalletTopup(payload: PaystackWebhookEvent): Promise<WebhookResult> {
+    const event = mapPaystackEvent(payload);
+    if (event.type !== 'WALLET_TOPUP_SUCCEEDED') {
+      throw new Error(`Transaction is not a successful wallet top-up (mapped to ${event.type}).`);
+    }
+    return this.processWithDatabase(JSON.stringify(payload), payload, event);
+  }
+
   private async processWithDatabase(
     rawBody: string,
     payload: PaystackWebhookEvent,
