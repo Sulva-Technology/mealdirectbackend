@@ -25,6 +25,7 @@ type PaystackEnvelope = {
   status?: boolean;
   message?: string;
   data?: unknown;
+  meta?: unknown;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -126,6 +127,23 @@ export class PaystackClient implements PaystackClientContract {
       status,
       transactionId
     };
+  }
+
+  /** One page (up to 100) of successful transactions created at or after fromIso. */
+  async listSuccessfulTransactions(
+    fromIso: string,
+    page: number
+  ): Promise<{ transactions: Record<string, unknown>[]; pageCount: number }> {
+    const query = new URLSearchParams({
+      status: 'success',
+      from: fromIso,
+      perPage: '100',
+      page: String(page)
+    });
+    const envelope = await this.request(`/transaction?${query.toString()}`, { method: 'GET' });
+    const transactions = Array.isArray(envelope.data) ? envelope.data.filter(isRecord) : [];
+    const pageCount = isRecord(envelope.meta) ? numberFrom(envelope.meta.pageCount) : undefined;
+    return { transactions, pageCount: pageCount ?? 1 };
   }
 
   async createRefund(input: PaystackRefundInput): Promise<PaystackRefundResult> {

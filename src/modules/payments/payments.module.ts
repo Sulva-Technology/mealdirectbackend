@@ -13,6 +13,7 @@ import { RefundsService } from './refunds.service.js';
 import { PaystackWebhookController } from './paystack-webhook.controller.js';
 import { PaystackWebhookService } from './paystack-webhook.service.js';
 import { PaystackClient } from './paystack.client.js';
+import { DvaTopupSweepService } from './dva-topup-sweep.service.js';
 import { PaymentsRepository } from './payments.repository.js';
 import { PaymentsService } from './payments.service.js';
 import { ReconciliationController } from './reconciliation.controller.js';
@@ -35,6 +36,7 @@ import { ReconciliationService } from './reconciliation.service.js';
     AuditService,
     SupportNotesService,
     PaystackClient,
+    DvaTopupSweepService,
     PaymentsRepository,
     PaymentsService,
     PaystackWebhookService,
@@ -43,6 +45,6 @@ import { ReconciliationService } from './reconciliation.service.js';
     RefundsRepository,
     RefundsService
   ],
-  exports: [PaymentsService]
+  exports: [PaymentsService, DvaTopupSweepService]
 })
 export class PaymentsModule {}

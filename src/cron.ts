@@ -6,6 +6,7 @@ import { sql } from 'kysely';
 import { AppModule } from './app.module.js';
 import { JsonLogger } from './common/logging/json-logger.service.js';
 import { DatabaseService } from './database/database.service.js';
+import { DvaTopupSweepService } from './modules/payments/dva-topup-sweep.service.js';
 import { PaymentsService } from './modules/payments/payments.service.js';
 import { PayoutService } from './modules/settlements/payout.service.js';
 import {
@@ -21,7 +22,8 @@ const cronJobs = [
   'reconcile-pending-payments',
   'reconcile-wallet-balances',
   'run-payouts',
-  'reconcile-payout-transfers'
+  'reconcile-payout-transfers',
+  'sweep-dva-topups'
 ] as const;
 type CronJob = (typeof cronJobs)[number];
 
@@ -74,6 +76,10 @@ async function runCronJob(job: CronJob): Promise<void> {
     if (job === 'run-payouts') {
       const result = await app.get(PayoutService).runPayouts();
       logger.log({ message: 'Ran payouts', job, ...result }, 'Cron');
+    }
+    if (job === 'sweep-dva-topups') {
+      const result = await app.get(DvaTopupSweepService).sweep();
+      logger.log({ message: 'Swept dedicated-account top-ups', job, ...result }, 'Cron');
     }
     if (job === 'reconcile-payout-transfers') {
       const result = await app.get(PayoutService).reconcilePendingPayouts();

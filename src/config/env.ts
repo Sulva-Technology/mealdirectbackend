@@ -146,7 +146,10 @@ const envSchema = z
     // received — mirroring Paystack's DVA charge. Card top-ups are not charged this.
     // BPS 0 disables it; CAP 0 removes the cap.
     WALLET_DVA_DEPOSIT_FEE_BPS: z.coerce.number().int().min(0).max(10_000).default(100),
-    WALLET_DVA_DEPOSIT_FEE_CAP_KOBO: z.coerce.number().int().min(0).default(30_000)
+    WALLET_DVA_DEPOSIT_FEE_CAP_KOBO: z.coerce.number().int().min(0).default(30_000),
+    // How often the API re-checks Paystack for dedicated-account transfers whose webhook was
+    // missed and credits them (DvaTopupSweepService). 0 disables the inline sweep.
+    WALLET_DVA_SWEEP_INTERVAL_MS: z.coerce.number().int().min(0).default(600_000)
   })
   .superRefine((env, context) => {
     if ((env.NODE_ENV === 'production' || env.NODE_ENV === 'staging') && !env.DATABASE_SSL) {
