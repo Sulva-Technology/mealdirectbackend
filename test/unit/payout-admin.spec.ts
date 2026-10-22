@@ -93,6 +93,7 @@ describe('PayoutService admin listing', () => {
       applyReconcile: vi.fn(),
       listTransfers: vi.fn().mockResolvedValue({ items: [], hasMore: false, limit: 20 }),
       findTransferById: vi.fn(),
+      cancelOnDemandSettlement: vi.fn(),
       ...overrides
     };
   }

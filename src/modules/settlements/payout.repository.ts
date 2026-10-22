@@ -175,6 +175,21 @@ export class PayoutRepository implements PayoutRepositoryContract {
     return result.rows;
   }
 
+  async cancelOnDemandSettlement(settlementId: string): Promise<void> {
+    await sql`
+      update public.settlements s
+      set status = 'cancelled'
+      where s.id = ${settlementId}::uuid
+        and s.kind = 'on_demand'
+        and s.status = 'approved'
+        and not exists (
+          select 1 from public.payout_transfers pt
+          where pt.settlement_id = s.id
+            and pt.status in ('pending', 'success')
+        )
+    `.execute(this.database.db);
+  }
+
   async applyReconcile(
     reference: string,
     status: 'success' | 'failed' | 'reversed',

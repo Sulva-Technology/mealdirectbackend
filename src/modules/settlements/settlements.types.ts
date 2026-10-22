@@ -1,4 +1,5 @@
 export type SettlementStatus = 'approved' | 'cancelled' | 'draft' | 'paid';
+export type SettlementKind = 'daily' | 'on_demand';
 
 export type SettlementSummary = {
   id: string;
@@ -6,6 +7,8 @@ export type SettlementSummary = {
   vendorId: string | null;
   riderId: string | null;
   settlementDate: string;
+  // daily = admin-generated; on_demand = withdrawal requested from the app.
+  kind: SettlementKind;
   status: SettlementStatus;
   grossFoodAmountKobo: number;
   deliveryEarningsKobo: number;

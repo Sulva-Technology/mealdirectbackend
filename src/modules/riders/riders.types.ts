@@ -1,5 +1,5 @@
 import type { OrderDetail, OrderStatus } from '../orders/orders.types.js';
-import type { SettlementStatus } from '../settlements/settlements.types.js';
+import type { SettlementKind, SettlementStatus } from '../settlements/settlements.types.js';
 
 export type RiderStatus = 'deactivated' | 'pending' | 'suspended' | 'verified';
 export type DeliveryAssignmentStatus =
@@ -194,6 +194,7 @@ export type RiderSettlementSummary = {
   campusId: string;
   riderId: string;
   settlementDate: string;
+  kind: SettlementKind;
   status: SettlementStatus;
   deliveryEarningsKobo: number;
   adjustmentsKobo: number;

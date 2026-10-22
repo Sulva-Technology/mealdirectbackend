@@ -190,6 +190,9 @@ services:
 
   # Automated pay-run: selects eligible settlements and initiates Paystack transfers. Runs
   # daily after settlement generation. Gated by PAYOUTS_ENABLED (no-op when off).
+  # Since on-demand withdrawals (20261022000100) no new daily settlements are produced; this
+  # run now only clears the approved pre-cutover backlog and is the safety net for a
+  # withdrawal whose Paystack outcome was unknown (same reference, so Paystack dedupes).
   - type: cron
     name: meal-direct-run-payouts
     runtime: docker

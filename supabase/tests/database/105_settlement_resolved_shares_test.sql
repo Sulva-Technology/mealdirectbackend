@@ -73,6 +73,10 @@ where db.campus_id = '11111111-1111-1111-1111-111111111111'
   and db.zone_id = '21111111-1111-1111-1111-111111111111'
   and db.delivery_mode = 'meal_direct_rider';
 
+-- This test covers the daily producers, which the on-demand cutover blocks for current dates;
+-- switch on-demand off for this (rolled-back) transaction.
+delete from public.platform_settings where key = 'on_demand_payouts_start_date';
+
 select public.produce_rider_daily_settlement(
   '32111111-1111-1111-1111-111111111111'::uuid, current_date + 5,
   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa4'::uuid);

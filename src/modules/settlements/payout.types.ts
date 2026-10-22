@@ -84,4 +84,6 @@ export type PayoutRepositoryContract = {
     cursor?: string;
   }) => Promise<PayoutTransferPage>;
   findTransferById: (id: string) => Promise<PayoutTransferListItem | undefined>;
+  // Releases an on-demand withdrawal Paystack never accepted; a no-op once any transfer is live.
+  cancelOnDemandSettlement: (settlementId: string) => Promise<void>;
 };

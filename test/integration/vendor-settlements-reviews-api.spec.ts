@@ -48,6 +48,7 @@ const settlement: SettlementSummary = {
   riderId: null,
   serviceFeeKobo: 0,
   settlementDate: '2026-06-15',
+  kind: 'daily',
   status: 'draft',
   updatedAt: '2026-06-15T09:00:00.000Z',
   vendorId
