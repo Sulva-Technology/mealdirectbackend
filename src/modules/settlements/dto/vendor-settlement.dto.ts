@@ -51,6 +51,14 @@ export class SettlementSummaryDto {
   @ApiProperty({ example: '2026-06-15', type: String })
   settlementDate!: string;
 
+  @ApiProperty({
+    enum: ['daily', 'on_demand'],
+    description:
+      'daily = admin-generated settlement; on_demand = withdrawal requested from the app.',
+    type: String
+  })
+  kind!: string;
+
   @ApiProperty({ enum: settlementStatuses, type: String })
   status!: string;
 

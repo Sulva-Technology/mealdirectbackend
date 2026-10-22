@@ -159,6 +159,7 @@ const settlement: RiderSettlementSummary = {
   payableKobo: 7500,
   riderId,
   settlementDate: '2026-06-15',
+  kind: 'daily',
   status: 'draft',
   updatedAt: '2026-06-15T09:00:00.000Z'
 };

@@ -4355,6 +4355,98 @@
         "tags": ["vendor-settlements"]
       }
     },
+    "/v1/vendor/withdrawals/balance": {
+      "get": {
+        "operationId": "VendorWithdrawalsController_getBalance",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Withdrawable balance: available now, still in the hold window, and on the way to the bank.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WithdrawalBalanceEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Vendor access is required, or withdrawals are off." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor-withdrawals"]
+      }
+    },
+    "/v1/vendor/withdrawals": {
+      "post": {
+        "operationId": "VendorWithdrawalsController_requestWithdrawal",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Withdraw the whole available balance to the approved payout bank account immediately.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WithdrawalResultEnvelopeDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Nothing to withdraw, below the minimum, or no approved payout bank account."
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Vendor access is required, or withdrawals are off." },
+          "503": {
+            "description": "Paystack did not accept the transfer; the balance is unchanged and the request can be retried."
+          }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["vendor-withdrawals"]
+      }
+    },
+    "/v1/rider/withdrawals/balance": {
+      "get": {
+        "operationId": "RiderWithdrawalsController_getBalance",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Withdrawable balance: available now, still in the hold window, and on the way to the bank.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WithdrawalBalanceEnvelopeDto" }
+              }
+            }
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Rider access is required, or withdrawals are off." }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["rider-withdrawals"]
+      }
+    },
+    "/v1/rider/withdrawals": {
+      "post": {
+        "operationId": "RiderWithdrawalsController_requestWithdrawal",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Withdraw the whole available balance to the approved payout bank account immediately.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WithdrawalResultEnvelopeDto" }
+              }
+            }
+          },
+          "400": {
+            "description": "Nothing to withdraw, below the minimum, or no approved payout bank account."
+          },
+          "401": { "description": "Missing, invalid, or expired Supabase JWT." },
+          "403": { "description": "Rider access is required, or withdrawals are off." },
+          "503": {
+            "description": "Paystack did not accept the transfer; the balance is unchanged and the request can be retried."
+          }
+        },
+        "security": [{ "supabaseAuth": [] }],
+        "tags": ["rider-withdrawals"]
+      }
+    },
     "/v1/orders/{orderId}/review": {
       "post": {
         "operationId": "CustomerReviewsController_createReview",
@@ -8881,6 +8973,11 @@
           "campusId": { "type": "string", "format": "uuid" },
           "riderId": { "type": "string", "format": "uuid" },
           "settlementDate": { "type": "string" },
+          "kind": {
+            "type": "string",
+            "enum": ["daily", "on_demand"],
+            "description": "daily = admin-generated settlement; on_demand = withdrawal requested from the app."
+          },
           "status": { "type": "string", "enum": ["approved", "cancelled", "draft", "paid"] },
           "deliveryEarningsKobo": { "type": "number" },
           "adjustmentsKobo": { "type": "number" },
@@ -8896,6 +8993,7 @@
           "campusId",
           "riderId",
           "settlementDate",
+          "kind",
           "status",
           "deliveryEarningsKobo",
           "adjustmentsKobo",
@@ -8936,6 +9034,11 @@
           "campusId": { "type": "string", "format": "uuid" },
           "riderId": { "type": "string", "format": "uuid" },
           "settlementDate": { "type": "string" },
+          "kind": {
+            "type": "string",
+            "enum": ["daily", "on_demand"],
+            "description": "daily = admin-generated settlement; on_demand = withdrawal requested from the app."
+          },
           "status": { "type": "string", "enum": ["approved", "cancelled", "draft", "paid"] },
           "deliveryEarningsKobo": { "type": "number" },
           "adjustmentsKobo": { "type": "number" },
@@ -8955,6 +9058,7 @@
           "campusId",
           "riderId",
           "settlementDate",
+          "kind",
           "status",
           "deliveryEarningsKobo",
           "adjustmentsKobo",
@@ -8978,6 +9082,11 @@
           "vendorId": { "type": "string", "format": "uuid", "nullable": true },
           "riderId": { "type": "string", "format": "uuid", "nullable": true },
           "settlementDate": { "type": "string", "example": "2026-06-15" },
+          "kind": {
+            "type": "string",
+            "enum": ["daily", "on_demand"],
+            "description": "daily = admin-generated settlement; on_demand = withdrawal requested from the app."
+          },
           "status": { "type": "string", "enum": ["approved", "cancelled", "draft", "paid"] },
           "grossFoodAmountKobo": { "type": "number" },
           "deliveryEarningsKobo": { "type": "number" },
@@ -9000,6 +9109,7 @@
           "vendorId",
           "riderId",
           "settlementDate",
+          "kind",
           "status",
           "grossFoodAmountKobo",
           "deliveryEarningsKobo",
@@ -9055,6 +9165,11 @@
           "vendorId": { "type": "string", "format": "uuid", "nullable": true },
           "riderId": { "type": "string", "format": "uuid", "nullable": true },
           "settlementDate": { "type": "string", "example": "2026-06-15" },
+          "kind": {
+            "type": "string",
+            "enum": ["daily", "on_demand"],
+            "description": "daily = admin-generated settlement; on_demand = withdrawal requested from the app."
+          },
           "status": { "type": "string", "enum": ["approved", "cancelled", "draft", "paid"] },
           "grossFoodAmountKobo": { "type": "number" },
           "deliveryEarningsKobo": { "type": "number" },
@@ -9081,6 +9196,7 @@
           "vendorId",
           "riderId",
           "settlementDate",
+          "kind",
           "status",
           "grossFoodAmountKobo",
           "deliveryEarningsKobo",
@@ -9099,6 +9215,72 @@
       "VendorSettlementDetailEnvelopeDto": {
         "type": "object",
         "properties": { "data": { "$ref": "#/components/schemas/SettlementDetailDto" } },
+        "required": ["data"]
+      },
+      "WithdrawalBalanceDto": {
+        "type": "object",
+        "properties": {
+          "availableKobo": {
+            "type": "number",
+            "description": "Earnings past the hold, net of refunds, that a withdrawal pays now. Negative when refunds exceed earnings."
+          },
+          "pendingKobo": {
+            "type": "number",
+            "description": "Delivered earnings still inside the hold window."
+          },
+          "processingKobo": {
+            "type": "number",
+            "description": "Withdrawals sent and awaiting bank confirmation."
+          },
+          "minimumKobo": { "type": "number", "example": 100000 },
+          "holdMinutes": { "type": "number", "example": 120 },
+          "payoutAccountReady": {
+            "type": "boolean",
+            "description": "An admin-approved payout bank account is on file."
+          },
+          "enabled": { "type": "boolean", "description": "On-demand withdrawals are switched on." },
+          "canWithdraw": {
+            "type": "boolean",
+            "description": "A withdrawal request would succeed right now."
+          }
+        },
+        "required": [
+          "availableKobo",
+          "pendingKobo",
+          "processingKobo",
+          "minimumKobo",
+          "holdMinutes",
+          "payoutAccountReady",
+          "enabled",
+          "canWithdraw"
+        ]
+      },
+      "WithdrawalBalanceEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/WithdrawalBalanceDto" } },
+        "required": ["data"]
+      },
+      "WithdrawalResultDto": {
+        "type": "object",
+        "properties": {
+          "settlementId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "On-demand settlement created for this withdrawal."
+          },
+          "amountKobo": { "type": "number" },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "success", "processing"],
+            "description": "pending: Paystack accepted the transfer; success: paid; processing: being confirmed, completes automatically."
+          },
+          "reference": { "type": "string", "nullable": true }
+        },
+        "required": ["settlementId", "amountKobo", "status", "reference"]
+      },
+      "WithdrawalResultEnvelopeDto": {
+        "type": "object",
+        "properties": { "data": { "$ref": "#/components/schemas/WithdrawalResultDto" } },
         "required": ["data"]
       },
       "ReviewRecordDto": {

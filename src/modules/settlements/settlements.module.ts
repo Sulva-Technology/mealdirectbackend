@@ -8,16 +8,29 @@ import { SettlementsController } from './settlements.controller.js';
 import { SettlementsRepository } from './settlements.repository.js';
 import { SettlementsService } from './settlements.service.js';
 import { VendorSettlementsController } from './vendor-settlements.controller.js';
+import {
+  RiderWithdrawalsController,
+  VendorWithdrawalsController
+} from './withdrawals.controller.js';
+import { WithdrawalsRepository } from './withdrawals.repository.js';
+import { WithdrawalsService } from './withdrawals.service.js';
 
 @Module({
   imports: [AuthModule],
-  controllers: [SettlementsController, VendorSettlementsController],
+  controllers: [
+    SettlementsController,
+    VendorSettlementsController,
+    VendorWithdrawalsController,
+    RiderWithdrawalsController
+  ],
   providers: [
     SettlementsRepository,
     SettlementsService,
     PayoutRepository,
     PayoutService,
-    PaystackClient
+    PaystackClient,
+    WithdrawalsRepository,
+    WithdrawalsService
   ],
   exports: [PayoutService]
 })

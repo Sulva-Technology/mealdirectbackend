@@ -1,4 +1,8 @@
-import { BadRequestException } from '@nestjs/common';
+import {
+  BadGatewayException,
+  BadRequestException,
+  ServiceUnavailableException
+} from '@nestjs/common';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { EnvService } from '../../src/config/env.service.js';
@@ -70,7 +74,8 @@ function makeRepository(context?: PayoutContext): PayoutRepositoryContract {
     listPendingTransfers: vi.fn().mockResolvedValue([]),
     applyReconcile: vi.fn().mockResolvedValue(undefined),
     listTransfers: vi.fn(),
-    findTransferById: vi.fn()
+    findTransferById: vi.fn(),
+    cancelOnDemandSettlement: vi.fn().mockResolvedValue(undefined)
   };
 }
 
@@ -199,5 +204,97 @@ describe('PayoutService', () => {
     expect(repository.listTransfers).toHaveBeenCalledWith(
       expect.objectContaining({ status: 'failed', limit: 20, maxAttempts: 5 })
     );
+  });
+
+  describe('payWithdrawal', () => {
+    it('pays a withdrawal straight away', async () => {
+      const repository = makeRepository(makeContext());
+      const service = new PayoutService(makeEnv(true), paystack, repository);
+
+      const result = await service.payWithdrawal(settlementId, initiatedBy);
+
+      expect(result).toEqual(transferRecord);
+      expect(paystack.initiateTransfer).toHaveBeenCalledWith(
+        expect.objectContaining({ reference: `${settlementId}-a1` })
+      );
+      expect(repository.cancelOnDemandSettlement).not.toHaveBeenCalled();
+    });
+
+    it('stores an otp transfer as pending', async () => {
+      paystack.initiateTransfer = vi
+        .fn()
+        .mockResolvedValue({ transferCode: 'TRF_1', status: 'otp', providerPayload: {} });
+      const repository = makeRepository(makeContext());
+      const service = new PayoutService(makeEnv(true), paystack, repository);
+
+      await service.payWithdrawal(settlementId, initiatedBy);
+
+      expect(repository.recordTransfer).toHaveBeenCalledWith(
+        expect.objectContaining({ status: 'pending' })
+      );
+      expect(repository.applyReconcile).not.toHaveBeenCalled();
+    });
+
+    it('reconciles a transfer Paystack fails on the spot so the earnings are released', async () => {
+      paystack.initiateTransfer = vi
+        .fn()
+        .mockResolvedValue({ transferCode: 'TRF_1', status: 'failed', providerPayload: {} });
+      const repository = makeRepository(makeContext());
+      repository.recordTransfer = vi
+        .fn()
+        .mockResolvedValue({ ...transferRecord, status: 'failed' });
+      const service = new PayoutService(makeEnv(true), paystack, repository);
+
+      await service.payWithdrawal(settlementId, initiatedBy);
+
+      expect(repository.applyReconcile).toHaveBeenCalledWith(`${settlementId}-a1`, 'failed', {});
+    });
+
+    it('releases the withdrawal only when Paystack confirms it has no such transfer', async () => {
+      paystack.initiateTransfer = vi
+        .fn()
+        .mockRejectedValue(new BadGatewayException('Your balance is not enough'));
+      paystack.fetchTransfer = vi.fn().mockRejectedValue(new BadGatewayException('Not found'));
+      const repository = makeRepository(makeContext());
+      const service = new PayoutService(makeEnv(true), paystack, repository);
+
+      await expect(service.payWithdrawal(settlementId, initiatedBy)).rejects.toBeInstanceOf(
+        ServiceUnavailableException
+      );
+      expect(paystack.fetchTransfer).toHaveBeenCalledWith(`${settlementId}-a1`);
+      expect(repository.cancelOnDemandSettlement).toHaveBeenCalledWith(settlementId);
+    });
+
+    it('records the transfer when the initiate call failed but Paystack has it', async () => {
+      paystack.initiateTransfer = vi.fn().mockRejectedValue(new BadGatewayException('timeout'));
+      paystack.fetchTransfer = vi.fn().mockResolvedValue({
+        status: 'pending',
+        providerPayload: { data: { transfer_code: 'TRF_found' } }
+      });
+      const repository = makeRepository(makeContext());
+      const service = new PayoutService(makeEnv(true), paystack, repository);
+
+      await service.payWithdrawal(settlementId, initiatedBy);
+
+      expect(repository.cancelOnDemandSettlement).not.toHaveBeenCalled();
+      expect(repository.recordTransfer).toHaveBeenCalledWith(
+        expect.objectContaining({
+          attempt: 1,
+          amountKobo: 60000,
+          providerTransferCode: 'TRF_found',
+          status: 'pending'
+        })
+      );
+    });
+
+    it('leaves the withdrawal processing when the outcome is unknown', async () => {
+      paystack.initiateTransfer = vi.fn().mockRejectedValue(new TypeError('fetch failed'));
+      const repository = makeRepository(makeContext());
+      const service = new PayoutService(makeEnv(true), paystack, repository);
+
+      await expect(service.payWithdrawal(settlementId, initiatedBy)).resolves.toBeUndefined();
+      expect(repository.cancelOnDemandSettlement).not.toHaveBeenCalled();
+      expect(paystack.fetchTransfer).not.toHaveBeenCalled();
+    });
   });
 });

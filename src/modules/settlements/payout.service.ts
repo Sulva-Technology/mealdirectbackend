@@ -1,10 +1,12 @@
 import {
   BadRequestException,
   ForbiddenException,
+  HttpException,
   Inject,
   Injectable,
   Logger,
-  NotFoundException
+  NotFoundException,
+  ServiceUnavailableException
 } from '@nestjs/common';
 
 import { ErrorCodes } from '../../common/errors/error-codes.js';
@@ -17,7 +19,8 @@ import type {
   PayoutRepositoryContract,
   PayoutTransferListItem,
   PayoutTransferPage,
-  PayoutTransferRecord
+  PayoutTransferRecord,
+  RecordTransferInput
 } from './payout.types.js';
 
 // Paystack transfer status → our terminal reconcile status. Anything else (pending, otp,
@@ -27,6 +30,21 @@ function terminalTransferStatus(status: string): 'success' | 'failed' | 'reverse
   if (status === 'reversed') return 'reversed';
   if (status === 'failed' || status === 'abandoned') return 'failed';
   return undefined;
+}
+
+// What we store on payout_transfers (pending | success | failed | reversed). Paystack can also
+// answer otp/received/queued at initiation; those are still in flight, so they store as pending.
+function storedTransferStatus(status: string): 'pending' | 'success' | 'failed' | 'reversed' {
+  return terminalTransferStatus(status) ?? 'pending';
+}
+
+function transferCodeFrom(payload: Record<string, unknown>, fallback: string): string {
+  const data = payload.data;
+  if (typeof data === 'object' && data !== null && 'transfer_code' in data) {
+    const code = (data as { transfer_code?: unknown }).transfer_code;
+    if (typeof code === 'string' && code.length > 0) return code;
+  }
+  return fallback;
 }
 
 @Injectable()
@@ -114,16 +132,89 @@ export class PayoutService {
       reason: `Settlement ${settlementId}`
     });
 
-    return this.repository.recordTransfer({
+    return this.recordAndSettle({
       settlementId,
       attempt,
       reference,
       amountKobo: context.payableKobo,
       providerTransferCode: transfer.transferCode,
-      status: transfer.status,
+      status: storedTransferStatus(transfer.status),
       initiatedBy,
       providerPayload: transfer.providerPayload
     });
+  }
+
+  /**
+   * Pay an on-demand withdrawal (a fresh settlement, so attempt 1) right away.
+   *
+   * Never pays twice: when the initiate call fails, Paystack is asked whether the transfer
+   * exists anyway (a timeout can hide a success). Only when Paystack answers that it has no
+   * such transfer is the withdrawal cancelled, which returns its earnings to the balance. When
+   * the outcome is unknown (network failure) the withdrawal stays approved and is returned as
+   * undefined: "processing", picked up by the pay-run with the same reference, which Paystack
+   * dedupes.
+   */
+  async payWithdrawal(
+    settlementId: string,
+    initiatedBy: string
+  ): Promise<PayoutTransferRecord | undefined> {
+    try {
+      return await this.payToSettlement(settlementId, initiatedBy);
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : 'unknown payout failure';
+      if (!(error instanceof HttpException)) {
+        this.logger.warn(`Withdrawal ${settlementId} outcome unknown, left processing: ${reason}`);
+        return undefined;
+      }
+
+      const reference = `${settlementId}-a1`;
+      let fetched;
+      try {
+        fetched = await this.paystack.fetchTransfer(reference);
+      } catch (verifyError) {
+        if (!(verifyError instanceof HttpException)) {
+          this.logger.warn(
+            `Withdrawal ${settlementId} outcome unknown, left processing: ${reason}`
+          );
+          return undefined;
+        }
+        this.logger.warn(`Withdrawal ${settlementId} rejected by Paystack, released: ${reason}`);
+        await this.repository.cancelOnDemandSettlement(settlementId);
+        throw new ServiceUnavailableException({
+          code: ErrorCodes.PAYOUT_UNAVAILABLE,
+          message:
+            'Your withdrawal could not be sent right now. Your balance is unchanged; please try again shortly.'
+        });
+      }
+
+      // Paystack has the transfer after all: record it so the webhook and reconcile sweep own it.
+      const context = await this.repository.findPayoutContext(settlementId);
+      return this.recordAndSettle({
+        settlementId,
+        attempt: 1,
+        reference,
+        amountKobo: context?.payableKobo ?? 0,
+        providerTransferCode: transferCodeFrom(fetched.providerPayload, reference),
+        status: storedTransferStatus(fetched.status),
+        initiatedBy,
+        providerPayload: fetched.providerPayload
+      });
+    }
+  }
+
+  // Record the transfer row; a transfer that is already terminal at initiation (Paystack can
+  // answer success or failed synchronously) is reconciled at once instead of waiting for the
+  // webhook, so the settlement shows paid, or an on-demand withdrawal is released, immediately.
+  private async recordAndSettle(input: RecordTransferInput): Promise<PayoutTransferRecord> {
+    const record = await this.repository.recordTransfer(input);
+    if (record.status !== 'pending') {
+      await this.repository.applyReconcile(
+        record.reference,
+        record.status as 'success' | 'failed' | 'reversed',
+        input.providerPayload
+      );
+    }
+    return record;
   }
 
   /**
