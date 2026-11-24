@@ -127,6 +127,19 @@ const envSchema = z
     SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0),
     RESEND_API_KEY: optionalSecret,
     EMAIL_FROM: z.string().min(1).default('Meal Direct <no-reply@mealdirectly.com>'),
+    // Email transport selector. 'resend' (default) keeps the Resend API path.
+    // 'smtp' routes all outbound email through an SMTP host (e.g. Gmail SMTP).
+    // Resend code is retained; switch between them with MAIL_TRANSPORT.
+    MAIL_TRANSPORT: z.enum(['resend', 'smtp']).default('resend'),
+    // SMTP host (e.g. smtp.gmail.com). Required when MAIL_TRANSPORT=smtp.
+    SMTP_HOST: optionalSecret,
+    SMTP_PORT: z.coerce.number().int().min(1).max(65535).optional(),
+    // Set 'true' for port 465 / implicit TLS; absent or 'false' uses STARTTLS (port 587).
+    SMTP_SECURE: booleanFromString.default(false),
+    SMTP_USER: optionalSecret,
+    SMTP_PASS: optionalSecret,
+    // Overrides EMAIL_FROM for SMTP deliveries. Defaults to EMAIL_FROM.
+    SMTP_FROM: optionalSecret,
     FCM_PROJECT_ID: optionalSecret,
     FCM_CLIENT_EMAIL: optionalSecret,
     FCM_PRIVATE_KEY: optionalSecret,
@@ -209,11 +222,18 @@ const envSchema = z
         message: 'PAYSTACK_BASE_URL must be https://api.paystack.co in production'
       });
     }
-    if ((env.NODE_ENV === 'production' || env.NODE_ENV === 'staging') && !env.RESEND_API_KEY) {
+    if ((env.NODE_ENV === 'production' || env.NODE_ENV === 'staging') && !env.RESEND_API_KEY && env.MAIL_TRANSPORT !== 'smtp') {
       context.addIssue({
         code: 'custom',
         path: ['RESEND_API_KEY'],
-        message: 'RESEND_API_KEY must be configured outside development and test'
+        message: 'RESEND_API_KEY must be configured outside development and test (or set MAIL_TRANSPORT=smtp)'
+      });
+    }
+    if ((env.NODE_ENV === 'production' || env.NODE_ENV === 'staging') && env.MAIL_TRANSPORT === 'smtp' && !env.SMTP_HOST) {
+      context.addIssue({
+        code: 'custom',
+        path: ['SMTP_HOST'],
+        message: 'SMTP_HOST must be configured outside development and test when MAIL_TRANSPORT=smtp'
       });
     }
     // FCM credentials are optional: when any are absent, createPushSender falls

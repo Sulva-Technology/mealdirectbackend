@@ -38,6 +38,14 @@ Do not commit real values. Store staging and production values only in platform 
 | `FCM_PRIVATE_KEY`                  | staging, production | yes    | Firebase service-account private key for FCM; encode newlines as `\n`                                                                                         |
 | `E2E_DATABASE_URL`                 | E2E only            | yes    | Dedicated hosted Supabase E2E database URL; must match `DATABASE_URL` in E2E                                                                                  |
 | `E2E_TEST_NAMESPACE`               | E2E only            | no     | Safe namespace prefix such as `e2e_meal_direct_<run_id>`                                                                                                      |
+
+| `MAIL_TRANSPORT`                   | all                 | no     | `'resend'` (default) or `'smtp'`; chooses email backend. Resend code retained, flip to switch.                                                              |
+| `SMTP_HOST`                        | all                 | yes    | SMTP host (e.g. `smtp.gmail.com`); required when `MAIL_TRANSPORT=smtp`                                                                                        |
+| `SMTP_PORT`                        | all                 | no     | SMTP port; defaults to `465` when `SMTP_SECURE=true`, else `587`                                                                                              |
+| `SMTP_SECURE`                      | all                 | no     | `'true'` uses implicit TLS on port 465; `'false'` (default) uses STARTTLS on port 587                                                                         |
+| `SMTP_USER`                        | all                 | yes    | SMTP username                                                                                                                                                 |
+| `SMTP_PASS`                        | all                 | yes    | SMTP password (use a Gmail app password for Gmail SMTP)                                                                                                       |
+| `SMTP_FROM`                        | all                 | no     | Overrides `EMAIL_FROM` for SMTP deliveries; defaults to `EMAIL_FROM`                                                                                          |
 | `PRODUCTION_API_BASE_URL`          | smoke only          | no     | Production API URL used by `pnpm smoke:production`                                                                                                            |
 | `SMOKE_FRONTEND_ORIGINS`           | smoke only          | no     | Optional frontend origin override for smoke checks                                                                                                            |
 

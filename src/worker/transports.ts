@@ -1,6 +1,8 @@
 import type { AppEnvironment } from '../config/env.js';
 import type { EmailTransport } from '../notifications/channels/notification-channel.js';
 import type { PushSender } from '../notifications/channels/push.channel.js';
+import { Resend } from 'resend';
+import { createTransport, type Transporter } from 'nodemailer';
 
 const noopEmailTransport: EmailTransport = {
   send: (): Promise<void> => Promise.resolve()
@@ -10,7 +12,7 @@ const noopPushSender: PushSender = {
   send: (): Promise<void> => Promise.resolve()
 };
 
-export function createEmailTransport(env: AppEnvironment): EmailTransport {
+function createResendTransport(env: AppEnvironment): EmailTransport {
   const apiKey = env.RESEND_API_KEY;
   if (apiKey === undefined) {
     return noopEmailTransport;
@@ -18,7 +20,6 @@ export function createEmailTransport(env: AppEnvironment): EmailTransport {
 
   return {
     async send(input): Promise<void> {
-      const { Resend } = await import('resend');
       const client = new Resend(apiKey);
       const result = await client.emails.send({
         from: input.from,
@@ -31,6 +32,44 @@ export function createEmailTransport(env: AppEnvironment): EmailTransport {
       }
     }
   };
+}
+
+function createSmtpTransport(env: AppEnvironment): EmailTransport {
+  const host = env.SMTP_HOST;
+  if (host === undefined) {
+    return noopEmailTransport;
+  }
+
+  const port = env.SMTP_PORT ?? (env.SMTP_SECURE === true ? 465 : 587);
+  const secure = env.SMTP_SECURE === true;
+
+  const transporter: Transporter = createTransport({
+    host,
+    port,
+    secure,
+    ...(env.SMTP_USER !== undefined && env.SMTP_PASS !== undefined
+      ? { auth: { user: env.SMTP_USER, pass: env.SMTP_PASS } }
+      : {})
+  });
+
+  return {
+    async send(input): Promise<void> {
+      await transporter.sendMail({
+        from: env.SMTP_FROM ?? env.EMAIL_FROM,
+        to: input.to,
+        subject: input.subject,
+        text: input.text
+      });
+    }
+  };
+}
+
+export function createEmailTransport(env: AppEnvironment): EmailTransport {
+  if (env.MAIL_TRANSPORT === 'smtp') {
+    return createSmtpTransport(env);
+  }
+
+  return createResendTransport(env);
 }
 
 export function createPushSender(env: AppEnvironment): PushSender {

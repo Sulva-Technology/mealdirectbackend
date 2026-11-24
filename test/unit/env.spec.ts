@@ -90,4 +90,64 @@ describe('environment validation', () => {
     expect(() => parseEnvironment(stagingEnv)).not.toThrow(/FCM_/);
     expect(parseEnvironment(stagingEnv).FCM_PROJECT_ID).toBeUndefined();
   });
+
+  it('defaults MAIL_TRANSPORT to resend', () => {
+    expect(parseEnvironment(validEnv).MAIL_TRANSPORT).toBe('resend');
+  });
+
+  it('accepts MAIL_TRANSPORT=smtp', () => {
+    const env = parseEnvironment({ ...validEnv, MAIL_TRANSPORT: 'smtp', SMTP_HOST: 'smtp.gmail.com' });
+    expect(env.MAIL_TRANSPORT).toBe('smtp');
+    expect(env.SMTP_HOST).toBe('smtp.gmail.com');
+  });
+
+  it('rejects invalid MAIL_TRANSPORT value', () => {
+    expect(() =>
+      parseEnvironment({ ...validEnv, MAIL_TRANSPORT: 'sendgrid' as unknown as string })
+    ).toThrow(EnvironmentValidationError);
+  });
+
+  it('requires SMTP_HOST in staging when MAIL_TRANSPORT=smtp', () => {
+    const invalidEnv = {
+      ...validEnv,
+      NODE_ENV: 'staging',
+      DATABASE_SSL: 'true',
+      INTERNAL_OPERATIONS_TOKEN: 'staging-operations-token',
+      SUPABASE_JWT_SECRET: 'staging-jwt-secret',
+      SUPABASE_SERVICE_ROLE_KEY: 'staging-service-role-key',
+      MAIL_TRANSPORT: 'smtp'
+    };
+
+    expect(() => parseEnvironment(invalidEnv)).toThrow(/SMTP_HOST/);
+  });
+
+  it('does not require RESEND_API_KEY when MAIL_TRANSPORT=smtp in staging', () => {
+    const stagingEnv = {
+      ...validEnv,
+      NODE_ENV: 'staging',
+      DATABASE_SSL: 'true',
+      INTERNAL_OPERATIONS_TOKEN: 'staging-operations-token',
+      SUPABASE_JWT_SECRET: 'staging-jwt-secret',
+      SUPABASE_SERVICE_ROLE_KEY: 'staging-service-role-key',
+      MAIL_TRANSPORT: 'smtp',
+      SMTP_HOST: 'smtp.gmail.com'
+    };
+
+    expect(() => parseEnvironment(stagingEnv)).not.toThrow(/RESEND_API_KEY/);
+    expect(parseEnvironment(stagingEnv).SMTP_HOST).toBe('smtp.gmail.com');
+  });
+
+  it('requires RESEND_API_KEY in staging when MAIL_TRANSPORT=resend', () => {
+    const invalidEnv = {
+      ...validEnv,
+      NODE_ENV: 'staging',
+      DATABASE_SSL: 'true',
+      INTERNAL_OPERATIONS_TOKEN: 'staging-operations-token',
+      SUPABASE_JWT_SECRET: 'staging-jwt-secret',
+      SUPABASE_SERVICE_ROLE_KEY: 'staging-service-role-key',
+      MAIL_TRANSPORT: 'resend'
+    };
+
+    expect(() => parseEnvironment(invalidEnv)).toThrow(/RESEND_API_KEY/);
+  });
 });
