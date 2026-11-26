@@ -23,8 +23,11 @@ const actor: AuthenticatedActor = {
 const profile: ProfileRecord = {
   id: actor.userId,
   email: 'student@example.com',
+  firstName: 'Ada',
+  lastName: 'Student',
   displayName: 'Ada Student',
   phoneNumber: '+2348012345678',
+  gender: null,
   avatarUrl: null,
   accountStatus: 'active',
   defaultCampusId: '22222222-2222-4222-8222-222222222222',
@@ -113,6 +116,35 @@ describe('ProfilesService', () => {
       vendorMemberships: [vendorMembership],
       riderProfiles: [riderProfile],
       adminMemberships: [adminMembership]
+    });
+  });
+
+  it('fills the profile from rider metadata when the database profile has no signup columns', async () => {
+    vi.mocked(repository.ensureProfile).mockResolvedValue({
+      ...profile,
+      firstName: null,
+      lastName: null,
+      displayName: null,
+      phoneNumber: null,
+      gender: null
+    });
+    const riderActor: AuthenticatedActor = {
+      ...actor,
+      role: 'rider',
+      firstName: 'Esther',
+      lastName: 'Ilori',
+      phone: '+2348012345678',
+      gender: 'Female'
+    };
+
+    await expect(service.getCurrentUser(riderActor)).resolves.toMatchObject({
+      profile: {
+        firstName: 'Esther',
+        lastName: 'Ilori',
+        displayName: 'Esther Ilori',
+        phoneNumber: '+2348012345678',
+        gender: 'Female'
+      }
     });
   });
 

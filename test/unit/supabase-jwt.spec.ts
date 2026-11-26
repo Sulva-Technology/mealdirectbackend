@@ -65,6 +65,38 @@ describe('SupabaseJwtService', () => {
     });
   });
 
+  it('exposes safe rider profile fields from user metadata without changing role resolution', async () => {
+    const token = await new SignJWT({
+      email: 'rider@example.com',
+      app_metadata: { meal_direct_role: 'rider' },
+      user_metadata: {
+        first_name: 'Esther',
+        last_name: 'Ilori',
+        phone: '+2348012345678',
+        gender: 'Female',
+        meal_direct_role: 'super_admin'
+      }
+    })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setSubject('55555555-5555-4555-8555-555555555555')
+      .setIssuer(issuer)
+      .setAudience(audience)
+      .setIssuedAt()
+      .setExpirationTime('15m')
+      .sign(new TextEncoder().encode(hsSecret));
+
+    const service = new SupabaseJwtService(makeEnv({ SUPABASE_JWT_SECRET: hsSecret }));
+    const actor = await service.verifyToken(token);
+
+    expect(actor).toMatchObject({
+      role: 'rider',
+      firstName: 'Esther',
+      lastName: 'Ilori',
+      phone: '+2348012345678',
+      gender: 'Female'
+    });
+  });
+
   it('falls back to HS256 verification when only the secret is configured', async () => {
     const token = await new SignJWT(claims)
       .setProtectedHeader({ alg: 'HS256' })

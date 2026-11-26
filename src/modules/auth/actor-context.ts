@@ -7,6 +7,10 @@ export type AuthenticatedActor = {
   campusId?: string;
   vendorId?: string;
   riderId?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  gender?: 'Male' | 'Female';
 };
 
 export function isActorRole(value: unknown): value is ActorRole {

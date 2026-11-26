@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Inject,
   Injectable,
@@ -16,7 +17,7 @@ import { EnvService } from '../../config/env.service.js';
 import type { ActorRole } from '../../domain/authorization.js';
 import { WalletsRepository } from '../wallets/wallets.repository.js';
 import { AuthRoleGrantsRepository } from './auth-role-grants.repository.js';
-import type { AuthPortal, AuthTokensResponseDto } from './dto/auth.dto.js';
+import type { AuthPortal, AuthTokensResponseDto, RiderSignUpDto } from './dto/auth.dto.js';
 import { VendorInvitationsRepository } from './vendor-invitations.repository.js';
 
 type WalletProvisioner = { ensureWallet: (userId: string) => Promise<string> };
@@ -299,7 +300,7 @@ export class SupabaseAuthService {
   private logSignUpFailure(email: string, role: string, error: SupabaseAuthErrorLike) {
     this.logger.error(
       `Supabase signUp failed for ${email} (role: ${role}): status=${String(error.status)} ` +
-        `code=${error.code ?? 'none'} name=${error.name ?? 'unknown'} message=${error.message ?? ''}`
+        `code=${error.code ?? 'none'} name=${error.name ?? 'unknown'}`
     );
   }
 
@@ -308,7 +309,8 @@ export class SupabaseAuthService {
     password: string,
     role: string,
     fullName?: string,
-    redirectTo?: string
+    redirectTo?: string,
+    metadata: Record<string, unknown> = {}
   ): Promise<AuthTokensResponseDto> {
     const { data, error } = await this.getClient().auth.signUp({
       email,
@@ -320,6 +322,7 @@ export class SupabaseAuthService {
         emailRedirectTo: redirectTo ?? this.authRedirectUrl(role),
         data: {
           meal_direct_role: role,
+          ...metadata,
           ...(fullName ? { full_name: fullName } : {})
         }
       }
@@ -327,6 +330,15 @@ export class SupabaseAuthService {
 
     if (error) {
       this.logSignUpFailure(email, role, error);
+      if (
+        error.code === 'user_already_exists' ||
+        /already registered|already exists/i.test(error.message ?? '')
+      ) {
+        throw new ConflictException({
+          code: ErrorCodes.CONFLICT,
+          message: 'An account with this email already exists.'
+        });
+      }
       throw signUpFailureException(error);
     }
 
@@ -379,6 +391,25 @@ export class SupabaseAuthService {
     }
 
     return response;
+  }
+
+  async signUpRider(dto: RiderSignUpDto): Promise<AuthTokensResponseDto> {
+    const firstName = dto.firstName.trim();
+    const lastName = dto.lastName.trim();
+    return this.signUp(
+      dto.email.trim().toLowerCase(),
+      dto.password,
+      'rider',
+      `${firstName} ${lastName}`,
+      dto.redirectTo,
+      {
+        first_name: firstName,
+        last_name: lastName,
+        display_name: `${firstName} ${lastName}`,
+        phone: dto.phone.trim(),
+        gender: dto.gender
+      }
+    );
   }
 
   async acceptVendorInvite(input: {
@@ -557,9 +588,18 @@ export class SupabaseAuthService {
       this.logger.warn(
         `Sign-in failed for ${normalizedEmail} (portals: ${portals}): ${error.message}`
       );
+      if (
+        /email not confirmed|email_not_confirmed/i.test(error.message ?? '') ||
+        error.code === 'email_not_confirmed'
+      ) {
+        throw new ForbiddenException({
+          code: ErrorCodes.FORBIDDEN,
+          message: 'Please verify your email address before signing in.'
+        });
+      }
       throw new UnauthorizedException({
         code: ErrorCodes.AUTH_FAILED,
-        message: error.message
+        message: 'Invalid email or password.'
       });
     }
 
@@ -783,11 +823,15 @@ export class SupabaseAuthService {
     };
   }
 
-  async requestPasswordReset(email: string, portal: AuthPortal = 'customer'): Promise<void> {
+  async requestPasswordReset(
+    email: string,
+    portal: AuthPortal = 'customer',
+    redirectTo?: string
+  ): Promise<void> {
     // Swallow provider errors so the response never reveals whether an account exists.
     try {
       const { error } = await this.getClient().auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: this.authRedirectUrl(portal)
+        redirectTo: redirectTo ?? this.authRedirectUrl(portal)
       });
       if (error) {
         this.logger.warn(

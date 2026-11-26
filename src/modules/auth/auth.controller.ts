@@ -19,6 +19,7 @@ import {
   LoginDto,
   RefreshDto,
   SignUpDto,
+  RiderSignUpDto,
   UpdatePasswordDto
 } from './dto/auth.dto.js';
 import { AuthThrottleGuard } from '../../common/http/auth-throttle.guard.js';
@@ -114,14 +115,8 @@ export class AuthController {
     description: 'Rider registered successfully.'
   })
   @ApiBadRequestResponse({ description: 'Registration failed.' })
-  async riderSignUp(@Body() dto: SignUpDto): Promise<AuthTokensResponseDto> {
-    return this.authService.signUp(
-      dto.email,
-      dto.password,
-      'rider',
-      dto.fullName,
-      dto.redirectTo ?? dto.emailRedirectTo
-    );
+  async riderSignUp(@Body() dto: RiderSignUpDto): Promise<AuthTokensResponseDto> {
+    return this.authService.signUpRider(dto);
   }
 
   @Post('rider/login')
@@ -175,8 +170,8 @@ export class AuthController {
     description: 'A password reset email is sent if the account exists (non-enumerating).'
   })
   async requestPasswordReset(@Body() dto: EmailRequestDto): Promise<AuthMessageResponseDto> {
-    await this.authService.requestPasswordReset(dto.email, dto.portal);
-    return { message: 'If an account exists for that email, a password reset link has been sent.' };
+    await this.authService.requestPasswordReset(dto.email, dto.portal, dto.redirectTo);
+    return { message: "If an account exists for that email, we've sent a password reset link." };
   }
 
   @Post('resend-confirmation')

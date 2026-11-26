@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsEmail, IsIn, IsOptional, IsString, IsUrl, MinLength } from 'class-validator';
+import { IsEmail, IsIn, IsOptional, IsString, IsUrl, MaxLength, MinLength } from 'class-validator';
 
 export const authPortals = ['customer', 'vendor', 'rider', 'admin', 'fleet'] as const;
 export type AuthPortal = (typeof authPortals)[number];
@@ -77,6 +77,50 @@ export class LoginDto {
   password!: string;
 }
 
+export class RiderSignUpDto {
+  @ApiProperty({ type: String, example: 'Jane' })
+  @Transform(({ value }) => trimString(value))
+  @IsString()
+  @MinLength(1)
+  @MaxLength(100)
+  firstName!: string;
+
+  @ApiProperty({ type: String, example: 'Doe' })
+  @Transform(({ value }) => trimString(value))
+  @IsString()
+  @MinLength(1)
+  @MaxLength(100)
+  lastName!: string;
+
+  @ApiProperty({ type: String, example: '+2348012345678' })
+  @Transform(({ value }) => trimString(value))
+  @IsString()
+  @MinLength(1)
+  @MaxLength(32)
+  phone!: string;
+
+  @ApiProperty({ enum: ['Male', 'Female'] })
+  @Transform(({ value }) => trimString(value))
+  @IsIn(['Male', 'Female'])
+  gender!: 'Male' | 'Female';
+
+  @ApiProperty({ type: String, example: 'user@example.com' })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim().toLowerCase() : value))
+  @IsEmail()
+  email!: string;
+
+  @ApiProperty({ type: String, example: 'Password123!', minLength: 8 })
+  @IsString()
+  @MinLength(8)
+  password!: string;
+
+  @ApiPropertyOptional({ type: String, example: 'https://rider.mealdirectly.com/auth/callback' })
+  @Transform(({ value }) => trimString(value))
+  @IsOptional()
+  @IsUrl({ require_tld: false })
+  redirectTo?: string;
+}
+
 export class RefreshDto {
   @ApiProperty({ type: String, description: 'The Supabase refresh token.' })
   @IsString()
@@ -104,6 +148,12 @@ export class EmailRequestDto {
   @IsOptional()
   @IsIn(authPortals)
   portal?: AuthPortal;
+
+  @ApiPropertyOptional({ type: String, example: 'https://rider.mealdirectly.com/auth/callback' })
+  @Transform(({ value }) => trimString(value))
+  @IsOptional()
+  @IsUrl({ require_tld: false })
+  redirectTo?: string;
 }
 
 export class AcceptVendorInviteDto extends SignUpDto {

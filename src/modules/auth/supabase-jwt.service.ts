@@ -131,6 +131,13 @@ export class SupabaseJwtService {
     const campusId = stringValue(appMetadata.campus_id);
     const vendorId = stringValue(appMetadata.vendor_id);
     const riderId = stringValue(appMetadata.rider_id);
+    const firstName = stringValue(userMetadata.first_name);
+    const lastName = stringValue(userMetadata.last_name);
+    const phone = stringValue(userMetadata.phone);
+    const gender =
+      userMetadata.gender === 'Male' || userMetadata.gender === 'Female'
+        ? userMetadata.gender
+        : undefined;
 
     return {
       userId,
@@ -138,7 +145,11 @@ export class SupabaseJwtService {
       ...(email === undefined ? {} : { email }),
       ...(campusId === undefined ? {} : { campusId }),
       ...(vendorId === undefined ? {} : { vendorId }),
-      ...(riderId === undefined ? {} : { riderId })
+      ...(riderId === undefined ? {} : { riderId }),
+      ...(firstName === undefined ? {} : { firstName }),
+      ...(lastName === undefined ? {} : { lastName }),
+      ...(phone === undefined ? {} : { phone }),
+      ...(gender === undefined ? {} : { gender })
     };
   }
 }

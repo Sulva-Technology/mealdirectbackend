@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer';
-import { IsOptional, IsString, IsUrl, Matches, MaxLength, MinLength } from 'class-validator';
+import { IsIn, IsOptional, IsString, IsUrl, Matches, MaxLength, MinLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 import { actorRoles } from '../../../domain/authorization.js';
@@ -12,6 +12,34 @@ function trimString(value: unknown): unknown {
 }
 
 export class UpdateProfileDto {
+  @ApiPropertyOptional({
+    description: 'Given name shown in Meal Direct operational surfaces.',
+    maxLength: 100,
+    minLength: 1,
+    nullable: true,
+    type: String
+  })
+  @IsOptional()
+  @Transform(({ value }) => trimString(value))
+  @IsString()
+  @MinLength(1)
+  @MaxLength(100)
+  firstName?: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Family name shown in Meal Direct operational surfaces.',
+    maxLength: 100,
+    minLength: 1,
+    nullable: true,
+    type: String
+  })
+  @IsOptional()
+  @Transform(({ value }) => trimString(value))
+  @IsString()
+  @MinLength(1)
+  @MaxLength(100)
+  lastName?: string | null;
+
   @ApiPropertyOptional({
     description: 'Display name shown in Meal Direct operational surfaces.',
     maxLength: 120,
@@ -36,6 +64,17 @@ export class UpdateProfileDto {
   @Transform(({ value }) => trimString(value))
   @Matches(phonePattern)
   phoneNumber?: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Self-reported gender.',
+    enum: ['Male', 'Female'],
+    nullable: true,
+    type: String
+  })
+  @IsOptional()
+  @Transform(({ value }) => trimString(value))
+  @IsIn(['Male', 'Female'])
+  gender?: 'Male' | 'Female' | null;
 
   @ApiPropertyOptional({
     description: 'Profile image URL mirrored from the identity provider or user settings.',
@@ -81,10 +120,19 @@ export class ProfileRecordDto {
   email!: string | null;
 
   @ApiPropertyOptional({ nullable: true, type: String })
+  firstName!: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
+  lastName!: string | null;
+
+  @ApiPropertyOptional({ nullable: true, type: String })
   displayName!: string | null;
 
   @ApiPropertyOptional({ nullable: true, type: String })
   phoneNumber!: string | null;
+
+  @ApiPropertyOptional({ enum: ['Male', 'Female'], nullable: true, type: String })
+  gender!: string | null;
 
   @ApiPropertyOptional({ nullable: true, type: String })
   avatarUrl!: string | null;
@@ -227,6 +275,18 @@ export class MeActorDto {
 
   @ApiPropertyOptional({ format: 'uuid', type: String })
   riderId?: string;
+
+  @ApiPropertyOptional({ type: String })
+  firstName?: string;
+
+  @ApiPropertyOptional({ type: String })
+  lastName?: string;
+
+  @ApiPropertyOptional({ type: String })
+  phone?: string;
+
+  @ApiPropertyOptional({ enum: ['Male', 'Female'], type: String })
+  gender?: 'Male' | 'Female';
 }
 
 export class MeSessionDto {

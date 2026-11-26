@@ -160,6 +160,74 @@ describe('Supabase JWT authentication', () => {
       expect(signInSpy).toHaveBeenCalledWith('test@example.com', 'Password123!', ['customer']);
     });
 
+    it('rider/signup validates the rider registration fields and forwards normalized data', async () => {
+      const authService = app.get(SupabaseAuthService);
+      const spy = vi.spyOn(authService, 'signUpRider').mockResolvedValue({
+        user: { id: 'rider-id', email: 'rider@example.com', role: 'rider' },
+        message: 'Registration successful. Please check your email for verification.'
+      });
+      const response = await app.inject({
+        method: 'POST',
+        url: '/v1/auth/rider/signup',
+        payload: {
+          firstName: ' Jane ',
+          lastName: ' Doe ',
+          phone: '+2348012345678',
+          gender: 'Female',
+          email: ' Rider@Example.com ',
+          password: 'password8',
+          redirectTo: 'https://rider.example.com/callback'
+        }
+      });
+      expect(response.statusCode).toBe(201);
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          firstName: 'Jane',
+          lastName: 'Doe',
+          email: 'rider@example.com',
+          gender: 'Female'
+        })
+      );
+    });
+
+    it.each([
+      [
+        {
+          lastName: 'Doe',
+          phone: '+2348012345678',
+          gender: 'Male',
+          email: 'a@b.com',
+          password: 'password8'
+        }
+      ],
+      [
+        {
+          firstName: 'Jane',
+          lastName: 'Doe',
+          phone: '+2348012345678',
+          gender: 'Other',
+          email: 'a@b.com',
+          password: 'password8'
+        }
+      ],
+      [
+        {
+          firstName: 'Jane',
+          lastName: 'Doe',
+          phone: '+2348012345678',
+          gender: 'Male',
+          email: 'a@b.com',
+          password: 'short'
+        }
+      ]
+    ])('rider/signup rejects invalid fields with field details', async (payload) => {
+      const response = await app.inject({ method: 'POST', url: '/v1/auth/rider/signup', payload });
+      expect(response.statusCode).toBe(400);
+      expect(response.json()).toMatchObject({
+        error: { code: 'VALIDATION_FAILED', details: expect.any(Array) }
+      });
+    });
+
     it('vendor/accept-invite creates a vendor account from an invite token', async () => {
       const authService = app.get(SupabaseAuthService);
       const mockResponse = {
@@ -228,7 +296,7 @@ describe('Supabase JWT authentication', () => {
 
       expect(response.statusCode).toBe(200);
       expect(response.json<{ message: string }>().message).toMatch(/password reset/i);
-      expect(resetSpy).toHaveBeenCalledWith('test@example.com', undefined);
+      expect(resetSpy).toHaveBeenCalledWith('test@example.com', undefined, undefined);
     });
 
     it('password-reset validates the email shape', async () => {

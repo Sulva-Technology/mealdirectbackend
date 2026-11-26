@@ -5,12 +5,16 @@ export type AccountStatus = 'active' | 'suspended' | 'deactivated';
 export type AdminMembershipRole = 'campus_admin' | 'super_admin';
 export type VendorUserRole = 'owner' | 'staff';
 export type RiderStatus = 'pending' | 'verified' | 'suspended' | 'deactivated';
+export type Gender = 'Male' | 'Female';
 
 export type ProfileRecord = {
   id: string;
   email: string | null;
+  firstName: string | null;
+  lastName: string | null;
   displayName: string | null;
   phoneNumber: string | null;
+  gender: Gender | null;
   avatarUrl: string | null;
   accountStatus: AccountStatus;
   defaultCampusId: string | null;
@@ -77,8 +81,11 @@ export type MeSession = {
 };
 
 export type ProfileUpdateInput = {
+  firstName?: string | null;
+  lastName?: string | null;
   displayName?: string | null;
   phoneNumber?: string | null;
+  gender?: Gender | null;
   avatarUrl?: string | null;
 };
 

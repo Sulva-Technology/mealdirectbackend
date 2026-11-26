@@ -5331,6 +5331,17 @@ components:
         riderId:
           type: string
           format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+        gender:
+          type: string
+          enum:
+            - Male
+            - Female
       required:
         - userId
         - role
@@ -5343,11 +5354,23 @@ components:
         email:
           type: string
           nullable: true
+        firstName:
+          type: string
+          nullable: true
+        lastName:
+          type: string
+          nullable: true
         displayName:
           type: string
           nullable: true
         phoneNumber:
           type: string
+          nullable: true
+        gender:
+          type: string
+          enum:
+            - Male
+            - Female
           nullable: true
         avatarUrl:
           type: string

@@ -79,7 +79,7 @@ export class ProfilesService {
 
     const roles: ActorRole[] = ['customer'];
     if (vendorMemberships.length > 0) pushRole(roles, 'vendor');
-    if (riderProfiles.length > 0) pushRole(roles, 'rider');
+    if (actor.role === 'rider' || riderProfiles.length > 0) pushRole(roles, 'rider');
     if (adminMemberships.some((membership) => membership.role === 'campus_admin')) {
       pushRole(roles, 'campus_admin');
     }
@@ -87,9 +87,19 @@ export class ProfilesService {
       pushRole(roles, 'super_admin');
     }
 
+    const profileResponse = toProfileResponse(profile);
+    const metadataDisplayName = [actor.firstName, actor.lastName].filter(Boolean).join(' ');
+
     return {
       actor,
-      profile: await this.signProfile(toProfileResponse(profile)),
+      profile: await this.signProfile({
+        ...profileResponse,
+        firstName: actor.firstName ?? profileResponse.firstName,
+        lastName: actor.lastName ?? profileResponse.lastName,
+        displayName: (profileResponse.displayName ?? metadataDisplayName) || null,
+        phoneNumber: actor.phone ?? profileResponse.phoneNumber,
+        gender: actor.gender ?? profileResponse.gender
+      }),
       roles,
       campuses,
       vendorMemberships,
@@ -110,12 +120,19 @@ export class ProfilesService {
     await this.repository.ensureProfile(actor);
 
     const update: ProfileUpdateInput = {};
+    const firstName = normalizeNullableString(input.firstName);
+    const lastName = normalizeNullableString(input.lastName);
     const displayName = normalizeNullableString(input.displayName);
     const phoneNumber = normalizeNullableString(input.phoneNumber);
     const avatarUrl = normalizeNullableString(input.avatarUrl);
 
+    if (firstName !== undefined) update.firstName = firstName;
+    if (lastName !== undefined) update.lastName = lastName;
     if (displayName !== undefined) update.displayName = displayName;
     if (phoneNumber !== undefined) update.phoneNumber = phoneNumber;
+    if (Object.hasOwn(input, 'gender') && input.gender !== undefined) {
+      update.gender = input.gender;
+    }
     if (avatarUrl !== undefined) update.avatarUrl = avatarUrl;
 
     const profile = await this.repository.updateProfile(actor.userId, update);
