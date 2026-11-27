@@ -34,6 +34,17 @@ This document provides the exact shapes of queries, request bodies, parameters, 
 
 ## auth Endpoints
 
+### `POST /v1/auth/customer/register`
+
+Request body: `firstName`, `lastName`, `email`, `phone`, `gender` (`Male` or `Female`),
+`password`, `confirmPassword`, and `declarationConfirmed` (must be `true`). Passwords
+must be at least 8 characters and the phone must contain at least 7 digits. The confirmation
+password is validated and discarded; credentials are managed by Supabase Auth.
+
+- **Status 201**: Customer registered (a verification message is returned when email confirmation is enabled).
+- **Status 400**: Invalid registration fields.
+- **Status 409**: An account with this email already exists.
+
 ### `POST /v1/auth/customer/signup`
 
 #### Responses

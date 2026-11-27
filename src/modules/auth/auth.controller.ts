@@ -3,6 +3,7 @@ import {
   ApiBadRequestResponse,
   ApiBearerAuth,
   ApiCreatedResponse,
+  ApiConflictResponse,
   ApiForbiddenResponse,
   ApiOkResponse,
   ApiTags,
@@ -20,6 +21,7 @@ import {
   RefreshDto,
   SignUpDto,
   RiderSignUpDto,
+  CustomerRegistrationDto,
   UpdatePasswordDto
 } from './dto/auth.dto.js';
 import { AuthThrottleGuard } from '../../common/http/auth-throttle.guard.js';
@@ -61,6 +63,15 @@ export class AuthController {
   @ApiForbiddenResponse({ description: 'Incorrect role.' })
   async customerLogin(@Body() dto: LoginDto): Promise<AuthTokensResponseDto> {
     return this.authService.signIn(dto.email, dto.password, ['customer']);
+  }
+
+  @Post('customer/register')
+  @UseGuards(AuthThrottleGuard)
+  @ApiCreatedResponse({ type: AuthTokensResponseDto, description: 'Customer account created.' })
+  @ApiBadRequestResponse({ description: 'Registration request is invalid.' })
+  @ApiConflictResponse({ description: 'An account with this email already exists.' })
+  async customerRegister(@Body() dto: CustomerRegistrationDto): Promise<AuthTokensResponseDto> {
+    return this.authService.registerCustomer(dto);
   }
 
   @Post('vendor/signup')

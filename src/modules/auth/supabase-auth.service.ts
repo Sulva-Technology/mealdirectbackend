@@ -17,7 +17,12 @@ import { EnvService } from '../../config/env.service.js';
 import type { ActorRole } from '../../domain/authorization.js';
 import { WalletsRepository } from '../wallets/wallets.repository.js';
 import { AuthRoleGrantsRepository } from './auth-role-grants.repository.js';
-import type { AuthPortal, AuthTokensResponseDto, RiderSignUpDto } from './dto/auth.dto.js';
+import type {
+  AuthPortal,
+  AuthTokensResponseDto,
+  RiderSignUpDto,
+  CustomerRegistrationDto
+} from './dto/auth.dto.js';
 import { VendorInvitationsRepository } from './vendor-invitations.repository.js';
 
 type WalletProvisioner = { ensureWallet: (userId: string) => Promise<string> };
@@ -408,6 +413,26 @@ export class SupabaseAuthService {
         display_name: `${firstName} ${lastName}`,
         phone: dto.phone.trim(),
         gender: dto.gender
+      }
+    );
+  }
+
+  async registerCustomer(dto: CustomerRegistrationDto): Promise<AuthTokensResponseDto> {
+    const firstName = dto.firstName.trim();
+    const lastName = dto.lastName.trim();
+    return this.signUp(
+      dto.email.trim().toLowerCase(),
+      dto.password,
+      'customer',
+      `${firstName} ${lastName}`,
+      undefined,
+      {
+        first_name: firstName,
+        last_name: lastName,
+        display_name: `${firstName} ${lastName}`,
+        phone: dto.phone.trim(),
+        gender: dto.gender,
+        declaration_confirmed: dto.declarationConfirmed
       }
     );
   }

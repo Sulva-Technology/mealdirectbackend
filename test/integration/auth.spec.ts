@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SignJWT } from 'jose';
+import { ConflictException } from '@nestjs/common';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 
 import { createApp } from '../../src/app.factory.js';
@@ -104,6 +105,77 @@ describe('Supabase JWT authentication', () => {
   });
 
   describe('public auth endpoints', () => {
+    const registrationPayload = {
+      firstName: 'Jane',
+      lastName: 'Doe',
+      email: 'jane@example.com',
+      phone: '+2348012345678',
+      gender: 'Female',
+      password: 'Password123!',
+      confirmPassword: 'Password123!',
+      declarationConfirmed: true
+    };
+
+    it('registers a customer account using validated profile fields', async () => {
+      const authService = app.get(SupabaseAuthService);
+      const result = { user: { id: 'user-id', email: 'jane@example.com', role: 'customer' } };
+      const spy = vi.spyOn(authService, 'registerCustomer').mockResolvedValue(result);
+      const response = await app.inject({
+        method: 'POST',
+        url: '/v1/auth/customer/register',
+        payload: registrationPayload
+      });
+      expect(response.statusCode).toBe(201);
+      expect(response.json()).toEqual(result);
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          firstName: 'Jane',
+          lastName: 'Doe',
+          email: 'jane@example.com',
+          phone: '+2348012345678',
+          gender: 'Female',
+          declarationConfirmed: true
+        })
+      );
+    });
+
+    it.each([
+      { ...registrationPayload, email: 'bad-email' },
+      { ...registrationPayload, phone: '123456' },
+      { ...registrationPayload, password: 'short', confirmPassword: 'short' },
+      { ...registrationPayload, confirmPassword: 'different-password' },
+      { ...registrationPayload, gender: 'Other' },
+      { ...registrationPayload, declarationConfirmed: false },
+      { ...registrationPayload, declarationConfirmed: 'true' }
+    ])('rejects invalid customer registration fields', async (payload) => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/v1/auth/customer/register',
+        payload
+      });
+      expect(response.statusCode).toBe(400);
+      expect(response.json()).toMatchObject({ error: { code: 'VALIDATION_FAILED' } });
+    });
+
+    it('returns the safe duplicate email conflict from Supabase Auth', async () => {
+      const authService = app.get(SupabaseAuthService);
+      vi.spyOn(authService, 'registerCustomer').mockRejectedValue(
+        new ConflictException({
+          code: 'CONFLICT',
+          message: 'An account with this email already exists.'
+        })
+      );
+      const response = await app.inject({
+        method: 'POST',
+        url: '/v1/auth/customer/register',
+        payload: registrationPayload
+      });
+      expect(response.statusCode).toBe(409);
+      expect(response.json()).toMatchObject({
+        error: { message: 'An account with this email already exists.' }
+      });
+    });
+
     it('customer/signup returns 201 and tokens', async () => {
       const authService = app.get(SupabaseAuthService);
       const mockResponse = {

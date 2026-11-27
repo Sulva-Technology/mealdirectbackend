@@ -1,12 +1,41 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsEmail, IsIn, IsOptional, IsString, IsUrl, MaxLength, MinLength } from 'class-validator';
+import {
+  IsBoolean,
+  IsEmail,
+  IsIn,
+  IsOptional,
+  IsString,
+  IsUrl,
+  MaxLength,
+  MinLength,
+  Matches,
+  registerDecorator,
+  type ValidationArguments,
+  type ValidationOptions
+} from 'class-validator';
 
 export const authPortals = ['customer', 'vendor', 'rider', 'admin', 'fleet'] as const;
 export type AuthPortal = (typeof authPortals)[number];
 
 function trimString(value: unknown): unknown {
   return typeof value === 'string' ? value.trim() : value;
+}
+
+function MatchesPassword(property: string, options?: ValidationOptions): PropertyDecorator {
+  return (target, propertyName) =>
+    registerDecorator({
+      name: 'matchesPassword',
+      target: target.constructor,
+      propertyName: String(propertyName),
+      ...(options === undefined ? {} : { options }),
+      constraints: [property],
+      validator: {
+        validate(value: unknown, args: ValidationArguments) {
+          return value === (args.object as Record<string, unknown>)[args.constraints[0]];
+        }
+      }
+    });
 }
 
 export class SignUpDto {
@@ -119,6 +148,57 @@ export class RiderSignUpDto {
   @IsOptional()
   @IsUrl({ require_tld: false })
   redirectTo?: string;
+}
+
+/** Customer Create Account form. Confirmation is validated but never sent to Auth metadata. */
+export class CustomerRegistrationDto {
+  @ApiProperty({ type: String, example: 'Jane' })
+  @Transform(({ value }) => trimString(value))
+  @IsString()
+  @MinLength(1)
+  @MaxLength(100)
+  firstName!: string;
+
+  @ApiProperty({ type: String, example: 'Doe' })
+  @Transform(({ value }) => trimString(value))
+  @IsString()
+  @MinLength(1)
+  @MaxLength(100)
+  lastName!: string;
+
+  @ApiProperty({ type: String, example: 'jane@example.com' })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim().toLowerCase() : value))
+  @IsEmail()
+  email!: string;
+
+  @ApiProperty({ type: String, example: '+2348012345678' })
+  @Transform(({ value }) => trimString(value))
+  @IsString()
+  @MaxLength(32)
+  @Matches(/^[+0-9][0-9 ()-]{5,30}$/)
+  @Matches(/(?:\D*\d){7,}/, { message: 'phone must contain at least 7 digits' })
+  phone!: string;
+
+  @ApiProperty({ enum: ['Male', 'Female'] })
+  @Transform(({ value }) => trimString(value))
+  @IsIn(['Male', 'Female'])
+  gender!: 'Male' | 'Female';
+
+  @ApiProperty({ type: String, minLength: 8 })
+  @IsString()
+  @MinLength(8)
+  password!: string;
+
+  @ApiProperty({ type: String, minLength: 8 })
+  @IsString()
+  @MinLength(8)
+  @MatchesPassword('password', { message: 'confirmPassword must match password' })
+  confirmPassword!: string;
+
+  @ApiProperty({ type: Boolean, description: 'Must be true to confirm the accuracy declaration.' })
+  @IsBoolean()
+  @IsIn([true], { message: 'declarationConfirmed must be true' })
+  declarationConfirmed!: boolean;
 }
 
 export class RefreshDto {
